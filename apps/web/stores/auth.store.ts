@@ -1,0 +1,76 @@
+import { defineStore } from 'pinia'
+import { isAccessTokenExpired } from '~/utils/auth-token'
+
+interface AuthUser {
+  id: string
+  email: string
+}
+
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null as AuthUser | null,
+    accessToken: null as string | null,
+    isAuthenticated: false,
+  }),
+  actions: {
+    setSession(user: AuthUser, accessToken: string) {
+      this.user = user
+      this.accessToken = accessToken
+      this.isAuthenticated = true
+      if (import.meta.client) {
+        localStorage.setItem('profiloz:access-token', accessToken)
+        localStorage.setItem('profiloz:user', JSON.stringify(user))
+      }
+    },
+    loadFromStorage() {
+      if (!import.meta.client) return
+      const token = localStorage.getItem('profiloz:access-token')
+      const userRaw = localStorage.getItem('profiloz:user')
+      if (!token || !userRaw || isAccessTokenExpired(token)) {
+        this.logout()
+        return
+      }
+      this.accessToken = token
+      this.user = JSON.parse(userRaw) as AuthUser
+      this.isAuthenticated = true
+    },
+    /** Déconnecte si le token en mémoire a expiré pendant la session */
+    syncSession() {
+      if (!import.meta.client || !this.isAuthenticated) return
+      const token = localStorage.getItem('profiloz:access-token')
+      if (!token || isAccessTokenExpired(token)) {
+        this.logout()
+      }
+    },
+    logout() {
+      this.user = null
+      this.accessToken = null
+      this.isAuthenticated = false
+      if (import.meta.client) {
+        localStorage.removeItem('profiloz:access-token')
+        localStorage.removeItem('profiloz:user')
+      }
+    },
+    async login(email: string, password: string) {
+      const { post } = useApiClient()
+      const result = await post<{ user: AuthUser; accessToken: string }>('/auth/login', { email, password })
+      this.setSession(result.user, result.accessToken)
+      return result
+    },
+    async register(email: string, password: string, resumeSnapshot?: unknown) {
+      const { post } = useApiClient()
+      const guestSessionId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
+      const result = await post<{ user: AuthUser; accessToken: string; migratedResumeId?: string }>(
+        '/auth/register',
+        {
+          email,
+          password,
+          guestSessionId: guestSessionId ?? undefined,
+          resumeSnapshot,
+        },
+      )
+      this.setSession(result.user, result.accessToken)
+      return result
+    },
+  },
+})

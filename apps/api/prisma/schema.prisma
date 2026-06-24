@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum DocumentType {
+  CV
+  DIPLOMA
+  CERTIFICATE
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  PARSED
+  FAILED
+}
+
+enum ResumeStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum TemplateSlug {
+  ETUDIANT
+  PROFESSIONNEL
+  MODERNE
+  DEVELOPPEUR
+  COMMERCIAL
+  MANAGER
+  INTERNATIONAL
+  MINIMALISTE
+  CREATIF
+  PREMIUM
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum LanguageLevel {
+  BASIC
+  CONVERSATIONAL
+  PROFESSIONAL
+  NATIVE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  avatarUrl     String?
+  role          UserRole  @default(USER)
+  locale        String    @default("fr-FR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  resumes       Resume[]
+  documents     Document[]
+  coverLetters  CoverLetter[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model GuestSession {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  data      Json?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents Document[]
+  pdfJobs   PdfJob[]
+
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@map("guest_sessions")
+}
+
+model Resume {
+  id             String       @id @default(cuid())
+  userId         String?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestSessionId String?
+
+  title          String       @default("Mon CV")
+  status         ResumeStatus @default(DRAFT)
+  templateSlug   TemplateSlug @default(PROFESSIONNEL)
+  templateConfig Json         @default("{}")
+
+  fullName       String?
+  email          String?
+  phone          String?
+  location       String?
+  jobTitle       String?
+  linkedinUrl    String?
+  websiteUrl     String?
+  summary        String?      @db.Text
+  photoUrl       String?
+
+  completeness   Int          @default(0)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  publishedAt    DateTime?
+
+  experiences    Experience[]
+  educations     Education[]
+  skills         Skill[]
+  certifications Certification[]
+  interests      Interest[]
+  languages      Language[]
+  versions       ResumeVersion[]
+  coverLetters   CoverLetter[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("resumes")
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  resumeId    String
+  resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  company     String
+  position    String
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([resumeId])
+  @@map("experiences")
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  resumeId    String
+  resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  institution String
+  degree      String
+  field       String?
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?   @db.Text
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([resumeId])
+  @@map("educations")
+}
+
+model Skill {
+  id        String     @id @default(cuid())
+  resumeId  String
+  resume    Resume     @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  name      String
+  level     SkillLevel @default(INTERMEDIATE)
+  category  String?
+  sortOrder Int        @default(0)
+
+  @@index([resumeId])
+  @@map("skills")
+}
+
+model Certification {
+  id           String    @id @default(cuid())
+  resumeId     String
+  resume       Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  name         String
+  issuer       String?
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  credentialId String?
+  sortOrder    Int       @default(0)
+
+  @@index([resumeId])
+  @@map("certifications")
+}
+
+model Interest {
+  id        String @id @default(cuid())
+  resumeId  String
+  resume    Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int    @default(0)
+
+  @@index([resumeId])
+  @@map("interests")
+}
+
+model Language {
+  id        String        @id @default(cuid())
+  resumeId  String
+  resume    Resume        @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  name      String
+  level     LanguageLevel @default(CONVERSATIONAL)
+  sortOrder Int           @default(0)
+
+  @@index([resumeId])
+  @@map("languages")
+}
+
+model ResumeVersion {
+  id        String   @id @default(cuid())
+  resumeId  String
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  snapshot  Json
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@index([resumeId])
+  @@map("resume_versions")
+}
+
+model Document {
+  id             String         @id @default(cuid())
+  userId         String?
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestSessionId String?
+  guestSession   GuestSession?  @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+
+  type           DocumentType
+  status         DocumentStatus @default(UPLOADED)
+  originalName   String
+  mimeType       String
+  sizeBytes      Int
+  storageKey     String         @unique
+  checksum       String?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  ocrResult      OcrResult?
+
+  @@index([userId])
+  @@index([guestSessionId])
+  @@index([type])
+  @@map("documents")
+}
+
+model OcrResult {
+  id          String   @id @default(cuid())
+  documentId  String   @unique
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  rawText     String   @db.Text
+  parsedData  Json
+  confidence  Float?
+  provider    String   @default("tesseract")
+  processedAt DateTime @default(now())
+
+  @@map("ocr_results")
+}
+
+model PdfJob {
+  id             String        @id @default(cuid())
+  guestSessionId String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  resumeId       String?
+  storageKey     String?
+  status         String        @default("pending")
+  errorMessage   String?
+  createdAt      DateTime      @default(now())
+  completedAt    DateTime?
+  expiresAt      DateTime?
+
+  @@index([status])
+  @@map("pdf_jobs")
+}
+
+model CoverLetter {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId      String?
+  resume        Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  title         String   @default("Lettre de motivation")
+  companyName   String?
+  position      String?
+  recruiterName String?
+  content       String   @db.Text
+  templateId    String   @default("classic")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("cover_letters")
+}
+
+model Template {
+  id          String       @id @default(cuid())
+  slug        TemplateSlug @unique
+  name        String
+  category    String
+  description String?
+  previewUrl  String
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  config      Json         @default("{}")
+
+  @@map("templates")
+}

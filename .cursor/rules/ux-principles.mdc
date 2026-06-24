@@ -1,0 +1,33 @@
+---
+description: Principes UX ProfiloZ — simplicité, vitesse, clarté (Canva/Linear/Notion/Stripe)
+globs: apps/web/**/*
+alwaysApply: false
+---
+
+# UX ProfiloZ
+
+Le produit ne doit **jamais** ressembler à un dashboard administratif.
+
+## Inspiration
+Canva, Linear, Notion, Stripe
+
+## Objectif
+L'utilisateur doit toujours sentir qu'il est à **moins de 5 minutes** de son CV final.
+
+## Prioriser
+- Simplicité, vitesse, clarté
+- Prévisualisation en temps réel dès que possible
+- **Un objectif unique par écran**
+
+## Éviter
+- Écrans surchargés, formulaires interminables, menus complexes
+- Jargon technique (ATS, slug, completeness, Premium Builder, PARSED)
+- Fausses UI (notifications, avatar, stats) sans fonction réelle
+- Sidebars à 5+ items, tableaux admin, footers marketing dans l'app
+
+## Patterns
+- Wizard : barre de progression compacte, étapes optionnelles avec « Passer »
+- Éditeur : preview-first, actions secondaires dans un menu
+- Dashboard : 2 nav items max (Mes CV, Documents), pas de footer
+- Auth : respecter `?redirect=` pour revenir au flux en cours
+- Copy : français simple (« Continuer », « Télécharger », « Modifier »)

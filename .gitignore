@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build
+dist
+.output
+.next
+.turbo
+*.tsbuildinfo
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Storage
+storage/
+apps/api/storage/
+
+# IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test
+coverage
+playwright-report
+test-results
+
+# Prisma
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+
+# Docker
+.docker
+
+# Misc
+*.pem

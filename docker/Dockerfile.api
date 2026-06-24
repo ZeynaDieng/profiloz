@@ -1,0 +1,47 @@
+FROM node:20-slim AS base
+RUN apt-get update && apt-get install -y \
+    openssl \
+    chromium \
+    tesseract-ocr \
+    tesseract-ocr-fra \
+    tesseract-ocr-eng \
+    fonts-liberation \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+WORKDIR /app
+RUN corepack enable
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/validators/package.json ./packages/validators/
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS builder
+COPY . .
+RUN pnpm --filter @profiloz/shared build
+RUN pnpm --filter @profiloz/validators build
+RUN pnpm --filter @profiloz/api exec prisma generate
+RUN pnpm --filter @profiloz/api build
+
+FROM base AS runner
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV STORAGE_LOCAL_PATH=/app/storage
+WORKDIR /app
+
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api ./apps/api
+COPY --from=builder /app/packages ./packages
+COPY docker/entrypoint-api.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh && mkdir -p /app/storage
+
+EXPOSE 3001
+ENTRYPOINT ["/entrypoint.sh"]
