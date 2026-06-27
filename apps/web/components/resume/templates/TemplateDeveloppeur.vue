@@ -2,7 +2,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 
 const props = defineProps<{ resume: ResumeSnapshot }>()
-const { accent, p, contactItems, snapshot, hasExperiences, hasSkills, hasCertifications } = useResumeSections(
+const { accent, p, contactItems, snapshot, hasExperiences, hasSkills, hasCertifications, hasEducations } = useResumeSections(
   () => props.resume,
 )
 </script>
@@ -33,9 +33,24 @@ const { accent, p, contactItems, snapshot, hasExperiences, hasSkills, hasCertifi
     <section v-if="hasExperiences" class="mb-6">
       <h2 class="font-mono text-xs font-bold uppercase mb-3" :style="{ color: accent }">// Expérience</h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4 border-l-2 border-slate-200 pl-4">
-        <p class="font-bold text-sm">{{ exp.position }} @ {{ exp.company }}</p>
-        <p class="text-xs font-mono text-on-surface-variant">{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
-        <p v-if="exp.description" class="text-sm text-on-surface-variant mt-1">{{ exp.description }}</p>
+        <ExperienceEntry
+          :exp="exp"
+          company-class="text-xs font-mono text-on-surface-variant"
+          location-class="text-xs font-mono text-on-surface-variant"
+          period-class="text-xs font-mono text-on-surface-variant"
+        />
+      </div>
+    </section>
+
+    <section v-if="hasEducations" class="mb-6">
+      <h2 class="font-mono text-xs font-bold uppercase mb-3" :style="{ color: accent }">// Formation</h2>
+      <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 border-l-2 border-slate-200 pl-4">
+        <EducationEntry
+          :edu="edu"
+          institution-class="text-xs font-mono text-on-surface-variant"
+          field-class="text-xs font-mono text-on-surface-variant"
+          period-class="text-xs font-mono text-on-surface-variant"
+        />
       </div>
     </section>
 

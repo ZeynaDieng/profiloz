@@ -28,8 +28,9 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../../../node_modules/.pnpm/@nuxt+icon@1.15.0_magicast@0.5.3_vite@7.3.5_@types+node@22.20.0_jiti@2.7.0_lightningcss@1.32._3p5k22sb5yv2pwwguutgroyjqa/node_modules/@nuxt/icon/dist/runtime/plugin.js")> &
   InjectionType<typeof import("../../../../node_modules/.pnpm/nuxt@3.21.8_@parcel+watcher@2.5.6_@types+node@22.20.0_@vue+compiler-sfc@3.5.38_cac@6.7.14_db0_kj7woc27ta7hcyyzbeofgipqpq/node_modules/nuxt/dist/app/plugins/warn.dev.server.js")> &
   InjectionType<typeof import("../../../../node_modules/.pnpm/nuxt@3.21.8_@parcel+watcher@2.5.6_@types+node@22.20.0_@vue+compiler-sfc@3.5.38_cac@6.7.14_db0_kj7woc27ta7hcyyzbeofgipqpq/node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")> &
-  InjectionType<typeof import("../../plugins/auth.client")> &
-  InjectionType<typeof import("../../plugins/pinia-persistedstate.client")>
+  InjectionType<typeof import("../../plugins/00.pinia-persistedstate.client")> &
+  InjectionType<typeof import("../../plugins/00.resume-draft.client")> &
+  InjectionType<typeof import("../../plugins/auth.client")>
 
 declare module '#app' {
   interface NuxtApp extends NuxtAppInjections { }

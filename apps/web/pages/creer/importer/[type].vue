@@ -1,40 +1,36 @@
 <script setup lang="ts">
-const titles: Record<string, { title: string; subtitle: string; type: 'CV' | 'DIPLOMA' | 'CERTIFICATE' }> = {
+import type { ResumeSnapshot } from '@profiloz/shared'
+
+const titles: Record<string, { title: string; subtitle: string; type: 'CV' }> = {
   cv: {
     title: 'Importer votre CV',
     subtitle: 'Téléversez votre CV existant pour préremplir votre profil.',
     type: 'CV',
   },
-  diplome: {
-    title: 'Importer un diplôme',
-    subtitle: 'Ajoutez une formation à partir de votre diplôme.',
-    type: 'DIPLOMA',
-  },
-  attestation: {
-    title: 'Importer une attestation',
-    subtitle: 'Ajoutez une certification ou attestation professionnelle.',
-    type: 'CERTIFICATE',
-  },
 }
 
 const route = useRoute()
-const kind = computed(() => {
-  if (route.path.includes('diplome')) return 'diplome'
-  if (route.path.includes('attestation')) return 'attestation'
-  return 'cv'
-})
+const kind = computed(() => (route.path.includes('cv') ? 'cv' : 'cv'))
 
 const meta = computed(() => titles[kind.value]!)
 const { state, progress, extractedData, errorMessage, processFile, reset } = useImportFlow(meta.value.type)
 const resumeStore = useResumeStore()
 
 definePageMeta({ layout: 'wizard' })
-useGuestSession()
-resumeStore.initDraft()
 
-function onConfirm() {
-  resumeStore.mergeImportedData(extractedData.value)
-  navigateTo('/creer/modele')
+const { ensureSession } = useGuestSession()
+onMounted(() => {
+  void ensureSession()
+  if (route.path.includes('diplome') || route.path.includes('attestation')) {
+    navigateTo('/creer/importer/cv', { replace: true })
+  }
+})
+
+function onConfirm(data: Partial<ResumeSnapshot>) {
+  resumeStore.mergeImportedData(data, { documentType: meta.value.type })
+  // On passe par l'étape Informations pour que l'utilisateur vérifie/corrige
+  // son identité (le nom détecté par l'OCR peut être imparfait).
+  navigateTo('/creer/assistant/informations')
 }
 
 function onReset() {
@@ -51,7 +47,7 @@ function onReset() {
 
     <FeatureImportFileDropZone
       v-if="state === 'idle'"
-      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+      accept=".pdf,.docx,.jpg,.jpeg,.png"
       @select="processFile"
     />
 
@@ -64,16 +60,11 @@ function onReset() {
       </button>
     </div>
 
-    <div v-else class="space-y-stack-lg">
-      <FeatureImportExtractedPreview :data="extractedData" />
-      <div class="flex justify-end gap-4 border-t border-outline-variant pt-stack-md">
-        <button type="button" class="px-6 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg" @click="onReset">
-          Annuler
-        </button>
-        <button type="button" class="px-8 py-2.5 bg-secondary text-white rounded-lg font-bold" @click="onConfirm">
-          Confirmer et choisir un modèle
-        </button>
-      </div>
-    </div>
+    <FeatureImportReview
+      v-else
+      :data="extractedData"
+      @confirm="onConfirm"
+      @cancel="onReset"
+    />
   </div>
 </template>

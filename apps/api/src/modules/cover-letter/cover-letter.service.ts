@@ -1,15 +1,23 @@
+import { buildCoverLetterTitle } from '@profiloz/shared'
 import { createCoverLetterSchema, updateCoverLetterSchema } from '@profiloz/validators'
 import { AppError } from '@/lib/errors'
+import type { CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
 import { coverLetterRepository } from './cover-letter.repository'
 
 function toDto(letter: {
   id: string
   title: string
+  senderName: string | null
+  senderEmail: string | null
+  senderPhone: string | null
+  senderLocation: string | null
   companyName: string | null
+  companyAddress: string | null
   position: string | null
   recruiterName: string | null
   content: string
+  closingText: string | null
   templateId: string
   resumeId: string | null
   createdAt: Date
@@ -18,10 +26,16 @@ function toDto(letter: {
   return {
     id: letter.id,
     title: letter.title,
+    senderName: letter.senderName,
+    senderEmail: letter.senderEmail,
+    senderPhone: letter.senderPhone,
+    senderLocation: letter.senderLocation,
     companyName: letter.companyName,
+    companyAddress: letter.companyAddress,
     position: letter.position,
     recruiterName: letter.recruiterName,
     content: letter.content,
+    closingText: letter.closingText,
     templateId: letter.templateId,
     resumeId: letter.resumeId,
     createdAt: letter.createdAt.toISOString(),
@@ -43,11 +57,17 @@ export class CoverLetterService {
   async create(userId: string, body: unknown) {
     const input = createCoverLetterSchema.parse(body)
     const letter = await coverLetterRepository.create(userId, {
-      title: input.title,
-      companyName: input.companyName,
-      position: input.position,
-      recruiterName: input.recruiterName,
+      title: buildCoverLetterTitle(input.senderName),
+      senderName: input.senderName ?? null,
+      senderEmail: input.senderEmail || null,
+      senderPhone: input.senderPhone ?? null,
+      senderLocation: input.senderLocation ?? null,
+      companyName: input.companyName ?? null,
+      companyAddress: input.companyAddress ?? null,
+      position: input.position ?? null,
+      recruiterName: input.recruiterName ?? null,
       content: input.content,
+      closingText: input.closingText ?? null,
       templateId: input.templateId,
       ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
     })
@@ -59,12 +79,23 @@ export class CoverLetterService {
     if (!existing) throw new AppError(404, 'Not Found', 'Lettre introuvable')
 
     const input = updateCoverLetterSchema.parse(body)
+    const title =
+      input.senderName !== undefined
+        ? buildCoverLetterTitle(input.senderName)
+        : input.title ?? existing.title
+
     await coverLetterRepository.update(id, userId, {
-      title: input.title,
-      companyName: input.companyName,
-      position: input.position,
-      recruiterName: input.recruiterName,
+      title,
+      senderName: input.senderName ?? null,
+      senderEmail: input.senderEmail || null,
+      senderPhone: input.senderPhone ?? null,
+      senderLocation: input.senderLocation ?? null,
+      companyName: input.companyName ?? null,
+      companyAddress: input.companyAddress ?? null,
+      position: input.position ?? null,
+      recruiterName: input.recruiterName ?? null,
       content: input.content,
+      closingText: input.closingText ?? null,
       templateId: input.templateId,
       ...(input.resumeId !== undefined
         ? input.resumeId
@@ -81,17 +112,46 @@ export class CoverLetterService {
     if (result.count === 0) throw new AppError(404, 'Not Found', 'Lettre introuvable')
   }
 
+  /** Mappe les lettres liées à un CV en entrées prêtes pour le rendu PDF. */
+  async listPdfInputsByResume(resumeId: string, userId: string): Promise<CoverLetterPdfInput[]> {
+    const letters = await coverLetterRepository.listByResume(resumeId, userId)
+    return letters.map((letter) => ({
+      templateSlug: letter.templateId,
+      title: letter.title,
+      senderName: letter.senderName,
+      senderEmail: letter.senderEmail,
+      senderPhone: letter.senderPhone,
+      senderLocation: letter.senderLocation,
+      companyName: letter.companyName,
+      companyAddress: letter.companyAddress,
+      position: letter.position,
+      recruiterName: letter.recruiterName,
+      content: letter.content,
+      closingText: letter.closingText,
+    }))
+  }
+
   async generatePdf(id: string, userId: string) {
     const letter = await coverLetterRepository.findById(id, userId)
     if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
 
-    const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf({
-      title: letter.title,
-      companyName: letter.companyName,
-      position: letter.position,
-      recruiterName: letter.recruiterName,
-      content: letter.content,
-    })
+    const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf(
+      {
+        templateSlug: letter.templateId,
+        title: letter.title,
+        senderName: letter.senderName,
+        senderEmail: letter.senderEmail,
+        senderPhone: letter.senderPhone,
+        senderLocation: letter.senderLocation,
+        companyName: letter.companyName,
+        companyAddress: letter.companyAddress,
+        position: letter.position,
+        recruiterName: letter.recruiterName,
+        content: letter.content,
+        closingText: letter.closingText,
+      },
+      { userId },
+    )
 
     return {
       jobId,

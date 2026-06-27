@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
+import { applyCorsHeaders } from '@/lib/cors'
 
 export class AppError extends Error {
   constructor(
@@ -59,27 +60,11 @@ export function jsonResponse<T>(data: T, status = 200) {
 }
 
 export function withCors(response: NextResponse | Response, origin?: string | null) {
-  const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)
-
-  const matchedOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
-
-  if (origin === matchedOrigin || !origin) {
-    response.headers.set('Access-Control-Allow-Origin', matchedOrigin)
-    response.headers.set('Access-Control-Allow-Credentials', 'true')
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
-    response.headers.set(
-      'Access-Control-Allow-Headers',
-      'Content-Type, Authorization, X-Guest-Session-Id',
-    )
-  }
-  return response
+  return applyCorsHeaders(response, origin)
 }
 
 export function handleOptions(request: Request) {
   const origin = request.headers.get('origin')
   const response = new NextResponse(null, { status: 204 })
-  return withCors(response, origin)
+  return applyCorsHeaders(response, origin)
 }

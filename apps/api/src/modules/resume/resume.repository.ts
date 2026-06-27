@@ -20,10 +20,12 @@ function snapshotRelationData(snapshot: ResumeSnapshot) {
         company: e.company,
         position: e.position,
         location: e.location,
+        country: e.country,
         startDate: parseFlexibleDate(e.startDate),
         endDate: parseFlexibleDate(e.endDate),
         isCurrent: e.isCurrent ?? false,
         description: e.description,
+        skillsUsed: e.skillsUsed ?? [],
         sortOrder: i,
       })),
     },
@@ -145,6 +147,13 @@ export class ResumeRepository {
     return this.createFromSnapshot(snapshot, userId)
   }
 
+  updateTitle(id: string, userId: string, title: string) {
+    return prisma.resume.updateMany({
+      where: { id, userId },
+      data: { title },
+    })
+  }
+
   archive(id: string, userId: string) {
     return prisma.resume.updateMany({
       where: { id, userId },
@@ -208,10 +217,12 @@ export function resumeEntityToSnapshot(resume: NonNullable<Awaited<ReturnType<Re
       company: e.company,
       position: e.position,
       location: e.location ?? undefined,
+      country: e.country ?? undefined,
       startDate: formatFlexibleDate(e.startDate),
       endDate: formatFlexibleDate(e.endDate),
       isCurrent: e.isCurrent,
       description: e.description ?? undefined,
+      skillsUsed: e.skillsUsed?.length ? e.skillsUsed : undefined,
     })),
     educations: resume.educations.map((e) => ({
       id: e.id,

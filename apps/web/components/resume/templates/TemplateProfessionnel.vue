@@ -27,27 +27,20 @@ const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasEducat
 
     <section v-if="hasSummary" class="mb-6">
       <h2 class="text-sm font-bold uppercase border-b border-outline-variant pb-1 mb-3">Profil</h2>
-      <p class="text-sm text-on-surface-variant leading-relaxed">{{ snapshot.summary }}</p>
+      <p class="text-sm text-on-surface-variant leading-relaxed whitespace-pre-line">{{ snapshot.summary }}</p>
     </section>
 
     <section v-if="hasExperiences" class="mb-6">
       <h2 class="text-sm font-bold uppercase border-b border-outline-variant pb-1 mb-3">Expérience</h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4">
-        <div class="flex justify-between text-sm font-bold gap-4">
-          <span>{{ exp.position }} — {{ exp.company }}</span>
-          <span class="text-on-surface-variant font-normal shrink-0">
-            {{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}
-          </span>
-        </div>
-        <p v-if="exp.description" class="text-sm text-on-surface-variant mt-1">{{ exp.description }}</p>
+        <ExperienceEntry :exp="exp" layout="inline-header" />
       </div>
     </section>
 
     <section v-if="hasEducations" class="mb-6">
       <h2 class="text-sm font-bold uppercase border-b border-outline-variant pb-1 mb-3">Formation</h2>
       <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-2">
-        <p class="text-sm font-bold">{{ edu.degree }}</p>
-        <p class="text-xs text-on-surface-variant">{{ edu.institution }} • {{ edu.endDate }}</p>
+        <EducationEntry :edu="edu" />
       </div>
     </section>
 

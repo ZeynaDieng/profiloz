@@ -15,7 +15,9 @@
     "db:seed": "pnpm --filter @profiloz/api db:seed",
     "db:studio": "pnpm --filter @profiloz/api db:studio",
     "test:e2e": "playwright test",
-    "docker:prod": "docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.production.example up --build"
+    "test:e2e:pdf": "playwright test e2e/guest-pdf.spec.ts",
+    "docker:prod": "docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.production.example up --build",
+    "docker:smoke-pdf": "bash docker/scripts/smoke-pdf.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.1",

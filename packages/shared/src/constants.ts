@@ -33,4 +33,6 @@ export const TEMPLATE_SLUGS = [
   'MINIMALISTE',
   'CREATIF',
   'PREMIUM',
+  'CADRE',
+  'EXECUTIF',
 ] as const

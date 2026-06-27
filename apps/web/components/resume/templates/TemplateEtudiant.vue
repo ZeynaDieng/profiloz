@@ -22,17 +22,17 @@ const { accent, p, contactItems, snapshot, hasEducations, hasSkills, hasExperien
         <section v-if="hasEducations" class="mb-6">
           <h2 class="text-xs font-bold uppercase tracking-widest mb-3" :style="{ color: accent }">Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-4 pl-3 border-l-2" :style="{ borderColor: accent }">
-            <p class="font-bold text-sm">{{ edu.degree }}</p>
-            <p class="text-xs text-on-surface-variant">{{ edu.institution }}</p>
-            <p class="text-xs text-on-surface-variant/70">{{ edu.endDate }}</p>
+            <EducationEntry
+              :edu="edu"
+              period-class="text-xs text-on-surface-variant/70"
+            />
           </div>
         </section>
 
         <section v-if="hasExperiences">
           <h2 class="text-xs font-bold uppercase tracking-widest mb-3" :style="{ color: accent }">Stages & expériences</h2>
           <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-3">
-            <p class="text-sm font-semibold">{{ exp.position }}</p>
-            <p class="text-xs text-on-surface-variant">{{ exp.company }} • {{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
+            <ExperienceEntry :exp="exp" :accent="accent" />
           </div>
         </section>
       </div>

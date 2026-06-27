@@ -25,6 +25,13 @@ export class CoverLetterRepository {
     })
   }
 
+  listByResume(resumeId: string, userId: string) {
+    return prisma.coverLetter.findMany({
+      where: { userId, resumeId },
+      orderBy: { createdAt: 'asc' },
+    })
+  }
+
   create(userId: string, data: Omit<Prisma.CoverLetterCreateInput, 'user'>) {
     return prisma.coverLetter.create({
       data: {

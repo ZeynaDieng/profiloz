@@ -2,6 +2,15 @@
 definePageMeta({ layout: false })
 
 const authStore = useAuthStore()
+const resumeStore = useResumeStore()
+const route = useRoute()
+
+const downloadedFilename = computed(() => {
+  const fromQuery = route.query.file
+  if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery
+  if (resumeStore.current) return buildResumePdfFilename(resumeStore.current)
+  return 'cv Profiloz.pdf'
+})
 
 onMounted(() => {
   authStore.loadFromStorage()
@@ -20,7 +29,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-[80vh] flex items-center justify-center p-margin-mobile relative overflow-hidden gradient-mesh">
+  <div class="min-h-screen flex flex-col">
+    <header class="flex justify-between items-center gap-3 px-margin-mobile py-2.5 border-b border-outline-variant/30 bg-surface/90 backdrop-blur-sm shrink-0">
+      <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
+      <LayoutAuthStatus icon-only class="sm:hidden" />
+      <LayoutAuthStatus compact class="hidden sm:flex" />
+    </header>
+    <div class="flex-1 flex items-center justify-center p-margin-mobile relative overflow-hidden gradient-mesh">
     <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
     <div class="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-3xl shadow-lg p-8 md:p-12 text-center">
       <div class="text-5xl mb-6">🎉</div>
@@ -68,9 +83,10 @@ onMounted(() => {
 
       <div class="inline-flex items-center gap-3 bg-white px-4 py-3 rounded-lg border border-outline-variant/30">
         <UiPzIcon name="picture_as_pdf" class="text-error" />
-        <span class="text-sm text-on-surface-variant">mon_cv_profiloz.pdf</span>
+        <span class="text-sm text-on-surface-variant">{{ downloadedFilename }}</span>
         <UiPzIcon name="download" class="text-on-surface-variant/50 text-[18px]" />
       </div>
+    </div>
     </div>
   </div>
 </template>

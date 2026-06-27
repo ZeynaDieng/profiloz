@@ -1,0 +1,34 @@
+{
+  "snapshot": {
+    "id": "smoke-test",
+    "title": "CV Smoke Test",
+    "templateSlug": "PROFESSIONNEL",
+    "templateConfig": { "accentColor": "#0051d5" },
+    "personalInfo": {
+      "fullName": "Smoke Test",
+      "email": "smoke@profiloz.test",
+      "jobTitle": "Ingénieur QA"
+    },
+    "summary": "Test de génération PDF Docker.",
+    "experiences": [
+      {
+        "company": "Profilo'Z",
+        "position": "Testeur",
+        "startDate": "2024",
+        "endDate": "",
+        "isCurrent": true,
+        "description": "Validation pipeline PDF."
+      }
+    ],
+    "educations": [],
+    "skills": [{ "name": "Docker" }],
+    "certifications": [],
+    "interests": [],
+    "languages": [],
+    "metadata": {
+      "completeness": 80,
+      "lastModified": "2026-01-01T00:00:00.000Z",
+      "source": "wizard"
+    }
+  }
+}

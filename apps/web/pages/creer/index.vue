@@ -1,7 +1,8 @@
 <template>
   <div class="max-w-[640px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
     <div class="text-center mb-stack-lg">
-      <h1 class="text-3xl font-bold text-on-surface mb-3">Comment souhaitez-vous commencer ?</h1>
+      <h1 class="text-3xl font-bold text-on-surface mb-3">Créons votre dossier de candidature</h1>
+      <p class="text-on-surface-variant">Comment souhaitez-vous commencer ?</p>
     </div>
 
     <div class="space-y-4">
@@ -14,8 +15,8 @@
             <UiPzIcon name="edit_note" />
           </div>
           <div>
-            <h2 class="font-bold text-xl text-on-surface mb-1">Créer mon CV</h2>
-            <p class="text-on-surface-variant text-sm">Créer un CV à partir de zéro, étape par étape.</p>
+            <h2 class="font-bold text-xl text-on-surface mb-1">Partir de zéro</h2>
+            <p class="text-on-surface-variant text-sm">Construisez votre dossier étape par étape, avec un assistant qui vous guide.</p>
           </div>
         </div>
       </NuxtLink>
@@ -27,10 +28,10 @@
           </div>
           <div>
             <h2 class="font-bold text-xl text-on-surface mb-1">Importer mes documents</h2>
-            <p class="text-on-surface-variant text-sm">Préremplissez votre CV à partir de fichiers existants.</p>
+            <p class="text-on-surface-variant text-sm">Préremplissez votre CV ou votre lettre de motivation à partir de fichiers existants.</p>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <NuxtLink
             to="/creer/importer/cv"
             class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
@@ -39,25 +40,11 @@
             <span class="text-sm font-semibold text-on-surface">CV</span>
           </NuxtLink>
           <NuxtLink
-            to="/creer/importer/diplome"
+            to="/creer/importer/lettre"
             class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
           >
-            <UiPzIcon name="school" class="text-secondary" />
-            <span class="text-sm font-semibold text-on-surface">Diplôme</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/creer/importer/attestation"
-            class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
-          >
-            <UiPzIcon name="verified" class="text-secondary" />
-            <span class="text-sm font-semibold text-on-surface">Attestation</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/creer/importer/attestation"
-            class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
-          >
-            <UiPzIcon name="workspace_premium" class="text-secondary" />
-            <span class="text-sm font-semibold text-on-surface">Certificat</span>
+            <UiPzIcon name="mail" class="text-secondary" />
+            <span class="text-sm font-semibold text-on-surface">Lettre de motivation</span>
           </NuxtLink>
         </div>
       </div>
@@ -71,12 +58,9 @@ definePageMeta({ layout: 'wizard' })
 useGuestSession()
 const resumeStore = useResumeStore()
 
-const hasDraft = computed(() =>
-  Boolean(resumeStore.current?.personalInfo.fullName),
-)
-
 onMounted(() => {
-  if (!hasDraft.value) {
+  resumeStore.rehydrateFromStorage()
+  if (!resumeStore.current?.personalInfo.fullName) {
     resumeStore.startNewDraft()
   }
 })

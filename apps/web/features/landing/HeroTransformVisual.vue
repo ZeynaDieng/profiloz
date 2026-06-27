@@ -214,7 +214,7 @@
       <p
         class="text-center text-xs sm:text-sm text-on-surface-variant mt-2.5 sm:mt-3 font-medium"
       >
-        Importez votre document, nous faisons le reste.
+        Importez vos documents ou créez CV et lettre — nous faisons le reste.
       </p>
     </div>
   </div>

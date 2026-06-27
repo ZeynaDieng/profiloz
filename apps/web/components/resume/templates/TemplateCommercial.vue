@@ -2,7 +2,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 
 const props = defineProps<{ resume: ResumeSnapshot }>()
-const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasSkills } = useResumeSections(
+const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasSkills, hasEducations } = useResumeSections(
   () => props.resume,
 )
 </script>
@@ -31,10 +31,15 @@ const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasSkills
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4 grid grid-cols-[auto_1fr] gap-4">
         <div class="w-2 rounded-full shrink-0" :style="{ backgroundColor: accent }" />
         <div>
-          <p class="font-bold">{{ exp.position }} — {{ exp.company }}</p>
-          <p class="text-xs text-on-surface-variant mb-1">{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
-          <p v-if="exp.description" class="text-sm text-on-surface-variant">{{ exp.description }}</p>
+          <ExperienceEntry :exp="exp" />
         </div>
+      </div>
+    </section>
+
+    <section v-if="hasEducations" class="mb-6">
+      <h2 class="text-sm font-black uppercase mb-3" :style="{ color: accent }">Formation</h2>
+      <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-2">
+        <EducationEntry :edu="edu" />
       </div>
     </section>
 

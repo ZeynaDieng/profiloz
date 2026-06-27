@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs'
 import jwt, { type SignOptions } from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
 import type { LoginInput, RegisterInput } from '@profiloz/validators'
+import { guestSessionRepository } from '@/modules/guest/guest.repository'
+import { paymentService } from '@/modules/payment/payment.service'
 import { resumeService } from '@/modules/resume/resume.service'
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me'
@@ -65,6 +67,16 @@ export class AuthService {
         migratedResumeId = migrated.migratedResumeId
       } catch (error) {
         console.warn('Guest resume migration failed during registration:', error)
+      }
+    }
+
+    // Migration des droits invités (crédits, abonnement, dossiers persistés, paiements).
+    if (input.guestSessionId) {
+      try {
+        const guest = await guestSessionRepository.findBySessionId(input.guestSessionId)
+        if (guest) await paymentService.migrateGuestToUser(user.id, guest.id)
+      } catch (error) {
+        console.warn('Guest entitlements migration failed during registration:', error)
       }
     }
 

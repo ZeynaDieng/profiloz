@@ -13,6 +13,7 @@ export function getSectionLabel(section: string) {
 
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   CV: 'CV',
+  COVER_LETTER: 'Lettre de motivation',
   DIPLOMA: 'Diplôme',
   CERTIFICATE: 'Attestation',
 }

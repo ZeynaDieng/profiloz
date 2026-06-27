@@ -1,12 +1,12 @@
 export const WIZARD_ROUTES = [
   { step: 1, path: '/creer/assistant/informations', label: 'Informations' },
-  { step: 2, path: '/creer/assistant/parcours', label: 'Parcours' },
-  { step: 3, path: '/creer/assistant/qualifications', label: 'Qualifications' },
+  { step: 2, path: '/creer/modele', label: 'Modèle' },
+  { step: 3, path: '/creer/assistant/parcours', label: 'Parcours' },
+  { step: 4, path: '/creer/assistant/qualifications', label: 'Qualifications' },
 ] as const
 
 export const FLOW_STEPS = [
   ...WIZARD_ROUTES,
-  { step: 4, path: '/creer/modele', label: 'Modèle' },
   { step: 5, path: '/creer/editeur', label: 'Prévisualisation' },
 ] as const
 
@@ -23,7 +23,7 @@ export function useWizardNavigation() {
 
   function goNext() {
     if (next.value) navigateTo(next.value.path)
-    else navigateTo('/creer/modele')
+    else navigateTo('/creer/editeur')
   }
 
   function goBack() {

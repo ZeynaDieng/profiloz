@@ -67,9 +67,8 @@ async function deleteDocument(id: string) {
 }
 
 const importLinks = [
-  { to: '/creer/importer/cv', label: 'Importer un CV', icon: 'upload_file' },
-  { to: '/creer/importer/diplome', label: 'Importer un diplôme', icon: 'school' },
-  { to: '/creer/importer/attestation', label: 'Importer une attestation', icon: 'verified' },
+  { to: '/creer/importer/cv', label: 'Importer un CV', icon: 'description' },
+  { to: '/creer/importer/lettre', label: 'Importer une lettre', icon: 'mail' },
 ]
 </script>
 
@@ -102,7 +101,7 @@ const importLinks = [
     <div v-else-if="documents.length === 0" class="glass-card rounded-xl p-stack-lg border border-outline-variant text-center">
       <UiPzIcon name="folder_open" class="text-4xl text-on-surface-variant/40 mb-3" />
       <h2 class="font-bold text-on-surface mb-2">Aucun document</h2>
-      <p class="text-on-surface-variant mb-4">Importez un CV, un diplôme ou une attestation pour commencer.</p>
+      <p class="text-on-surface-variant mb-4">Importez un CV ou une lettre de motivation pour commencer.</p>
       <NuxtLink to="/creer/importer/cv" class="text-secondary font-bold hover:underline">Importer un CV</NuxtLink>
     </div>
 

@@ -145,8 +145,8 @@ async function downloadPdf() {
     if (authStore.isAuthenticated && resumeStore.isDirty) {
       await saveResume()
     }
-    await pdfService.generateAndDownload(currentSnapshot())
-    await navigateTo('/creer/succes')
+    const { filename } = await pdfService.generateAndDownload(currentSnapshot())
+    await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch {
     pdfError.value = 'Impossible de générer le PDF. Réessayez dans un instant.'
   } finally {
@@ -166,17 +166,19 @@ async function downloadPdf() {
   </div>
 
   <div v-else-if="resume && previewResume" class="h-screen flex flex-col overflow-hidden bg-background">
-    <header class="relative flex justify-between items-center px-margin-mobile md:px-gutter py-3 bg-surface border-b border-outline-variant shrink-0 gap-2">
-      <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-        <UiAppLogo size="sm" class="shrink-0" />
-        <span class="text-on-surface-variant text-sm truncate">{{ resume.title }}</span>
+    <header class="relative flex justify-between items-center px-margin-mobile md:px-gutter py-2.5 md:py-3 bg-surface border-b border-outline-variant shrink-0 gap-2">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
+        <span class="text-on-surface-variant text-sm truncate hidden min-[380px]:inline">{{ resume.title }}</span>
       </div>
 
       <p v-if="autoSaveLabel" class="text-xs text-secondary hidden md:block truncate max-w-[280px]">
         {{ autoSaveLabel }}
       </p>
 
-      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+      <div class="flex items-center gap-0.5 sm:gap-2 shrink-0">
+        <LayoutAuthStatus icon-only class="sm:hidden" />
+        <LayoutAuthStatus compact class="hidden sm:flex" />
         <p v-if="saveMessage" class="text-sm hidden lg:block" :class="saveMessage === 'Enregistré' ? 'text-secondary' : 'text-error'">
           {{ saveMessage }}
         </p>

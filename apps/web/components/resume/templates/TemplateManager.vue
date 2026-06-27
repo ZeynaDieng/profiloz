@@ -25,20 +25,15 @@ const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasEducat
         Parcours exécutif
       </h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5">
-        <div class="flex justify-between items-baseline gap-4">
-          <p class="font-bold">{{ exp.position }}</p>
-          <p class="text-xs text-on-surface-variant shrink-0">{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
-        </div>
-        <p class="text-sm" :style="{ color: accent }">{{ exp.company }}</p>
-        <p v-if="exp.description" class="text-sm text-on-surface-variant mt-2">{{ exp.description }}</p>
+        <ExperienceEntry :exp="exp" :accent="accent" layout="inline-header" />
       </div>
     </section>
 
     <section v-if="hasEducations">
       <h2 class="text-xs font-bold uppercase tracking-widest mb-3" :style="{ color: accent }">Formation</h2>
-      <p v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-1">
-        {{ edu.degree }}, {{ edu.institution }}
-      </p>
+      <div v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-2">
+        <EducationEntry :edu="edu" />
+      </div>
     </section>
   </TemplatesTemplateShell>
 </template>

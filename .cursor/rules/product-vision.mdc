@@ -1,0 +1,32 @@
+---
+description: Vision produit officielle Profilo'Z V1 — référence pour toute décision technique
+alwaysApply: true
+---
+
+# Vision Profilo'Z V1
+
+Référence complète : [docs/00-vision.md](mdc:docs/00-vision.md). Cette vision **prime** sur les autres docs en cas de conflit.
+
+## Le test décisif (à appliquer à CHAQUE décision)
+> « Est-ce que cela aide un utilisateur à créer un **dossier de candidature professionnel**
+> plus **rapidement**, plus **simplement** et avec plus de **confiance** ? »
+Si non → ce n'est probablement pas prioritaire pour la V1.
+
+## Concept central
+- Profilo'Z crée un **dossier de candidature** (CV + lettre + documents + historique), pas « un CV ».
+- Vocabulaire UI unifié : **dossier** (Créer / Mes dossiers / Modifier / Télécharger le dossier).
+- Éviter de présenter CV / Lettre / Document comme des entités séparées.
+
+## Règles non négociables
+- **Paiement à la fin uniquement**, jamais avant (Créer → Modifier → Prévisualiser → Télécharger → Offre → PayTech).
+- **Compte jamais obligatoire** ; proposé après paiement ; ne demander que le mot de passe (pré-remplir le reste).
+- **Ne jamais stocker les PDF** : générer → envoyer → supprimer. Persister uniquement données, modèles, documents importés, paiements.
+- **CV compatibles ATS** : pas de tableaux ni colonnes complexes ; bonne hiérarchie/typographie.
+- **Un seul objectif par écran** ; jamais l'aspect d'un dashboard admin (cf. `ux-principles`).
+
+## Architecture à respecter (extensible, sans refonte)
+- Paiements derrière une interface `PaymentProvider` (PayTech en V1 ; Stripe/Wave/Orange Money/Free Money/PayPal ensuite) sans toucher au code métier.
+- **Système de crédits** interne : un dossier consomme 1 crédit, un téléchargement n'en consomme jamais.
+- **Multi-tenant** anticipé : Organisation + rôles Owner/Admin/Manager/Member (même si non exposé en V1).
+- **Templates** ajoutables via registry sans refonte.
+- **CMS** : contenus marketing/légaux éditables sans redéploiement.

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { isAccessTokenExpired } from '~/utils/auth-token'
+import { clearLegacyResumeDraft } from '~/utils/resume-draft-storage'
 
 interface AuthUser {
   id: string
@@ -20,6 +21,8 @@ export const useAuthStore = defineStore('auth', {
       if (import.meta.client) {
         localStorage.setItem('profiloz:access-token', accessToken)
         localStorage.setItem('profiloz:user', JSON.stringify(user))
+        clearLegacyResumeDraft()
+        useResumeStore().rehydrateFromStorage()
       }
     },
     loadFromStorage() {
@@ -49,6 +52,10 @@ export const useAuthStore = defineStore('auth', {
       if (import.meta.client) {
         localStorage.removeItem('profiloz:access-token')
         localStorage.removeItem('profiloz:user')
+        localStorage.removeItem('profiloz:guest-session')
+        clearLegacyResumeDraft()
+        localStorage.setItem('profiloz:guest-session', crypto.randomUUID())
+        useResumeStore().rehydrateFromStorage()
       }
     },
     async login(email: string, password: string) {

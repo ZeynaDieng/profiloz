@@ -8,10 +8,12 @@ function addItem() {
     company: '',
     position: '',
     location: '',
+    country: '',
     startDate: '',
     endDate: '',
     isCurrent: false,
     description: '',
+    skillsUsed: [],
   })
 }
 
@@ -32,20 +34,31 @@ function removeItem(index: number) {
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
       <UiFormField label="Entreprise" required>
-        <input v-model="item.company" type="text" class="form-input w-full" required />
+        <input v-model="item.company" type="text" class="form-input w-full" />
       </UiFormField>
       <UiFormField label="Poste" required>
-        <input v-model="item.position" type="text" class="form-input w-full" required />
-      </UiFormField>
-      <UiFormField label="Lieu">
-        <input v-model="item.location" type="text" class="form-input w-full" />
+        <input v-model="item.position" type="text" class="form-input w-full" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Début">
+        <UiFormField label="Ville" required>
+          <input v-model="item.location" type="text" class="form-input w-full" placeholder="Ex. Dakar" />
+        </UiFormField>
+        <UiFormField label="Pays">
+          <input v-model="item.country" type="text" class="form-input w-full" placeholder="Ex. Sénégal" />
+        </UiFormField>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <UiFormField label="Début" required>
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2021" />
         </UiFormField>
-        <UiFormField label="Fin">
-          <input v-model="item.endDate" type="text" class="form-input w-full" placeholder="Present" :disabled="item.isCurrent" />
+        <UiFormField label="Fin" :required="!item.isCurrent">
+          <input
+            v-model="item.endDate"
+            type="text"
+            class="form-input w-full"
+            placeholder="2024"
+            :disabled="item.isCurrent"
+          />
         </UiFormField>
       </div>
       <label class="flex items-center gap-2 text-label-sm text-on-surface-variant">
@@ -53,7 +66,21 @@ function removeItem(index: number) {
         Poste actuel
       </label>
       <UiFormField label="Description">
-        <textarea v-model="item.description" rows="3" class="form-input w-full resize-none" />
+        <textarea
+          v-model="item.description"
+          rows="3"
+          class="form-input w-full resize-none"
+          placeholder="Missions, réalisations… (optionnel)"
+        />
+      </UiFormField>
+      <UiFormField label="Compétences utilisées">
+        <input
+          type="text"
+          class="form-input w-full"
+          placeholder="Séparées par des virgules — Ex. Vue.js, SQL, Gestion de projet"
+          :value="(item.skillsUsed ?? []).join(', ')"
+          @input="item.skillsUsed = ($event.target as HTMLInputElement).value.split(',').map((s) => s.trim()).filter(Boolean)"
+        />
       </UiFormField>
     </div>
     <button

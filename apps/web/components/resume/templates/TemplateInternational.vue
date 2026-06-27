@@ -32,18 +32,14 @@ const { accent, p, contactItems, snapshot, hasExperiences, hasLanguages, hasEduc
     <section v-if="hasExperiences" class="mb-6">
       <h2 class="text-xs font-bold uppercase tracking-widest mb-3" :style="{ color: accent }">Expérience internationale</h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4">
-        <p class="font-bold text-sm">{{ exp.position }} — {{ exp.company }}</p>
-        <p class="text-xs text-on-surface-variant">
-          {{ exp.location ? `${exp.location} • ` : '' }}{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}
-        </p>
-        <p v-if="exp.description" class="text-sm text-on-surface-variant mt-1">{{ exp.description }}</p>
+        <ExperienceEntry :exp="exp" :accent="accent" />
       </div>
     </section>
 
     <section v-if="hasEducations">
       <h2 class="text-xs font-bold uppercase tracking-widest mb-3" :style="{ color: accent }">Formation</h2>
       <div v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-2">
-        <span class="font-semibold">{{ edu.degree }}</span> — {{ edu.institution }}
+        <EducationEntry :edu="edu" />
       </div>
     </section>
   </TemplatesTemplateShell>

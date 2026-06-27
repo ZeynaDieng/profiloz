@@ -1,39 +1,11 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { PDF_TTL_HOURS } from '@profiloz/shared'
 import { prisma } from '@/lib/prisma'
-import { storageProvider } from '@/lib/storage/local-storage.provider'
+import { resolveAppUrl } from '@/lib/pdf/app-url'
+import { logPdfEvent } from '@/lib/pdf/pdf-logger'
+import { isTransientPuppeteerError, withPuppeteerPage } from '@/lib/pdf/puppeteer-pool'
+import { storageProvider } from '@/lib/storage'
 import { randomUUID } from 'crypto'
-import { existsSync } from 'fs'
-
-const SYSTEM_CHROME_PATHS = [
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-]
-
-async function resolveBrowserExecutable(): Promise<string> {
-  if (process.env.PUPPETEER_EXECUTABLE_PATH && existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
-    return process.env.PUPPETEER_EXECUTABLE_PATH
-  }
-
-  const puppeteer = await import('puppeteer')
-  try {
-    const bundledPath = puppeteer.default.executablePath()
-    if (existsSync(bundledPath)) return bundledPath
-  } catch {
-    // Bundled Chrome not installed for this Puppeteer version.
-  }
-
-  for (const path of SYSTEM_CHROME_PATHS) {
-    if (existsSync(path)) return path
-  }
-
-  throw new Error(
-    'Chrome introuvable. Installez Google Chrome ou exécutez: pnpm --filter @profiloz/api exec puppeteer browsers install chrome',
-  )
-}
 
 function escapeHtml(value: string) {
   return value
@@ -43,34 +15,59 @@ function escapeHtml(value: string) {
     .replace(/"/g, '&quot;')
 }
 
+function formatDateRange(start?: string, end?: string, isCurrent?: boolean): string {
+  if (!start && !end && !isCurrent) return ''
+  const endLabel = isCurrent ? 'Présent' : end ?? ''
+  return start ? `${start} – ${endLabel}` : endLabel
+}
+
+function formatEducationPeriod(start?: string, end?: string): string {
+  const startLabel = start?.trim() ?? ''
+  const endLabel = end?.trim() ?? ''
+  if (startLabel && endLabel) return `${startLabel} – ${endLabel}`
+  return startLabel || endLabel
+}
+
+function formatParagraph(value: string): string {
+  return escapeHtml(value).replace(/\n/g, '<br/>')
+}
+
 export function renderResumeHtml(snapshot: ResumeSnapshot): string {
   const accent = snapshot.templateConfig.accentColor ?? '#0051d5'
   const p = snapshot.personalInfo
 
   const experienceHtml = snapshot.experiences
-    .map(
-      (e) => `
+    .map((e) => {
+      const period = formatDateRange(e.startDate, e.endDate, e.isCurrent)
+      return `
       <div class="item">
         <div class="item-head">
           <strong>${escapeHtml(e.position)} — ${escapeHtml(e.company)}</strong>
-          <span>${escapeHtml(e.startDate ?? '')} – ${e.isCurrent ? 'Présent' : escapeHtml(e.endDate ?? '')}</span>
+          ${period ? `<span>${escapeHtml(period)}</span>` : ''}
         </div>
-        ${e.description ? `<p>${escapeHtml(e.description)}</p>` : ''}
-      </div>`,
-    )
+        ${e.location ? `<p>${escapeHtml(e.location)}</p>` : ''}
+        ${e.description?.trim() ? `<p>${formatParagraph(e.description)}</p>` : ''}
+      </div>`
+    })
     .join('')
 
   const educationHtml = snapshot.educations
-    .map(
-      (e) => `
+    .map((e) => {
+      const period = formatEducationPeriod(e.startDate, e.endDate)
+      return `
       <div class="item">
         <strong>${escapeHtml(e.degree)}</strong>
-        <p>${escapeHtml(e.institution)}${e.endDate ? ` • ${escapeHtml(e.endDate)}` : ''}</p>
-      </div>`,
-    )
+        ${e.institution ? `<p>${escapeHtml(e.institution)}</p>` : ''}
+        ${e.field ? `<p>${escapeHtml(e.field)}</p>` : ''}
+        ${period ? `<p>${escapeHtml(period)}</p>` : ''}
+      </div>`
+    })
     .join('')
 
   const skillsHtml = snapshot.skills.map((s) => `<span class="tag">${escapeHtml(s.name)}</span>`).join('')
+  const languagesHtml = snapshot.languages?.length
+    ? `<section><h2>Langues</h2><p>${snapshot.languages.map((l) => escapeHtml(l.name)).join(', ')}</p></section>`
+    : ''
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -98,22 +95,78 @@ export function renderResumeHtml(snapshot: ResumeSnapshot): string {
       ${[p.email, p.phone, p.location, p.linkedinUrl].filter((v): v is string => Boolean(v)).map(escapeHtml).join(' • ')}
     </div>
   </header>
-  ${snapshot.summary ? `<section><h2>Profil</h2><p>${escapeHtml(snapshot.summary)}</p></section>` : ''}
+  ${snapshot.summary ? `<section><h2>Profil</h2><p>${formatParagraph(snapshot.summary)}</p></section>` : ''}
   ${experienceHtml ? `<section><h2>Expérience</h2>${experienceHtml}</section>` : ''}
   ${educationHtml ? `<section><h2>Formation</h2>${educationHtml}</section>` : ''}
   ${skillsHtml ? `<section><h2>Compétences</h2>${skillsHtml}</section>` : ''}
+  ${languagesHtml}
 </body>
 </html>`
 }
 
+async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
+  return withPuppeteerPage(async (page) => {
+    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 })
+    await page.goto(printUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 })
+
+    const errorHandle = await page.$('[data-cv-error="true"]')
+    if (errorHandle) {
+      throw new Error('La page d’impression n’a pas pu charger le CV')
+    }
+
+    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 45_000 })
+    await page.evaluate(async () => {
+      if (document.fonts?.ready) await document.fonts.ready
+    })
+    await new Promise((resolve) => setTimeout(resolve, 400))
+
+    return Buffer.from(
+      await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+      }),
+    )
+  })
+}
+
+async function withTransientRetry<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation()
+  } catch (error) {
+    if (!isTransientPuppeteerError(error)) throw error
+    return operation()
+  }
+}
+
+async function mergePdfBuffers(buffers: Buffer[]): Promise<Buffer> {
+  if (buffers.length === 1) return buffers[0]!
+  const { PDFDocument } = await import('pdf-lib')
+  const merged = await PDFDocument.create()
+  for (const buffer of buffers) {
+    const doc = await PDFDocument.load(buffer)
+    const pages = await merged.copyPages(doc, doc.getPageIndices())
+    for (const page of pages) merged.addPage(page)
+  }
+  return Buffer.from(await merged.save())
+}
+
 export interface CoverLetterPdfInput {
+  templateSlug: string
   title: string
+  senderName?: string | null
+  senderEmail?: string | null
+  senderPhone?: string | null
+  senderLocation?: string | null
   companyName?: string | null
+  companyAddress?: string | null
   position?: string | null
   recruiterName?: string | null
   content: string
+  closingText?: string | null
 }
 
+/** @deprecated Utiliser generateCoverLetterPdf avec la page /imprimer/lettre */
 export function renderCoverLetterHtml(letter: CoverLetterPdfInput): string {
   const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   const greeting = letter.recruiterName
@@ -142,7 +195,7 @@ export function renderCoverLetterHtml(letter: CoverLetterPdfInput): string {
   <div class="meta">${date}</div>
   ${letter.companyName ? `<p>${escapeHtml(letter.companyName)}</p>` : ''}
   <p>${greeting}</p>
-  ${letter.position ? `<p class="subject">Objet : Candidature — ${escapeHtml(letter.position)}</p>` : ''}
+  ${letter.position ? `<p class="subject">Objet : Candidation — ${escapeHtml(letter.position)}</p>` : ''}
   ${paragraphs}
   <p class="closing">Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>
 </body>
@@ -150,33 +203,55 @@ export function renderCoverLetterHtml(letter: CoverLetterPdfInput): string {
 }
 
 async function htmlToPdf(html: string): Promise<Buffer> {
-  const puppeteer = await import('puppeteer')
-  const executablePath = await resolveBrowserExecutable()
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    executablePath,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  })
-  try {
-    const page = await browser.newPage()
+  return withPuppeteerPage(async (page) => {
     await page.setContent(html, { waitUntil: 'domcontentloaded' })
     return Buffer.from(
       await page.pdf({ format: 'A4', printBackground: true, margin: { top: '0', right: '0', bottom: '0', left: '0' } }),
     )
-  } finally {
-    await browser.close()
-  }
+  })
+}
+
+type GenerateContext = {
+  userId?: string
+  guestSessionDbId?: string
 }
 
 export class PdfService {
-  async generateFromSnapshot(snapshot: ResumeSnapshot, guestSessionDbId?: string) {
-    const html = renderResumeHtml(snapshot)
-    let pdfBuffer: Buffer
+  async generateFromSnapshot(snapshot: ResumeSnapshot, guestSessionDbId?: string, ctx?: GenerateContext) {
+    const startedAt = Date.now()
+    logPdfEvent({
+      event: 'pdf_generate_start',
+      kind: 'resume',
+      templateSlug: snapshot.templateSlug,
+      userId: ctx?.userId,
+      guestSessionId: guestSessionDbId,
+    })
 
+    const renderId = randomUUID()
+    const snapshotKey = `pdf-render/${renderId}.json`
+    await storageProvider.upload(Buffer.from(JSON.stringify(snapshot), 'utf-8'), snapshotKey, 'application/json')
+
+    const printUrl = `${resolveAppUrl()}/imprimer/cv?renderId=${renderId}`
+    let pdfBuffer: Buffer
     try {
-      pdfBuffer = await htmlToPdf(html)
+      pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
     } catch (error) {
-      throw new Error(`PDF generation failed: ${error instanceof Error ? error.message : 'unknown'}`)
+      const detail = error instanceof Error ? error.message : 'unknown'
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+        error: detail,
+      })
+      throw new Error(
+        `Impossible de générer le PDF avec le modèle choisi (${detail}). ` +
+          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+      )
+    } finally {
+      await storageProvider.delete(snapshotKey)
     }
 
     const storageKey = `pdf/${randomUUID()}.pdf`
@@ -195,25 +270,170 @@ export class PdfService {
       },
     })
 
+    logPdfEvent({
+      event: 'pdf_generate_success',
+      kind: 'resume',
+      templateSlug: snapshot.templateSlug,
+      userId: ctx?.userId,
+      guestSessionId: guestSessionDbId,
+      durationMs: Date.now() - startedAt,
+    })
+
     return { jobId: job.id, storageKey, expiresAt }
   }
 
-  async generateCoverLetterPdf(letter: CoverLetterPdfInput) {
-    const html = renderCoverLetterHtml(letter)
-    const pdfBuffer = await htmlToPdf(html)
+  async generateCoverLetterPdf(letter: CoverLetterPdfInput, ctx?: GenerateContext) {
+    const startedAt = Date.now()
+    logPdfEvent({
+      event: 'pdf_generate_start',
+      kind: 'cover_letter',
+      templateSlug: letter.templateSlug,
+      userId: ctx?.userId,
+    })
+
+    const renderId = randomUUID()
+    const snapshotKey = `pdf-render/${renderId}.json`
+    await storageProvider.upload(Buffer.from(JSON.stringify(letter), 'utf-8'), snapshotKey, 'application/json')
+
+    const printUrl = `${resolveAppUrl()}/imprimer/lettre?renderId=${renderId}`
+    let pdfBuffer: Buffer
+    try {
+      pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'unknown'
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+        error: detail,
+      })
+      throw new Error(
+        `Impossible de générer le PDF de la lettre (${detail}). ` +
+          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+      )
+    } finally {
+      await storageProvider.delete(snapshotKey)
+    }
+
+    try {
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(pdfBuffer, storageKey, 'application/pdf')
+
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
+
+      const job = await prisma.pdfJob.create({
+        data: {
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      logPdfEvent({
+        event: 'pdf_generate_success',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+      })
+
+      return { jobId: job.id, expiresAt }
+    } catch (error) {
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error.message : 'unknown',
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Rend un PDF (CV ou lettre) en buffer via la page d'impression Nuxt,
+   * sans persister de job. Le snapshot de rendu est nettoyé après usage.
+   */
+  private async renderPrintBuffer(payload: unknown, printPath: 'cv' | 'lettre'): Promise<Buffer> {
+    const renderId = randomUUID()
+    const snapshotKey = `pdf-render/${renderId}.json`
+    await storageProvider.upload(Buffer.from(JSON.stringify(payload), 'utf-8'), snapshotKey, 'application/json')
+    const printUrl = `${resolveAppUrl()}/imprimer/${printPath}?renderId=${renderId}`
+    try {
+      return await renderPdfFromPrintUrl(printUrl)
+    } finally {
+      await storageProvider.delete(snapshotKey)
+    }
+  }
+
+  /**
+   * Génère le dossier de candidature unifié : CV + lettres liées fusionnés
+   * en un seul PDF téléchargeable.
+   */
+  async generateDossierPdf(
+    snapshot: ResumeSnapshot,
+    letters: CoverLetterPdfInput[],
+    ctx?: GenerateContext & { resumeId?: string },
+  ) {
+    const startedAt = Date.now()
+    logPdfEvent({
+      event: 'pdf_generate_start',
+      kind: 'resume',
+      templateSlug: snapshot.templateSlug,
+      userId: ctx?.userId,
+    })
+
+    let merged: Buffer
+    try {
+      const cvBuffer = await withTransientRetry(() => this.renderPrintBuffer(snapshot, 'cv'))
+      const letterBuffers: Buffer[] = []
+      for (const letter of letters) {
+        letterBuffers.push(await withTransientRetry(() => this.renderPrintBuffer(letter, 'lettre')))
+      }
+      merged = await mergePdfBuffers([cvBuffer, ...letterBuffers])
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'unknown'
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+        error: detail,
+      })
+      throw new Error(
+        `Impossible de générer le dossier (${detail}). ` +
+          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+      )
+    }
+
     const storageKey = `pdf/${randomUUID()}.pdf`
-    await storageProvider.upload(pdfBuffer, storageKey, 'application/pdf')
+    await storageProvider.upload(merged, storageKey, 'application/pdf')
 
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
 
     const job = await prisma.pdfJob.create({
       data: {
+        resumeId: ctx?.resumeId ?? null,
         storageKey,
         status: 'completed',
         completedAt: new Date(),
         expiresAt,
       },
+    })
+
+    logPdfEvent({
+      event: 'pdf_generate_success',
+      kind: 'resume',
+      templateSlug: snapshot.templateSlug,
+      userId: ctx?.userId,
+      durationMs: Date.now() - startedAt,
     })
 
     return { jobId: job.id, expiresAt }

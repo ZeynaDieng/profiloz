@@ -1,4 +1,6 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { isEducationComplete } from '~/utils/education'
+import { isExperienceComplete } from '~/utils/experience'
 
 export function calculateCompleteness(resume: ResumeSnapshot): number {
   let score = 0
@@ -16,8 +18,10 @@ export function calculateCompleteness(resume: ResumeSnapshot): number {
   if (personalInfo.fullName && personalInfo.email) score += weights.personal
   else if (personalInfo.fullName || personalInfo.email) score += weights.personal / 2
 
-  if (educations.length > 0) score += weights.education
-  if (experiences.length > 0) score += weights.experience
+  if (educations.some(isEducationComplete)) score += weights.education
+  else if (educations.length > 0) score += weights.education / 2
+  if (experiences.some(isExperienceComplete)) score += weights.experience
+  else if (experiences.length > 0) score += weights.experience / 2
   if (skills.length >= 3) score += weights.skills
   else if (skills.length > 0) score += weights.skills / 2
 
@@ -30,8 +34,8 @@ export function calculateCompleteness(resume: ResumeSnapshot): number {
 export function getMissingSections(resume: ResumeSnapshot): string[] {
   const missing: string[] = []
   if (!resume.personalInfo.fullName || !resume.personalInfo.email) missing.push('informations')
-  if (resume.educations.length === 0) missing.push('formation')
-  if (resume.experiences.length === 0) missing.push('experience')
+  if (!resume.educations.some(isEducationComplete)) missing.push('formation')
+  if (!resume.experiences.some(isExperienceComplete)) missing.push('experience')
   if (resume.skills.length < 3) missing.push('competences')
   if (!resume.summary?.trim()) missing.push('summary')
   return missing

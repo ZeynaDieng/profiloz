@@ -1,44 +1,85 @@
 <script setup lang="ts">
+import { isBase64PhotoUrl } from '@profiloz/shared'
+
 const model = defineModel<string | undefined>()
 
-const previewUrl = ref<string | null>(model.value ?? null)
+const avatarService = useAvatarService()
+const previewUrl = ref<string | null>(null)
 const isDragging = ref(false)
+const uploading = ref(false)
+const uploadError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const cropShape = ref<'circle' | 'square'>('circle')
 
-function processFile(file: File) {
-  if (!file.type.startsWith('image/')) return
-  if (file.size > 2 * 1024 * 1024) return
+function syncPreview(value?: string) {
+  previewUrl.value = value ? avatarService.resolvePhoto(value) ?? null : null
+}
 
-  const reader = new FileReader()
-  reader.onload = () => {
-    const result = reader.result as string
-    previewUrl.value = result
-    model.value = result
+async function processFile(file: File) {
+  if (!file.type.startsWith('image/')) return
+  if (file.size > 2 * 1024 * 1024) {
+    uploadError.value = 'Photo trop volumineuse (max 2 Mo).'
+    return
   }
-  reader.readAsDataURL(file)
+
+  // Afficher l'aperçu local immédiatement
+  const localPreview = URL.createObjectURL(file)
+  previewUrl.value = localPreview
+
+  uploading.value = true
+  uploadError.value = ''
+
+  try {
+    await useGuestSession().ensureSession()
+    const jpegBlob = await convertImageFileToJpegBlob(file)
+    const previousKey = model.value && !isBase64PhotoUrl(model.value) ? model.value : undefined
+    const result = await avatarService.uploadAvatar(jpegBlob)
+    model.value = result.storageKey
+    syncPreview(result.storageKey)
+    // Libérer l'URL locale après upload réussi
+    URL.revokeObjectURL(localPreview)
+
+    if (previousKey?.startsWith('avatars/') && previousKey !== result.storageKey) {
+      avatarService.deleteAvatar(previousKey).catch(() => {})
+    }
+  } catch {
+    uploadError.value = 'Impossible d’envoyer la photo. Réessayez.'
+    // En cas d'erreur, revenir à l'aperçu local
+    previewUrl.value = localPreview
+  } finally {
+    uploading.value = false
+  }
 }
 
 function onDrop(e: DragEvent) {
   isDragging.value = false
   const file = e.dataTransfer?.files[0]
-  if (file) processFile(file)
+  if (file) void processFile(file)
 }
 
 function onFileSelect(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) processFile(file)
+  if (file) void processFile(file)
 }
 
-function removePhoto() {
+async function removePhoto() {
+  const currentKey = model.value
   previewUrl.value = null
   model.value = undefined
   if (fileInput.value) fileInput.value.value = ''
+
+  if (currentKey?.startsWith('avatars/')) {
+    avatarService.deleteAvatar(currentKey).catch(() => {})
+  }
 }
 
-watch(model, (v) => {
-  previewUrl.value = v ?? null
-})
+watch(
+  model,
+  (value) => {
+    syncPreview(value)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -50,7 +91,11 @@ watch(model, (v) => {
       @dragleave="isDragging = false"
       @drop.prevent="onDrop"
     >
-      <div v-if="previewUrl" class="flex items-center gap-4">
+      <div v-if="uploading" class="text-center py-6 text-sm text-on-surface-variant">
+        Envoi de la photo…
+      </div>
+
+      <div v-else-if="previewUrl" class="flex items-center gap-4">
         <div
           class="w-20 h-20 overflow-hidden bg-surface-container shrink-0"
           :class="cropShape === 'circle' ? 'rounded-full' : 'rounded-lg'"
@@ -97,6 +142,8 @@ watch(model, (v) => {
         </button>
         <p class="text-xs text-on-surface-variant/60 mt-2">JPG, PNG · max 2 Mo</p>
       </div>
+
+      <p v-if="uploadError" class="text-xs text-error mt-2">{{ uploadError }}</p>
 
       <input
         ref="fileInput"

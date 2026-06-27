@@ -31,17 +31,28 @@ export const personalInfoSchema = z.object({
   jobTitle: z.preprocess(emptyToUndefined, z.string().max(200).optional()),
   linkedinUrl: optionalUrlSchema,
   websiteUrl: optionalUrlSchema,
-  photoUrl: z.preprocess(emptyToUndefined, z.string().max(500_000).optional()),
+  photoUrl: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .max(512)
+      .refine((val) => !val.startsWith('data:'), {
+        message: 'Les photos base64 ne sont plus acceptées. Utilisez l’upload photo.',
+      })
+      .optional(),
+  ),
 })
 
 export const experienceSchema = z.object({
   company: requiredString('Entreprise', 200),
   position: requiredString('Poste', 200),
   location: z.string().max(200).optional(),
+  country: z.string().max(100).optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   isCurrent: z.boolean().default(false),
   description: z.string().max(5000).optional(),
+  skillsUsed: z.array(z.string().max(100)).max(30).optional(),
   sortOrder: z.number().int().default(0),
 })
 
@@ -85,6 +96,10 @@ export const updateResumeSchema = z.object({
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']).optional(),
 })
 
+export const renameResumeSchema = z.object({
+  title: z.string().trim().min(1, 'Titre requis').max(200),
+})
+
 export const migrateResumeSchema = z.object({
   guestSessionId: z.string().uuid(),
   resumeSnapshot: z.record(z.unknown()),
@@ -116,10 +131,12 @@ export const saveResumeSnapshotSchema = z.object({
         company: requiredString('Entreprise', 200),
         position: requiredString('Poste', 200),
         location: z.string().max(200).optional(),
+        country: z.string().max(100).optional(),
         startDate: snapshotDateSchema,
         endDate: snapshotDateSchema,
         isCurrent: z.boolean().optional(),
         description: z.string().max(5000).optional(),
+        skillsUsed: z.array(z.string().max(100)).max(30).optional(),
       }),
     )
     .default([]),

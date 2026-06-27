@@ -1,4 +1,6 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { filterCompleteEducations } from '~/utils/education'
+import { filterCompleteExperiences } from '~/utils/experience'
 
 function hasText(value: string | undefined | null): value is string {
   return Boolean(value?.trim())
@@ -23,28 +25,29 @@ export function toSavePayload(snapshot: ResumeSnapshot): SaveResumePayload {
     title: snapshot.title?.trim() || 'Mon CV',
     templateSlug: snapshot.templateSlug,
     templateConfig: snapshot.templateConfig,
-    personalInfo: snapshot.personalInfo,
+    personalInfo: {
+      ...snapshot.personalInfo,
+      photoUrl: stripLegacyBase64Photo(snapshot.personalInfo.photoUrl),
+    },
     summary: snapshot.summary,
-    experiences: snapshot.experiences
-      .filter((item) => hasText(item.company) && hasText(item.position))
-      .map(({ company, position, location, startDate, endDate, isCurrent, description }) => ({
+    experiences: filterCompleteExperiences(snapshot.experiences).map(
+      ({ company, position, location, startDate, endDate, isCurrent, description }) => ({
       company: company.trim(),
       position: position.trim(),
-      location,
-      startDate,
-      endDate,
+      location: location!.trim(),
+      startDate: startDate!.trim(),
+      endDate: isCurrent ? undefined : endDate?.trim(),
       isCurrent,
-      description,
+      description: description?.trim() || undefined,
     })),
-    educations: snapshot.educations
-      .filter((item) => hasText(item.institution) && hasText(item.degree))
-      .map(({ institution, degree, field, location, startDate, endDate, description }) => ({
+    educations: filterCompleteEducations(snapshot.educations).map(
+      ({ institution, degree, field, location, startDate, endDate, description }) => ({
       institution: institution.trim(),
       degree: degree.trim(),
-      field,
+      field: field!.trim(),
       location,
-      startDate,
-      endDate,
+      startDate: startDate!.trim(),
+      endDate: endDate!.trim(),
       description,
     })),
     skills: snapshot.skills
@@ -98,6 +101,10 @@ export function useResumeService() {
     return patch<ResumeSnapshot>(`/resumes/${id}`, payload)
   }
 
+  async function rename(id: string, title: string) {
+    return patch<{ id: string; title: string }>(`/resumes/${id}/title`, { title })
+  }
+
   async function duplicate(id: string) {
     return post<ResumeSnapshot>(`/resumes/${id}/duplicate`)
   }
@@ -110,5 +117,5 @@ export function useResumeService() {
     return get<{ score: number; missingSections: string[] }>(`/resumes/${id}/completeness`)
   }
 
-  return { listResumes, getById, create, update, duplicate, archive, getCompleteness, toSavePayload }
+  return { listResumes, getById, create, update, rename, duplicate, archive, getCompleteness, toSavePayload }
 }

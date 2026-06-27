@@ -1,11 +1,12 @@
 <template>
-  <WizardStep show-skip @continue="onContinue" @skip="onSkip">
-    <FeatureWizardSplitLayout :resume="resumeStore.current">
-      <div class="wizard-container px-margin-mobile md:px-margin-desktop py-stack-lg max-w-[800px] mx-auto space-y-stack-xl">
+  <FeatureWizardSplitLayout :resume="previewResume">
+    <div class="wizard-container px-margin-mobile md:px-margin-desktop py-stack-lg max-w-[800px] mx-auto space-y-stack-xl">
       <div>
         <h1 class="text-2xl font-bold text-on-surface">Votre parcours</h1>
         <p class="text-on-surface-variant">Formation et expériences professionnelles.</p>
       </div>
+
+      <p v-if="stepError" class="text-sm text-error">{{ stepError }}</p>
 
       <section class="space-y-stack-md">
         <h2 class="font-bold text-on-surface text-lg">Formation</h2>
@@ -16,19 +17,23 @@
         <h2 class="font-bold text-on-surface text-lg">Expérience professionnelle</h2>
         <FeatureWizardExperienceForm v-model="experiences" />
       </section>
-      </div>
-    </FeatureWizardSplitLayout>
-  </WizardStep>
+    </div>
+  </FeatureWizardSplitLayout>
 </template>
 
 <script setup lang="ts">
 import type { Education, Experience } from '@profiloz/shared'
 
-definePageMeta({ layout: 'wizard' })
+definePageMeta({ layout: 'wizard', wizardFooter: true })
 
+const toast = useToast()
 const resumeStore = useResumeStore()
 const { goNext } = useWizardNavigation()
-resumeStore.initDraft()
+const { previewResume } = useWizardPreviewResume()
+
+const stepError = ref('')
+
+useWizardDraftInit()
 
 const educations = ref<Education[]>(
   resumeStore.current?.educations.length
@@ -42,18 +47,57 @@ const experiences = ref<Experience[]>(
     : [{ company: '', position: '', location: '', startDate: '', endDate: '', isCurrent: false, description: '' }],
 )
 
+function persistEducations() {
+  resumeStore.setEducations(
+    educations.value.filter(
+      (e) => e.institution?.trim() || e.degree?.trim() || e.field?.trim() || e.startDate?.trim() || e.endDate?.trim(),
+    ),
+  )
+}
+
+function persistExperiences() {
+  resumeStore.setExperiences(filterExperiencesWithContent(experiences.value))
+}
+
 function persist() {
-  resumeStore.setEducations(educations.value.filter((e) => e.institution && e.degree))
-  resumeStore.setExperiences(experiences.value.filter((e) => e.company && e.position))
+  persistEducations()
+  persistExperiences()
+}
+
+watch(educations, persistEducations, { deep: true })
+watch(experiences, persistExperiences, { deep: true })
+
+function validateStep(): string | null {
+  for (const edu of educations.value) {
+    if (hasEducationContent(edu) && !isEducationComplete(edu)) {
+      return 'Complétez tous les champs de chaque formation commencée, ou supprimez-la.'
+    }
+  }
+  for (const exp of experiences.value) {
+    if (hasExperienceContent(exp) && !isExperienceComplete(exp)) {
+      return 'Complétez tous les champs de chaque expérience commencée, ou supprimez-la.'
+    }
+  }
+  return null
 }
 
 function onContinue() {
+  stepError.value = ''
+  const error = validateStep()
+  if (error) {
+    stepError.value = error
+    toast.add({ title: error, color: 'error' })
+    return
+  }
   persist()
   goNext()
 }
 
 function onSkip() {
+  stepError.value = ''
   persist()
   goNext()
 }
+
+useWizardStep({ showSkip: true, onContinue, onSkip })
 </script>

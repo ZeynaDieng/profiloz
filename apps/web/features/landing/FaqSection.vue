@@ -25,11 +25,21 @@
         </details>
         <details class="group border-b border-outline-variant pb-6">
           <summary class="flex justify-between items-center cursor-pointer list-none font-bold text-on-surface">
+            <span>Puis-je créer une lettre de motivation ?</span>
+            <UiPzIcon name="expand_more" class="transition-transform group-open:rotate-180" />
+          </summary>
+          <p class="mt-4 text-on-surface-variant leading-relaxed">
+            Oui. Profilo'Z permet de rédiger et personnaliser des lettres de motivation, puis de les exporter en PDF.
+            La création de lettres nécessite un compte gratuit pour les sauvegarder et les modifier.
+          </p>
+        </details>
+        <details class="group border-b border-outline-variant pb-6">
+          <summary class="flex justify-between items-center cursor-pointer list-none font-bold text-on-surface">
             <span>Puis-je télécharger mon CV en PDF ?</span>
             <UiPzIcon name="expand_more" class="transition-transform group-open:rotate-180" />
           </summary>
           <p class="mt-4 text-on-surface-variant leading-relaxed">
-            Oui, vous pouvez exporter votre CV en PDF haute qualité. La création de compte permet de sauvegarder et modifier vos CV ultérieurement.
+            Oui, vous pouvez exporter votre CV en PDF haute qualité sans inscription. Un compte permet aussi de sauvegarder CV et lettres.
           </p>
         </details>
       </div>

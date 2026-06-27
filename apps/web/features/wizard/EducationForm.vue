@@ -30,19 +30,19 @@ function removeItem(index: number) {
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
       <UiFormField label="Établissement" required>
-        <input v-model="item.institution" type="text" class="form-input w-full" required />
+        <input v-model="item.institution" type="text" class="form-input w-full" />
       </UiFormField>
       <UiFormField label="Diplôme" required>
-        <input v-model="item.degree" type="text" class="form-input w-full" required />
+        <input v-model="item.degree" type="text" class="form-input w-full" />
       </UiFormField>
-      <UiFormField label="Domaine">
-        <input v-model="item.field" type="text" class="form-input w-full" />
+      <UiFormField label="Domaine" required>
+        <input v-model="item.field" type="text" class="form-input w-full" placeholder="Ex. Informatique, Commerce…" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Début">
+        <UiFormField label="Début" required>
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2018" />
         </UiFormField>
-        <UiFormField label="Fin">
+        <UiFormField label="Fin" required>
           <input v-model="item.endDate" type="text" class="form-input w-full" placeholder="2022" />
         </UiFormField>
       </div>

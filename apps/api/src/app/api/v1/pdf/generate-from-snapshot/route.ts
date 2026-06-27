@@ -1,16 +1,32 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { sanitizePhotoReference } from '@profiloz/shared'
 import { pdfService } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
+import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
+
+function sanitizeSnapshot(snapshot: ResumeSnapshot): ResumeSnapshot {
+  return {
+    ...snapshot,
+    personalInfo: {
+      ...snapshot.personalInfo,
+      photoUrl: sanitizePhotoReference(snapshot.personalInfo.photoUrl),
+    },
+  }
+}
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
     const ctx = await requireGuestOrAuth(request)
+    assertPdfRateLimit(request, ctx)
     const body = await request.json()
-    const snapshot = body.snapshot as ResumeSnapshot
+    const snapshot = sanitizeSnapshot(body.snapshot as ResumeSnapshot)
 
-    const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId)
+    const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId, {
+      userId: ctx.userId,
+      guestSessionDbId: ctx.guestSessionDbId,
+    })
     const response = jsonResponse({
       jobId: result.jobId,
       status: 'completed',

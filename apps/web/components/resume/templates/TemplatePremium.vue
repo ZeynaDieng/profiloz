@@ -30,9 +30,11 @@ const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasEducat
       <section v-if="hasExperiences">
         <h2 class="text-[10px] font-bold uppercase tracking-[0.25em] mb-4" :style="{ color: accent }">Expérience</h2>
         <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4">
-          <p class="text-sm font-semibold">{{ exp.position }}</p>
-          <p class="text-xs text-on-surface-variant">{{ exp.company }}</p>
-          <p class="text-[10px] text-on-surface-variant/60 mt-1">{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
+          <ExperienceEntry
+            :exp="exp"
+            :accent="accent"
+            period-class="text-[10px] text-on-surface-variant/60"
+          />
         </div>
       </section>
 
@@ -40,8 +42,7 @@ const { accent, p, contactItems, snapshot, hasSummary, hasExperiences, hasEducat
         <section v-if="hasEducations" class="mb-6">
           <h2 class="text-[10px] font-bold uppercase tracking-[0.25em] mb-4" :style="{ color: accent }">Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3">
-            <p class="text-sm font-semibold">{{ edu.degree }}</p>
-            <p class="text-xs text-on-surface-variant">{{ edu.institution }}</p>
+            <EducationEntry :edu="edu" />
           </div>
         </section>
 

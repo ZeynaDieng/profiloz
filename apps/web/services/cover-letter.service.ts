@@ -1,10 +1,23 @@
+import type { CoverLetterSnapshot, CoverLetterTemplateSlug } from '~/types/cover-letter'
+import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
+import {
+  buildCoverLetterPdfFilename,
+} from '~/utils/coverLetterPdfFilename'
+import { encodeContentDispositionFilename } from '~/utils/resumePdfFilename'
+
 export interface CoverLetter {
   id: string
   title: string
+  senderName?: string | null
+  senderEmail?: string | null
+  senderPhone?: string | null
+  senderLocation?: string | null
   companyName?: string | null
+  companyAddress?: string | null
   position?: string | null
   recruiterName?: string | null
   content: string
+  closingText?: string | null
   templateId: string
   resumeId?: string | null
   createdAt: string
@@ -25,10 +38,17 @@ export function useCoverLetterService() {
 
   async function create(payload: {
     title?: string
+    senderName?: string
+    senderEmail?: string
+    senderPhone?: string
+    senderLocation?: string
     companyName?: string
+    companyAddress?: string
     position?: string
     recruiterName?: string
     content: string
+    closingText?: string
+    templateId?: CoverLetterTemplateSlug
     resumeId?: string
   }) {
     return post<CoverLetter>('/cover-letters', payload)
@@ -50,9 +70,29 @@ export function useCoverLetterService() {
   }
 
   async function downloadPdf(id: string) {
+    const letter = await getById(id)
+    const filename = buildCoverLetterPdfFilename(letter.senderName)
     const result = await post<{ downloadUrl: string }>(`/cover-letters/${id}/pdf`)
-    await pdfService.downloadWithAuth(result.downloadUrl)
+    const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
+    await pdfService.downloadWithAuth(downloadUrl, filename)
   }
 
-  return { list, getById, create, update, remove, downloadPdf, getDownloadUrl }
+  function toSnapshot(letter: Partial<CoverLetter> & { content: string }): CoverLetterSnapshot {
+    return {
+      templateSlug: normalizeCoverLetterTemplateSlug(letter.templateId),
+      title: letter.title ?? undefined,
+      senderName: letter.senderName ?? undefined,
+      senderEmail: letter.senderEmail ?? undefined,
+      senderPhone: letter.senderPhone ?? undefined,
+      senderLocation: letter.senderLocation ?? undefined,
+      companyName: letter.companyName ?? undefined,
+      companyAddress: letter.companyAddress ?? undefined,
+      position: letter.position ?? undefined,
+      recruiterName: letter.recruiterName ?? undefined,
+      content: letter.content,
+      closingText: letter.closingText ?? undefined,
+    }
+  }
+
+  return { list, getById, create, update, remove, downloadPdf, getDownloadUrl, toSnapshot }
 }

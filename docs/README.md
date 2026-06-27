@@ -20,6 +20,7 @@ Profilo'Z permet de créer un CV professionnel en quelques minutes : création m
 
 | # | Fichier | Contenu |
 |---|---------|---------|
+| **00** | [**00-vision.md**](./00-vision.md) | **Vision produit officielle V1 — référence qui prime sur tout le reste** |
 | 01 | [01-product-analysis.md](./01-product-analysis.md) | Analyse PRD, critique maquettes, incohérences, améliorations |
 | 02 | [02-architecture.md](./02-architecture.md) | Architecture système, monorepo, modules, ADR |
 | 03 | [03-database-design.md](./03-database-design.md) | Schéma Prisma, ERD, migrations |

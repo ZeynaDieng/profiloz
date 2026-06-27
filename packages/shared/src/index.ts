@@ -1,2 +1,6 @@
 export * from './constants.js'
+export * from './avatar.js'
+export * from './cover-letter.js'
+export * from './payment.js'
 export * from './types/index.js'
+export * from './types/extraction.js'

@@ -1,7 +1,6 @@
 <template>
-  <WizardStep show-skip @continue="onContinue" @skip="onSkip">
-    <FeatureWizardSplitLayout :resume="resumeStore.current">
-      <div class="wizard-container px-margin-mobile md:px-margin-desktop py-stack-lg max-w-[800px] mx-auto space-y-stack-xl">
+  <FeatureWizardSplitLayout :resume="previewResume">
+    <div class="wizard-container px-margin-mobile md:px-margin-desktop py-stack-lg max-w-[800px] mx-auto space-y-stack-xl">
       <div>
         <h1 class="text-2xl font-bold text-on-surface">Vos qualifications</h1>
         <p class="text-on-surface-variant">Compétences, certifications et centres d'intérêt.</p>
@@ -21,19 +20,20 @@
         <h2 class="font-bold text-on-surface text-lg">Centres d'intérêt</h2>
         <FeatureWizardInterestsForm v-model="interests" />
       </section>
-      </div>
-    </FeatureWizardSplitLayout>
-  </WizardStep>
+    </div>
+  </FeatureWizardSplitLayout>
 </template>
 
 <script setup lang="ts">
 import type { Certification, Interest, Skill } from '@profiloz/shared'
 
-definePageMeta({ layout: 'wizard' })
+definePageMeta({ layout: 'wizard', wizardFooter: true })
 
 const resumeStore = useResumeStore()
 const { goNext } = useWizardNavigation()
-resumeStore.initDraft()
+const { previewResume } = useWizardPreviewResume()
+
+useWizardDraftInit()
 
 const skills = ref<Skill[]>([...(resumeStore.current?.skills ?? [])])
 const certifications = ref<Certification[]>([...(resumeStore.current?.certifications ?? [])])
@@ -45,6 +45,10 @@ function persist() {
   resumeStore.setInterests(interests.value.filter((i) => i.name))
 }
 
+watch(skills, () => resumeStore.setSkills(skills.value), { deep: true })
+watch(certifications, () => resumeStore.setCertifications(certifications.value.filter((c) => c.name)), { deep: true })
+watch(interests, () => resumeStore.setInterests(interests.value.filter((i) => i.name)), { deep: true })
+
 function onContinue() {
   persist()
   goNext()
@@ -54,4 +58,6 @@ function onSkip() {
   persist()
   goNext()
 }
+
+useWizardStep({ showSkip: true, onContinue, onSkip })
 </script>

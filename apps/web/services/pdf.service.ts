@@ -1,4 +1,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { useApiClient } from '~/composables/useApiClient'
+import { getStoredAccessToken } from '~/utils/auth-token'
+import { buildResumePdfFilename, encodeContentDispositionFilename } from '~/utils/resumePdfFilename'
 
 export function usePdfService() {
   const { post, getDownloadUrl } = useApiClient()
@@ -12,7 +15,7 @@ export function usePdfService() {
     }>('/pdf/generate-from-snapshot', { snapshot })
   }
 
-  async function downloadWithAuth(relativePath: string, filename = 'mon_cv_profiloz.pdf') {
+  async function downloadWithAuth(relativePath: string, filename = 'cv Profiloz.pdf') {
     const url = getDownloadUrl(relativePath)
     const headers: Record<string, string> = {}
 
@@ -39,10 +42,51 @@ export function usePdfService() {
   }
 
   async function generateAndDownload(snapshot: ResumeSnapshot) {
+    const filename = buildResumePdfFilename(snapshot)
     const result = await generateFromSnapshot(snapshot)
-    await downloadWithAuth(result.downloadUrl)
-    return result
+    const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
+    await downloadWithAuth(downloadUrl, filename)
+    return { ...result, filename }
   }
 
-  return { generateFromSnapshot, downloadWithAuth, generateAndDownload, getDownloadUrl }
+  async function downloadResumeCv(resumeId: string, snapshot?: Pick<ResumeSnapshot, 'personalInfo'>) {
+    const filename = snapshot ? buildResumePdfFilename(snapshot as ResumeSnapshot) : 'cv Profiloz.pdf'
+    const result = await post<{
+      jobId: string
+      status: string
+      downloadUrl: string
+      expiresAt: string
+    }>(`/resumes/${resumeId}/pdf`)
+    const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
+    await downloadWithAuth(downloadUrl, filename)
+    return { ...result, filename }
+  }
+
+  async function downloadDossier(resumeId: string, snapshot?: Pick<ResumeSnapshot, 'personalInfo'>) {
+    const rawName = snapshot?.personalInfo?.fullName?.trim() || 'Profiloz'
+    const safeName = rawName
+      .replace(/[/\\:*?"<>|]/g, ' ')
+      .replace(/[-–—_]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const filename = `dossier ${safeName}.pdf`
+    const result = await post<{
+      jobId: string
+      status: string
+      downloadUrl: string
+      expiresAt: string
+    }>(`/resumes/${resumeId}/dossier/pdf`)
+    const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
+    await downloadWithAuth(downloadUrl, filename)
+    return { ...result, filename }
+  }
+
+  return {
+    generateFromSnapshot,
+    downloadWithAuth,
+    generateAndDownload,
+    downloadResumeCv,
+    downloadDossier,
+    getDownloadUrl,
+  }
 }

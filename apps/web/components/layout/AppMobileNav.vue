@@ -2,9 +2,8 @@
 const route = useRoute()
 
 const items = [
-  { to: '/tableau-de-bord', icon: 'description', label: 'CV', match: '/tableau-de-bord', exact: true },
-  { to: '/tableau-de-bord/lettres', icon: 'mail', label: 'Lettres', match: '/lettres' },
-  { to: '/tableau-de-bord/documents', icon: 'folder_open', label: 'Docs', match: '/documents' },
+  { to: '/tableau-de-bord', icon: 'folder_shared', label: 'Dossiers', match: '/tableau-de-bord', exact: true },
+  { to: '/tableau-de-bord/documents', icon: 'folder_open', label: 'Documents', match: '/documents' },
 ]
 
 function navClass(item: (typeof items)[number]) {
@@ -33,7 +32,7 @@ function navClass(item: (typeof items)[number]) {
     <NuxtLink
       to="/creer"
       class="w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center -translate-y-3 shadow-lg absolute left-1/2 -translate-x-1/2 min-h-12 min-w-12"
-      aria-label="Nouveau CV"
+      aria-label="Nouveau dossier"
     >
       <UiPzIcon name="add" />
     </NuxtLink>

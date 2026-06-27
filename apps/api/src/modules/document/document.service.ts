@@ -1,12 +1,38 @@
-import { ALLOWED_MIME_TYPES, MAX_UPLOAD_SIZE_BYTES } from '@profiloz/shared'
+import { ALLOWED_MIME_TYPES, MAX_UPLOAD_SIZE_BYTES, type DocumentType } from '@profiloz/shared'
 import { documentTypeSchema } from '@profiloz/validators'
 import { AppError } from '@/lib/errors'
-import { storageProvider } from '@/lib/storage/local-storage.provider'
+import { sanitizeJsonForDb, sanitizeTextForDb } from '@/lib/text-sanitize'
+import { storageProvider } from '@/lib/storage'
 import type { RequestContext } from '@/lib/request-context'
 import { ocrService } from '@/modules/ocr/ocr.service'
 import { documentRepository } from './document.repository'
 import { randomUUID } from 'crypto'
 import path from 'path'
+
+function emptyTextMessage(mimeType: string, documentType: DocumentType): string {
+  if (mimeType === 'application/pdf') {
+    if (documentType === 'COVER_LETTER') {
+      return 'Impossible de lire cette lettre. Utilisez un PDF exporté en texte, un DOCX ou une photo nette.'
+    }
+    if (documentType === 'DIPLOMA') {
+      return 'Impossible de lire ce diplôme. Utilisez une photo nette (JPG/PNG), un PDF exporté en texte, ou un scan de meilleure qualité.'
+    }
+    if (documentType === 'CERTIFICATE') {
+      return 'Impossible de lire cette attestation. Utilisez une photo nette (JPG/PNG) ou un PDF exporté en texte.'
+    }
+    return 'Ce PDF ne contient pas de texte lisible. Exportez votre CV en PDF texte ou importez un fichier DOCX.'
+  }
+  if (mimeType.startsWith('image/')) {
+    if (documentType === 'DIPLOMA') {
+      return 'Impossible de lire le texte sur cette photo de diplôme. Reprenez la photo avec un meilleur éclairage et cadrage.'
+    }
+    return 'Impossible de lire le texte sur cette image. Essayez un PDF ou DOCX, ou une photo plus nette.'
+  }
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return 'Impossible de lire ce fichier Word. Réenregistrez-le en DOCX et réessayez.'
+  }
+  return 'Impossible d’extraire le texte de ce document.'
+}
 
 export class DocumentService {
   async upload(file: File, typeRaw: string, ctx: RequestContext) {
@@ -17,7 +43,11 @@ export class DocumentService {
     }
 
     if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
-      throw new AppError(422, 'Validation Error', 'Format de fichier non supporté')
+      throw new AppError(
+        422,
+        'Validation Error',
+        'Format non supporté. Utilisez PDF, DOCX, JPG ou PNG.',
+      )
     }
 
     const ext = path.extname(file.name) || '.bin'
@@ -36,23 +66,47 @@ export class DocumentService {
     })
   }
 
-  async process(documentId: string) {
+  async process(documentId: string, options?: { force?: boolean }) {
     const doc = await documentRepository.findById(documentId)
     if (!doc) throw new AppError(404, 'Not Found', 'Document introuvable')
-    if (doc.ocrResult) return doc.ocrResult
+    if (doc.ocrResult && !options?.force) return doc.ocrResult
 
     await documentRepository.updateStatus(documentId, 'PROCESSING')
-    const buffer = await storageProvider.read(doc.storageKey)
-    const { rawText, confidence } = await ocrService.extractText(buffer, doc.mimeType)
-    const parsedData = ocrService.parseStructured(rawText)
 
-    const ocrResult = await documentRepository.saveOcrResult(documentId, {
-      rawText,
-      parsedData,
-      confidence,
-    })
-    await documentRepository.updateStatus(documentId, 'PARSED')
-    return ocrResult
+    try {
+      const buffer = await storageProvider.read(doc.storageKey)
+      let rawText = ''
+      let confidence = 0
+
+      try {
+        const extracted = await ocrService.extractText(buffer, doc.mimeType)
+        rawText = extracted.rawText
+        confidence = extracted.confidence
+      } catch {
+        throw new AppError(
+          422,
+          'Unprocessable Entity',
+          'Impossible de lire ce fichier. Vérifiez qu’il n’est pas protégé ou corrompu.',
+        )
+      }
+
+      if (!rawText.trim()) {
+        throw new AppError(422, 'Unprocessable Entity', emptyTextMessage(doc.mimeType, doc.type))
+      }
+
+      const parsedData = sanitizeJsonForDb(await ocrService.parseStructured(rawText, doc.type))
+      const ocrResult = await documentRepository.saveOcrResult(documentId, {
+        rawText: sanitizeTextForDb(rawText),
+        parsedData,
+        confidence,
+      })
+      await documentRepository.updateStatus(documentId, 'PARSED')
+      return ocrResult
+    } catch (error) {
+      await documentRepository.updateStatus(documentId, 'FAILED')
+      if (error instanceof AppError) throw error
+      throw new AppError(422, 'Unprocessable Entity', 'Impossible d’analyser ce document. Réessayez avec un autre fichier.')
+    }
   }
 
   getById(id: string) {

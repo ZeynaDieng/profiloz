@@ -11,6 +11,8 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
       cdnURL: string,
    },
 
+   apiInternalBaseUrl: string,
+
    nitro: {
       envPrefix: string,
    },

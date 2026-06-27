@@ -16,14 +16,18 @@ const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills } = 
     <section v-if="hasExperiences" class="mb-8">
       <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Expérience</h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5">
-        <p class="text-sm">{{ exp.position }}, {{ exp.company }}</p>
-        <p class="text-xs text-on-surface-variant/60">{{ formatDateRange(exp.startDate, exp.endDate, exp.isCurrent) }}</p>
+        <ExperienceEntry
+          :exp="exp"
+          period-class="text-xs text-on-surface-variant/60"
+        />
       </div>
     </section>
 
     <section v-if="hasEducations" class="mb-8">
       <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Formation</h2>
-      <p v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-2">{{ edu.degree }}, {{ edu.institution }}</p>
+      <div v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-2">
+        <EducationEntry :edu="edu" />
+      </div>
     </section>
 
     <section v-if="hasSkills">

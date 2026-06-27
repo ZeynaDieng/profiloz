@@ -16,6 +16,7 @@ enum DocumentType {
   CV
   DIPLOMA
   CERTIFICATE
+  COVER_LETTER
 }
 
 enum DocumentStatus {
@@ -42,6 +43,8 @@ enum TemplateSlug {
   MINIMALISTE
   CREATIF
   PREMIUM
+  CADRE
+  EXECUTIF
 }
 
 enum SkillLevel {
@@ -49,6 +52,13 @@ enum SkillLevel {
   INTERMEDIATE
   ADVANCED
   EXPERT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
 }
 
 enum LanguageLevel {
@@ -67,6 +77,8 @@ model User {
   avatarUrl     String?
   role          UserRole  @default(USER)
   locale        String    @default("fr-FR")
+  creditsBalance Int      @default(0)
+  unlimitedUntil DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
@@ -75,6 +87,7 @@ model User {
   documents     Document[]
   coverLetters  CoverLetter[]
   refreshTokens RefreshToken[]
+  payments      Payment[]
 
   @@map("users")
 }
@@ -92,15 +105,19 @@ model RefreshToken {
 }
 
 model GuestSession {
-  id        String   @id @default(cuid())
-  sessionId String   @unique
-  data      Json?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(cuid())
+  sessionId      String    @unique
+  data           Json?
+  creditsBalance Int       @default(0)
+  unlimitedUntil DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   documents Document[]
   pdfJobs   PdfJob[]
+  resumes   Resume[]
+  payments  Payment[]
 
   @@index([sessionId])
   @@index([expiresAt])
@@ -108,10 +125,11 @@ model GuestSession {
 }
 
 model Resume {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   userId         String?
-  user           User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   guestSessionId String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
 
   title          String       @default("Mon CV")
   status         ResumeStatus @default(DRAFT)
@@ -129,6 +147,7 @@ model Resume {
   photoUrl       String?
 
   completeness   Int          @default(0)
+  unlockedAt     DateTime?
 
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -144,6 +163,7 @@ model Resume {
   coverLetters   CoverLetter[]
 
   @@index([userId])
+  @@index([guestSessionId])
   @@index([status])
   @@map("resumes")
 }
@@ -155,10 +175,12 @@ model Experience {
   company     String
   position    String
   location    String?
+  country     String?
   startDate   DateTime?
   endDate     DateTime?
   isCurrent   Boolean   @default(false)
   description String?   @db.Text
+  skillsUsed  String[]  @default([])
   sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -304,6 +326,34 @@ model PdfJob {
   @@map("pdf_jobs")
 }
 
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestSessionId String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+
+  planSlug     String
+  amountXof    Int
+  credits      Int           @default(0)
+  status       PaymentStatus @default(PENDING)
+
+  provider     String        @default("paytech")
+  /** Référence de commande générée par nous, envoyée à PayTech (ref_command). */
+  providerRef  String        @unique
+  /** Token de paiement renvoyé par PayTech. */
+  providerToken String?
+  paymentMethod String?
+
+  createdAt    DateTime      @default(now())
+  paidAt       DateTime?
+
+  @@index([userId])
+  @@index([guestSessionId])
+  @@index([status])
+  @@map("payments")
+}
+
 model CoverLetter {
   id            String   @id @default(cuid())
   userId        String
@@ -312,11 +362,17 @@ model CoverLetter {
   resume        Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
 
   title         String   @default("Lettre de motivation")
-  companyName   String?
-  position      String?
-  recruiterName String?
-  content       String   @db.Text
-  templateId    String   @default("classic")
+  senderName      String?
+  senderEmail     String?
+  senderPhone     String?
+  senderLocation  String?
+  companyName     String?
+  companyAddress  String?  @db.Text
+  position        String?
+  recruiterName   String?
+  content         String   @db.Text
+  closingText     String?  @db.Text
+  templateId      String   @default("CLASSIQUE")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

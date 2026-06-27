@@ -2,9 +2,8 @@
 const route = useRoute()
 
 const items = [
-  { to: '/tableau-de-bord', icon: 'description', label: 'Mes CV', match: '/tableau-de-bord', exact: true },
-  { to: '/tableau-de-bord/lettres', icon: 'mail', label: 'Mes lettres', match: '/lettres' },
-  { to: '/tableau-de-bord/documents', icon: 'folder_open', label: 'Mes documents', match: '/documents' },
+  { to: '/tableau-de-bord', icon: 'folder_shared', label: 'Mes dossiers', match: '/tableau-de-bord', exact: true },
+  { to: '/tableau-de-bord/documents', icon: 'folder_open', label: 'Documents', match: '/documents' },
 ]
 
 function isActive(item: (typeof items)[number]) {
@@ -42,7 +41,7 @@ function isActive(item: (typeof items)[number]) {
         class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-sm font-bold flex items-center justify-center gap-2 hover:opacity-90"
       >
         <UiPzIcon name="add" />
-        Nouveau CV
+        Nouveau dossier
       </NuxtLink>
     </div>
   </aside>

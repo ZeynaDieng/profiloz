@@ -1,10 +1,20 @@
-import type { ResumeSnapshot } from '@profiloz/shared'
-import { migrateResumeSchema, saveResumeSnapshotSchema } from '@profiloz/validators'
+import { sanitizePhotoReference, type ResumeSnapshot } from '@profiloz/shared'
+import { migrateResumeSchema, renameResumeSchema, saveResumeSnapshotSchema } from '@profiloz/validators'
 import { randomUUID } from 'crypto'
 import { AppError } from '@/lib/errors'
 import { guestSessionRepository } from '@/modules/guest/guest.repository'
 import { calculateCompleteness, getMissingSections } from './completeness'
 import { resumeEntityToSnapshot, resumeRepository } from './resume.repository'
+
+function normalizeSnapshot(snapshot: ResumeSnapshot): ResumeSnapshot {
+  return {
+    ...snapshot,
+    personalInfo: {
+      ...snapshot.personalInfo,
+      photoUrl: sanitizePhotoReference(snapshot.personalInfo.photoUrl),
+    },
+  }
+}
 
 function inputToSnapshot(input: ReturnType<typeof saveResumeSnapshotSchema.parse>): ResumeSnapshot {
   const snapshot: ResumeSnapshot = {
@@ -36,7 +46,7 @@ export class ResumeService {
     const guest = await guestSessionRepository.findBySessionId(input.guestSessionId)
     if (!guest) throw new AppError(404, 'Not Found', 'Session invité introuvable')
 
-    const snapshot = input.resumeSnapshot as unknown as ResumeSnapshot
+    const snapshot = normalizeSnapshot(input.resumeSnapshot as unknown as ResumeSnapshot)
     snapshot.metadata = {
       ...snapshot.metadata,
       completeness: calculateCompleteness(snapshot),
@@ -60,18 +70,26 @@ export class ResumeService {
 
   async create(userId: string, body: unknown) {
     const input = saveResumeSnapshotSchema.parse(body)
-    const snapshot = inputToSnapshot(input)
+    const snapshot = normalizeSnapshot(inputToSnapshot(input))
     const resume = await resumeRepository.createFromSnapshot(snapshot, userId)
     return resumeEntityToSnapshot(resume)
   }
 
   async update(id: string, userId: string, body: unknown) {
     const input = saveResumeSnapshotSchema.parse(body)
-    const snapshot = inputToSnapshot(input)
+    const snapshot = normalizeSnapshot(inputToSnapshot(input))
     snapshot.id = id
     const resume = await resumeRepository.updateFromSnapshot(id, userId, snapshot)
     if (!resume) throw new AppError(404, 'Not Found', 'CV introuvable')
     return resumeEntityToSnapshot(resume)
+  }
+
+  /** Renomme le dossier (titre) sans toucher au contenu du CV. */
+  async rename(id: string, userId: string, body: unknown) {
+    const { title } = renameResumeSchema.parse(body)
+    const result = await resumeRepository.updateTitle(id, userId, title)
+    if (result.count === 0) throw new AppError(404, 'Not Found', 'CV introuvable')
+    return { id, title }
   }
 
   async archive(id: string, userId: string) {

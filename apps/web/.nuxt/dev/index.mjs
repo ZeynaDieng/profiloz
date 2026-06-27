@@ -931,9 +931,10 @@ const _inlineRuntimeConfig = {
   },
   "public": {
     "apiBaseUrl": "http://127.0.0.1:3001/api/v1",
-    "appUrl": "http://localhost:3000",
+    "appUrl": "http://127.0.0.1:3000",
     "heroVariant": "transform"
   },
+  "apiInternalBaseUrl": "",
   "icon": {
     "serverKnownCssClasses": []
   }
@@ -2349,7 +2350,7 @@ const _jdp3d8ZZmNWPiuDtOApgrZ5l0vBqfdST8ykn9IbpB4 = (function(nitro) {
 
 const rootDir = "/Users/mac/ProfiloZ/apps/web";
 
-const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"},{"name":"description","content":"Créez un CV professionnel en quelques minutes. Importez votre CV, choisissez un modèle, téléchargez votre PDF."},{"property":"og:image","content":"/logo.png"},{"property":"og:title","content":"Profilo'Z | Créateur de CV professionnel"}],"link":[{"rel":"icon","type":"image/png","sizes":"32x32","href":"/favicon-32.png"},{"rel":"icon","type":"image/png","sizes":"512x512","href":"/favicon.png"},{"rel":"apple-touch-icon","sizes":"180x180","href":"/apple-touch-icon.png"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"}],"style":[],"script":[],"noscript":[],"title":"Profilo'Z | Créateur de CV professionnel"};
+const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"},{"name":"description","content":"Créez votre CV et votre lettre de motivation en quelques minutes. Importez vos documents, choisissez un modèle, exportez en PDF."},{"property":"og:image","content":"/logo.png"},{"property":"og:title","content":"Profilo'Z | Créateur de CV professionnel"}],"link":[{"rel":"icon","type":"image/png","sizes":"32x32","href":"/favicon-32.png"},{"rel":"icon","type":"image/png","sizes":"512x512","href":"/favicon.png"},{"rel":"apple-touch-icon","sizes":"180x180","href":"/apple-touch-icon.png"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"}],"style":[],"script":[],"noscript":[],"title":"Profilo'Z | Créateur de CV professionnel"};
 
 const appRootTag = "div";
 

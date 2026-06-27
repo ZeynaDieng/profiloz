@@ -12,6 +12,8 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
+    /** URL API joignable depuis le conteneur web (SSR / page d'impression). Vide = utiliser apiBaseUrl public. */
+    apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL || '',
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api/v1',
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -31,12 +33,21 @@ export default defineNuxtConfig({
     { path: '~/components/dashboard', prefix: 'Dashboard' },
     { path: '~/components/wizard' },
     { path: '~/components/resume', pathPrefix: true },
+    { path: '~/components/cover-letter/templates', prefix: 'CoverLetter' },
+    { path: '~/components/cover-letter', prefix: 'CoverLetter', ignore: ['templates/**'] },
     { path: '~/features/landing', prefix: 'FeaturesLanding' },
     { path: '~/features/import', prefix: 'FeatureImport' },
     { path: '~/features/wizard', prefix: 'FeatureWizard' },
     { path: '~/features/editor', prefix: 'FeatureEditor' },
     { path: '~/features/templates', prefix: 'FeatureTemplates' },
+    { path: '~/features/cover-letter-templates', prefix: 'FeatureCoverLetterTemplates' },
+    { path: '~/features/cover-letter', prefix: 'FeatureCoverLetter' },
   ],
+  vite: {
+    resolve: {
+      dedupe: ['vue'],
+    },
+  },
   app: {
     head: {
       title: "Profilo'Z | Créateur de CV professionnel",
@@ -45,7 +56,7 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         {
           name: 'description',
-          content: 'Créez un CV professionnel en quelques minutes. Importez votre CV, choisissez un modèle, téléchargez votre PDF.',
+          content: 'Créez votre CV et votre lettre de motivation en quelques minutes. Importez vos documents, choisissez un modèle, exportez en PDF.',
         },
         { property: 'og:image', content: '/logo.png' },
         { property: 'og:title', content: "Profilo'Z | Créateur de CV professionnel" },

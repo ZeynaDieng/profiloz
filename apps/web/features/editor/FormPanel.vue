@@ -22,10 +22,23 @@ const skills = ref<Skill[]>([])
 const certifications = ref<Certification[]>([])
 const interests = ref<Interest[]>([])
 
+const isHydratingFromStore = ref(false)
+
 function loadFromStore() {
   const r = resumeStore.current
   if (!r) return
-  Object.assign(personalForm, r.personalInfo)
+
+  isHydratingFromStore.value = true
+  Object.assign(personalForm, {
+    fullName: '',
+    email: '',
+    phone: '',
+    jobTitle: '',
+    location: '',
+    linkedinUrl: '',
+    photoUrl: undefined as string | undefined,
+    ...r.personalInfo,
+  })
   summary.value = r.summary ?? ''
   educations.value = r.educations.length
     ? [...r.educations]
@@ -36,21 +49,52 @@ function loadFromStore() {
   skills.value = [...r.skills]
   certifications.value = [...r.certifications]
   interests.value = [...r.interests]
+  nextTick(() => {
+    isHydratingFromStore.value = false
+  })
 }
 
+onMounted(() => {
+  loadFromStore()
+})
+
 watch(
-  () => resumeStore.current?.metadata.lastModified,
-  () => loadFromStore(),
-  { immediate: true },
+  () => resumeStore.current?.id,
+  (id, previousId) => {
+    if (id && id !== previousId) loadFromStore()
+  },
 )
 
-watch(personalForm, () => resumeStore.updatePersonalInfo({ ...personalForm }), { deep: true })
-watch(summary, (v) => resumeStore.setSummary(v))
-watch(educations, (v) => resumeStore.setEducations(v.filter((e) => e.institution || e.degree)), { deep: true })
-watch(experiences, (v) => resumeStore.setExperiences(v.filter((e) => e.company || e.position)), { deep: true })
-watch(skills, (v) => resumeStore.setSkills(v), { deep: true })
-watch(certifications, (v) => resumeStore.setCertifications(v.filter((c) => c.name)), { deep: true })
-watch(interests, (v) => resumeStore.setInterests(v.filter((i) => i.name)), { deep: true })
+watch(personalForm, () => {
+  if (isHydratingFromStore.value) return
+  resumeStore.updatePersonalInfo({ ...personalForm })
+}, { deep: true })
+watch(summary, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setSummary(v)
+})
+watch(educations, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setEducations(
+    v.filter((e) => e.institution?.trim() || e.degree?.trim() || e.field?.trim() || e.startDate?.trim() || e.endDate?.trim()),
+  )
+}, { deep: true })
+watch(experiences, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setExperiences(filterExperiencesWithContent(v))
+}, { deep: true })
+watch(skills, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setSkills(v)
+}, { deep: true })
+watch(certifications, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setCertifications(v.filter((c) => c.name))
+}, { deep: true })
+watch(interests, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setInterests(v.filter((i) => i.name))
+}, { deep: true })
 
 const sections = [
   { id: 'personal', label: 'Informations', icon: 'person' },

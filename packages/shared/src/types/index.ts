@@ -4,7 +4,7 @@ export type TemplateSlug = (typeof TEMPLATE_SLUGS)[number]
 
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
-export type DocumentType = 'CV' | 'DIPLOMA' | 'CERTIFICATE'
+export type DocumentType = 'CV' | 'DIPLOMA' | 'CERTIFICATE' | 'COVER_LETTER'
 
 export type DocumentStatus = 'UPLOADED' | 'PROCESSING' | 'PARSED' | 'FAILED'
 
@@ -30,10 +30,14 @@ export interface Experience {
   company: string
   position: string
   location?: string
+  /** Pays, distinct de la ville (`location`). */
+  country?: string
   startDate?: string
   endDate?: string
   isCurrent?: boolean
   description?: string
+  /** Compétences mobilisées sur cette expérience. */
+  skillsUsed?: string[]
   sortOrder?: number
 }
 
@@ -116,6 +120,18 @@ export interface TemplateDefinition {
   description?: string
   previewUrl: string
   supportedSections: string[]
+}
+
+export interface CoverLetterImportData {
+  senderName?: string
+  senderEmail?: string
+  senderPhone?: string
+  senderLocation?: string
+  companyName?: string
+  position?: string
+  recruiterName?: string
+  content: string
+  closingText?: string
 }
 
 export interface ApiError {

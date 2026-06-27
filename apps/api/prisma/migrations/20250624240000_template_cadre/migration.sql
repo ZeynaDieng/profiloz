@@ -1,0 +1,1 @@
+ALTER TYPE "TemplateSlug" ADD VALUE 'CADRE';

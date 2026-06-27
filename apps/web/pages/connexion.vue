@@ -43,6 +43,13 @@ async function onSubmit() {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  authStore.loadFromStorage()
+  if (authStore.isAuthenticated) {
+    navigateTo(redirectTo.value)
+  }
+})
 </script>
 
 <template>

@@ -1,15 +1,16 @@
 <script setup lang="ts">
-const journeySteps = ['Importer ou créer', 'Choisir un modèle', 'Télécharger le PDF'] as const
+const journeySteps = ['CV ou lettre', 'Choisir un modèle', 'Exporter en PDF'] as const
+
+const highlights = [
+  { icon: 'description', label: 'CV professionnels' },
+  { icon: 'mail', label: 'Lettres de motivation' },
+  { icon: 'palette', label: 'Modèles modernes' },
+  { icon: 'download', label: 'Export PDF' },
+] as const
 
 const config = useRuntimeConfig()
 const heroVariant = computed(() =>
   (config.public.heroVariant as string) === 'start' ? 'start' : 'transform',
-)
-
-const title = computed(() =>
-  heroVariant.value === 'start'
-    ? 'Votre prochain CV commence ici.'
-    : 'Transformez votre ancien CV en un CV moderne et prêt à envoyer.',
 )
 </script>
 
@@ -21,38 +22,49 @@ const title = computed(() =>
           class="hero-fade hero-fade-2 text-[1.45rem] sm:text-[1.875rem] lg:text-[2.15rem] font-bold text-on-surface leading-[1.22] tracking-tight"
         >
           <template v-if="heroVariant === 'transform'">
-            Transformez votre ancien CV<br class="hidden sm:block" />
-            en un CV moderne et prêt à envoyer.
+            Créez votre CV et votre lettre de motivation<br class="hidden sm:block" />
+            en quelques minutes.
           </template>
           <template v-else>
-            {{ title }}
+            Tout ce qu'il faut pour réussir votre candidature.
           </template>
         </h1>
 
-        <p class="hero-fade hero-fade-3 text-[0.9375rem] sm:text-base text-on-surface-variant max-w-md leading-relaxed">
-          Importez votre CV ou vos documents.<br />
-          Profilo'Z génère automatiquement un CV professionnel prêt à être envoyé.
+        <p class="hero-fade hero-fade-3 text-[0.9375rem] sm:text-base text-on-surface-variant max-w-lg leading-relaxed">
+          Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF —
+          l'ensemble de votre dossier de candidature, au même endroit.
         </p>
+
+        <ul class="hero-fade hero-fade-3b flex flex-wrap gap-2 pt-0.5">
+          <li
+            v-for="item in highlights"
+            :key="item.label"
+            class="inline-flex items-center gap-1.5 rounded-full border border-outline-variant/40 bg-surface-container-lowest px-3 py-1 text-xs sm:text-sm text-on-surface"
+          >
+            <UiPzIcon :name="item.icon" class="text-[15px] text-secondary" />
+            {{ item.label }}
+          </li>
+        </ul>
 
         <div class="hero-fade hero-fade-4 flex flex-col sm:flex-row sm:items-center gap-2.5">
           <NuxtLink
             to="/creer"
             class="hero-cta-primary inline-flex items-center justify-center gap-1.5 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold shadow-lg w-full sm:w-auto whitespace-nowrap text-sm sm:text-base"
           >
-            Créer mon CV gratuitement
+            Commencer gratuitement
             <UiPzIcon name="arrow_forward" class="text-[17px]" />
           </NuxtLink>
           <NuxtLink
-            to="/creer/importer/cv"
+            to="/inscription?redirect=/tableau-de-bord/lettres/nouvelle"
             class="hero-cta-secondary inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:text-secondary transition-colors w-full sm:w-auto whitespace-nowrap"
           >
-            <UiPzIcon name="upload_file" class="text-[17px] opacity-70" />
-            Importer mon ancien CV
+            <UiPzIcon name="mail" class="text-[17px] opacity-70" />
+            Créer une lettre
           </NuxtLink>
         </div>
 
         <p class="hero-fade hero-fade-5 text-sm text-on-surface-variant/80">
-          Sans inscription obligatoire · PDF immédiat · Compatible ATS
+          CV sans inscription · Compte gratuit pour les lettres · PDF immédiat · Compatible ATS
         </p>
 
         <p class="hero-fade hero-fade-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-on-surface-variant/75">
@@ -78,6 +90,7 @@ const title = computed(() =>
 
 .hero-fade-2 { animation-delay: 0.06s; }
 .hero-fade-3 { animation-delay: 0.12s; }
+.hero-fade-3b { animation-delay: 0.15s; }
 .hero-fade-4 { animation-delay: 0.18s; }
 .hero-fade-5 { animation-delay: 0.24s; }
 .hero-fade-6 { animation-delay: 0.3s; }

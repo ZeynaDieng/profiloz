@@ -9,12 +9,17 @@ const features = [
   {
     icon: 'palette',
     title: 'Modèles professionnels',
-    description: 'Choisissez parmi plusieurs modèles adaptés à votre profil.',
+    description: 'Des modèles modernes pour votre CV et vos lettres de motivation.',
+  },
+  {
+    icon: 'mail',
+    title: 'Lettres de motivation',
+    description: 'Créez ou personnalisez une lettre professionnelle adaptée à votre candidature.',
   },
   {
     icon: 'download',
     title: 'Téléchargement PDF',
-    description: 'Téléchargez immédiatement un CV prêt à envoyer.',
+    description: 'Exportez CV et lettres en PDF haute qualité, prêts à envoyer.',
   },
 ]
 </script>
@@ -24,13 +29,13 @@ const features = [
     <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
       <div class="text-center mb-8 md:mb-12 space-y-3">
         <h2 class="text-xl sm:text-2xl font-bold text-on-surface">
-          Tout ce qu'il faut pour un CV prêt à envoyer
+          Une plateforme complète pour votre candidature
         </h2>
         <p class="text-on-surface-variant max-w-2xl mx-auto text-sm sm:text-base">
-          Simple, rapide, sans jargon technique.
+          CV, lettres, modèles et export PDF — simple, rapide, sans jargon technique.
         </p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
         <div
           v-for="feature in features"
           :key="feature.title"
