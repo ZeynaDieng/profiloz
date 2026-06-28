@@ -1,5 +1,11 @@
+type PdfEvent =
+  | 'pdf_generate_start'
+  | 'pdf_generate_success'
+  | 'pdf_generate_error'
+  | 'pdf_cache_hit'
+
 type PdfLogPayload = {
-  event: 'pdf_generate_start' | 'pdf_generate_success' | 'pdf_generate_error'
+  event: PdfEvent
   kind: 'resume' | 'cover_letter'
   durationMs?: number
   templateSlug?: string
@@ -9,5 +15,11 @@ type PdfLogPayload = {
 }
 
 export function logPdfEvent(payload: PdfLogPayload) {
-  console.log(JSON.stringify({ scope: 'pdf', at: new Date().toISOString(), ...payload }))
+  console.log(
+    JSON.stringify({
+      scope: 'pdf',
+      at: new Date().toISOString(),
+      ...payload,
+    }),
+  )
 }
