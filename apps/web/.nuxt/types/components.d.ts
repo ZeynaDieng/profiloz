@@ -48,6 +48,7 @@ interface _GlobalComponents {
   TemplatesTemplatePremium: typeof import("../../components/resume/templates/TemplatePremium.vue")['default']
   TemplatesTemplateProfessionnel: typeof import("../../components/resume/templates/TemplateProfessionnel.vue")['default']
   TemplatesTemplateShell: typeof import("../../components/resume/templates/TemplateShell.vue")['default']
+  TemplatesTemplateSidebar: typeof import("../../components/resume/templates/TemplateSidebar.vue")['default']
   CoverLetterPreviewA4: typeof import("../../components/cover-letter/CoverLetterPreviewA4.vue")['default']
   CoverLetterShell: typeof import("../../components/cover-letter/CoverLetterShell.vue")['default']
   FeaturesLandingApplicationDuoSection: typeof import("../../features/landing/ApplicationDuoSection.vue")['default']
@@ -202,6 +203,7 @@ interface _GlobalComponents {
   LazyTemplatesTemplatePremium: LazyComponent<typeof import("../../components/resume/templates/TemplatePremium.vue")['default']>
   LazyTemplatesTemplateProfessionnel: LazyComponent<typeof import("../../components/resume/templates/TemplateProfessionnel.vue")['default']>
   LazyTemplatesTemplateShell: LazyComponent<typeof import("../../components/resume/templates/TemplateShell.vue")['default']>
+  LazyTemplatesTemplateSidebar: LazyComponent<typeof import("../../components/resume/templates/TemplateSidebar.vue")['default']>
   LazyCoverLetterPreviewA4: LazyComponent<typeof import("../../components/cover-letter/CoverLetterPreviewA4.vue")['default']>
   LazyCoverLetterShell: LazyComponent<typeof import("../../components/cover-letter/CoverLetterShell.vue")['default']>
   LazyFeaturesLandingApplicationDuoSection: LazyComponent<typeof import("../../features/landing/ApplicationDuoSection.vue")['default']>

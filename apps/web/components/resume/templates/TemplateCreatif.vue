@@ -1,64 +1,202 @@
 <script setup lang="ts">
-import type { ResumeSnapshot } from '@profiloz/shared'
+import type { ResumeSnapshot } from "@profiloz/shared";
 
-const props = defineProps<{ resume: ResumeSnapshot }>()
-const { accent, p, contactItems, snapshot, hasExperiences, hasSkills, hasInterests, hasEducations } = useResumeSections(
-  () => props.resume,
-)
+const props = defineProps<{ resume: ResumeSnapshot }>();
+const {
+  accent,
+  p,
+  contactItems,
+  snapshot,
+  hasExperiences,
+  hasSkills,
+  hasInterests,
+  hasEducations,
+} = useResumeSections(() => props.resume);
+
+const initials = computed(() =>
+  (p.value?.fullName || "")
+    .split(" ")
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase(),
+);
 </script>
 
 <template>
   <TemplatesTemplateShell :resume="resume" template-name="Créatif">
-    <div class="relative">
-      <div class="absolute -top-4 -left-4 w-24 h-24 rounded-full opacity-20" :style="{ backgroundColor: accent }" />
-      <div class="absolute top-12 right-0 w-16 h-16 rotate-45 opacity-10" :style="{ backgroundColor: accent }" />
+    <div class="grid grid-cols-[1fr_155px] gap-8 relative">
+      <!-- Formes décoratives de fond -->
+      <div
+        class="absolute -top-[20mm] -right-[20mm] w-52 h-52 rounded-full pointer-events-none"
+        :style="{ backgroundColor: `${accent}10` }"
+      />
+      <div
+        class="absolute top-32 -left-[20mm] w-28 h-28 rotate-12 pointer-events-none"
+        :style="{ backgroundColor: `${accent}07` }"
+      />
 
-      <header class="relative mb-8">
-        <h1 class="text-4xl font-black leading-none" :style="{ color: accent }">{{ p.fullName || 'Votre nom' }}</h1>
-        <p class="text-lg font-medium mt-2">{{ p.jobTitle || 'Créatif' }}</p>
-        <div class="flex flex-wrap gap-2 mt-4">
-          <span
-            v-for="item in contactItems"
-            :key="item"
-            class="text-xs px-3 py-1 rounded-full border"
-            :style="{ borderColor: accent, color: accent }"
+      <!-- Colonne principale -->
+      <div class="relative">
+        <!-- En-tête -->
+        <header class="mb-8">
+          <p
+            class="text-[7.5pt] font-black uppercase tracking-[0.22em] mb-2"
+            :style="{ color: `${accent}80` }"
           >
-            {{ item }}
-          </span>
-        </div>
-      </header>
+            {{ p.jobTitle || "Créatif" }}
+          </p>
+          <h1
+            class="text-[26pt] font-black leading-none tracking-tight"
+            :style="{ color: accent }"
+          >
+            {{ p.fullName || "Votre nom" }}
+          </h1>
 
-      <section v-if="hasSkills" class="mb-6">
-        <h2 class="inline-block text-xs font-bold uppercase px-3 py-1 text-white mb-4" :style="{ backgroundColor: accent }">
-          Compétences
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="(skill, i) in snapshot.skills" :key="i" class="text-sm font-medium">{{ skill.name }}</span>
-        </div>
-      </section>
+          <!-- Trait signature -->
+          <div class="flex items-center gap-2 mt-4">
+            <div
+              class="h-[3px] w-10 rounded-full"
+              :style="{ backgroundColor: accent }"
+            />
+            <div
+              class="h-[3px] w-3 rounded-full"
+              :style="{ backgroundColor: `${accent}40` }"
+            />
+          </div>
+        </header>
 
-      <section v-if="hasExperiences" class="mb-6">
-        <h2 class="inline-block text-xs font-bold uppercase px-3 py-1 text-white mb-4" :style="{ backgroundColor: accent }">
-          Expérience
-        </h2>
-        <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-3 pl-4 border-l-4" :style="{ borderColor: accent }">
-          <ExperienceEntry :exp="exp" />
-        </div>
-      </section>
+        <!-- Expérience -->
+        <section v-if="hasExperiences" class="mb-7">
+          <div
+            class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-4"
+            :style="{ backgroundColor: accent }"
+          >
+            Expérience
+          </div>
+          <div
+            v-for="(exp, i) in snapshot.experiences"
+            :key="i"
+            class="mb-5 pl-4 relative"
+            :style="{ borderLeft: `3px solid ${accent}35` }"
+          >
+            <span
+              class="absolute -left-[7px] top-[6px] w-[11px] h-[11px] rounded-sm rotate-45"
+              :style="{ backgroundColor: accent }"
+            />
+            <ExperienceEntry :exp="exp" :accent="accent" />
+          </div>
+        </section>
 
-      <section v-if="hasEducations" class="mb-6">
-        <h2 class="inline-block text-xs font-bold uppercase px-3 py-1 text-white mb-4" :style="{ backgroundColor: accent }">
-          Formation
-        </h2>
-        <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-2 pl-4 border-l-4" :style="{ borderColor: accent }">
-          <EducationEntry :edu="edu" />
-        </div>
-      </section>
+        <!-- Formation -->
+        <section v-if="hasEducations" class="mb-7">
+          <div
+            class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-4"
+            :style="{ backgroundColor: accent }"
+          >
+            Formation
+          </div>
+          <div
+            v-for="(edu, i) in snapshot.educations"
+            :key="i"
+            class="mb-3 pl-4"
+            :style="{ borderLeft: `3px solid ${accent}20` }"
+          >
+            <EducationEntry :edu="edu" :accent="accent" />
+          </div>
+        </section>
 
-      <section v-if="hasInterests">
-        <h2 class="text-xs font-bold uppercase mb-2" :style="{ color: accent }">Centres d'intérêt</h2>
-        <p class="text-sm">{{ snapshot.interests.map((i) => i.name).join(' · ') }}</p>
-      </section>
+        <!-- Centres d'intérêt -->
+        <section v-if="hasInterests">
+          <div
+            class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-3"
+            :style="{ backgroundColor: `${accent}70` }"
+          >
+            Centres d'intérêt
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span
+              v-for="(interest, i) in snapshot.interests"
+              :key="i"
+              class="text-[8.5pt] px-2.5 py-1 rounded-full font-medium"
+              :style="{
+                backgroundColor: `${accent}12`,
+                color: accent,
+                border: `1px solid ${accent}25`,
+              }"
+            >
+              {{ interest.name }}
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Sidebar droite -->
+      <aside class="space-y-6 pt-1">
+        <!-- Avatar -->
+        <div class="flex justify-center">
+          <div
+            v-if="p.photoUrl"
+            class="w-20 h-20 rounded-2xl overflow-hidden border-[3px]"
+            :style="{ borderColor: accent }"
+          >
+            <img :src="p.photoUrl" alt="" class="w-full h-full object-cover" />
+          </div>
+          <div
+            v-else
+            class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-xl font-black border-[3px]"
+            :style="{
+              backgroundColor: `${accent}20`,
+              borderColor: accent,
+              color: accent,
+            }"
+          >
+            {{ initials }}
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div>
+          <div
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-2.5 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}30` }"
+          >
+            Contact
+          </div>
+          <ul class="space-y-1.5">
+            <li
+              v-for="item in contactItems"
+              :key="item"
+              class="text-[8pt] text-[#475569] leading-snug break-all"
+            >
+              {{ item }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Compétences -->
+        <div v-if="hasSkills">
+          <div
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-2.5 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}30` }"
+          >
+            Compétences
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              v-for="(skill, i) in snapshot.skills"
+              :key="i"
+              class="text-[8pt] px-2 py-[3px] rounded-sm font-medium"
+              :style="{
+                backgroundColor: `${accent}12`,
+                color: accent,
+              }"
+            >
+              {{ skill.name }}
+            </span>
+          </div>
+        </div>
+      </aside>
     </div>
   </TemplatesTemplateShell>
 </template>
