@@ -5,6 +5,7 @@ import { resolveAppUrl } from '@/lib/pdf/app-url'
 import { logPdfEvent } from '@/lib/pdf/pdf-logger'
 import { isTransientPuppeteerError, withPuppeteerPage } from '@/lib/pdf/puppeteer-pool'
 import { storageProvider } from '@/lib/storage'
+import { pdfCacheService } from '@/lib/redis/pdf-cache'
 import { randomUUID } from 'crypto'
 
 function escapeHtml(value: string) {
@@ -219,6 +220,38 @@ type GenerateContext = {
 export class PdfService {
   async generateFromSnapshot(snapshot: ResumeSnapshot, guestSessionDbId?: string, ctx?: GenerateContext) {
     const startedAt = Date.now()
+
+    // Vérifier le cache Redis
+    const cachedPdf = await pdfCacheService.get(snapshot, 'resume')
+    if (cachedPdf) {
+      logPdfEvent({
+        event: 'pdf_cache_hit',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+      })
+
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(cachedPdf, storageKey, 'application/pdf')
+
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
+
+      const job = await prisma.pdfJob.create({
+        data: {
+          guestSessionId: guestSessionDbId,
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      return { jobId: job.id, storageKey, expiresAt, cached: true }
+    }
+
     logPdfEvent({
       event: 'pdf_generate_start',
       kind: 'resume',
@@ -248,11 +281,14 @@ export class PdfService {
       })
       throw new Error(
         `Impossible de générer le PDF avec le modèle choisi (${detail}). ` +
-          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+          'Vérifiez que l\'application web est démarrée (pnpm run dev sur le port 3000).',
       )
     } finally {
       await storageProvider.delete(snapshotKey)
     }
+
+    // Stocker dans le cache pour les prochaines requêtes
+    await pdfCacheService.set(snapshot, 'resume', pdfBuffer)
 
     const storageKey = `pdf/${randomUUID()}.pdf`
     await storageProvider.upload(pdfBuffer, storageKey, 'application/pdf')
@@ -279,11 +315,41 @@ export class PdfService {
       durationMs: Date.now() - startedAt,
     })
 
-    return { jobId: job.id, storageKey, expiresAt }
+    return { jobId: job.id, storageKey, expiresAt, cached: false }
   }
 
   async generateCoverLetterPdf(letter: CoverLetterPdfInput, ctx?: GenerateContext) {
     const startedAt = Date.now()
+
+    // Vérifier le cache Redis
+    const cachedPdf = await pdfCacheService.get(letter, 'cover_letter')
+    if (cachedPdf) {
+      logPdfEvent({
+        event: 'pdf_cache_hit',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+      })
+
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(cachedPdf, storageKey, 'application/pdf')
+
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
+
+      const job = await prisma.pdfJob.create({
+        data: {
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      return { jobId: job.id, expiresAt, cached: true }
+    }
+
     logPdfEvent({
       event: 'pdf_generate_start',
       kind: 'cover_letter',
@@ -311,11 +377,14 @@ export class PdfService {
       })
       throw new Error(
         `Impossible de générer le PDF de la lettre (${detail}). ` +
-          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+          'Vérifiez que l\'application web est démarrée (pnpm run dev sur le port 3000).',
       )
     } finally {
       await storageProvider.delete(snapshotKey)
     }
+
+    // Stocker dans le cache pour les prochaines requêtes
+    await pdfCacheService.set(letter, 'cover_letter', pdfBuffer)
 
     try {
       const storageKey = `pdf/${randomUUID()}.pdf`
@@ -341,7 +410,7 @@ export class PdfService {
         durationMs: Date.now() - startedAt,
       })
 
-      return { jobId: job.id, expiresAt }
+      return { jobId: job.id, expiresAt, cached: false }
     } catch (error) {
       logPdfEvent({
         event: 'pdf_generate_error',
@@ -381,6 +450,40 @@ export class PdfService {
     ctx?: GenerateContext & { resumeId?: string },
   ) {
     const startedAt = Date.now()
+
+    // Créer un objet combiné pour le cache
+    const dossierPayload = { ...snapshot, letters }
+
+    // Vérifier le cache Redis
+    const cachedPdf = await pdfCacheService.get(dossierPayload, 'dossier')
+    if (cachedPdf) {
+      logPdfEvent({
+        event: 'pdf_cache_hit',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        durationMs: Date.now() - startedAt,
+      })
+
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(cachedPdf, storageKey, 'application/pdf')
+
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
+
+      const job = await prisma.pdfJob.create({
+        data: {
+          resumeId: ctx?.resumeId ?? null,
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      return { jobId: job.id, expiresAt, cached: true }
+    }
+
     logPdfEvent({
       event: 'pdf_generate_start',
       kind: 'resume',
@@ -408,9 +511,12 @@ export class PdfService {
       })
       throw new Error(
         `Impossible de générer le dossier (${detail}). ` +
-          'Vérifiez que l’application web est démarrée (pnpm run dev sur le port 3000).',
+          'Vérifiez que l\'application web est démarrée (pnpm run dev sur le port 3000).',
       )
     }
+
+    // Stocker dans le cache pour les prochaines requêtes
+    await pdfCacheService.set(dossierPayload, 'dossier', merged)
 
     const storageKey = `pdf/${randomUUID()}.pdf`
     await storageProvider.upload(merged, storageKey, 'application/pdf')
@@ -436,7 +542,7 @@ export class PdfService {
       durationMs: Date.now() - startedAt,
     })
 
-    return { jobId: job.id, expiresAt }
+    return { jobId: job.id, expiresAt, cached: false }
   }
 
   async getJob(jobId: string) {

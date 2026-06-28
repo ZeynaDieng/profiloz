@@ -32,7 +32,8 @@ RUN pnpm --filter @profiloz/api build
 FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV STORAGE_LOCAL_PATH=/app/storage
+ENV STORAGE_PERSISTENT_PATH=/app/storage/persistent
+ENV STORAGE_TEMP_PATH=/app/storage/temp
 WORKDIR /app
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
@@ -41,7 +42,7 @@ COPY --from=builder /app/apps/api ./apps/api
 COPY --from=builder /app/packages ./packages
 COPY docker/entrypoint-api.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh && mkdir -p /app/storage
+RUN chmod +x /entrypoint.sh && mkdir -p /app/storage/persistent /app/storage/temp /tmp/pdfs
 
 EXPOSE 3001
 ENTRYPOINT ["/entrypoint.sh"]

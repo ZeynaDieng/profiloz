@@ -13,6 +13,28 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     build:
@@ -22,11 +44,14 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgresql://${POSTGRES_USER:-profiloz}:${POSTGRES_PASSWORD:-profiloz}@postgres:5432/${POSTGRES_DB:-profiloz}
+      REDIS_URL: redis://redis:6379
+      REDIS_CACHE_TTL: ${REDIS_CACHE_TTL:-3600}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       STORAGE_PROVIDER: local
-      STORAGE_LOCAL_PATH: /app/storage
+      STORAGE_PERSISTENT_PATH: /app/storage/persistent
+      STORAGE_TEMP_PATH: /app/storage/temp
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
       APP_URL: ${APP_URL:-http://web:3000}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
@@ -34,11 +59,15 @@ services:
       RUN_SEED: ${RUN_SEED:-true}
       CRON_SECRET: ${CRON_SECRET:-change-me-cron-secret}
     volumes:
-      - storage_data:/app/storage
+      - storage_persistent:/app/storage/persistent
+      - storage_temp:/app/storage/temp
+      - storage_temp:/tmp/pdfs
+    ports:
+      - '${API_PORT:-3001}:3001'
     depends_on:
       postgres:
         condition: service_healthy
-      web:
+      redis:
         condition: service_healthy
     healthcheck:
       test:
@@ -53,6 +82,11 @@ services:
       retries: 5
       start_period: 60s
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     build:
@@ -66,6 +100,8 @@ services:
       NITRO_PORT: 3000
       NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://localhost/api/v1}
       NUXT_API_INTERNAL_BASE_URL: ${NUXT_API_INTERNAL_BASE_URL:-http://api:3001/api/v1}
+    ports:
+      - '${WEB_PORT:-3000}:3000'
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
       interval: 10s
@@ -73,20 +109,28 @@ services:
       retries: 6
       start_period: 40s
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  nginx:
-    image: nginx:1.27-alpine
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
     ports:
-      - '${HTTP_PORT:-80}:80'
+      - '${UPTIME_KUMA_PORT:-3002}:3001'
     volumes:
-      - ./nginx/profiloz.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      web:
-        condition: service_healthy
-      api:
-        condition: service_healthy
+      - uptime_kuma_data:/app/data
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
-  storage_data:
+  redis_data:
+  storage_persistent:
+  storage_temp:
+  uptime_kuma_data:
