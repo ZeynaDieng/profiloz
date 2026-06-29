@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildPublicAppPath, resolveAppUrl, resolvePublicAppUrl } from '../lib/pdf/app-url'
+import { buildPublicAppPath, buildPublicAppPathForRequest, resolveAppUrl, resolvePublicAppUrl, resolvePublicAppUrlForRequest } from '../lib/pdf/app-url'
 import { checkPdfRenderReadiness } from '../lib/pdf/pdf-readiness'
 
 describe('resolveAppUrl', () => {
@@ -54,6 +54,14 @@ describe('resolvePublicAppUrl', () => {
     expect(buildPublicAppPath('/paiement/succes', { ref: 'pz_test', returnTo: '/creer/editeur' })).toBe(
       'http://localhost:3000/paiement/succes?ref=pz_test&returnTo=%2Fcreer%2Fediteur',
     )
+  })
+
+  it('priorise Origin profiloz.com même si PUBLIC_APP_URL pointe vers .sn', () => {
+    process.env.PUBLIC_APP_URL = 'https://profiloz.sn'
+    expect(resolvePublicAppUrlForRequest('https://profiloz.com')).toBe('https://profiloz.com')
+    expect(
+      buildPublicAppPathForRequest('https://profiloz.com', '/paiement/succes', { ref: 'pz_test' }),
+    ).toBe('https://profiloz.com/paiement/succes?ref=pz_test')
   })
 })
 

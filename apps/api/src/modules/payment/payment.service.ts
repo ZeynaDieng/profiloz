@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getPlan } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
-import { resolvePublicAppUrl, buildPublicAppPath } from '@/lib/pdf/app-url'
+import { buildPublicAppPathForRequest } from '@/lib/pdf/app-url'
 import { prisma } from '@/lib/prisma'
 import { paytechProvider } from './paytech.provider'
 import type { PaymentProvider } from './payment.provider'
@@ -59,7 +59,12 @@ export class PaymentService {
   }
 
   /** Démarre un paiement : crée la commande PENDING et renvoie l'URL de redirection PayTech. */
-  async createCheckout(owner: EntitlementOwner, planSlug: string, returnTo?: string) {
+  async createCheckout(
+    owner: EntitlementOwner,
+    planSlug: string,
+    returnTo?: string,
+    requestOrigin?: string | null,
+  ) {
     requireOwner(owner)
     const plan = getPlan(planSlug)
     if (!plan) throw new AppError(400, 'Bad Request', 'Offre inconnue')
@@ -90,11 +95,11 @@ export class PaymentService {
       commandName: `Profilo'Z — ${plan.name}`,
       customField: { ...owner, planSlug: plan.slug, paymentId: payment.id, returnTo: safeReturnTo },
       ipnUrl: process.env.PAYTECH_IPN_URL ?? '',
-      successUrl: buildPublicAppPath('/paiement/succes', {
+      successUrl: buildPublicAppPathForRequest(requestOrigin, '/paiement/succes', {
         ref: refCommand,
         ...(safeReturnTo ? { returnTo: safeReturnTo } : {}),
       }),
-      cancelUrl: buildPublicAppPath('/paiement/annule', { ref: refCommand }),
+      cancelUrl: buildPublicAppPathForRequest(requestOrigin, '/paiement/annule', { ref: refCommand }),
     })
 
     await prisma.payment.update({ where: { id: payment.id }, data: { providerToken: token } })

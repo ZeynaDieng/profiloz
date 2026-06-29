@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId },
       planSlug,
       returnTo,
+      origin,
     )
     return withCors(jsonResponse(result), origin)
   } catch (error) {

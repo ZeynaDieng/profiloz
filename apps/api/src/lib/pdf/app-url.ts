@@ -55,8 +55,46 @@ export function resolvePublicAppUrl(): string {
   return 'http://127.0.0.1:3000'
 }
 
+/** Hôtes publics connus pour les redirections PayTech (domaine visité par l'utilisateur). */
+function isTrustedPublicHostname(hostname: string): boolean {
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true
+  if (hostname === 'profiloz.com' || hostname.endsWith('.profiloz.com')) return true
+  if (hostname === 'profiloz.sn' || hostname.endsWith('.profiloz.sn')) return true
+  return false
+}
+
+/** URL publique du front pour une requête entrante (priorise Origin si domaine Profilo'Z). */
+export function resolvePublicAppUrlForRequest(requestOrigin?: string | null): string {
+  const normalizedOrigin = normalizeAbsoluteUrl(requestOrigin ?? undefined)
+  if (normalizedOrigin) {
+    const { protocol, hostname } = new URL(normalizedOrigin)
+    if (protocol === 'https:' && isTrustedPublicHostname(hostname)) {
+      return normalizedOrigin
+    }
+    if (process.env.NODE_ENV === 'development' && isTrustedPublicHostname(hostname)) {
+      return normalizedOrigin
+    }
+  }
+  return resolvePublicAppUrl()
+}
+
 export function buildPublicAppPath(path: string, query?: Record<string, string | undefined>): string {
   const base = resolvePublicAppUrl()
+  const url = new URL(path.startsWith('/') ? path : `/${path}`, `${base}/`)
+  if (query) {
+    for (const [key, value] of Object.entries(query)) {
+      if (value) url.searchParams.set(key, value)
+    }
+  }
+  return url.toString()
+}
+
+export function buildPublicAppPathForRequest(
+  requestOrigin: string | null | undefined,
+  path: string,
+  query?: Record<string, string | undefined>,
+): string {
+  const base = resolvePublicAppUrlForRequest(requestOrigin)
   const url = new URL(path.startsWith('/') ? path : `/${path}`, `${base}/`)
   if (query) {
     for (const [key, value] of Object.entries(query)) {
