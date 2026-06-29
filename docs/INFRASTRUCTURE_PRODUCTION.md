@@ -199,18 +199,32 @@ docker compose -f docker/docker-compose.prod.yml logs -f
 
 ### Variables d'environnement
 
-Copier `docker/env.production.example` en `docker/.env.production` et modifier :
+Copier `docker/.env.production.example` en `docker/.env.production` et modifier :
 
 ```bash
-cp docker/env.production.example docker/.env.production
+cp docker/.env.production.example docker/.env.production
 ```
 
 **Variables essentielles :**
 - `POSTGRES_PASSWORD` : Mot de passe PostgreSQL
 - `JWT_SECRET` : Secret JWT (générer une chaîne forte)
-- `CORS_ORIGIN` : Origine autorisée (ex: https://profiloz.com)
-- `NUXT_PUBLIC_API_BASE_URL` : URL publique API
-- `NUXT_PUBLIC_APP_URL` : URL publique application
+- `CORS_ORIGIN` : Origine autorisée (ex: `https://profiloz.com`)
+- `NUXT_PUBLIC_API_BASE_URL` : URL publique API (ex: `https://profiloz.com/api/v1`)
+- `NUXT_PUBLIC_APP_URL` : URL publique application (ex: `https://profiloz.com`)
+- `PUBLIC_APP_URL` : même URL que le front — **redirections PayTech après paiement**
+- `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` : clés PayTech (sandbox `test` ou prod)
+- `PAYTECH_ENV` : `test` ou `prod`
+- `PAYTECH_IPN_URL` : `https://profiloz.com/api/v1/payments/ipn` (HTTPS, joignable par PayTech)
+
+Sans `PAYTECH_API_KEY` et `PAYTECH_API_SECRET`, `POST /payments/checkout` renvoie **503**.
+
+Après modification de `.env.production`, redémarrer l'API :
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.production up -d --no-deps api
+docker/scripts/check-paytech-env.sh
+curl -s 'https://profiloz.com/api/v1/health?detailed=1' | jq .payments
+```
 
 ## Premier déploiement
 
