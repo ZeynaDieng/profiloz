@@ -95,7 +95,13 @@ async function getBrowser(): Promise<PuppeteerBrowser> {
       const instance = await puppeteer.default.launch({
         headless: true,
         executablePath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--font-render-hinting=none',
+        ],
       })
       instance.on('disconnected', () => {
         browser = null

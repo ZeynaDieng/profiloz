@@ -271,44 +271,21 @@ export class PdfService {
       guestSessionId: guestSessionDbId,
     })
 
-    const renderId = randomUUID()
-    const snapshotKey = `pdf-render/${renderId}.json`
-    await storageProvider.upload(Buffer.from(JSON.stringify(snapshot), 'utf-8'), snapshotKey, 'application/json')
-
-    const printUrl = `${resolveAppUrl()}/imprimer/cv?renderId=${renderId}`
     let pdfBuffer: Buffer
     try {
-      pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
-    } catch (printError) {
-      const printDetail = printError instanceof Error ? printError.message : 'unknown'
+      pdfBuffer = await renderResumePdfFromHtml(snapshot)
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_print_fallback',
+        event: 'pdf_generate_error',
         kind: 'resume',
         templateSlug: snapshot.templateSlug,
         userId: ctx?.userId,
         guestSessionId: guestSessionDbId,
         durationMs: Date.now() - startedAt,
-        error: printDetail,
+        error: detail,
       })
-      try {
-        pdfBuffer = await renderResumePdfFromHtml(snapshot)
-      } catch (fallbackError) {
-        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
-        logPdfEvent({
-          event: 'pdf_generate_error',
-          kind: 'resume',
-          templateSlug: snapshot.templateSlug,
-          userId: ctx?.userId,
-          guestSessionId: guestSessionDbId,
-          durationMs: Date.now() - startedAt,
-          error: `${printDetail} | fallback: ${fallbackDetail}`,
-        })
-        throw new Error(
-          `Impossible de générer le PDF (${fallbackDetail}). Vérifiez que Chromium est disponible sur le serveur.`,
-        )
-      }
-    } finally {
-      await storageProvider.delete(snapshotKey)
+      throw new Error(`Impossible de générer le PDF (${detail}).`)
     }
 
     // Stocker dans le cache pour les prochaines requêtes

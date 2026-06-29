@@ -51,11 +51,11 @@ export function toPdfGenerationError(error: unknown): AppError {
   if (error instanceof AppError) return error
 
   const message = error instanceof Error ? error.message : 'Erreur inconnue'
-  if (/Impossible de générer le PDF|page d.impression|Timeout|ERR_|Navigation/i.test(message)) {
+  if (/Impossible de générer le PDF|page d.impression|Timeout|ERR_|Navigation|Chrome introuvable|Chromium/i.test(message)) {
     return new AppError(
       503,
       'Service Unavailable',
-      'Impossible de générer le PDF pour le moment. Réessayez dans quelques secondes.',
+      'Impossible de générer le PDF pour le moment. Réessayez dans quelques secondes ou contactez le support si le problème persiste.',
     )
   }
 

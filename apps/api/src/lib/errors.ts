@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { applyCorsHeaders } from '@/lib/cors'
+import { resolvePublicAppUrl } from '@/lib/pdf/app-url'
+
+function problemType(status: number | string): string {
+  return `${resolvePublicAppUrl()}/errors/${status}`
+}
 
 export class AppError extends Error {
   constructor(
@@ -29,7 +34,7 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
   if (error instanceof ZodError) {
     return NextResponse.json(
       {
-        type: 'https://profiloz.fr/errors/validation',
+        type: problemType('validation'),
         title: 'Validation Error',
         status: 422,
         detail: 'Données invalides',
@@ -45,7 +50,7 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
   if (isAppError(error)) {
     return NextResponse.json(
       {
-        type: `https://profiloz.fr/errors/${error.status}`,
+        type: problemType(error.status),
         title: error.title,
         status: error.status,
         detail: error.detail ?? error.message,
@@ -58,7 +63,7 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
   console.error(error)
   return NextResponse.json(
     {
-      type: 'https://profiloz.fr/errors/internal',
+      type: problemType('internal'),
       title: 'Internal Server Error',
       status,
       detail:
