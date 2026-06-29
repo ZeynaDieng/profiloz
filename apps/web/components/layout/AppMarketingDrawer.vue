@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const route = useRoute()
 const authStore = useAuthStore()
-const { open, closeMenu } = useMarketingMenuState()
+const { open, closeMenu, menuTriggerRef } = useMarketingMenuState()
+const closeButtonRef = ref<HTMLButtonElement | null>(null)
+
+useDrawerA11y(open, closeButtonRef, menuTriggerRef)
 
 const marketingLinks = [
   { href: '#features', label: 'Fonctionnalités', icon: 'auto_awesome' },
@@ -24,6 +27,7 @@ watch(
   <UDrawer
     v-model:open="open"
     direction="left"
+    title="Navigation"
     :handle="false"
     :ui="{
       overlay: 'z-[100] bg-black/40 backdrop-blur-[2px]',
@@ -36,6 +40,7 @@ watch(
         <div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-outline-variant/20">
           <UiAppLogo size="md" />
           <button
+            ref="closeButtonRef"
             type="button"
             class="touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
             aria-label="Fermer le menu"

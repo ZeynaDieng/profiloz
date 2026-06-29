@@ -27,7 +27,7 @@ function navClass(item: (typeof primaryNavItems)[number]) {
       type="button"
       class="flex flex-col items-center justify-center gap-1 min-h-11 min-w-11 text-on-surface-variant text-label-xs"
       aria-label="Menu"
-      @click="toggleDrawer"
+      @click="toggleDrawer($event.currentTarget as HTMLElement)"
     >
       <UiPzIcon name="menu" />
       Menu

@@ -1,7 +1,10 @@
 export function useDrawerState() {
   const drawerOpen = useState('appDrawerOpen', () => false)
+  const drawerTriggerRef = useState<HTMLElement | null>('appDrawerTrigger', () => null)
 
-  function openDrawer() {
+  function openDrawer(trigger?: HTMLElement | null) {
+    if (trigger) drawerTriggerRef.value = trigger
+    trigger?.blur()
     drawerOpen.value = true
   }
 
@@ -9,9 +12,13 @@ export function useDrawerState() {
     drawerOpen.value = false
   }
 
-  function toggleDrawer() {
-    drawerOpen.value = !drawerOpen.value
+  function toggleDrawer(trigger?: HTMLElement | null) {
+    if (!drawerOpen.value) {
+      openDrawer(trigger ?? undefined)
+    } else {
+      closeDrawer()
+    }
   }
 
-  return { drawerOpen, openDrawer, closeDrawer, toggleDrawer }
+  return { drawerOpen, drawerTriggerRef, openDrawer, closeDrawer, toggleDrawer }
 }

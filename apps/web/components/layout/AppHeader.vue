@@ -59,7 +59,7 @@ onMounted(() => {
           type="button"
           class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container transition-colors"
           aria-label="Menu"
-          @click="openMenu"
+          @click="openMenu($event.currentTarget as HTMLElement)"
         >
           <UiPzIcon name="menu" class="text-[22px]" />
         </button>
@@ -70,7 +70,7 @@ onMounted(() => {
           type="button"
           class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
           aria-label="Menu"
-          @click="toggleDrawer"
+          @click="toggleDrawer($event.currentTarget as HTMLElement)"
         >
           <UiPzIcon name="menu" />
         </button>
