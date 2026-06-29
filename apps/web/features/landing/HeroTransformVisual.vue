@@ -58,7 +58,6 @@
             class="flex flex-col items-center justify-center gap-0.5 px-0.5 hero-arrow"
             aria-hidden="true"
           >
-            
             <UiPzIcon name="arrow_forward" class="text-secondary text-[20px]" />
           </div>
 
@@ -73,7 +72,7 @@
                 src="/logo.png"
                 alt="Profilo'Z"
                 class="h-5 w-auto object-contain"
-              >
+              />
               <span
                 class="text-[8px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold"
                 >Pro</span
@@ -176,7 +175,7 @@
               src="/logo.png"
               alt="Profilo'Z"
               class="h-5 w-auto object-contain"
-            >
+            />
             <span
               class="text-[8px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold"
               >Pro</span
@@ -214,7 +213,7 @@
       <p
         class="text-center text-xs sm:text-sm text-on-surface-variant mt-2.5 sm:mt-3 font-medium"
       >
-        Importez vos documents ou créez CV et lettre — nous faisons le reste.
+        Importez vos documents ou créez CV et lettre nous faisons le reste.
       </p>
     </div>
   </div>

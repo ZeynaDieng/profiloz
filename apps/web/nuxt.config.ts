@@ -56,7 +56,7 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         {
           name: 'description',
-          content: 'Créez votre CV et votre lettre de motivation en quelques minutes. Importez vos documents, choisissez un modèle, exportez en PDF.',
+          content: 'Le moyen le plus rapide de créer un CV qui donne envie d'être lu. Importez vos documents, choisissez un modèle, exportez en PDF.',
         },
         { property: 'og:image', content: '/logo.png' },
         { property: 'og:title', content: "Profilo'Z | Créateur de CV professionnel" },

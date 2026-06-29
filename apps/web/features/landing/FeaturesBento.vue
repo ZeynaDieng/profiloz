@@ -4,7 +4,7 @@ const features = [
     icon: "upload_file",
     title: "Import intelligent",
     description:
-      "Importez CV, diplômes et attestations. Les informations sont organisées automatiquement.",
+      "Importez CV Les informations sont organisées automatiquement.",
   },
   {
     icon: "palette",

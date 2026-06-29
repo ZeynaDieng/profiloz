@@ -49,7 +49,7 @@ const profiloz = [
             <p
               class="mt-4 text-on-surface-variant text-base sm:text-lg leading-relaxed max-w-md mx-auto lg:mx-0"
             >
-              Créez votre CV et votre lettre de motivation en quelques minutes.
+              Le moyen le plus rapide de créer un CV qui donne envie d'être lu.
             </p>
 
             <div
