@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(
+const props = withDefaults(
   defineProps<{
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
     variant?: 'full' | 'icon'
@@ -15,14 +15,17 @@ const sizeClasses: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', string> = {
   lg: 'h-14',
   xl: 'h-16',
 }
+
+const src = computed(() => (props.variant === 'icon' ? '/logo-icon.png' : '/logo.png'))
 </script>
 
 <template>
   <NuxtLink :to="to" class="inline-flex shrink-0 items-center" aria-label="Profilo'Z — Accueil">
-    <img
-      :src="variant === 'icon' ? '/logo-icon.png' : '/logo.png'"
+    <UiOptimizedImage
+      :src="src"
       alt="Profilo'Z"
-      :class="[sizeClasses[size], 'w-auto object-contain']"
-    >
+      loading="eager"
+      :img-class="[sizeClasses[size], 'w-auto object-contain'].join(' ')"
+    />
   </NuxtLink>
 </template>

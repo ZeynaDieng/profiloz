@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import { saveCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 
 definePageMeta({ layout: 'wizard' })
@@ -50,11 +51,9 @@ function onReset() {
 
     <FeatureImportExtractionProgress v-else-if="state === 'processing'" :progress="progress" />
 
-    <div v-else-if="state === 'error'" class="text-center py-stack-xl">
-      <p class="text-error mb-4">{{ errorMessage }}</p>
-      <button type="button" class="px-6 py-2.5 bg-secondary text-white rounded-lg font-bold" @click="onReset">
-        Réessayer
-      </button>
+    <div v-else-if="state === 'error'" class="max-w-md mx-auto py-stack-xl space-y-4">
+      <UiMessageBanner variant="error" :message="errorMessage" />
+      <UiButton variant="secondary" block @click="onReset">{{ MSG.confirm.retry }}</UiButton>
     </div>
 
     <div v-else class="space-y-stack-lg">
@@ -68,7 +67,7 @@ function onReset() {
           Annuler
         </button>
         <button type="button" class="px-8 py-2.5 bg-secondary text-white rounded-lg font-bold" @click="onConfirm">
-          Confirmer et personnaliser
+          {{ MSG.buttons.continue }}
         </button>
       </div>
     </div>

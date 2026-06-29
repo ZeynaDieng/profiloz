@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { toCoverLetterSnapshot, normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 
@@ -49,7 +50,7 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
 <template>
   <div class="min-h-screen bg-white print:bg-white print:min-h-0">
     <div v-if="error || !letter" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
-      Impossible de charger la lettre pour l'impression.
+      {{ MSG.error.loadPrintLetter }}
     </div>
     <div v-else data-cv-ready="true" class="flex justify-center print:block">
       <CoverLetterPreviewA4 :letter="letter" />

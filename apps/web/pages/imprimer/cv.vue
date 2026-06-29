@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 
 definePageMeta({ layout: false })
 
@@ -30,7 +31,7 @@ const { data: resume, error } = await useAsyncData(
 <template>
   <div class="min-h-screen bg-white print:bg-white print:min-h-0">
     <div v-if="error || !resume" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
-      Impossible de charger le CV pour l'impression.
+      {{ MSG.error.loadPrintCv }}
     </div>
     <div v-else data-cv-ready="true" class="flex justify-center print:block">
       <ResumePreviewA4 :resume="resume" />

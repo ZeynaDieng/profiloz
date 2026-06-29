@@ -18,18 +18,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop">
-    <div class="mb-stack-lg">
-      <h1 class="text-2xl font-bold text-on-surface">Modèles de CV</h1>
-      <p class="text-on-surface-variant">Parcourez les 10 modèles disponibles pour votre prochain CV.</p>
-    </div>
+  <div class="page-container">
+    <header class="mb-stack-lg">
+      <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Modèles de CV</h1>
+      <p class="text-on-surface-variant mt-1 text-sm sm:text-base">
+        Parcourez les {{ TEMPLATE_REGISTRY.length }} modèles disponibles pour votre prochain CV.
+      </p>
+    </header>
 
-    <div class="flex flex-wrap gap-2 mb-stack-lg">
+    <div class="flex gap-2 mb-stack-lg overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
       <button
         v-for="filter in TEMPLATE_FILTERS"
         :key="filter.id"
         type="button"
-        class="px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
+        class="shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
         :class="
           activeFilter === filter.id
             ? 'bg-secondary text-white border-secondary'
@@ -53,14 +55,23 @@ onMounted(() => {
         <div class="p-4">
           <h2 class="font-bold text-on-surface">{{ template.name }}</h2>
           <p class="text-xs text-on-surface-variant mt-1">{{ template.category }}</p>
-          <NuxtLink
-            to="/creer/modele"
-            class="inline-block mt-3 text-secondary text-sm font-bold hover:underline"
-          >
-            Utiliser ce modèle
+          <NuxtLink :to="`/creer/modele?select=${template.slug}`" class="block mt-3">
+            <UiButton variant="secondary" size="sm" block>
+              Utiliser ce modèle
+            </UiButton>
           </NuxtLink>
         </div>
       </article>
     </div>
   </div>
 </template>
+
+<style scoped>
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+</style>

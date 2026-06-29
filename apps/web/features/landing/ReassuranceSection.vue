@@ -3,48 +3,66 @@ const items = [
   {
     icon: 'verified_user',
     title: 'Compatible ATS',
-    description: 'Modèles structurés pour une lecture optimale par les logiciels de recrutement.',
+    description: 'Modèles structurés pour les logiciels de recrutement.',
   },
   {
     icon: 'person_off',
-    title: 'Sans inscription obligatoire',
-    description: 'Créez votre CV en mode invité. Compte gratuit pour sauvegarder CV et lettres.',
+    title: 'Sans inscription',
+    description: 'CV en mode invité. Compte gratuit pour sauvegarder.',
   },
   {
     icon: 'bolt',
-    title: 'Téléchargement PDF immédiat',
-    description: 'Obtenez vos documents en PDF en quelques minutes, dès la fin du parcours.',
+    title: 'PDF immédiat',
+    description: 'Téléchargez vos documents en quelques minutes.',
   },
   {
     icon: 'lock',
     title: 'Données sécurisées',
-    description: 'Vos documents et informations sont protégés et conservés de façon responsable.',
+    description: 'Vos informations protégées et conservées de manière responsable.',
   },
 ]
+
+const { target, revealed } = useScrollReveal(0.15)
 </script>
 
 <template>
-  <section id="reassurance" class="py-12 md:py-20 bg-surface-container-low border-t border-outline-variant/30">
-    <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-      <div class="text-center mb-10 md:mb-12 space-y-3">
-        <h2 class="text-xl sm:text-2xl font-bold text-on-surface">Simple, fiable, sans engagement</h2>
-        <p class="text-on-surface-variant max-w-2xl mx-auto text-sm sm:text-base">
-          Tout ce qu'il faut pour préparer votre dossier de candidature en toute confiance.
+  <section
+    id="reassurance"
+    ref="target"
+    class="landing-section bg-surface-container-low border-t border-outline-variant/30"
+    :class="revealed ? 'scroll-reveal is-revealed' : 'scroll-reveal'"
+  >
+    <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden">
+      <ul class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-gutter pb-8 md:pb-10 mb-8 md:mb-10 border-b border-outline-variant/15">
+        <FeaturesLandingStatItem :end="12000" suffix="+" label="CV créés" />
+        <FeaturesLandingStatItem :end="8" suffix=" min" label="Temps moyen" />
+        <FeaturesLandingStatItem :end="100" suffix="%" label="Compatible ATS" />
+        <FeaturesLandingStatItem :end="24" suffix="/7" label="Disponible" />
+      </ul>
+
+      <div class="landing-section-header text-center !pt-0">
+        <h2 class="text-xl sm:text-2xl font-bold text-on-surface">Simple et fiable</h2>
+        <p class="text-on-surface-variant text-sm hidden sm:block max-w-2xl mx-auto">
+          Préparez votre dossier en toute confiance.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
-        <div
+      <div class="mobile-scroll-x sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-gutter">
+        <UiCard
           v-for="item in items"
           :key="item.title"
-          class="flex flex-col items-center text-center gap-3 p-stack-md rounded-2xl bg-surface-container-lowest border border-outline-variant/30"
+          variant="default"
+          padding="md"
+          class="mobile-scroll-card-sm premium-card flex flex-col items-center text-center gap-2 sm:gap-3 !py-4 sm:!py-stack-md"
         >
-          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <UiPzIcon :name="item.icon" class="text-[24px]" />
+          <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <UiPzIcon :name="item.icon" class="text-[22px] sm:text-[24px]" />
           </div>
-          <h3 class="font-bold text-on-surface">{{ item.title }}</h3>
-          <p class="text-sm text-on-surface-variant leading-relaxed">{{ item.description }}</p>
-        </div>
+          <h3 class="font-bold text-on-surface text-sm sm:text-base">{{ item.title }}</h3>
+          <p class="text-xs sm:text-sm text-on-surface-variant leading-snug line-clamp-2 sm:line-clamp-none">
+            {{ item.description }}
+          </p>
+        </UiCard>
       </div>
     </div>
   </section>

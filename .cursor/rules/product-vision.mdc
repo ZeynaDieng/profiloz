@@ -12,6 +12,8 @@ Référence complète : [docs/00-vision.md](mdc:docs/00-vision.md). Cette vision
 > plus **rapidement**, plus **simplement** et avec plus de **confiance** ? »
 Si non → ce n'est probablement pas prioritaire pour la V1.
 
+**Guidage UX détaillé** : `.cursor/rules/ux-principles.mdc` (une action par écran, messages rassurants, dashboard assistant).
+
 ## Concept central
 - Profilo'Z crée un **dossier de candidature** (CV + lettre + documents + historique), pas « un CV ».
 - Vocabulaire UI unifié : **dossier** (Créer / Mes dossiers / Modifier / Télécharger le dossier).

@@ -16,14 +16,15 @@ export function useGuestSession() {
     try {
       await post('/guest/session', { sessionId: id })
     } catch {
-      // API may be offline during dev
+      // Réessai une fois : la session doit exister côté API pour les appels invités.
+      await post('/guest/session', { sessionId: id })
     }
 
     return id
   }
 
   onMounted(() => {
-    ensureSession()
+    ensureSession().catch(() => {})
   })
 
   return { guestSessionId, ensureSession }

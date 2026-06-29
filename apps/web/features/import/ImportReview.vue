@@ -9,7 +9,10 @@ import type {
   LanguageLevel,
   ResumeSnapshot,
 } from '@profiloz/shared'
-import { EXTRACTION_LOW_CONFIDENCE } from '@profiloz/shared'
+import {
+  EXTRACTION_LOW_CONFIDENCE,
+  MSG,
+} from '@profiloz/shared'
 
 type ImportData = Partial<ResumeSnapshot> & { _extraction?: ExtractionMeta }
 
@@ -292,7 +295,7 @@ const inputClass =
           @input="exp.skillsUsed = ($event.target as HTMLInputElement).value.split(',').map((s) => s.trim()).filter(Boolean)"
         />
       </div>
-      <p v-if="!form.experiences.length" class="text-sm text-on-surface-variant">Aucune expérience détectée.</p>
+      <p v-if="!form.experiences.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noExperience }}</p>
     </div> -->
 
     <!-- Formations -->
@@ -331,7 +334,7 @@ const inputClass =
           </div>
         </div>
       </div>
-      <p v-if="!form.educations.length" class="text-sm text-on-surface-variant">Aucune formation détectée.</p>
+      <p v-if="!form.educations.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noEducation }}</p>
     </div> -->
 
     <!-- Compétences -->
@@ -376,7 +379,7 @@ const inputClass =
         </select>
         <button type="button" class="text-xs text-error hover:underline" @click="removeLanguage(i)">Suppr.</button>
       </div>
-      <p v-if="!form.languages.length" class="text-sm text-on-surface-variant">Aucune langue détectée.</p>
+      <p v-if="!form.languages.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noLanguage }}</p>
     </div> -->
 
     <!-- Centres d'intérêt -->
@@ -405,21 +408,13 @@ const inputClass =
       </div>
     </div> -->
 
-    <div class="flex justify-end gap-4 border-t border-outline-variant pt-stack-md">
-      <button
-        type="button"
-        class="px-6 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg"
-        @click="emit('cancel')"
-      >
+    <div class="flex flex-col sm:flex-row sm:justify-end gap-3 border-t border-outline-variant pt-stack-md sticky bottom-0 bg-background/95 backdrop-blur-sm pb-[max(1rem,env(safe-area-inset-bottom))] -mx-margin-mobile px-margin-mobile md:static md:bg-transparent md:backdrop-blur-none md:pb-0 md:mx-0 md:px-0">
+      <UiButton variant="ghost" block class="sm:w-auto" @click="emit('cancel')">
         Annuler
-      </button>
-      <button
-        type="button"
-        class="px-8 py-2.5 bg-secondary text-white rounded-lg font-bold"
-        @click="emit('confirm', buildResult())"
-      >
-        Confirmer et choisir un modèle
-      </button>
+      </UiButton>
+      <UiButton variant="secondary" block class="sm:w-auto" @click="emit('confirm', buildResult())">
+        {{ MSG.buttons.continue }}
+      </UiButton>
     </div>
   </div>
 </template>

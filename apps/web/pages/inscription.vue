@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import { registerSchema } from '@profiloz/validators'
+import { parseRegisterError } from '~/utils/api-error'
 
 definePageMeta({ layout: 'auth' })
 
@@ -24,30 +26,10 @@ const loginLink = computed(() => ({
   query: route.query.redirect ? { redirect: route.query.redirect } : {},
 }))
 
-function parseRegisterError(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const problem = err as {
-      status?: number
-      detail?: string
-      errors?: Array<{ field: string; message: string }>
-    }
-    if (problem.errors?.length) {
-      return problem.errors.map((e) => e.message).join('. ')
-    }
-    if (problem.status === 409) {
-      return 'Un compte existe déjà avec cet e-mail.'
-    }
-    if (problem.detail) {
-      return problem.detail
-    }
-  }
-  return 'Impossible de créer le compte. Vérifiez vos informations et réessayez.'
-}
-
 async function onSubmit() {
   error.value = ''
   if (password.value !== confirmPassword.value) {
-    error.value = 'Les mots de passe ne correspondent pas'
+    error.value = MSG.validation.passwordMismatch
     return
   }
 
@@ -84,38 +66,65 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full max-w-[440px] glass-card rounded-xl p-stack-lg shadow-sm">
-    <div class="text-center mb-stack-lg">
-      <h1 class="text-2xl font-bold text-on-surface mb-2">Sauvegardez votre CV</h1>
-      <p class="text-on-surface-variant">30 secondes pour ne rien perdre de votre travail.</p>
+  <UiCard variant="glass" padding="lg" class="shadow-sm w-full max-w-[440px] mx-auto">
+    <div v-if="!success" class="">
+      <div class="text-center mb-stack-lg">
+        <h1 class="text-2xl sm:text-3xl font-bold text-on-surface mb-2">Sauvegardez votre CV</h1>
+        <p class="text-on-surface-variant text-sm sm:text-base">30 secondes pour ne rien perdre de votre travail.</p>
+      </div>
+
+      <form class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
+        <UiFormField label="E-mail">
+          <input
+            v-model="email"
+            type="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            class="form-input form-input--white w-full"
+            placeholder="vous@exemple.com"
+          >
+        </UiFormField>
+        <UiFormField label="Mot de passe">
+          <input
+            v-model="password"
+            type="password"
+            required
+            minlength="8"
+            autocomplete="new-password"
+            class="form-input form-input--white w-full"
+            placeholder="8 car. min, 1 majuscule, 1 chiffre"
+          >
+        </UiFormField>
+        <UiFormField label="Confirmer le mot de passe">
+          <input
+            v-model="confirmPassword"
+            type="password"
+            required
+            autocomplete="new-password"
+            class="form-input form-input--white w-full"
+            placeholder="Répétez le mot de passe"
+          >
+        </UiFormField>
+        <Transition name="form-field__error">
+          <UiMessageBanner v-if="error" variant="error" :message="error" />
+        </Transition>
+        <UiButton type="submit" variant="secondary" block :loading="loading" class="mt-1">
+          Créer mon compte
+        </UiButton>
+        <p class="text-center text-on-surface-variant text-sm">
+          Déjà inscrit ?
+          <NuxtLink :to="loginLink" class="text-secondary font-semibold hover:underline">Se connecter</NuxtLink>
+        </p>
+      </form>
     </div>
 
-    <form v-if="!success" class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
-      <UiFormField label="E-mail">
-        <input v-model="email" type="email" required class="form-input form-input--white w-full" placeholder="vous@exemple.com" />
-      </UiFormField>
-      <UiFormField label="Mot de passe">
-        <input v-model="password" type="password" required minlength="8" class="form-input form-input--white w-full" placeholder="8 car. min, 1 majuscule, 1 chiffre" />
-      </UiFormField>
-      <UiFormField label="Confirmer le mot de passe">
-        <input v-model="confirmPassword" type="password" required class="form-input form-input--white w-full" />
-      </UiFormField>
-      <p v-if="error" class="text-error text-sm">{{ error }}</p>
-      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-bold mt-2" :disabled="loading">
-        {{ loading ? 'Création...' : 'Créer mon compte' }}
-      </button>
-      <p class="text-center text-on-surface-variant">
-        Déjà inscrit ?
-        <NuxtLink :to="loginLink" class="text-secondary font-semibold hover:underline">Se connecter</NuxtLink>
-      </p>
-    </form>
-
-    <div v-else class="text-center py-stack-lg">
+    <div v-else class="text-center py-stack-lg animate-zoom-in">
       <div class="w-16 h-16 bg-secondary-fixed rounded-full flex items-center justify-center mb-4 mx-auto text-secondary">
         <UiPzIcon name="check_circle" class="text-[32px]" />
       </div>
-      <h2 class="text-xl font-bold">Compte créé</h2>
+      <h2 class="text-xl font-bold">{{ MSG.success.accountCreated }}</h2>
       <p class="text-on-surface-variant mt-2">Redirection vers votre tableau de bord...</p>
     </div>
-  </div>
+  </UiCard>
 </template>

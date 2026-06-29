@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { TemplateSlug } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
 useGuestSession()
-const toast = useToast()
+const { error: toastError } = useAppToast()
 const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
@@ -40,7 +41,7 @@ function selectTemplate(slug: TemplateSlug) {
 
 function onContinue() {
   if (!selectedSlug.value) {
-    toast.add({ title: 'Choisissez un modèle pour continuer.', color: 'error' })
+    toastError(MSG.wizard.chooseTemplate)
     return
   }
   resumeStore.setTemplate(selectedSlug.value)
@@ -55,21 +56,28 @@ useWizardStep({ onContinue })
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto">
-    <div class="mb-stack-lg">
-      <h1 class="text-3xl font-bold text-on-surface">Choisissez votre modèle</h1>
-      <p class="text-on-surface-variant">
-        {{ filteredTemplates.length }} modèles conçus pour tous les profils — l'aperçu des étapes suivantes utilisera
-        ce modèle.
-      </p>
-    </div>
+  <div class="page-container max-w-container-max mx-auto pb-4">
+    <header class="mb-stack-lg space-y-3">
+      <p class="text-sm font-medium text-secondary">{{ MSG.guide.modelStep }}</p>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Choisissez votre modèle</h1>
+        <p class="text-on-surface-variant mt-1 text-sm sm:text-base">
+          {{ filteredTemplates.length }} modèles — une colonne sur mobile pour comparer facilement.
+        </p>
+      </div>
+      <UiMessageBanner
+        v-if="selectedSlug"
+        variant="success"
+        :message="MSG.guide.modelSelected"
+      />
+    </header>
 
-    <div class="flex flex-wrap gap-2 mb-stack-lg">
+    <div class="flex gap-2 mb-stack-lg overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
       <button
         v-for="filter in TEMPLATE_FILTERS"
         :key="filter.id"
         type="button"
-        class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+        class="shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-colors"
         :class="
           activeFilter === filter.id
             ? 'bg-secondary text-white'
@@ -81,13 +89,14 @@ useWizardStep({ onContinue })
       </button>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
       <FeatureTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
         :user-snapshot="resumeStore.current"
+        class=""
         @select="selectTemplate"
       >
         <div>
@@ -98,3 +107,13 @@ useWizardStep({ onContinue })
     </div>
   </div>
 </template>
+
+<style scoped>
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+</style>

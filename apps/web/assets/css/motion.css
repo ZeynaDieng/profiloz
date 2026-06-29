@@ -1,0 +1,528 @@
+/**
+ * Profilo'Z — Charte d'animations
+ * Style : Stripe / Linear / Framer / Notion / Vercel
+ * Uniquement transform + opacity. Mobile-first, prefers-reduced-motion.
+ */
+
+:root {
+  --pz-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --pz-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --pz-duration-fast: 200ms;
+  --pz-duration-normal: 250ms;
+  --pz-duration-reveal: 700ms;
+  --pz-duration-hero: 700ms;
+  --pz-translate-reveal: 20px;
+  --pz-shadow-card: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --pz-shadow-card-hover: 0 12px 32px rgba(15, 23, 42, 0.1);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --pz-duration-reveal: 550ms;
+    --pz-duration-hero: 600ms;
+    --pz-translate-reveal: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pz-duration-fast: 0ms;
+    --pz-duration-normal: 0ms;
+    --pz-duration-reveal: 0ms;
+    --pz-duration-hero: 0ms;
+    --pz-translate-reveal: 0px;
+  }
+}
+
+/* ── Keyframes ── */
+
+@keyframes pz-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--pz-translate-reveal));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pz-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pz-modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes pz-drawer-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pz-drawer-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+/* ── Drawer mobile marketing ── */
+
+.mobile-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  color: var(--color-on-surface);
+  transition:
+    background-color var(--pz-duration-normal) var(--pz-ease-out),
+    transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.mobile-drawer-link:active {
+  transform: scale(0.98);
+}
+
+.mobile-drawer-link:hover {
+  background-color: var(--color-surface-container-low);
+}
+
+.mobile-drawer-link__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--color-secondary) 8%, transparent);
+  flex-shrink: 0;
+}
+
+.mobile-drawer-item {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity var(--pz-duration-normal) var(--pz-ease-out),
+    transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.mobile-drawer-item.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@keyframes pz-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pz-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes pz-valid-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Entrée de page (transitions Nuxt + conteneurs) ── */
+
+.page-enter {
+  opacity: 0;
+  animation: pz-fade-up var(--pz-duration-reveal) var(--pz-ease-out) forwards;
+}
+
+.page-enter-delay-1 { animation-delay: 80ms; }
+.page-enter-delay-2 { animation-delay: 140ms; }
+.page-enter-delay-3 { animation-delay: 200ms; }
+
+/* Cartes verre / bento héritent du hover premium */
+.glass-card:not(.no-hover-motion),
+.bento-card {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    box-shadow var(--pz-duration-normal) var(--pz-ease-out),
+    border-color var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.glass-card:not(.no-hover-motion):hover,
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--pz-shadow-card-hover);
+}
+
+/* Liens et zones cliquables */
+a.btn-primary,
+a.btn-secondary,
+a.btn-outline,
+a.btn-ghost,
+button:not(.no-motion) {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    background-color var(--pz-duration-normal) var(--pz-ease-out),
+    border-color var(--pz-duration-normal) var(--pz-ease-out),
+    color var(--pz-duration-normal) var(--pz-ease-out),
+    box-shadow var(--pz-duration-normal) var(--pz-ease-out),
+    opacity var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+a.btn-primary:hover,
+a.btn-secondary:hover,
+a.btn-outline:hover,
+a.btn-ghost:hover {
+  transform: scale(1.02);
+}
+
+a.btn-primary:active,
+a.btn-secondary:active,
+a.btn-outline:active,
+a.btn-ghost:active {
+  transform: scale(0.98);
+}
+
+.touch-target {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    background-color var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.touch-target:active {
+  transform: scale(0.98);
+}
+
+/* ── Scroll reveal (sections) ── */
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(var(--pz-translate-reveal));
+  transition:
+    opacity var(--pz-duration-reveal) var(--pz-ease-out),
+    transform var(--pz-duration-reveal) var(--pz-ease-out);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stagger (témoignages, listes) ── */
+
+.stagger-item {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--pz-duration-reveal) var(--pz-ease-out),
+    transform var(--pz-duration-reveal) var(--pz-ease-out);
+}
+
+.stagger-item.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Hero entrance ── */
+
+.hero-enter {
+  opacity: 0;
+  animation: pz-fade-up var(--pz-duration-hero) var(--pz-ease-out) forwards;
+}
+
+/* ── Cartes ── */
+
+.pz-card,
+.premium-card,
+.bento-card {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    box-shadow var(--pz-duration-normal) var(--pz-ease-out),
+    border-color var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.pz-card:hover,
+.premium-card:hover,
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--pz-shadow-card-hover);
+}
+
+.premium-card:hover {
+  border-color: rgba(0, 81, 213, 0.15);
+}
+
+/* ── Boutons ── */
+
+.pz-btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-ghost {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    background-color var(--pz-duration-normal) var(--pz-ease-out),
+    border-color var(--pz-duration-normal) var(--pz-ease-out),
+    color var(--pz-duration-normal) var(--pz-ease-out),
+    box-shadow var(--pz-duration-normal) var(--pz-ease-out),
+    opacity var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.pz-btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-outline:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.pz-btn:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-outline:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pz-btn--loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* ── Icônes ── */
+
+.pz-icon-hover {
+  transition: transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.pz-card:hover .pz-icon-hover,
+.premium-card:hover .premium-icon-wrap,
+.premium-card:hover .premium-icon-wrap {
+  transform: scale(1.06);
+}
+
+/* ── Templates CV ── */
+
+.pz-template-card {
+  transition:
+    transform var(--pz-duration-normal) var(--pz-ease-out),
+    box-shadow var(--pz-duration-normal) var(--pz-ease-out),
+    border-color var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.pz-template-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--pz-shadow-card-hover);
+}
+
+.pz-template-preview {
+  transition: transform 0.4s var(--pz-ease-out);
+}
+
+.pz-template-card:hover .pz-template-preview {
+  transform: scale(1.02);
+}
+
+/* ── FAQ accordion ── */
+
+.faq-item {
+  transition: background-color var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.faq-panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.faq-panel__inner {
+  overflow: hidden;
+}
+
+.faq-panel__content {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--pz-duration-normal) var(--pz-ease-out),
+    transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.faq-panel.is-open .faq-panel__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.faq-chevron {
+  transition: transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.faq-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* ── Formulaires ── */
+
+.form-field__error-enter-active,
+.form-field__error-leave-active {
+  transition:
+    opacity var(--pz-duration-normal) var(--pz-ease-out),
+    transform var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.form-field__error-enter-from,
+.form-field__error-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.form-field__valid {
+  animation: pz-valid-pop var(--pz-duration-normal) var(--pz-ease-out) both;
+}
+
+.form-input--valid {
+  border-color: color-mix(in srgb, var(--color-secondary) 50%, var(--color-outline-variant));
+}
+
+.form-input--error {
+  border-color: var(--color-error);
+}
+
+/* ── Skeleton (pas de spinner) ── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-container-low) 0%,
+    var(--color-surface-container) 50%,
+    var(--color-surface-container-low) 100%
+  );
+  background-size: 200% 100%;
+  animation: pz-shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes pz-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ── Reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .stagger-item,
+  .hero-enter {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+
+  .scroll-reveal.is-revealed,
+  .stagger-item.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pz-card:hover,
+  .premium-card:hover,
+  .bento-card:hover,
+  .glass-card:not(.no-hover-motion):hover,
+  .bento-card:hover,
+  .pz-template-card:hover {
+    transform: none;
+  }
+
+  .page-enter {
+    opacity: 1;
+    animation: none;
+  }
+
+  a.btn-primary:hover,
+  a.btn-secondary:hover,
+  a.btn-outline:hover,
+  a.btn-ghost:hover,
+  .pz-btn:hover:not(:disabled),
+  .btn-primary:hover:not(:disabled),
+  .btn-secondary:hover:not(:disabled),
+  .btn-outline:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-zoom-in {
+    animation: none;
+  }
+
+  .page-enter-active,
+  .page-leave-active,
+  .layout-enter-active,
+  .layout-leave-active {
+    transition: none;
+  }
+
+  .page-enter-from,
+  .page-leave-to,
+  .layout-enter-from,
+  .layout-leave-to {
+    opacity: 1;
+    transform: none;
+  }
+
+  .faq-panel,
+  .faq-panel__content,
+  .faq-chevron {
+    transition: none;
+  }
+
+  .skeleton {
+    animation: none;
+    background: var(--color-surface-container);
+  }
+}

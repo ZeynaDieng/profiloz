@@ -18,7 +18,7 @@ function validate(file: File): boolean {
   error.value = ''
   const maxBytes = (props.maxSizeMb ?? 10) * 1024 * 1024
   if (file.size > maxBytes) {
-    error.value = 'Fichier trop volumineux (max 10 Mo)'
+    error.value = MSG.upload.size
     return false
   }
   return true
@@ -60,7 +60,7 @@ function onDrop(e: DragEvent) {
         <p class="text-on-surface-variant">PDF, DOCX, JPG ou PNG — max {{ maxSizeMb ?? 10 }} Mo</p>
       </div>
       <span class="px-6 py-2 bg-primary text-white rounded-lg font-label-sm">Sélectionner un fichier</span>
-      <p v-if="error" class="text-error text-sm">{{ error }}</p>
+      <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-4" />
     </div>
   </div>
 </template>

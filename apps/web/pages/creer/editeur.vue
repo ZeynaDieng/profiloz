@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 
 definePageMeta({ layout: false })
@@ -8,16 +9,18 @@ const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 const resumeService = useResumeService()
 const pdfService = usePdfService()
+const paymentService = usePaymentService()
+const { ensureSession } = useGuestSession()
+const { isDesktop } = useBreakpoints()
 
 const loading = ref(true)
 const pageError = ref('')
 const accentColor = ref('#0051d5')
 const pdfLoading = ref(false)
+const pdfLoadingStep = ref(0)
 const pdfError = ref('')
-const saveLoading = ref(false)
-const saveMessage = ref('')
-const showMobilePreview = ref(false)
-const showMobileActions = ref(false)
+const previewOpen = ref(false)
+const actionsOpen = ref(false)
 const accentColors = ['#0051d5', '#0F172A', '#10B981', '#F43F5E'] as const
 
 const resume = computed(() => resumeStore.current)
@@ -68,6 +71,8 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
 
 onMounted(async () => {
   authStore.loadFromStorage()
+  await ensureSession().catch(() => {})
+
   const resumeId = route.query.id as string | undefined
 
   if (resumeId) {
@@ -93,6 +98,13 @@ onMounted(async () => {
 
   accentColor.value = resumeStore.current?.templateConfig.accentColor ?? '#0051d5'
   loading.value = false
+
+  if (route.query.download === '1') {
+    await nextTick()
+    await downloadPdf()
+    const { download: _removed, ...restQuery } = route.query
+    await navigateTo({ path: route.path, query: restQuery }, { replace: true })
+  }
 })
 
 watch(accentColor, (color) => {
@@ -109,8 +121,12 @@ function currentSnapshot() {
   }
 }
 
-async function saveResume() {
-  saveMessage.value = ''
+const pdfLoadingMessage = computed(() => {
+  const steps = MSG.pdf.steps
+  return steps[Math.min(pdfLoadingStep.value, steps.length - 1)]
+})
+
+async function saveResume(silent = false) {
   const wasAuthenticated = authStore.isAuthenticated
   authStore.syncSession()
   if (!authStore.isAuthenticated) {
@@ -118,180 +134,254 @@ async function saveResume() {
       path: wasAuthenticated ? '/connexion' : '/inscription',
       query: { redirect: route.fullPath },
     })
-    return
+    return false
   }
 
-  saveLoading.value = true
   try {
     await persistToServer()
-    saveMessage.value = 'Enregistré'
+    return true
   } catch (err) {
-    const problem = err as { status?: number; detail?: string; errors?: Array<{ message: string }> }
-    if (problem.status === 401) {
-      saveMessage.value = 'Session expirée — reconnectez-vous'
-      await navigateTo({ path: '/connexion', query: { redirect: route.fullPath } })
-      return
+    if (!silent) {
+      const problem = err as { status?: number; detail?: string; errors?: Array<{ message: string }> }
+      if (problem.status === 401) {
+        pdfError.value = MSG.auth.sessionExpired
+        await navigateTo({ path: '/connexion', query: { redirect: route.fullPath } })
+        return false
+      }
+      pdfError.value = problem.errors?.[0]?.message ?? problem.detail ?? MSG.save.error
     }
-    saveMessage.value = problem.errors?.[0]?.message ?? problem.detail ?? 'Erreur de sauvegarde'
-  } finally {
-    saveLoading.value = false
+    return false
   }
 }
 
 async function downloadPdf() {
   pdfError.value = ''
   pdfLoading.value = true
-  try {
-    if (authStore.isAuthenticated && resumeStore.isDirty) {
-      await saveResume()
+  pdfLoadingStep.value = 0
+  const stepTimer = window.setInterval(() => {
+    if (pdfLoadingStep.value < MSG.pdf.steps.length - 1) {
+      pdfLoadingStep.value += 1
     }
+  }, 1200)
+  try {
+    await ensureSession()
+
+    if (authStore.isAuthenticated && resumeStore.isDirty) {
+      const saved = await saveResume(true)
+      if (!saved) return
+    }
+
+    if (!authStore.isAuthenticated) {
+      try {
+        const entitlements = await paymentService.getEntitlements()
+        if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
+          await navigateTo({
+            path: '/tarifs',
+            query: { reason: 'unlock', returnTo: route.fullPath },
+          })
+          return
+        }
+      } catch (err) {
+        const problem = err as { status?: number }
+        if (problem.status === 402) {
+          await navigateTo({
+            path: '/tarifs',
+            query: { reason: 'unlock', returnTo: route.fullPath },
+          })
+          return
+        }
+        throw err
+      }
+    }
+
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
-  } catch {
-    pdfError.value = 'Impossible de générer le PDF. Réessayez dans un instant.'
+  } catch (err) {
+    const problem = err as { status?: number }
+    if (problem.status === 402) {
+      await navigateTo({
+        path: '/tarifs',
+        query: { reason: 'unlock', returnTo: route.fullPath },
+      })
+      return
+    }
+    pdfError.value = MSG.pdf.error
   } finally {
+    window.clearInterval(stepTimer)
     pdfLoading.value = false
   }
 }
 </script>
 
 <template>
-  <div v-if="loading" class="h-screen flex items-center justify-center text-on-surface-variant">
-    Chargement de l'éditeur...
+  <div v-if="loading" class="h-screen flex flex-col items-center justify-center gap-4 text-on-surface-variant p-margin-mobile">
+    <UiSkeleton variant="circle" width="3rem" height="3rem" />
+    <p>Chargement de l'éditeur...</p>
   </div>
 
-  <div v-else-if="pageError" class="h-screen flex flex-col items-center justify-center gap-4">
-    <p class="text-error">{{ pageError }}</p>
-    <NuxtLink to="/tableau-de-bord" class="text-secondary font-bold hover:underline">Retour au tableau de bord</NuxtLink>
+  <div v-else-if="pageError" class="h-screen flex flex-col items-center justify-center gap-4 p-margin-mobile max-w-md w-full">
+    <UiMessageBanner variant="error" :message="pageError" />
+    <NuxtLink to="/tableau-de-bord">
+      <UiButton variant="secondary">{{ MSG.confirm.back }}</UiButton>
+    </NuxtLink>
   </div>
 
   <div v-else-if="resume && previewResume" class="h-screen flex flex-col overflow-hidden bg-background">
-    <header class="relative flex justify-between items-center px-margin-mobile md:px-gutter py-2.5 md:py-3 bg-surface border-b border-outline-variant shrink-0 gap-2">
+    <!-- Header compact mobile-first -->
+    <header class="flex justify-between items-center px-margin-mobile md:px-gutter py-2.5 bg-surface border-b border-outline-variant shrink-0 gap-2">
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
-        <span class="text-on-surface-variant text-sm truncate hidden min-[380px]:inline">{{ resume.title }}</span>
+        <span class="text-on-surface-variant text-sm truncate hidden min-[360px]:inline">{{ resume.title }}</span>
       </div>
 
-      <p v-if="autoSaveLabel" class="text-xs text-secondary hidden md:block truncate max-w-[280px]">
+      <p v-if="autoSaveLabel" class="text-xs text-secondary hidden lg:block truncate max-w-[280px]">
         {{ autoSaveLabel }}
       </p>
 
-      <div class="flex items-center gap-0.5 sm:gap-2 shrink-0">
-        <LayoutAuthStatus icon-only class="sm:hidden" />
-        <LayoutAuthStatus compact class="hidden sm:flex" />
-        <p v-if="saveMessage" class="text-sm hidden lg:block" :class="saveMessage === 'Enregistré' ? 'text-secondary' : 'text-error'">
-          {{ saveMessage }}
-        </p>
-        <button
-          type="button"
-          class="lg:hidden min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container"
-          :aria-label="showMobilePreview ? 'Modifier le contenu' : 'Voir l’aperçu'"
-          @click="showMobilePreview = !showMobilePreview"
-        >
-          <UiPzIcon :name="showMobilePreview ? 'edit' : 'visibility'" />
-        </button>
-        <button
-          type="button"
-          class="md:hidden min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container"
-          aria-label="Plus d’actions"
-          @click="showMobileActions = !showMobileActions"
-        >
-          <UiPzIcon name="more_vert" />
-        </button>
-        <NuxtLink to="/creer/modele" class="hidden md:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center">
+      <div class="flex items-center gap-1 shrink-0">
+        <LayoutAuthStatus icon-only class="lg:hidden" />
+        <LayoutAuthStatus compact class="hidden lg:flex" />
+
+        <!-- Desktop actions -->
+        <NuxtLink to="/creer/modele" class="hidden xl:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center">
           {{ templateName }}
         </NuxtLink>
-        <div class="hidden sm:flex gap-1">
+        <div class="hidden lg:flex gap-1">
           <button
             v-for="color in accentColors"
             :key="color"
             type="button"
-            class="w-8 h-8 sm:w-6 sm:h-6 rounded-full ring-2 ring-offset-1"
+            class="w-7 h-7 rounded-full ring-2 ring-offset-1"
             :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
             :style="{ backgroundColor: color }"
             :aria-label="`Couleur ${color}`"
             @click="accentColor = color"
           />
         </div>
+
+        <!-- Mobile : menu options -->
         <button
           type="button"
-          class="hidden sm:inline-flex min-h-11 px-3 py-2 text-sm text-on-surface-variant hover:text-secondary items-center"
-          :disabled="saveLoading"
-          @click="saveResume"
+          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          aria-label="Plus d'actions"
+          @click="actionsOpen = true"
         >
-          {{ saveLoading ? '…' : 'Enregistrer' }}
+          <UiPzIcon name="tune" />
         </button>
-        <button
-          type="button"
-          class="min-h-11 inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-secondary text-white rounded-lg font-bold text-sm disabled:opacity-60"
-          :disabled="pdfLoading"
-          :aria-label="pdfLoading ? 'Génération du PDF' : 'Télécharger le PDF'"
+
+        <!-- Desktop PDF -->
+        <UiButton
+          variant="secondary"
+          size="sm"
+          class="hidden md:inline-flex"
+          icon="download"
+          :loading="pdfLoading"
           @click="downloadPdf"
         >
-          <UiPzIcon name="download" />
-          <span class="hidden sm:inline">{{ pdfLoading ? '…' : 'Télécharger' }}</span>
-        </button>
-      </div>
-
-      <div
-        v-if="showMobileActions"
-        class="md:hidden absolute top-full right-4 mt-1 w-56 rounded-xl border border-outline-variant bg-surface shadow-lg z-50 py-2"
-      >
-        <NuxtLink
-          to="/creer/modele"
-          class="flex items-center min-h-11 px-4 text-sm text-on-surface hover:bg-surface-container"
-          @click="showMobileActions = false"
-        >
-          Modèle · {{ templateName }}
-        </NuxtLink>
-        <button
-          type="button"
-          class="w-full flex items-center min-h-11 px-4 text-sm text-on-surface hover:bg-surface-container"
-          :disabled="saveLoading"
-          @click="showMobileActions = false; saveResume()"
-        >
-          {{ saveLoading ? 'Enregistrement…' : 'Enregistrer' }}
-        </button>
-        <div class="px-4 py-2 border-t border-outline-variant/30">
-          <p class="text-xs text-on-surface-variant mb-2">Couleur d’accent</p>
-          <div class="flex gap-2">
-            <button
-              v-for="color in accentColors"
-              :key="color"
-              type="button"
-              class="w-9 h-9 rounded-full ring-2 ring-offset-1"
-              :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
-              :style="{ backgroundColor: color }"
-              @click="accentColor = color"
-            />
-          </div>
-        </div>
+          {{ MSG.buttons.downloadPdf }}
+        </UiButton>
       </div>
     </header>
 
-    <p v-if="autoSaveLabel || saveMessage" class="text-xs px-margin-mobile md:px-gutter py-1.5 md:hidden bg-surface border-b border-outline-variant flex flex-wrap gap-x-2">
-      <span v-if="autoSaveLabel" class="text-secondary">{{ autoSaveLabel }}</span>
-      <span v-if="saveMessage" :class="saveMessage === 'Enregistré' ? 'text-secondary' : 'text-error'">{{ saveMessage }}</span>
-    </p>
+    <!-- Status bar mobile -->
+    <div
+      v-if="autoSaveLabel"
+      class="lg:hidden px-margin-mobile py-2 bg-surface border-b border-outline-variant"
+    >
+      <UiMessageBanner
+        variant="info"
+        :message="autoSaveLabel"
+      />
+    </div>
 
-    <main class="flex-1 flex overflow-hidden">
-      <div
-        class="w-full lg:w-[42%] xl:w-[38%] shrink-0 border-r border-outline-variant overflow-hidden"
-        :class="showMobilePreview ? 'hidden lg:block' : 'block'"
-      >
+    <!-- Contenu : formulaire seul sur mobile, split sur desktop -->
+    <main class="flex-1 flex overflow-hidden pb-[4.5rem] md:pb-0">
+      <div class="w-full xl:w-[42%] shrink-0 border-r border-outline-variant overflow-hidden">
         <FeatureEditorFormPanel />
       </div>
 
-      <div
-        class="flex-1 overflow-hidden min-w-0"
-        :class="showMobilePreview ? 'block' : 'hidden lg:block'"
-      >
+      <div v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">
         <FeatureEditorPreviewPanel :resume="previewResume" />
       </div>
     </main>
 
-    <p v-if="pdfError" class="text-error text-sm text-center py-2 bg-surface border-t border-outline-variant">
-      {{ pdfError }}
-    </p>
+    <!-- Mobile : barre d'actions sticky -->
+    <UiStickyActionBar class="md:hidden">
+      <div class="flex gap-2">
+        <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
+          Aperçu
+        </UiButton>
+        <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
+          {{ MSG.buttons.downloadPdf }}
+        </UiButton>
+      </div>
+    </UiStickyActionBar>
+
+    <!-- Mobile : aperçu plein écran -->
+    <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu du CV">
+      <FeatureEditorPreviewPanel :resume="previewResume" />
+      <template #footer>
+        <UiButton variant="secondary" block @click="previewOpen = false">
+          Retour à l'édition
+        </UiButton>
+      </template>
+    </UiFullScreenSheet>
+
+    <!-- Mobile : drawer actions -->
+    <UDrawer
+      v-model:open="actionsOpen"
+      direction="bottom"
+      :ui="{ content: 'rounded-t-2xl px-margin-mobile pb-[max(1rem,env(safe-area-inset-bottom))]' }"
+    >
+      <template #content>
+        <div class="py-4 space-y-1">
+          <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-2 mb-2">Options</p>
+          <NuxtLink
+            to="/creer/modele"
+            class="flex items-center min-h-11 px-3 rounded-xl text-sm text-on-surface hover:bg-surface-container"
+            @click="actionsOpen = false"
+          >
+            <UiPzIcon name="dashboard_customize" class="mr-3" />
+            Modèle · {{ templateName }}
+          </NuxtLink>
+          <div class="px-3 py-3 border-t border-outline-variant/30 mt-2">
+            <p class="text-xs text-on-surface-variant mb-3">Couleur d'accent</p>
+            <div class="flex gap-3">
+              <button
+                v-for="color in accentColors"
+                :key="color"
+                type="button"
+                class="w-10 h-10 rounded-full ring-2 ring-offset-2"
+                :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
+                :style="{ backgroundColor: color }"
+                @click="accentColor = color"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+    </UDrawer>
+
+    <UiMessageBanner
+      v-if="pdfError"
+      variant="error"
+      :message="pdfError"
+      class="rounded-none border-x-0 border-b-0"
+    />
+
+    <!-- Chargement PDF narratif -->
+    <div
+      v-if="pdfLoading"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-margin-mobile"
+      role="status"
+      aria-live="polite"
+    >
+      <UiCard variant="glass" padding="lg" class="w-full max-w-sm text-center shadow-lg">
+        <UiPzIcon name="picture_as_pdf" class="text-4xl text-secondary mb-4 animate-pulse" />
+        <p class="font-bold text-on-surface mb-2">{{ pdfLoadingMessage }}</p>
+        <p class="text-sm text-on-surface-variant">Quelques instants suffisent.</p>
+        <UiSkeleton variant="text" width="100%" class="mt-4" />
+      </UiCard>
+    </div>
   </div>
 </template>

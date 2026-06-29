@@ -1,4 +1,5 @@
 import type { DocumentType, ResumeSnapshot } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 import { parseApiAuthError } from '~/utils/api-error'
 
 const PROCESS_TIMEOUT_MS = 120_000
@@ -45,8 +46,7 @@ export function useImportFlow(documentType: DocumentType) {
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw {
-          detail:
-            'L’analyse a pris trop de temps. Privilégiez un PDF texte ou un DOCX plutôt qu’une photo ou un scan.',
+          detail: MSG.network.timeout,
         }
       }
       throw error
@@ -73,10 +73,7 @@ export function useImportFlow(documentType: DocumentType) {
       extractedData.value = result.parsedData ?? {}
       state.value = 'preview'
     } catch (error) {
-      errorMessage.value = parseApiAuthError(
-        error,
-        "Impossible d'analyser le document. Vérifiez le format et réessayez.",
-      )
+      errorMessage.value = parseApiAuthError(error, MSG.upload.ocrError)
       state.value = 'error'
     }
   }

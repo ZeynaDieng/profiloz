@@ -6,7 +6,7 @@
         <p class="text-on-surface-variant">Formation et expériences professionnelles.</p>
       </div>
 
-      <p v-if="stepError" class="text-sm text-error">{{ stepError }}</p>
+      <UiMessageBanner v-if="stepError" variant="error" :message="stepError" />
 
       <section class="space-y-stack-md">
         <h2 class="font-bold text-on-surface text-lg">Formation</h2>
@@ -23,10 +23,11 @@
 
 <script setup lang="ts">
 import type { Education, Experience } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
-const toast = useToast()
+const { error: toastError } = useAppToast()
 const resumeStore = useResumeStore()
 const { goNext } = useWizardNavigation()
 const { previewResume } = useWizardPreviewResume()
@@ -70,12 +71,12 @@ watch(experiences, persistExperiences, { deep: true })
 function validateStep(): string | null {
   for (const edu of educations.value) {
     if (hasEducationContent(edu) && !isEducationComplete(edu)) {
-      return 'Complétez tous les champs de chaque formation commencée, ou supprimez-la.'
+      return MSG.wizard.completeEducation
     }
   }
   for (const exp of experiences.value) {
     if (hasExperienceContent(exp) && !isExperienceComplete(exp)) {
-      return 'Complétez tous les champs de chaque expérience commencée, ou supprimez-la.'
+      return MSG.wizard.completeExperience
     }
   }
   return null
@@ -86,7 +87,7 @@ function onContinue() {
   const error = validateStep()
   if (error) {
     stepError.value = error
-    toast.add({ title: error, color: 'error' })
+    toastError(error)
     return
   }
   persist()

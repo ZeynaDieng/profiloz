@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import type { CoverLetter } from '~/services/cover-letter.service'
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
@@ -9,12 +10,15 @@ definePageMeta({ layout: 'dashboard' })
 const route = useRoute()
 const authStore = useAuthStore()
 const coverLetterService = useCoverLetterService()
+const { isDesktop } = useBreakpoints()
+const { confirm: confirmAction } = useConfirm()
 
 const letter = ref<CoverLetter | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const pdfLoading = ref(false)
 const error = ref('')
+const previewOpen = ref(false)
 
 const templateId = ref<CoverLetterTemplateSlug>('CLASSIQUE')
 const senderName = ref('')
@@ -93,7 +97,7 @@ async function onSave() {
     })
   } catch (err) {
     const problem = err as { detail?: string; title?: string }
-    error.value = problem.detail || problem.title || 'Impossible de sauvegarder.'
+    error.value = problem.detail || problem.title || MSG.letter.saveError
   } finally {
     saving.value = false
   }
@@ -106,31 +110,41 @@ async function onDownloadPdf() {
     await onSave()
     await coverLetterService.downloadPdf(letter.value.id)
   } catch {
-    error.value = 'Impossible de générer le PDF.'
+    error.value = MSG.pdf.error
   } finally {
     pdfLoading.value = false
   }
 }
 
 async function onDelete() {
-  if (!letter.value || !confirm('Supprimer cette lettre ?')) return
+  if (!letter.value) return
+  const ok = await confirmAction(MSG.delete.confirmLetter, {
+    title: MSG.delete.title,
+    confirmLabel: MSG.delete.confirmLabel,
+    destructive: true,
+  })
+  if (!ok) return
   await coverLetterService.remove(letter.value.id)
   await navigateTo('/tableau-de-bord/lettres')
 }
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop">
-    <NuxtLink to="/tableau-de-bord/lettres" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-block">
-      ← Retour aux lettres
+  <div class="page-container pb-28 xl:pb-0">
+    <NuxtLink to="/tableau-de-bord/lettres" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-flex items-center gap-1 min-h-11">
+      <UiPzIcon name="arrow_back" class="text-base" />
+      Retour aux lettres
     </NuxtLink>
 
-    <p v-if="loading" class="text-on-surface-variant">Chargement...</p>
-    <p v-else-if="error && !letter" class="text-error">{{ error }}</p>
+    <div v-if="loading" class="space-y-stack-md">
+      <UiSkeleton variant="text" :lines="2" />
+      <UiSkeleton variant="rect" height="12rem" />
+    </div>
+    <UiMessageBanner v-else-if="error && !letter" variant="error" :message="error" class="mb-4" />
 
-    <div v-else-if="letter" class="grid grid-cols-1 xl:grid-cols-2 gap-gutter">
-      <form class="glass-card rounded-xl p-stack-lg border border-outline-variant space-y-stack-lg" @submit.prevent="onSave">
-        <h1 class="text-xl font-bold text-on-surface">{{ letter.title }}</h1>
+    <div v-else-if="letter" class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter">
+      <form class="glass-card rounded-xl p-stack-md md:p-stack-lg border border-outline-variant space-y-stack-lg" @submit.prevent="onSave">
+        <h1 class="text-xl md:text-2xl font-bold text-on-surface">{{ letter.title }}</h1>
 
         <FeatureCoverLetterForm
           v-model:template-id="templateId"
@@ -146,26 +160,21 @@ async function onDelete() {
           v-model:closing-text="closingText"
         />
 
-        <p v-if="error" class="text-error text-sm">{{ error }}</p>
-        <div class="flex flex-wrap gap-3">
-          <button type="submit" class="px-5 py-2.5 bg-secondary text-white rounded-lg font-bold" :disabled="saving">
-            {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
-          </button>
-          <button
-            type="button"
-            class="px-5 py-2.5 border border-outline-variant rounded-lg font-bold"
-            :disabled="pdfLoading"
-            @click="onDownloadPdf"
-          >
-            {{ pdfLoading ? 'PDF...' : 'Télécharger PDF' }}
-          </button>
-          <button type="button" class="px-5 py-2.5 text-error hover:bg-error/5 rounded-lg" @click="onDelete">
+        <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-2" />
+
+        <!-- Actions desktop -->
+        <div class="hidden md:flex flex-wrap gap-3">
+          <UiButton variant="secondary" icon="download" :loading="pdfLoading" @click="onDownloadPdf">
+            {{ MSG.buttons.downloadPdf }}
+          </UiButton>
+          <UiButton variant="ghost" @click="onDelete">
             Supprimer
-          </button>
+          </UiButton>
         </div>
       </form>
 
-      <div class="glass-card rounded-xl border border-outline-variant overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
+      <!-- Aperçu desktop -->
+      <div v-if="isDesktop" class="glass-card rounded-xl border border-outline-variant overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
         <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-4 py-3 border-b border-outline-variant/30">
           Aperçu A4
         </p>
@@ -174,5 +183,28 @@ async function onDelete() {
         </div>
       </div>
     </div>
+
+    <!-- Mobile : barre d'actions sticky -->
+    <UiStickyActionBar v-if="letter && !loading" class="xl:hidden">
+      <div class="flex gap-2">
+        <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
+          Aperçu
+        </UiButton>
+        <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="onDownloadPdf">
+          {{ MSG.buttons.downloadPdf }}
+        </UiButton>
+      </div>
+    </UiStickyActionBar>
+
+    <UiFullScreenSheet v-if="previewLetter" v-model:open="previewOpen" title="Aperçu A4">
+      <div class="h-full min-h-[70vh] bg-surface-container-low">
+        <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+      </div>
+      <template #footer>
+        <UiButton variant="secondary" block @click="previewOpen = false">
+          Retour à l'édition
+        </UiButton>
+      </template>
+    </UiFullScreenSheet>
   </div>
 </template>

@@ -30,8 +30,8 @@ export function usePaymentService() {
   }
 
   /** Démarre un paiement et renvoie l'URL de redirection PayTech. */
-  async function checkout(planSlug: PlanSlug) {
-    return post<{ ref: string; redirectUrl: string }>('/payments/checkout', { planSlug })
+  async function checkout(planSlug: PlanSlug, returnTo?: string) {
+    return post<{ ref: string; redirectUrl: string }>('/payments/checkout', { planSlug, returnTo })
   }
 
   return { listPlans, getEntitlements, checkout }

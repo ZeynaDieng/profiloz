@@ -2,6 +2,7 @@
   <FeatureWizardSplitLayout :resume="previewResume">
       <div class="wizard-container flex flex-col items-center py-stack-lg max-w-[800px] mx-auto w-full">
       <div class="w-full space-y-stack-sm mb-stack-lg text-center md:text-left">
+        <p class="text-sm font-medium text-secondary">{{ MSG.guide.infoStep }}</p>
         <h1 class="text-2xl font-bold text-on-surface">Commençons par vos informations</h1>
         <p class="text-on-surface-variant">
           Ces informations apparaîtront en tête de votre CV. La photo est facultative.
@@ -40,12 +41,12 @@
 
 <script setup lang="ts">
 import type { TemplateSlug } from '@profiloz/shared'
-import { TEMPLATE_SLUGS } from '@profiloz/shared'
+import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
 useGuestSession()
-const toast = useToast()
+const { error: toastError } = useAppToast()
 const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
@@ -87,7 +88,7 @@ watch(form, () => resumeStore.updatePersonalInfo({ ...form }), { deep: true })
 
 function onContinue() {
   if (!form.fullName || !form.email) {
-    toast.add({ title: 'Renseignez au minimum votre nom et votre e-mail.', color: 'error' })
+    toastError(MSG.wizard.nameAndEmail)
     return
   }
   resumeStore.updatePersonalInfo({ ...form })

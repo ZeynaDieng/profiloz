@@ -1,36 +1,62 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'dashboard' })
 
 const authStore = useAuthStore()
+const { confirm } = useConfirm()
 
 onMounted(() => {
   authStore.loadFromStorage()
   if (!authStore.isAuthenticated) navigateTo('/connexion')
 })
 
-function logout() {
+async function logout() {
+  const ok = await confirm(MSG.auth.logoutConfirm, {
+    title: MSG.auth.logoutTitle,
+    confirmLabel: 'Se déconnecter',
+  })
+  if (!ok) return
   authStore.logout()
-  navigateTo('/connexion')
+  await navigateTo('/connexion')
 }
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop max-w-2xl">
-    <h1 class="text-2xl font-bold text-on-surface mb-2">Paramètres</h1>
-    <p class="text-on-surface-variant mb-stack-lg">Gérez votre compte Profilo'Z.</p>
+  <div class="page-container max-w-2xl">
+    <header class="mb-stack-lg">
+      <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Paramètres</h1>
+      <p class="text-on-surface-variant mt-1">Gérez votre compte Profilo'Z.</p>
+    </header>
 
-    <section class="glass-card rounded-xl p-stack-lg border border-outline-variant mb-stack-md">
-      <h2 class="font-bold text-on-surface mb-2">Compte</h2>
-      <p v-if="authStore.user" class="text-sm text-on-surface-variant mb-4">{{ authStore.user.email }}</p>
-      <button type="button" class="px-5 py-2.5 text-error border border-error/20 rounded-lg font-semibold hover:bg-error/5" @click="logout">
-        Se déconnecter
-      </button>
-    </section>
+    <div class="space-y-stack-md">
+      <UiCard variant="glass" padding="lg">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+            <UiPzIcon name="person" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="font-bold text-on-surface mb-1">Compte</h2>
+            <p v-if="authStore.user" class="text-sm text-on-surface-variant mb-4 break-all">{{ authStore.user.email }}</p>
+            <UiButton variant="danger" @click="logout">
+              Se déconnecter
+            </UiButton>
+          </div>
+        </div>
+      </UiCard>
 
-    <section class="glass-card rounded-xl p-stack-lg border border-outline-variant">
-      <h2 class="font-bold text-on-surface mb-2">Préférences</h2>
-      <p class="text-sm text-on-surface-variant">Langue : Français (fr-FR)</p>
-      <p class="text-xs text-on-surface-variant/70 mt-2">D'autres options seront disponibles prochainement.</p>
-    </section>
+      <UiCard variant="glass" padding="lg">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+            <UiPzIcon name="tune" />
+          </div>
+          <div>
+            <h2 class="font-bold text-on-surface mb-1">Préférences</h2>
+            <p class="text-sm text-on-surface-variant">Langue : Français (fr-FR)</p>
+            <p class="text-xs text-on-surface-variant/70 mt-2">D'autres options seront disponibles prochainement.</p>
+          </div>
+        </div>
+      </UiCard>
+    </div>
   </div>
 </template>

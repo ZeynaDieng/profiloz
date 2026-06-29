@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resolveAppUrl } from '../lib/pdf/app-url'
+import { buildPublicAppPath, resolveAppUrl, resolvePublicAppUrl } from '../lib/pdf/app-url'
 import { checkPdfRenderReadiness } from '../lib/pdf/pdf-readiness'
 
 describe('resolveAppUrl', () => {
@@ -8,6 +8,7 @@ describe('resolveAppUrl', () => {
   beforeEach(() => {
     process.env = { ...env }
     delete process.env.APP_URL
+    delete process.env.PUBLIC_APP_URL
     delete process.env.NUXT_PUBLIC_APP_URL
     delete process.env.CORS_ORIGIN
   })
@@ -24,6 +25,35 @@ describe('resolveAppUrl', () => {
 
   it('retombe sur localhost en dev', () => {
     expect(resolveAppUrl()).toBe('http://127.0.0.1:3000')
+  })
+})
+
+describe('resolvePublicAppUrl', () => {
+  const env = process.env
+
+  beforeEach(() => {
+    process.env = { ...env }
+    delete process.env.APP_URL
+    delete process.env.PUBLIC_APP_URL
+    delete process.env.NUXT_PUBLIC_APP_URL
+    delete process.env.CORS_ORIGIN
+  })
+
+  afterEach(() => {
+    process.env = env
+  })
+
+  it('ignore APP_URL docker interne et utilise PUBLIC_APP_URL', () => {
+    process.env.APP_URL = 'http://web:3000'
+    process.env.PUBLIC_APP_URL = 'http://localhost:3000'
+    expect(resolvePublicAppUrl()).toBe('http://localhost:3000')
+  })
+
+  it('construit une URL de redirection PayTech valide', () => {
+    process.env.PUBLIC_APP_URL = 'http://localhost:3000'
+    expect(buildPublicAppPath('/paiement/succes', { ref: 'pz_test', returnTo: '/creer/editeur' })).toBe(
+      'http://localhost:3000/paiement/succes?ref=pz_test&returnTo=%2Fcreer%2Fediteur',
+    )
   })
 })
 

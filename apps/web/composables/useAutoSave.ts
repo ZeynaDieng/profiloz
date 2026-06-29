@@ -1,3 +1,4 @@
+import { MSG } from '@profiloz/shared'
 import { useDebounceFn } from '@vueuse/core'
 
 export type AutoSaveStatus = 'idle' | 'pending' | 'saved' | 'error'
@@ -14,18 +15,18 @@ export function useAutoSave(options: {
 
   function formatTimeAgo(timestamp: number) {
     const seconds = Math.floor((Date.now() - timestamp) / 1000)
-    if (seconds < 10) return 'à l\'instant'
-    if (seconds < 60) return `il y a ${seconds} secondes`
+    if (seconds < 10) return "à l'instant"
+    if (seconds < 60) return `il y a ${seconds} s`
     const minutes = Math.floor(seconds / 60)
-    return `il y a ${minutes} minute${minutes > 1 ? 's' : ''}`
+    return `il y a ${minutes} min`
   }
 
   const statusLabel = computed(() => {
-    if (status.value === 'pending') return 'Sauvegarde en cours…'
+    if (status.value === 'pending') return MSG.save.inProgress
     if (status.value === 'saved' && lastSavedAt.value) {
-      return `✓ Sauvegardé automatiquement · ${formatTimeAgo(lastSavedAt.value)}`
+      return MSG.save.autoSaved(formatTimeAgo(lastSavedAt.value))
     }
-    if (status.value === 'error') return errorMessage.value || 'Erreur de sauvegarde'
+    if (status.value === 'error') return errorMessage.value || MSG.save.autoSaveFailed
     return ''
   })
 
@@ -40,7 +41,7 @@ export function useAutoSave(options: {
       status.value = 'saved'
     } catch {
       status.value = 'error'
-      errorMessage.value = 'Sauvegarde automatique échouée'
+      errorMessage.value = MSG.save.autoSaveFailed
     }
   }, options.intervalMs ?? 5000)
 

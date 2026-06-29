@@ -31,7 +31,7 @@ onMounted(async () => {
 
 <template>
   <article
-    class="bg-surface border border-outline-variant rounded-xl overflow-hidden hover:border-secondary transition-colors flex flex-col"
+    class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col pz-card pz-template-card"
   >
     <NuxtLink
       :to="`/tableau-de-bord/dossiers/${id}`"
@@ -46,13 +46,12 @@ onMounted(async () => {
         <UiPzIcon :name="isReady ? 'check_circle' : 'description'" class="text-[13px]" />
         {{ isReady ? 'Prêt à envoyer' : 'CV seul' }}
       </span>
-      <FeatureTemplatesA4PreviewFit v-if="snapshot" :resume="snapshot" />
-      <div
+      <FeatureTemplatesA4PreviewFit v-if="snapshot" :resume="snapshot" class="pz-template-preview" />
+      <UiSkeleton
         v-else-if="loadingPreview"
-        class="absolute inset-0 flex items-center justify-center text-xs text-on-surface-variant"
-      >
-        Aperçu...
-      </div>
+        class="absolute inset-0 !rounded-none"
+        height="100%"
+      />
       <div
         v-else
         class="absolute inset-0 flex items-center justify-center text-xs text-on-surface-variant px-4 text-center"
@@ -80,7 +79,7 @@ onMounted(async () => {
         </p>
         <NuxtLink
           :to="`/creer/editeur?id=${id}`"
-          class="inline-flex items-center justify-center min-h-11 px-4 py-2.5 bg-secondary text-white rounded-lg text-sm font-bold whitespace-nowrap"
+          class="btn-secondary inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap"
         >
           Modifier
         </NuxtLink>

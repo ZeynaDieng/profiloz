@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 import { formatEducationPeriod } from '~/utils/education'
 
 defineProps<{
@@ -52,7 +53,7 @@ defineProps<{
             </p>
           </div>
         </template>
-        <p v-else class="text-sm text-on-surface-variant">Aucune expérience détectée dans ce document.</p>
+        <p v-else class="text-sm text-on-surface-variant">{{ MSG.empty.noExperienceInDoc }}</p>
       </div>
 
       <div class="glass-card p-stack-md rounded-xl space-y-3">
@@ -67,7 +68,7 @@ defineProps<{
             </p>
           </div>
         </template>
-        <p v-else class="text-sm text-on-surface-variant">Aucune formation détectée dans ce document.</p>
+        <p v-else class="text-sm text-on-surface-variant">{{ MSG.empty.noEducationInDoc }}</p>
       </div>
 
       <div v-if="data.skills?.length" class="glass-card p-stack-md rounded-xl space-y-2">
@@ -89,7 +90,7 @@ defineProps<{
         <p v-if="data.languages?.length" class="text-sm text-on-surface-variant">
           {{ data.languages.map((l) => l.name).join(', ') }}
         </p>
-        <p v-else class="text-sm text-on-surface-variant">Aucune langue détectée.</p>
+        <p v-else class="text-sm text-on-surface-variant">{{ MSG.empty.noLanguage }}</p>
       </div>
 
       <div v-if="data.certifications?.length" class="glass-card p-stack-md rounded-xl md:col-span-2 space-y-3">

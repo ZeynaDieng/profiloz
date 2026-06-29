@@ -36,12 +36,27 @@
   --spacing-stack-sm: 8px;
   --spacing-stack-md: 16px;
   --spacing-stack-lg: 32px;
+  --spacing-stack-xl: 48px;
   --spacing-margin-mobile: 16px;
+  --spacing-margin-tablet: 24px;
   --spacing-margin-desktop: 40px;
   --spacing-container-max: 1280px;
+  --spacing-touch-target: 44px;
+  --spacing-bottom-nav: 72px;
+  --spacing-safe-bottom: max(0.75rem, env(safe-area-inset-bottom));
 
   --font-headline-md: 'Geist', sans-serif;
   --font-body-md: 'Inter', sans-serif;
   --font-label-sm: 'Geist', sans-serif;
   --font-display-lg: 'Geist', sans-serif;
+
+  --breakpoint-mobile-max: 767px;
+  --breakpoint-tablet-min: 768px;
+  --breakpoint-tablet-max: 1279px;
+  --breakpoint-desktop-min: 1280px;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
 }

@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import { TEMPLATE_SLUGS } from '@profiloz/shared'
+import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import './error-map.js'
 
 const templateSlugSchema = z.enum(TEMPLATE_SLUGS)
-const requiredString = (label: string, max: number) =>
-  z.string().trim().min(1, `${label} requis`).max(max, `Maximum ${max} caractères`)
+const requiredString = (max: number) =>
+  z.string().trim().min(1, MSG.validation.requiredAlt).max(max, MSG.validation.maxChars(max))
 
 function emptyToUndefined(val: unknown) {
   if (val === '' || val === null || val === undefined) return undefined
@@ -24,7 +24,7 @@ const optionalEmailSchema = z.preprocess(emptyToUndefined, z.string().email().op
 const optionalUrlSchema = z.preprocess(normalizeUrl, z.string().url().optional())
 
 export const personalInfoSchema = z.object({
-  fullName: z.preprocess(emptyToUndefined, z.string().trim().min(1, 'Nom requis').max(200).optional()),
+  fullName: z.preprocess(emptyToUndefined, z.string().trim().min(1, MSG.validation.name).max(200).optional()),
   email: optionalEmailSchema,
   phone: z.preprocess(emptyToUndefined, z.string().max(50).optional()),
   location: z.preprocess(emptyToUndefined, z.string().max(200).optional()),
@@ -37,15 +37,15 @@ export const personalInfoSchema = z.object({
       .string()
       .max(512)
       .refine((val) => !val.startsWith('data:'), {
-        message: 'Les photos base64 ne sont plus acceptées. Utilisez l’upload photo.',
+        message: MSG.photo.base64Rejected,
       })
       .optional(),
   ),
 })
 
 export const experienceSchema = z.object({
-  company: requiredString('Entreprise', 200),
-  position: requiredString('Poste', 200),
+  company: requiredString(200),
+  position: requiredString(200),
   location: z.string().max(200).optional(),
   country: z.string().max(100).optional(),
   startDate: z.coerce.date().optional(),
@@ -57,8 +57,8 @@ export const experienceSchema = z.object({
 })
 
 export const educationSchema = z.object({
-  institution: requiredString('Établissement', 200),
-  degree: requiredString('Diplôme', 200),
+  institution: requiredString(200),
+  degree: requiredString(200),
   field: z.string().max(200).optional(),
   location: z.string().max(200).optional(),
   startDate: z.coerce.date().optional(),
@@ -68,7 +68,7 @@ export const educationSchema = z.object({
 })
 
 export const skillSchema = z.object({
-  name: requiredString('Compétence', 100),
+  name: requiredString(100),
   level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']).optional(),
   category: z.string().max(100).optional(),
   sortOrder: z.number().int().default(0),
@@ -128,8 +128,8 @@ export const saveResumeSnapshotSchema = z.object({
   experiences: z
     .array(
       z.object({
-        company: requiredString('Entreprise', 200),
-        position: requiredString('Poste', 200),
+        company: requiredString(200),
+        position: requiredString(200),
         location: z.string().max(200).optional(),
         country: z.string().max(100).optional(),
         startDate: snapshotDateSchema,
@@ -143,8 +143,8 @@ export const saveResumeSnapshotSchema = z.object({
   educations: z
     .array(
       z.object({
-        institution: requiredString('Établissement', 200),
-        degree: requiredString('Diplôme', 200),
+        institution: requiredString(200),
+        degree: requiredString(200),
         field: z.string().max(200).optional(),
         location: z.string().max(200).optional(),
         startDate: snapshotDateSchema,
@@ -156,7 +156,7 @@ export const saveResumeSnapshotSchema = z.object({
   skills: z
     .array(
       z.object({
-        name: requiredString('Compétence', 100),
+        name: requiredString(100),
         level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']).optional(),
         category: z.string().max(100).optional(),
       }),
@@ -165,7 +165,7 @@ export const saveResumeSnapshotSchema = z.object({
   certifications: z
     .array(
       z.object({
-        name: requiredString('Certification', 200),
+        name: requiredString(200),
         issuer: z.string().max(200).optional(),
         issueDate: snapshotDateSchema,
         expiryDate: snapshotDateSchema,
@@ -173,11 +173,11 @@ export const saveResumeSnapshotSchema = z.object({
       }),
     )
     .default([]),
-  interests: z.array(z.object({ name: requiredString('Centre d’intérêt', 100) })).default([]),
+  interests: z.array(z.object({ name: requiredString(100) })).default([]),
   languages: z
     .array(
       z.object({
-        name: requiredString('Langue', 100),
+        name: requiredString(100),
         level: z.enum(['BASIC', 'CONVERSATIONAL', 'PROFESSIONAL', 'NATIVE']).optional(),
       }),
     )

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import { loginSchema } from '@profiloz/validators'
 import { parseApiAuthError } from '~/utils/api-error'
 
@@ -38,7 +39,7 @@ async function onSubmit() {
     await authStore.login(validation.data.email, validation.data.password)
     await navigateTo(redirectTo.value)
   } catch (err) {
-    error.value = parseApiAuthError(err, 'Identifiants incorrects.')
+    error.value = parseApiAuthError(err, MSG.auth.loginError)
   } finally {
     loading.value = false
   }
@@ -53,29 +54,49 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-md w-full glass-card rounded-xl p-stack-lg shadow-sm">
+  <UiCard variant="glass" padding="lg" class="shadow-sm">
     <div class="text-center mb-stack-lg">
-      <h1 class="text-2xl font-bold text-on-surface mb-2">Bon retour</h1>
-      <p class="text-on-surface-variant">Retrouvez vos CV et reprenez où vous en étiez.</p>
+      <h1 class="text-2xl sm:text-3xl font-bold text-on-surface mb-2">Bon retour</h1>
+      <p class="text-on-surface-variant text-sm sm:text-base">Retrouvez vos CV et reprenez où vous en étiez.</p>
     </div>
     <form class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
       <UiFormField label="E-mail">
-        <input v-model="email" type="email" required class="form-input form-input--white w-full" />
+        <input
+          v-model="email"
+          type="email"
+          required
+          autocomplete="email"
+          inputmode="email"
+          class="form-input form-input--white w-full"
+          placeholder="vous@exemple.com"
+        >
       </UiFormField>
       <UiFormField label="Mot de passe">
-        <input v-model="password" type="password" required class="form-input form-input--white w-full" />
+        <input
+          v-model="password"
+          type="password"
+          required
+          autocomplete="current-password"
+          class="form-input form-input--white w-full"
+          placeholder="Votre mot de passe"
+        >
       </UiFormField>
-      <p v-if="error" class="text-error text-sm">{{ error }}</p>
-      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-bold mt-2" :disabled="loading">
-        {{ loading ? 'Connexion...' : 'Se connecter' }}
-      </button>
+      <Transition name="form-field__error">
+        <UiMessageBanner v-if="error" variant="error" :message="error" />
+      </Transition>
+      <UiButton type="submit" block :loading="loading" class="mt-1">
+        Se connecter
+      </UiButton>
       <p class="text-center text-on-surface-variant text-sm">
         Pas encore de compte ?
         <NuxtLink :to="signupLink" class="text-secondary font-semibold hover:underline">Créer un compte</NuxtLink>
       </p>
-      <p class="text-center">
-        <NuxtLink to="/creer" class="text-sm text-on-surface-variant hover:text-secondary">Continuer sans compte →</NuxtLink>
+      <p class="text-center pt-1">
+        <NuxtLink to="/creer" class="text-sm text-on-surface-variant hover:text-secondary inline-flex items-center gap-1 min-h-11">
+          Continuer sans compte
+          <UiPzIcon name="arrow_forward" class="text-base" />
+        </NuxtLink>
       </p>
     </form>
-  </div>
+  </UiCard>
 </template>

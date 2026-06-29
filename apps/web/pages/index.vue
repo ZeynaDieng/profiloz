@@ -1,9 +1,10 @@
 <template>
   <div>
     <FeaturesLandingHeroSection />
+    <FeaturesLandingTestimonialsStrip />
+    <FeaturesLandingTemplatesShowcase />
     <FeaturesLandingFeaturesBento />
     <FeaturesLandingHowItWorksSection />
-    <FeaturesLandingTemplatesShowcase />
     <FeaturesLandingApplicationDuoSection />
     <FeaturesLandingReassuranceSection />
     <FeaturesLandingFaqSection />

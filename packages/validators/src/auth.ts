@@ -1,4 +1,5 @@
 import './error-map.js'
+import { MSG } from '@profiloz/shared'
 import { z } from 'zod'
 
 function emptyToUndefined(val: unknown) {
@@ -7,24 +8,24 @@ function emptyToUndefined(val: unknown) {
 }
 
 export const registerSchema = z.object({
-  email: z.string().min(1, 'E-mail requis').email('Format e-mail invalide'),
+  email: z.string().min(1, MSG.validation.requiredAlt).email(MSG.validation.email),
   password: z
     .string()
-    .min(1, 'Mot de passe requis')
-    .min(8, 'Minimum 8 caractères')
-    .regex(/[A-Z]/, 'Au moins une majuscule')
-    .regex(/[0-9]/, 'Au moins un chiffre'),
-  guestSessionId: z.preprocess(emptyToUndefined, z.string().uuid('Identifiant invité invalide').optional()),
+    .min(1, MSG.validation.requiredAlt)
+    .min(8, MSG.validation.passwordMin)
+    .regex(/[A-Z]/, MSG.validation.passwordUppercase)
+    .regex(/[0-9]/, MSG.validation.passwordDigit),
+  guestSessionId: z.preprocess(emptyToUndefined, z.string().uuid(MSG.validation.invalidData).optional()),
   resumeSnapshot: z.record(z.unknown()).optional(),
 })
 
 export const loginSchema = z.object({
-  email: z.string().min(1, 'E-mail requis').email('Format e-mail invalide'),
-  password: z.string().min(1, 'Mot de passe requis'),
+  email: z.string().min(1, MSG.validation.requiredAlt).email(MSG.validation.email),
+  password: z.string().min(1, MSG.validation.requiredAlt),
 })
 
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, 'Jeton requis'),
+  refreshToken: z.string().min(1, MSG.validation.required),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>

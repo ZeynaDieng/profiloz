@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: false })
 
 const authStore = useAuthStore()
@@ -29,65 +31,66 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col bg-background">
     <header class="flex justify-between items-center gap-3 px-margin-mobile py-2.5 border-b border-outline-variant/30 bg-surface/90 backdrop-blur-sm shrink-0">
       <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
       <LayoutAuthStatus icon-only class="sm:hidden" />
       <LayoutAuthStatus compact class="hidden sm:flex" />
     </header>
-    <div class="flex-1 flex items-center justify-center p-margin-mobile relative overflow-hidden gradient-mesh">
-    <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
-    <div class="relative w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-3xl shadow-lg p-8 md:p-12 text-center">
-      <div class="text-5xl mb-6">🎉</div>
-      <h1 class="text-3xl md:text-4xl font-bold text-primary mb-4">Félicitations !</h1>
-      <p class="text-lg text-on-surface font-medium mb-2">Votre CV professionnel est prêt.</p>
-      <p class="text-on-surface-variant max-w-md mx-auto mb-10">
-        Téléchargez-le maintenant ou créez un compte gratuit pour le sauvegarder et le modifier plus tard.
-      </p>
 
-      <div v-if="authStore.isAuthenticated" class="space-y-4 mb-8">
-        <NuxtLink
-          to="/tableau-de-bord"
-          class="block w-full bg-primary text-white py-4 px-8 rounded-lg font-bold"
-        >
-          Voir mes CV
-        </NuxtLink>
-        <NuxtLink to="/creer/editeur" class="block text-secondary font-semibold hover:underline">
-          Continuer à modifier
-        </NuxtLink>
-      </div>
+    <div class="flex-1 flex flex-col items-center justify-center p-margin-mobile relative overflow-hidden gradient-mesh pb-28 sm:pb-8">
+      <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
 
-      <div v-else class="w-full bg-surface-container-low rounded-xl p-6 md:p-8 mb-8 border border-outline-variant/20 text-left">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-3">
-            <h3 class="font-bold text-primary">Créez un compte gratuit pour sauvegarder votre CV</h3>
-            <ul class="space-y-2 text-on-surface-variant text-sm">
-              <li class="flex items-center gap-2"><UiPzIcon name="check" class="text-secondary text-[18px]" /> Sauvegarder vos CV</li>
-              <li class="flex items-center gap-2"><UiPzIcon name="check" class="text-secondary text-[18px]" /> Créer plusieurs versions</li>
-              <li class="flex items-center gap-2"><UiPzIcon name="check" class="text-secondary text-[18px]" /> Accéder à l'historique</li>
-            </ul>
-          </div>
-          <div class="flex flex-col gap-3 min-w-[200px]">
-            <NuxtLink
-              to="/inscription?redirect=/creer/editeur"
-              class="bg-primary text-white py-4 px-8 rounded-lg font-bold text-center"
-            >
-              Créer un compte
+      <UiCard variant="glass" padding="lg" class="relative w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">
+        <div class="text-5xl mb-4 sm:mb-6">🎉</div>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
+        <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ MSG.guide.successHeadline }}</p>
+        <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-8 sm:mb-10">
+          {{ MSG.guide.successLead }}
+        </p>
+
+        <div v-if="authStore.isAuthenticated" class="space-y-3 mb-6">
+          <NuxtLink to="/tableau-de-bord" class="block">
+            <UiButton block>Voir mes dossiers</UiButton>
+          </NuxtLink>
+          <NuxtLink to="/creer/editeur" class="block text-secondary font-semibold hover:underline min-h-11 inline-flex items-center justify-center w-full">
+            Continuer à modifier
+          </NuxtLink>
+        </div>
+
+        <UiCard v-else variant="default" padding="md" class="mb-6 text-left !bg-surface-container-low">
+          <h3 class="font-bold text-primary mb-3">{{ MSG.guide.accountPitch }}</h3>
+          <ul class="space-y-2 text-on-surface-variant text-sm mb-4">
+            <li v-for="benefit in MSG.guide.accountBenefits" :key="benefit" class="flex items-center gap-2">
+              <UiPzIcon name="check" class="text-secondary text-[18px]" />
+              {{ benefit }}
+            </li>
+          </ul>
+          <div class="flex flex-col gap-2">
+            <NuxtLink to="/inscription?redirect=/creer/editeur">
+              <UiButton variant="primary" block>{{ MSG.buttons.createAccount }}</UiButton>
             </NuxtLink>
-            <NuxtLink to="/" class="text-secondary py-3 text-center font-semibold hover:underline">
+            <NuxtLink to="/" class="text-secondary py-2 text-center font-semibold hover:underline min-h-11 inline-flex items-center justify-center">
               Continuer sans compte
             </NuxtLink>
           </div>
-        </div>
-      </div>
+        </UiCard>
 
-      <div class="inline-flex items-center gap-3 bg-white px-4 py-3 rounded-lg border border-outline-variant/30">
-        <UiPzIcon name="picture_as_pdf" class="text-error" />
-        <span class="text-sm text-on-surface-variant">{{ downloadedFilename }}</span>
-        <UiPzIcon name="download" class="text-on-surface-variant/50 text-[18px]" />
-      </div>
+        <div class="inline-flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-outline-variant/30 max-w-full">
+          <UiPzIcon name="picture_as_pdf" class="text-error shrink-0" />
+          <span class="text-sm text-on-surface-variant truncate">{{ downloadedFilename }}</span>
+          <UiPzIcon name="download" class="text-on-surface-variant/50 text-[18px] shrink-0" />
+        </div>
+      </UiCard>
     </div>
-    </div>
+
+    <UiStickyActionBar v-if="!authStore.isAuthenticated" class="sm:hidden">
+      <NuxtLink to="/inscription?redirect=/creer/editeur" class="block">
+        <UiButton variant="secondary" block icon="person_add">
+          {{ MSG.buttons.createAccount }}
+        </UiButton>
+      </NuxtLink>
+    </UiStickyActionBar>
   </div>
 </template>
 

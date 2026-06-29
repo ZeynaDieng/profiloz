@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'default' })
 
 useSeoMeta({ title: "Paiement annulé | Profilo'Z" })
@@ -7,30 +9,28 @@ const route = useRoute()
 const resumeId = computed(() =>
   typeof route.query.resumeId === 'string' && route.query.resumeId ? route.query.resumeId : null,
 )
+
+const tarifsLink = computed(() =>
+  `/tarifs${resumeId.value ? `?resumeId=${resumeId.value}&reason=unlock` : ''}`,
+)
 </script>
 
 <template>
-  <div class="max-w-lg mx-auto px-margin-mobile py-20 text-center">
+  <div class="page-container max-w-lg mx-auto py-12 md:py-20 text-center">
     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant mb-6">
       <UiPzIcon name="info" class="text-[36px]" />
     </div>
-    <h1 class="text-2xl font-bold text-on-surface mb-2">Paiement annulé</h1>
-    <p class="text-on-surface-variant mb-6">
-      Aucun montant n’a été débité. Vous pouvez réessayer quand vous le souhaitez.
+    <h1 class="text-2xl sm:text-3xl font-bold text-on-surface mb-2">{{ MSG.payment.cancelled }}</h1>
+    <p class="text-on-surface-variant mb-6 text-sm sm:text-base">
+      {{ MSG.payment.cancelledDetail }}
     </p>
 
-    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <NuxtLink
-        :to="`/tarifs${resumeId ? `?resumeId=${resumeId}&reason=unlock` : ''}`"
-        class="inline-flex items-center justify-center min-h-11 px-6 py-2.5 bg-primary text-on-primary rounded-lg font-bold"
-      >
-        Revoir les offres
+    <div class="flex flex-col gap-3">
+      <NuxtLink :to="tarifsLink">
+        <UiButton variant="primary" block>Revoir les offres</UiButton>
       </NuxtLink>
-      <NuxtLink
-        to="/tableau-de-bord"
-        class="inline-flex items-center justify-center min-h-11 px-6 py-2.5 border border-outline-variant rounded-lg font-bold text-on-surface hover:bg-surface-container-low"
-      >
-        Mes dossiers
+      <NuxtLink to="/tableau-de-bord">
+        <UiButton variant="outline" block>Mes dossiers</UiButton>
       </NuxtLink>
     </div>
   </div>

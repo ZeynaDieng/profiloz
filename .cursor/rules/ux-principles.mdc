@@ -1,33 +1,57 @@
 ---
-description: Principes UX ProfiloZ — simplicité, vitesse, clarté (Canva/Linear/Notion/Stripe)
-globs: apps/web/**/*
-alwaysApply: false
+description: Vision produit Profilo'Z — simplicité, guidage, une action par écran
+alwaysApply: true
 ---
 
-# UX ProfiloZ
+# Vision produit Profilo'Z
 
-Le produit ne doit **jamais** ressembler à un dashboard administratif.
+**Objectif** : l'app doit faire le travail à la place de l'utilisateur. Il ne doit jamais se demander « Et maintenant ? »
 
-## Inspiration
-Canva, Linear, Notion, Stripe
+À chaque instant, l'utilisateur sait : **où il est**, **ce qu'il doit faire**, **ce qui vient ensuite**.
 
-## Objectif
-L'utilisateur doit toujours sentir qu'il est à **moins de 5 minutes** de son CV final.
+Impression visée : *« C'est incroyablement simple. »* — pas *« C'est puissant. »*
 
-## Prioriser
-- Simplicité, vitesse, clarté
-- Prévisualisation en temps réel dès que possible
-- **Un objectif unique par écran**
+Chaque clic rapproche de l'objectif (CV / lettre / PDF). Aucun clic ne sert uniquement l'application.
 
-## Éviter
-- Écrans surchargés, formulaires interminables, menus complexes
-- Jargon technique (ATS, slug, completeness, Premium Builder, PARSED)
-- Fausses UI (notifications, avatar, stats) sans fonction réelle
-- Sidebars à 5+ items, tableaux admin, footers marketing dans l'app
+## Principes (non négociables)
 
-## Patterns
-- Wizard : barre de progression compacte, étapes optionnelles avec « Passer »
-- Éditeur : preview-first, actions secondaires dans un menu
-- Dashboard : 2 nav items max (Mes CV, Documents), pas de footer
-- Auth : respecter `?redirect=` pour revenir au flux en cours
-- Copy : français simple (« Continuer », « Télécharger », « Modifier »)
+1. **Une seule action principale par écran** — un seul CTA bleu (`btn-secondary`), même place, libellé clair.
+2. **Toujours guider** — numéro d'étape, titre de mission, phrase « prochaine étape » après chaque succès.
+3. **Une décision à la fois** — pas compte + abo + import + modèle sur le même écran.
+4. **Montrer la suite** — après modèle → « Il ne reste plus qu'à remplir… » ; après PDF → « Téléchargez maintenant » ; après DL → avantages du compte (optionnel).
+
+## Formulaires
+
+- Pas de gros formulaires : **une étape = une mission** (infos → expériences → formation → compétences → langues → résumé).
+- Wizard avec barre de progression et bouton unique « Continuer » / « Suivant ».
+
+## Boutons (libellés interdits)
+
+❌ Valider, OK, Confirmer, Action, Submit  
+✅ Continuer, Suivant, Télécharger mon PDF, Créer ma lettre, Créer mon compte
+
+## Messages (`MSG` dans `@profiloz/shared`)
+
+- Rassurants, jamais techniques. Utiliser `UiMessageBanner` + `useAppToast`.
+- Ex. : « Impossible de générer votre PDF pour le moment. » — pas « Erreur ».
+
+## Chargements
+
+- Jamais d'écran vide : étapes explicites (« Analyse… », « Détection des expériences… », « Préparation du PDF… »).
+
+## Animations
+
+- Utiles uniquement (coche, document qui apparaît, carte qui se soulève) — jamais décoratives.
+
+## Dashboard = assistant, pas admin
+
+- Accueil : « Bonjour 👋 — Que souhaitez-vous faire ? » + cartes action claires (Créer un CV, Créer une lettre, Mes documents…).
+
+## Paiement & compte
+
+- Paiement = dernière étape naturelle (document prêt → télécharger → paiement → DL → félicitations → compte optionnel).
+- Compte = avantage (retrouver, modifier, versions, historique) — jamais obligation.
+
+## Cohérence avec la V1 technique
+
+Voir aussi `product-vision.mdc` (dossier, crédits, PayTech, pas de stockage PDF). En cas de conflit UX vs technique, privilégier la simplicité perçue sans violer les règles métier V1.

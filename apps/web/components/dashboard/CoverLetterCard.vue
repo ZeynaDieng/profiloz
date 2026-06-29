@@ -39,19 +39,18 @@ function formatDate(iso: string) {
 
 <template>
   <article
-    class="bg-surface border border-outline-variant rounded-xl overflow-hidden hover:border-secondary transition-colors flex flex-col"
+    class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col pz-card pz-template-card"
   >
     <div
       class="relative bg-surface-container-low border-b border-outline-variant/20 overflow-hidden
         h-28 sm:h-auto sm:aspect-[3/4]"
     >
-      <FeatureCoverLetterTemplatesA4PreviewFit v-if="snapshot" :letter="snapshot" />
-      <div
+      <FeatureCoverLetterTemplatesA4PreviewFit v-if="snapshot" :letter="snapshot" class="pz-template-preview" />
+      <UiSkeleton
         v-else-if="loadingPreview"
-        class="absolute inset-0 flex items-center justify-center text-xs text-on-surface-variant"
-      >
-        Aperçu...
-      </div>
+        class="absolute inset-0 !rounded-none"
+        height="100%"
+      />
       <div
         v-else
         class="absolute inset-0 flex items-center justify-center text-xs text-on-surface-variant px-4 text-center"
@@ -72,7 +71,7 @@ function formatDate(iso: string) {
         <p class="text-xs text-on-surface-variant">Modifiée le {{ formatDate(updatedAt) }}</p>
         <NuxtLink
           :to="`/tableau-de-bord/lettres/${id}`"
-          class="inline-flex items-center justify-center min-h-11 px-4 py-2.5 bg-secondary text-white rounded-lg text-sm font-bold whitespace-nowrap"
+          class="btn-secondary inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap"
         >
           Modifier
         </NuxtLink>

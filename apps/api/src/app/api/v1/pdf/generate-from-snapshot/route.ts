@@ -1,5 +1,6 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { sanitizePhotoReference } from '@profiloz/shared'
+import { paymentService } from '@/modules/payment/payment.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
     assertPdfRateLimit(request, ctx)
     const body = await request.json()
     const snapshot = sanitizeSnapshot(body.snapshot as ResumeSnapshot)
+
+    if (!ctx.userId && ctx.guestSessionDbId) {
+      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+    }
 
     const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId, {
       userId: ctx.userId,

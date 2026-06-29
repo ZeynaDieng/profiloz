@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getPlan } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
-import { resolveAppUrl } from '@/lib/pdf/app-url'
+import { resolvePublicAppUrl, buildPublicAppPath } from '@/lib/pdf/app-url'
 import { prisma } from '@/lib/prisma'
 import { paytechProvider } from './paytech.provider'
 import type { PaymentProvider } from './payment.provider'
@@ -32,8 +32,34 @@ function isUnlimitedActive(unlimitedUntil: Date | null | undefined): boolean {
 export class PaymentService {
   constructor(private readonly provider: PaymentProvider = paytechProvider) {}
 
+  /**
+   * Consomme 1 crédit pour un téléchargement PDF invité (snapshot, sans dossier en base).
+   * Abonnement illimité actif → gratuit. Sinon 402 si aucun crédit.
+   */
+  async consumeGuestSnapshotDownload(owner: EntitlementOwner) {
+    requireOwner(owner)
+    if (owner.userId) return { consumed: false }
+
+    const entitlements = await this.getEntitlements(owner)
+    if (entitlements.unlimitedActive) return { consumed: false }
+
+    const decremented = await prisma.guestSession.updateMany({
+      where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+      data: { creditsBalance: { decrement: 1 } },
+    })
+
+    if (decremented.count === 0) {
+      throw new AppError(
+        402,
+        'Payment Required',
+        'Aucun crédit disponible. Choisissez une offre pour télécharger votre CV.',
+      )
+    }
+    return { consumed: true }
+  }
+
   /** Démarre un paiement : crée la commande PENDING et renvoie l'URL de redirection PayTech. */
-  async createCheckout(owner: EntitlementOwner, planSlug: string) {
+  async createCheckout(owner: EntitlementOwner, planSlug: string, returnTo?: string) {
     requireOwner(owner)
     const plan = getPlan(planSlug)
     if (!plan) throw new AppError(400, 'Bad Request', 'Offre inconnue')
@@ -54,16 +80,21 @@ export class PaymentService {
       },
     })
 
-    const appUrl = resolveAppUrl()
+    const safeReturnTo =
+      returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined
+
     const { token, redirectUrl } = await this.provider.initiatePayment({
       itemName: plan.name,
       amountXof: plan.priceXof,
       refCommand,
       commandName: `Profilo'Z — ${plan.name}`,
-      customField: { ...owner, planSlug: plan.slug, paymentId: payment.id },
+      customField: { ...owner, planSlug: plan.slug, paymentId: payment.id, returnTo: safeReturnTo },
       ipnUrl: process.env.PAYTECH_IPN_URL ?? '',
-      successUrl: `${appUrl}/paiement/succes?ref=${refCommand}`,
-      cancelUrl: `${appUrl}/paiement/annule?ref=${refCommand}`,
+      successUrl: buildPublicAppPath('/paiement/succes', {
+        ref: refCommand,
+        returnTo: safeReturnTo,
+      }),
+      cancelUrl: buildPublicAppPath('/paiement/annule', { ref: refCommand }),
     })
 
     await prisma.payment.update({ where: { id: payment.id }, data: { providerToken: token } })

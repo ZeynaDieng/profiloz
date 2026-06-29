@@ -68,10 +68,11 @@
             <div
               class="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-[#0051d5]/8 to-transparent border-b border-[#0051d5]/15 shrink-0"
             >
-              <img
+              <UiOptimizedImage
                 src="/logo.png"
                 alt="Profilo'Z"
-                class="h-5 w-auto object-contain"
+                loading="lazy"
+                img-class="h-5 w-auto object-contain"
               />
               <span
                 class="text-[8px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold"
@@ -171,10 +172,11 @@
           <div
             class="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-[#0051d5]/8 to-transparent border-b border-[#0051d5]/15"
           >
-            <img
+            <UiOptimizedImage
               src="/logo.png"
               alt="Profilo'Z"
-              class="h-5 w-auto object-contain"
+              loading="lazy"
+              img-class="h-5 w-auto object-contain"
             />
             <span
               class="text-[8px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold"

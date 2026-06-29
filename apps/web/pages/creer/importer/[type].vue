@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import type { ResumeSnapshot } from '@profiloz/shared'
 
 const titles: Record<string, { title: string; subtitle: string; type: 'CV' }> = {
@@ -39,11 +40,11 @@ function onReset() {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-28">
-    <div class="mb-stack-lg">
-      <h1 class="text-2xl font-bold text-on-surface">{{ meta.title }}</h1>
-      <p class="text-on-surface-variant">{{ meta.subtitle }}</p>
-    </div>
+  <div class="max-w-4xl mx-auto page-container pb-28">
+    <header class="mb-stack-lg">
+      <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">{{ meta.title }}</h1>
+      <p class="text-on-surface-variant mt-1">{{ meta.subtitle }}</p>
+    </header>
 
     <FeatureImportFileDropZone
       v-if="state === 'idle'"
@@ -53,11 +54,9 @@ function onReset() {
 
     <FeatureImportExtractionProgress v-else-if="state === 'processing'" :progress="progress" />
 
-    <div v-else-if="state === 'error'" class="text-center py-stack-xl">
-      <p class="text-error mb-4">{{ errorMessage }}</p>
-      <button type="button" class="px-6 py-2.5 bg-secondary text-white rounded-lg font-bold" @click="onReset">
-        Réessayer
-      </button>
+    <div v-else-if="state === 'error'" class="max-w-md mx-auto py-stack-xl space-y-4">
+      <UiMessageBanner variant="error" :message="errorMessage" />
+      <UiButton variant="secondary" block @click="onReset">{{ MSG.confirm.retry }}</UiButton>
     </div>
 
     <FeatureImportReview

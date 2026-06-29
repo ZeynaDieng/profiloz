@@ -1,58 +1,33 @@
 <template>
-  <div class="max-w-[640px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
-    <div class="text-center mb-stack-lg">
-      <h1 class="text-3xl font-bold text-on-surface mb-3">Créons votre dossier de candidature</h1>
-      <p class="text-on-surface-variant">Comment souhaitez-vous commencer ?</p>
+  <div class="max-w-[480px] mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop py-stack-lg pb-28 text-center">
+    <div class="mb-stack-lg">
+      <h1 class="text-2xl sm:text-3xl font-bold text-on-surface mb-3">{{ MSG.guide.createCvTitle }}</h1>
+      <p class="text-on-surface-variant">{{ MSG.guide.createCvSubtitle }}</p>
     </div>
 
-    <div class="space-y-4">
-      <NuxtLink
-        to="/creer/assistant/informations"
-        class="bento-card block p-stack-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/30 hover:border-secondary transition-colors"
-      >
-        <div class="flex items-start gap-4">
-          <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary shrink-0">
-            <UiPzIcon name="edit_note" />
-          </div>
-          <div>
-            <h2 class="font-bold text-xl text-on-surface mb-1">Partir de zéro</h2>
-            <p class="text-on-surface-variant text-sm">Construisez votre dossier étape par étape, avec un assistant qui vous guide.</p>
-          </div>
-        </div>
-      </NuxtLink>
+    <NuxtLink to="/creer/assistant/informations" class="btn-secondary w-full inline-flex items-center justify-center gap-2 min-h-[52px]">
+      {{ MSG.guide.createCvCta }}
+      <UiPzIcon name="arrow_forward" class="text-[20px]" />
+    </NuxtLink>
 
-      <div class="bento-card p-stack-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/30">
-        <div class="flex items-start gap-4 mb-4">
-          <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-            <UiPzIcon name="upload_file" />
-          </div>
-          <div>
-            <h2 class="font-bold text-xl text-on-surface mb-1">Importer mes documents</h2>
-            <p class="text-on-surface-variant text-sm">Préremplissez votre CV ou votre lettre de motivation à partir de fichiers existants.</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <NuxtLink
-            to="/creer/importer/cv"
-            class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
-          >
-            <UiPzIcon name="description" class="text-secondary" />
-            <span class="text-sm font-semibold text-on-surface">CV</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/creer/importer/lettre"
-            class="flex flex-col items-center gap-2 p-3 rounded-xl border border-outline-variant/30 hover:border-secondary hover:bg-secondary/5 transition-colors text-center"
-          >
-            <UiPzIcon name="mail" class="text-secondary" />
-            <span class="text-sm font-semibold text-on-surface">Lettre de motivation</span>
-          </NuxtLink>
-        </div>
-      </div>
+    <div class="mt-8 space-y-3 text-sm">
+      <p>
+        <NuxtLink to="/creer/importer/cv" class="text-secondary font-semibold hover:underline">
+          {{ MSG.guide.importCvLink }}
+        </NuxtLink>
+      </p>
+      <p>
+        <NuxtLink to="/creer/importer/lettre" class="text-on-surface-variant hover:text-secondary hover:underline">
+          {{ MSG.guide.importLetterLink }}
+        </NuxtLink>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'wizard' })
 
 useGuestSession()

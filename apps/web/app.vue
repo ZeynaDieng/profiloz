@@ -1,7 +1,8 @@
 <template>
-  <div class="min-h-screen bg-background text-on-background font-[family-name:var(--font-body-md)]">
+  <UApp>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </div>
+    <UiConfirmDialog />
+  </UApp>
 </template>

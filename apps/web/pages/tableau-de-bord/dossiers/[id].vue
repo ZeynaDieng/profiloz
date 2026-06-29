@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 import { DOCUMENT_TYPE_LABELS } from '~/utils/labels'
 import { resolveDossierName } from '~/utils/dossierName'
 
@@ -101,7 +102,7 @@ async function onDownloadCv() {
       await navigateTo(`/tarifs?resumeId=${dossierId.value}&reason=unlock`)
       return
     }
-    error.value = 'Impossible de générer le PDF du CV.'
+    error.value = MSG.pdf.error
   } finally {
     cvDownloading.value = false
   }
@@ -129,7 +130,7 @@ async function onRename() {
     snapshot.value = { ...snapshot.value, title }
     renaming.value = false
   } catch {
-    error.value = 'Impossible de renommer le dossier.'
+    error.value = MSG.error.renameFolder
   } finally {
     renameSaving.value = false
   }
@@ -148,7 +149,7 @@ async function onDownloadDossier() {
       await navigateTo(`/tarifs?resumeId=${dossierId.value}&reason=unlock`)
       return
     }
-    error.value = 'Impossible de générer le dossier complet.'
+    error.value = MSG.error.generateDossier
   } finally {
     dossierDownloading.value = false
   }
@@ -160,7 +161,7 @@ async function onDownloadLetter(id: string) {
   try {
     await coverLetterService.downloadPdf(id)
   } catch {
-    error.value = 'Impossible de générer le PDF de la lettre.'
+    error.value = MSG.pdf.error
   } finally {
     letterDownloadingId.value = null
   }
@@ -168,17 +169,21 @@ async function onDownloadLetter(id: string) {
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop">
-    <NuxtLink to="/tableau-de-bord" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-block">
-      ← Mes dossiers
+  <div class="page-container pb-28 lg:pb-0">
+    <NuxtLink to="/tableau-de-bord" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-flex items-center gap-1 min-h-11">
+      <UiPzIcon name="arrow_back" class="text-base" />
+      Mes dossiers
     </NuxtLink>
 
-    <p v-if="loading" class="text-on-surface-variant">Chargement...</p>
-    <p v-else-if="error && !snapshot" class="text-error">{{ error }}</p>
+    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-gutter">
+      <UiSkeleton variant="card" />
+      <UiSkeleton variant="rect" height="16rem" />
+    </div>
+    <UiMessageBanner v-else-if="error && !snapshot" variant="error" :message="error" class="mb-4" />
 
     <div v-else-if="snapshot">
       <!-- En-tête du dossier -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-stack-lg">
+      <div class="flex flex-col gap-4 mb-stack-lg">
         <div class="min-w-0">
           <div class="flex items-center gap-2 mb-1">
             <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Dossier de candidature</p>
@@ -206,7 +211,7 @@ async function onDownloadLetter(id: string) {
               :disabled="renameSaving || !renameValue.trim()"
               @click="onRename"
             >
-              {{ renameSaving ? '…' : 'OK' }}
+              {{ renameSaving ? '…' : MSG.buttons.renameFolder }}
             </button>
             <button
               type="button"
@@ -230,17 +235,17 @@ async function onDownloadLetter(id: string) {
           </div>
           <p v-if="jobTitle" class="text-on-surface-variant mt-1">{{ jobTitle }}</p>
         </div>
-        <div class="flex flex-wrap gap-2 shrink-0">
+        <div class="hidden lg:flex flex-wrap gap-2 shrink-0">
           <NuxtLink
             :to="`/creer/editeur?id=${dossierId}`"
-            class="inline-flex items-center justify-center min-h-11 px-5 py-2.5 border border-outline-variant rounded-lg font-bold text-on-surface hover:bg-surface-container-low"
+            class="btn-outline"
           >
             Modifier le CV
           </NuxtLink>
           <button
             v-if="letters.length"
             type="button"
-            class="inline-flex items-center justify-center min-h-11 px-5 py-2.5 border border-outline-variant rounded-lg font-bold text-on-surface hover:bg-surface-container-low disabled:opacity-60"
+            class="btn-outline disabled:opacity-60"
             :disabled="cvDownloading"
             @click="onDownloadCv"
           >
@@ -248,7 +253,7 @@ async function onDownloadLetter(id: string) {
           </button>
           <button
             type="button"
-            class="inline-flex items-center justify-center min-h-11 px-5 py-2.5 bg-primary text-on-primary rounded-lg font-bold disabled:opacity-60"
+            class="btn-primary disabled:opacity-60"
             :disabled="dossierDownloading || cvDownloading"
             @click="letters.length ? onDownloadDossier() : onDownloadCv()"
           >
@@ -262,7 +267,7 @@ async function onDownloadLetter(id: string) {
         </div>
       </div>
 
-      <p v-if="error" class="text-error text-sm mb-4">{{ error }}</p>
+      <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
 
       <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-gutter items-start">
         <!-- CV -->
@@ -290,36 +295,40 @@ async function onDownloadLetter(id: string) {
             </div>
 
             <p v-if="!letters.length" class="text-sm text-on-surface-variant">
-              Aucune lettre dans ce dossier. Ajoutez-en une pour compléter votre candidature.
+              {{ MSG.empty.noLetterInFolder }}
             </p>
 
-            <ul v-else class="divide-y divide-outline-variant/30">
-              <li v-for="letter in letters" :key="letter.id" class="flex items-center justify-between gap-3 py-3">
-                <div class="min-w-0">
-                  <p class="font-semibold text-on-surface truncate">{{ letter.title }}</p>
-                  <p class="text-xs text-on-surface-variant truncate">
-                    <span v-if="letter.position">{{ letter.position }}</span>
-                    <span v-if="letter.position && letter.companyName"> · </span>
-                    <span v-if="letter.companyName">{{ letter.companyName }}</span>
-                    <span v-if="!letter.position && !letter.companyName">Mise à jour le {{ formatDate(letter.updatedAt) }}</span>
-                  </p>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    class="min-h-11 px-3 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low rounded-lg disabled:opacity-60"
-                    :disabled="letterDownloadingId === letter.id"
-                    @click="onDownloadLetter(letter.id)"
-                  >
-                    {{ letterDownloadingId === letter.id ? 'PDF...' : 'Télécharger' }}
-                  </button>
-                  <NuxtLink
-                    :to="`/tableau-de-bord/lettres/${letter.id}`"
-                    class="min-h-11 px-3 py-2 text-sm font-bold text-secondary hover:bg-secondary/5 rounded-lg inline-flex items-center"
-                  >
-                    Modifier
-                  </NuxtLink>
-                </div>
+            <ul v-else class="space-y-stack-md lg:divide-y lg:divide-outline-variant/30 lg:space-y-0">
+              <li v-for="letter in letters" :key="letter.id" class="lg:py-3">
+                <UiCard variant="glass" padding="md" class="lg:border-0 lg:bg-transparent lg:p-0 lg:rounded-none">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                      <p class="font-semibold text-on-surface truncate">{{ letter.title }}</p>
+                      <p class="text-xs text-on-surface-variant truncate mt-0.5">
+                        <span v-if="letter.position">{{ letter.position }}</span>
+                        <span v-if="letter.position && letter.companyName"> · </span>
+                        <span v-if="letter.companyName">{{ letter.companyName }}</span>
+                        <span v-if="!letter.position && !letter.companyName">Mise à jour le {{ formatDate(letter.updatedAt) }}</span>
+                      </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-1 shrink-0">
+                      <UiButton
+                        variant="outline"
+                        size="sm"
+                        block
+                        :loading="letterDownloadingId === letter.id"
+                        @click="onDownloadLetter(letter.id)"
+                      >
+                        PDF
+                      </UiButton>
+                      <NuxtLink :to="`/tableau-de-bord/lettres/${letter.id}`" class="contents">
+                        <UiButton variant="secondary" size="sm" block>
+                          Modifier
+                        </UiButton>
+                      </NuxtLink>
+                    </div>
+                  </div>
+                </UiCard>
               </li>
             </ul>
           </section>
@@ -337,7 +346,7 @@ async function onDownloadLetter(id: string) {
             </p>
 
             <p v-if="!documents.length" class="text-sm text-on-surface-variant">
-              Aucun document importé pour l'instant.
+              {{ MSG.empty.noDocumentInFolder }}
             </p>
             <ul v-else class="flex flex-wrap gap-2">
               <li
@@ -354,5 +363,25 @@ async function onDownloadLetter(id: string) {
         </div>
       </div>
     </div>
+
+    <!-- Mobile : CTA principal sticky -->
+    <UiStickyActionBar v-if="snapshot && !loading" class="lg:hidden">
+      <div class="grid grid-cols-2 gap-2">
+        <NuxtLink :to="`/creer/editeur?id=${dossierId}`" class="contents">
+          <UiButton variant="outline" block icon="edit">
+            Modifier
+          </UiButton>
+        </NuxtLink>
+        <UiButton
+          variant="secondary"
+          block
+          icon="download"
+          :loading="dossierDownloading || cvDownloading"
+          @click="letters.length ? onDownloadDossier() : onDownloadCv()"
+        >
+          {{ letters.length ? 'Dossier PDF' : 'CV PDF' }}
+        </UiButton>
+      </div>
+    </UiStickyActionBar>
   </div>
 </template>

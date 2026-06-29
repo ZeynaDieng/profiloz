@@ -1,3 +1,4 @@
+import { normalizeAbsoluteUrl } from '@/lib/pdf/app-url'
 import { createHash } from 'crypto'
 import { PAYMENT_CURRENCY } from '@profiloz/shared'
 import type {
@@ -37,11 +38,27 @@ interface PayTechRequestResponse {
   message?: string
 }
 
+function assertPayTechRedirectUrl(url: string, label: string) {
+  const normalized = normalizeAbsoluteUrl(url)
+  if (!normalized) {
+    throw new Error(`${label} doit être une URL http(s) valide (reçu : « ${url || '(vide)'} »).`)
+  }
+}
+
 export class PayTechProvider implements PaymentProvider {
   readonly name = 'paytech'
 
   async initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
     const config = readConfig()
+
+    assertPayTechRedirectUrl(params.successUrl, 'successRedirectUrl')
+    assertPayTechRedirectUrl(params.cancelUrl, 'cancelUrl')
+    if (params.ipnUrl) {
+      const ipn = normalizeAbsoluteUrl(params.ipnUrl)
+      if (!ipn || !ipn.startsWith('https://')) {
+        throw new Error('ipn_url doit être une URL HTTPS valide.')
+      }
+    }
 
     const body: Record<string, unknown> = {
       item_name: params.itemName,
@@ -50,8 +67,8 @@ export class PayTechProvider implements PaymentProvider {
       ref_command: params.refCommand,
       command_name: params.commandName,
       env: config.env,
-      success_url: params.successUrl,
-      cancel_url: params.cancelUrl,
+      success_url: normalizeAbsoluteUrl(params.successUrl),
+      cancel_url: normalizeAbsoluteUrl(params.cancelUrl),
       custom_field: JSON.stringify(params.customField ?? {}),
     }
     // ipn_url doit être en HTTPS et joignable par PayTech (non envoyé en local sans tunnel).

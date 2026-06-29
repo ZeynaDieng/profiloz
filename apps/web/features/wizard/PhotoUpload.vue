@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isBase64PhotoUrl } from '@profiloz/shared'
+import { isBase64PhotoUrl, MSG } from '@profiloz/shared'
 
 const model = defineModel<string | undefined>()
 
@@ -18,7 +18,7 @@ function syncPreview(value?: string) {
 async function processFile(file: File) {
   if (!file.type.startsWith('image/')) return
   if (file.size > 2 * 1024 * 1024) {
-    uploadError.value = 'Photo trop volumineuse (max 2 Mo).'
+    uploadError.value = MSG.photo.size
     return
   }
 
@@ -43,7 +43,7 @@ async function processFile(file: File) {
       avatarService.deleteAvatar(previousKey).catch(() => {})
     }
   } catch {
-    uploadError.value = 'Impossible d’envoyer la photo. Réessayez.'
+    uploadError.value = MSG.photo.uploadError
     // En cas d'erreur, revenir à l'aperçu local
     previewUrl.value = localPreview
   } finally {
@@ -143,7 +143,7 @@ watch(
         <p class="text-xs text-on-surface-variant/60 mt-2">JPG, PNG · max 2 Mo</p>
       </div>
 
-      <p v-if="uploadError" class="text-xs text-error mt-2">{{ uploadError }}</p>
+      <UiMessageBanner v-if="uploadError" variant="error" :message="uploadError" class="mt-2" />
 
       <input
         ref="fileInput"

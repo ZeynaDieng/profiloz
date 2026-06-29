@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_LETTER_CONTENT } from '~/features/cover-letter-templates/registry'
@@ -11,15 +12,15 @@ const route = useRoute()
 const authStore = useAuthStore()
 const coverLetterService = useCoverLetterService()
 const resumeService = useResumeService()
+const { isDesktop } = useBreakpoints()
 
-// Dossier d'origine : la lettre créée sera rattachée à ce CV.
 const linkedResumeId = computed(() =>
   typeof route.query.resumeId === 'string' && route.query.resumeId ? route.query.resumeId : null,
 )
 const backLink = computed(() =>
   linkedResumeId.value ? `/tableau-de-bord/dossiers/${linkedResumeId.value}` : '/tableau-de-bord/lettres',
 )
-const backLabel = computed(() => (linkedResumeId.value ? '← Retour au dossier' : '← Retour aux lettres'))
+const backLabel = computed(() => (linkedResumeId.value ? 'Retour au dossier' : 'Retour aux lettres'))
 const browseModelsLink = computed(() =>
   linkedResumeId.value
     ? `/tableau-de-bord/modeles-lettres?resumeId=${linkedResumeId.value}`
@@ -42,6 +43,7 @@ const closingText = ref(DEFAULT_CLOSING_TEXT)
 
 const loading = ref(false)
 const error = ref('')
+const previewOpen = ref(false)
 
 const previewLetter = computed(() =>
   coverLetterService.toSnapshot({
@@ -120,7 +122,7 @@ async function onSubmit() {
     await navigateTo(`/tableau-de-bord/lettres/${letter.id}`)
   } catch (err) {
     const problem = err as { detail?: string; title?: string }
-    error.value = problem.detail || problem.title || 'Impossible de créer la lettre.'
+    error.value = problem.detail || problem.title || MSG.letter.createError
   } finally {
     loading.value = false
   }
@@ -128,22 +130,26 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="p-margin-mobile md:p-margin-desktop">
-    <NuxtLink :to="backLink" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-block">
+  <div class="page-container pb-28 xl:pb-0">
+    <NuxtLink :to="backLink" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-flex items-center gap-1 min-h-11">
+      <UiPzIcon name="arrow_back" class="text-base" />
       {{ backLabel }}
     </NuxtLink>
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-stack-lg">
-      <div>
-        <h1 class="text-2xl font-bold text-on-surface">Nouvelle lettre</h1>
-        <p class="text-on-surface-variant">Choisissez un modèle et personnalisez votre candidature.</p>
-      </div>
-      <NuxtLink :to="browseModelsLink" class="text-secondary text-sm font-bold hover:underline">
-        Parcourir les modèles
-      </NuxtLink>
-    </div>
 
-    <form class="grid grid-cols-1 xl:grid-cols-2 gap-gutter" @submit.prevent="onSubmit">
-      <div class="glass-card rounded-xl p-stack-lg border border-outline-variant">
+    <header class="flex flex-col gap-3 mb-stack-lg">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Nouvelle lettre</h1>
+          <p class="text-on-surface-variant mt-1 text-sm sm:text-base">Choisissez un modèle et personnalisez votre candidature.</p>
+        </div>
+        <NuxtLink :to="browseModelsLink" class="text-secondary text-sm font-bold hover:underline min-h-11 inline-flex items-center">
+          Parcourir les modèles →
+        </NuxtLink>
+      </div>
+    </header>
+
+    <form class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter" @submit.prevent="onSubmit">
+      <UiCard variant="glass" padding="lg" class="">
         <FeatureCoverLetterForm
           v-model:template-id="templateId"
           v-model:sender-name="senderName"
@@ -157,25 +163,50 @@ async function onSubmit() {
           v-model:content="content"
           v-model:closing-text="closingText"
         />
-        <p v-if="error" class="text-error text-sm mt-4">{{ error }}</p>
-        <div class="flex flex-wrap justify-end gap-3 mt-stack-lg">
-          <NuxtLink :to="backLink" class="px-5 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low">
-            Annuler
+        <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-4" />
+        <div class="hidden md:flex flex-wrap justify-end gap-3 mt-stack-lg">
+          <NuxtLink :to="backLink">
+            <UiButton variant="ghost">Annuler</UiButton>
           </NuxtLink>
-          <button type="submit" class="px-6 py-2.5 bg-secondary text-white rounded-lg font-bold" :disabled="loading">
-            {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
-          </button>
+          <UiButton type="submit" variant="secondary" :loading="loading">
+            {{ MSG.buttons.createLetter }}
+          </UiButton>
         </div>
-      </div>
+      </UiCard>
 
-      <div class="glass-card rounded-xl border border-outline-variant overflow-hidden bg-surface-container-low min-h-[480px] sticky top-4">
+      <UiCard v-if="isDesktop" variant="glass" padding="sm" class="overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
         <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-4 py-3 border-b border-outline-variant/30">
           Aperçu A4
         </p>
         <div class="h-[min(70vh,720px)]">
           <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
         </div>
-      </div>
+      </UiCard>
     </form>
+
+    <UiStickyActionBar class="md:hidden">
+      <div class="grid grid-cols-3 gap-2">
+        <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
+          Aperçu
+        </UiButton>
+        <NuxtLink :to="backLink" class="contents">
+          <UiButton variant="ghost" block>Annuler</UiButton>
+        </NuxtLink>
+        <UiButton variant="secondary" block :loading="loading" @click="onSubmit">
+          {{ MSG.buttons.createLetter }}
+        </UiButton>
+      </div>
+    </UiStickyActionBar>
+
+    <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4">
+      <div class="h-full min-h-[70vh] bg-surface-container-low">
+        <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+      </div>
+      <template #footer>
+        <UiButton variant="secondary" block @click="previewOpen = false">
+          Retour au formulaire
+        </UiButton>
+      </template>
+    </UiFullScreenSheet>
   </div>
 </template>
