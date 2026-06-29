@@ -32,7 +32,7 @@ export function parseApiAuthError(err: unknown, fallback = MSG.error.generic): s
   }
 
   if (status === 503) {
-    return MSG.network.serverUnavailable
+    return problem.detail ?? MSG.network.serverUnavailable
   }
 
   if (problem.detail) {
