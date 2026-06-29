@@ -51,6 +51,7 @@ export class PdfCacheService {
   private generateCacheKey(snapshot: any, kind: 'resume' | 'cover_letter' | 'dossier'): string {
     const content = JSON.stringify({
       kind,
+      engineVersion: 2,
       templateSlug: snapshot.templateSlug || snapshot.templateSlug,
       // Pour les CV : inclure les données essentielles
       ...(kind === 'resume' && {

@@ -271,21 +271,42 @@ export class PdfService {
       guestSessionId: guestSessionDbId,
     })
 
+    const renderId = randomUUID()
+    const snapshotKey = `pdf-render/${renderId}.json`
+    await storageProvider.upload(Buffer.from(JSON.stringify(snapshot), 'utf-8'), snapshotKey, 'application/json')
+
+    const printUrl = `${resolveAppUrl()}/imprimer/cv?renderId=${renderId}`
     let pdfBuffer: Buffer
     try {
-      pdfBuffer = await renderResumePdfFromHtml(snapshot)
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'unknown'
+      pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
+    } catch (printError) {
+      const printDetail = printError instanceof Error ? printError.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_error',
+        event: 'pdf_generate_print_fallback',
         kind: 'resume',
         templateSlug: snapshot.templateSlug,
         userId: ctx?.userId,
         guestSessionId: guestSessionDbId,
         durationMs: Date.now() - startedAt,
-        error: detail,
+        error: printDetail,
       })
-      throw new Error(`Impossible de générer le PDF (${detail}).`)
+      try {
+        pdfBuffer = await renderResumePdfFromHtml(snapshot)
+      } catch (fallbackError) {
+        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
+        logPdfEvent({
+          event: 'pdf_generate_error',
+          kind: 'resume',
+          templateSlug: snapshot.templateSlug,
+          userId: ctx?.userId,
+          guestSessionId: guestSessionDbId,
+          durationMs: Date.now() - startedAt,
+          error: `${printDetail} | fallback: ${fallbackDetail}`,
+        })
+        throw new Error(`Impossible de générer le PDF (${fallbackDetail}).`)
+      }
+    } finally {
+      await storageProvider.delete(snapshotKey)
     }
 
     // Stocker dans le cache pour les prochaines requêtes
