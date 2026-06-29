@@ -1,8 +1,8 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
-const POLL_INTERVAL_MS = 1500
-const MAX_POLL_ATTEMPTS = 20
+const POLL_INTERVAL_MS = 1200
+const MAX_POLL_ATTEMPTS = 25
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -18,29 +18,39 @@ export function usePostPaymentDownload() {
   const phase = ref<'idle' | 'confirming' | 'downloading'>('idle')
   const message = ref('')
 
-  async function waitForEntitlements() {
+  async function waitForEntitlements(paymentRef?: string | null) {
     phase.value = 'confirming'
     message.value = 'Confirmation de votre paiement…'
 
     for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
       if (attempt > 0) await sleep(POLL_INTERVAL_MS)
+
+      if (paymentRef) {
+        try {
+          await paymentService.confirmReturn(paymentRef)
+        } catch (err) {
+          const problem = err as { status?: number }
+          if (problem.status === 403 || problem.status === 404) throw err
+        }
+      }
+
       try {
         const entitlements = await paymentService.getEntitlements()
         if (entitlements.unlimitedActive || entitlements.creditsBalance > 0) {
           return entitlements
         }
       } catch {
-        // retry — IPN peut mettre quelques secondes
+        // retry
       }
     }
 
     throw new Error('payment-not-confirmed')
   }
 
-  async function downloadFromReturnPath(returnTo: string) {
+  async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
     if (!isGuestPdfReturnPath(returnTo)) return false
 
-    await waitForEntitlements()
+    await waitForEntitlements(paymentRef)
     await ensureSession()
 
     phase.value = 'downloading'
@@ -63,7 +73,9 @@ export function usePostPaymentDownload() {
 
     resumeStore.rehydrateFromStorage()
     resumeStore.initDraft()
-    if (!resumeStore.current) throw new Error('missing-resume')
+    if (!resumeStore.current?.personalInfo.fullName?.trim()) {
+      throw new Error('missing-resume')
+    }
 
     const snapshot: ResumeSnapshot = {
       ...resumeStore.current,

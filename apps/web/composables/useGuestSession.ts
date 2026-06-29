@@ -1,6 +1,12 @@
 export function useGuestSession() {
   const guestSessionId = useState<string | null>('guestSessionId', () => null)
 
+  function applyGuestSessionId(id: string) {
+    if (import.meta.server || !id.trim()) return
+    localStorage.setItem('profiloz:guest-session', id.trim())
+    guestSessionId.value = id.trim()
+  }
+
   async function ensureSession() {
     if (import.meta.server) return null
 
@@ -30,5 +36,5 @@ export function useGuestSession() {
     ensureSession().catch(() => {})
   })
 
-  return { guestSessionId, ensureSession }
+  return { guestSessionId, applyGuestSessionId, ensureSession }
 }

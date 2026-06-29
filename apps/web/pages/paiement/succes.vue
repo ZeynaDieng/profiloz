@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
-import { isGuestPdfReturnPath, resolvePaymentReturnTo } from '~/utils/payment-return'
+import {
+  guessGuestPdfReturnPath,
+  isGuestPdfReturnPath,
+  resolvePaymentRef,
+  resolvePaymentReturnTo,
+} from '~/utils/payment-return'
 
 definePageMeta({ layout: 'default' })
 
@@ -9,44 +14,62 @@ useSeoMeta({ title: "Paiement réussi | Profilo'Z" })
 const route = useRoute()
 const authStore = useAuthStore()
 const paymentService = usePaymentService()
-const { ensureSession } = useGuestSession()
+const { ensureSession, applyGuestSessionId } = useGuestSession()
 const { phase, message, downloadFromReturnPath } = usePostPaymentDownload()
 
 const entitlements = ref<{ creditsBalance: number; unlimitedActive: boolean } | null>(null)
 const autoDownloadError = ref('')
 const autoDownloadStarted = ref(false)
 const returnTo = ref<string | null>(null)
+const paymentRef = ref<string | null>(null)
 
 const resumeId = computed(() =>
   typeof route.query.resumeId === 'string' && route.query.resumeId ? route.query.resumeId : null,
 )
 
-const isAutoDownloadTarget = computed(
-  () => Boolean(returnTo.value && isGuestPdfReturnPath(returnTo.value)),
-)
+const canAutoDownload = computed(() => Boolean(paymentRef.value || returnTo.value))
 
 const showManualActions = computed(
   () => !autoDownloadStarted.value || Boolean(autoDownloadError.value) || phase.value === 'idle',
 )
 
+async function runAutoDownload() {
+  if (!returnTo.value) {
+    returnTo.value = guessGuestPdfReturnPath()
+  }
+  if (!isGuestPdfReturnPath(returnTo.value)) return
+
+  autoDownloadStarted.value = true
+  autoDownloadError.value = ''
+  try {
+    await downloadFromReturnPath(returnTo.value, paymentRef.value)
+  } catch (err) {
+    const code = err instanceof Error ? err.message : ''
+    autoDownloadError.value =
+      code === 'payment-not-confirmed'
+        ? 'Votre paiement est validé côté PayTech mais les crédits mettent du temps à arriver. Réessayez dans quelques secondes.'
+        : code === 'missing-resume' || code === 'missing-letter'
+          ? 'Votre brouillon est introuvable sur cet appareil. Rouvrez votre CV depuis la page d’accueil puis retéléchargez.'
+          : MSG.pdf.error
+  }
+}
+
 onMounted(async () => {
   authStore.loadFromStorage()
+
+  const gs = route.query.gs
+  if (typeof gs === 'string' && gs.trim()) {
+    applyGuestSessionId(gs.trim())
+  }
+
   await ensureSession().catch(() => {})
 
+  paymentRef.value = resolvePaymentRef(route.query.ref)
   returnTo.value = resolvePaymentReturnTo(route.query.returnTo)
 
-  if (returnTo.value && isGuestPdfReturnPath(returnTo.value)) {
-    autoDownloadStarted.value = true
-    try {
-      await downloadFromReturnPath(returnTo.value)
-      return
-    } catch (err) {
-      const code = err instanceof Error ? err.message : ''
-      autoDownloadError.value =
-        code === 'payment-not-confirmed'
-          ? 'Votre paiement est en cours de validation. Réessayez le téléchargement dans quelques instants.'
-          : MSG.pdf.error
-    }
+  if (paymentRef.value || returnTo.value) {
+    await runAutoDownload()
+    if (!autoDownloadError.value) return
   }
 
   try {
@@ -56,21 +79,6 @@ onMounted(async () => {
     entitlements.value = null
   }
 })
-
-async function retryDownload() {
-  if (!returnTo.value) return
-  autoDownloadError.value = ''
-  autoDownloadStarted.value = true
-  try {
-    await downloadFromReturnPath(returnTo.value)
-  } catch (err) {
-    const code = err instanceof Error ? err.message : ''
-    autoDownloadError.value =
-      code === 'payment-not-confirmed'
-        ? 'Votre paiement est en cours de validation. Réessayez le téléchargement dans quelques instants.'
-        : MSG.pdf.error
-  }
-}
 </script>
 
 <template>
@@ -92,27 +100,34 @@ async function retryDownload() {
       </div>
       <h1 class="text-2xl sm:text-3xl font-bold text-on-surface mb-2">{{ MSG.payment.success }}</h1>
       <p class="text-on-surface-variant mb-6 text-sm sm:text-base">
-        {{ autoDownloadError || MSG.payment.confirming }}
+        {{ autoDownloadError || 'Votre paiement est enregistré. Téléchargez votre document ci-dessous.' }}
       </p>
 
       <p v-if="entitlements && showManualActions" class="text-sm text-on-surface mb-6">
         <template v-if="entitlements.unlimitedActive">Accès illimité actif.</template>
-        <template v-else>Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong></template>
+        <template v-else-if="entitlements.creditsBalance > 0">
+          Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong>
+        </template>
       </p>
 
       <div v-if="showManualActions" class="flex flex-col gap-3">
         <UiButton
-          v-if="autoDownloadError && isAutoDownloadTarget"
+          v-if="canAutoDownload || entitlements?.creditsBalance"
           variant="secondary"
           block
           icon="download"
-          @click="retryDownload"
+          @click="runAutoDownload"
         >
           {{ MSG.buttons.downloadPdf }}
         </UiButton>
         <NuxtLink v-else-if="resumeId" :to="`/tableau-de-bord/dossiers/${resumeId}`">
           <UiButton variant="secondary" block icon="download">
             Télécharger mon dossier
+          </UiButton>
+        </NuxtLink>
+        <NuxtLink v-else to="/creer/editeur">
+          <UiButton variant="outline" block>
+            Retour à mon CV
           </UiButton>
         </NuxtLink>
         <NuxtLink v-if="authStore.isAuthenticated" to="/tableau-de-bord">

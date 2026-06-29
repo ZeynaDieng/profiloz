@@ -6,15 +6,13 @@ export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
     const ctx = await requireGuestOrAuth(request)
-    const body = (await request.json().catch(() => ({}))) as { planSlug?: string; returnTo?: string }
-    const planSlug = String(body.planSlug ?? '')
-    const returnTo = typeof body.returnTo === 'string' ? body.returnTo : undefined
-    const result = await paymentService.createCheckout(
+    const body = (await request.json().catch(() => ({}))) as { ref?: string }
+    const ref = String(body.ref ?? '').trim()
+    if (!ref) throw new Error('Référence requise')
+
+    const result = await paymentService.confirmReturn(
       { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId },
-      planSlug,
-      returnTo,
-      origin,
-      ctx.guestSessionId,
+      ref,
     )
     return withCors(jsonResponse(result), origin)
   } catch (error) {
