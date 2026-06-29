@@ -108,14 +108,21 @@ export function renderResumeHtml(snapshot: ResumeSnapshot): string {
 async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
   return withPuppeteerPage(async (page) => {
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 })
-    await page.goto(printUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 })
+    await page.goto(printUrl, { waitUntil: 'load', timeout: 90_000 })
 
     const errorHandle = await page.$('[data-cv-error="true"]')
     if (errorHandle) {
-      throw new Error('La page d’impression n’a pas pu charger le CV')
+      const errorText = await page
+        .$eval('[data-cv-error="true"]', (el) => el.textContent?.trim() || '')
+        .catch(() => '')
+      throw new Error(
+        errorText
+          ? `La page d'impression n'a pas pu charger le CV (${errorText})`
+          : "La page d'impression n'a pas pu charger le CV",
+      )
     }
 
-    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 45_000 })
+    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 60_000 })
     await page.evaluate(async () => {
       if (document.fonts?.ready) await document.fonts.ready
     })
@@ -129,6 +136,10 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
       }),
     )
   })
+}
+
+async function renderResumePdfFromHtml(snapshot: ResumeSnapshot): Promise<Buffer> {
+  return htmlToPdf(renderResumeHtml(snapshot))
 }
 
 async function withTransientRetry<T>(operation: () => Promise<T>): Promise<T> {
@@ -268,21 +279,34 @@ export class PdfService {
     let pdfBuffer: Buffer
     try {
       pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'unknown'
+    } catch (printError) {
+      const printDetail = printError instanceof Error ? printError.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_error',
+        event: 'pdf_generate_print_fallback',
         kind: 'resume',
         templateSlug: snapshot.templateSlug,
         userId: ctx?.userId,
         guestSessionId: guestSessionDbId,
         durationMs: Date.now() - startedAt,
-        error: detail,
+        error: printDetail,
       })
-      throw new Error(
-        `Impossible de générer le PDF avec le modèle choisi (${detail}). ` +
-          'Vérifiez que l\'application web est démarrée (pnpm run dev sur le port 3000).',
-      )
+      try {
+        pdfBuffer = await renderResumePdfFromHtml(snapshot)
+      } catch (fallbackError) {
+        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
+        logPdfEvent({
+          event: 'pdf_generate_error',
+          kind: 'resume',
+          templateSlug: snapshot.templateSlug,
+          userId: ctx?.userId,
+          guestSessionId: guestSessionDbId,
+          durationMs: Date.now() - startedAt,
+          error: `${printDetail} | fallback: ${fallbackDetail}`,
+        })
+        throw new Error(
+          `Impossible de générer le PDF (${fallbackDetail}). Vérifiez que Chromium est disponible sur le serveur.`,
+        )
+      }
     } finally {
       await storageProvider.delete(snapshotKey)
     }

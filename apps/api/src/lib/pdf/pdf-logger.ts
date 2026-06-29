@@ -2,6 +2,7 @@ type PdfEvent =
   | 'pdf_generate_start'
   | 'pdf_generate_success'
   | 'pdf_generate_error'
+  | 'pdf_generate_print_fallback'
   | 'pdf_cache_hit'
 
 type PdfLogPayload = {

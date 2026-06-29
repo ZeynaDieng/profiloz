@@ -10,7 +10,19 @@ export class AppError extends Error {
     public errors?: Array<{ field: string; message: string }>,
   ) {
     super(detail ?? title)
+    this.name = 'AppError'
   }
+}
+
+function isAppError(error: unknown): error is AppError {
+  return (
+    error instanceof AppError ||
+    (typeof error === 'object' &&
+      error !== null &&
+      'status' in error &&
+      'title' in error &&
+      typeof (error as AppError).status === 'number')
+  )
 }
 
 export function problemResponse(error: AppError | ZodError | Error, status = 500) {
@@ -30,13 +42,13 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
     )
   }
 
-  if (error instanceof AppError) {
+  if (isAppError(error)) {
     return NextResponse.json(
       {
         type: `https://profiloz.fr/errors/${error.status}`,
         title: error.title,
         status: error.status,
-        detail: error.detail,
+        detail: error.detail ?? error.message,
         errors: error.errors,
       },
       { status: error.status },
@@ -49,7 +61,10 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
       type: 'https://profiloz.fr/errors/internal',
       title: 'Internal Server Error',
       status,
-      detail: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      detail:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Une erreur inattendue est survenue. Réessayez dans quelques instants.',
     },
     { status },
   )
