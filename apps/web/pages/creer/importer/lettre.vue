@@ -4,25 +4,17 @@ import { saveCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 
 definePageMeta({ layout: 'wizard' })
 
-const authStore = useAuthStore()
 const { state, progress, extractedData, errorMessage, processFile, reset } = useCoverLetterImportFlow()
-
 const { ensureSession } = useGuestSession()
+
 onMounted(() => {
   void ensureSession()
 })
 
 function onConfirm() {
   saveCoverLetterImportDraft(extractedData.value)
-  authStore.loadFromStorage()
 
-  const redirect = '/tableau-de-bord/lettres/nouvelle?from=import'
-  if (authStore.isAuthenticated) {
-    navigateTo(redirect)
-    return
-  }
-
-  navigateTo(`/connexion?redirect=${encodeURIComponent(redirect)}`)
+  navigateTo('/creer/lettre/editeur?from=import')
 }
 
 function onReset() {

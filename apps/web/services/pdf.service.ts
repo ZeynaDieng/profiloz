@@ -1,6 +1,8 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { useApiClient } from '~/composables/useApiClient'
 import { getStoredAccessToken } from '~/utils/auth-token'
+import { buildCoverLetterPdfFilename } from '~/utils/coverLetterPdfFilename'
 import { buildResumePdfFilename, encodeContentDispositionFilename } from '~/utils/resumePdfFilename'
 
 export function usePdfService() {
@@ -49,6 +51,23 @@ export function usePdfService() {
     return { ...result, filename }
   }
 
+  async function generateLetterFromSnapshot(snapshot: CoverLetterSnapshot) {
+    return post<{
+      jobId: string
+      status: string
+      downloadUrl: string
+      expiresAt: string
+    }>('/pdf/generate-letter-from-snapshot', { snapshot })
+  }
+
+  async function generateLetterAndDownload(snapshot: CoverLetterSnapshot) {
+    const filename = buildCoverLetterPdfFilename(snapshot.senderName)
+    const result = await generateLetterFromSnapshot(snapshot)
+    const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
+    await downloadWithAuth(downloadUrl, filename)
+    return { ...result, filename }
+  }
+
   async function downloadResumeCv(resumeId: string, snapshot?: Pick<ResumeSnapshot, 'personalInfo'>) {
     const filename = snapshot ? buildResumePdfFilename(snapshot as ResumeSnapshot) : 'cv Profiloz.pdf'
     const result = await post<{
@@ -83,8 +102,10 @@ export function usePdfService() {
 
   return {
     generateFromSnapshot,
+    generateLetterFromSnapshot,
     downloadWithAuth,
     generateAndDownload,
+    generateLetterAndDownload,
     downloadResumeCv,
     downloadDossier,
     getDownloadUrl,

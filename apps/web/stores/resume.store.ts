@@ -13,6 +13,7 @@ import { isBase64PhotoUrl } from '@profiloz/shared'
 import { calculateCompleteness } from '~/utils/completeness'
 import { stripLegacyBase64Photo } from '~/utils/photoUrl'
 import { clearLegacyResumeDraft, createScopedResumeDraftStorage } from '~/utils/resume-draft-storage'
+import { createAminataDemoResume } from '~/features/demo/aminata-persona'
 
 function createEmptyResume(): ResumeSnapshot {
   return {
@@ -74,6 +75,19 @@ export const useResumeStore = defineStore('resume', {
       this.current = createEmptyResume()
       this.savedResumeId = null
       this.isDirty = false
+    },
+    loadDemoPersona() {
+      const slug = this.current?.templateSlug ?? 'PROFESSIONNEL'
+      const accent = this.current?.templateConfig?.accentColor ?? '#0051d5'
+      this.loadSnapshot(createAminataDemoResume(slug, accent))
+    },
+    ensureDemoPersonaIfEmpty() {
+      this.rehydrateFromStorage()
+      if (!this.current?.personalInfo.fullName?.trim()) {
+        this.loadDemoPersona()
+        return
+      }
+      this.initDraft()
     },
     rehydrateFromStorage() {
       if (!import.meta.client) return

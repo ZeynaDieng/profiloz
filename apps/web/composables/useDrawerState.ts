@@ -1,6 +1,6 @@
-const drawerOpen = ref(false)
-
 export function useDrawerState() {
+  const drawerOpen = useState('appDrawerOpen', () => false)
+
   function openDrawer() {
     drawerOpen.value = true
   }

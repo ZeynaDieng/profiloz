@@ -35,10 +35,7 @@ const { target, revealed } = useScrollReveal(0.25)
           :class="revealed && 'is-revealed'"
           :style="revealed ? { transitionDelay: `${i * 90}ms` } : undefined"
         >
-          <div class="flex gap-0.5 text-secondary mb-2" aria-hidden="true">
-            <UiPzIcon v-for="n in 5" :key="n" name="star" class="text-[14px]" />
-          </div>
-          <blockquote class="text-sm text-on-surface leading-snug">« {{ item.quote }} »</blockquote>
+          <blockquote class="text-sm text-on-surface leading-snug">{{ item.quote }}</blockquote>
           <figcaption class="mt-2 text-xs text-on-surface-variant">
             <span class="font-semibold text-on-surface">{{ item.name }}</span>
             · {{ item.role }}

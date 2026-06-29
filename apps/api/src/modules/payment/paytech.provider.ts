@@ -1,4 +1,5 @@
 import { normalizeAbsoluteUrl } from '@/lib/pdf/app-url'
+import { AppError } from '@/lib/errors'
 import { createHash } from 'crypto'
 import { PAYMENT_CURRENCY } from '@profiloz/shared'
 import type {
@@ -20,7 +21,11 @@ function readConfig(): PayTechConfig {
   const apiKey = process.env.PAYTECH_API_KEY
   const apiSecret = process.env.PAYTECH_API_SECRET
   if (!apiKey || !apiSecret) {
-    throw new Error('PayTech non configuré : définissez PAYTECH_API_KEY et PAYTECH_API_SECRET.')
+    throw new AppError(
+      503,
+      'Paiement indisponible',
+      "Le paiement n'est pas configuré pour le moment. Réessayez plus tard ou contactez le support.",
+    )
   }
   const env = process.env.PAYTECH_ENV === 'prod' ? 'prod' : 'test'
   return { apiKey, apiSecret, env }
@@ -41,7 +46,11 @@ interface PayTechRequestResponse {
 function assertPayTechRedirectUrl(url: string, label: string) {
   const normalized = normalizeAbsoluteUrl(url)
   if (!normalized) {
-    throw new Error(`${label} doit être une URL http(s) valide (reçu : « ${url || '(vide)'} »).`)
+    throw new AppError(
+      500,
+      'Configuration paiement',
+      `${label} doit être une URL http(s) valide. Définissez PUBLIC_APP_URL dans apps/api/.env (ex. http://localhost:3000).`,
+    )
   }
 }
 
@@ -56,7 +65,7 @@ export class PayTechProvider implements PaymentProvider {
     if (params.ipnUrl) {
       const ipn = normalizeAbsoluteUrl(params.ipnUrl)
       if (!ipn || !ipn.startsWith('https://')) {
-        throw new Error('ipn_url doit être une URL HTTPS valide.')
+        throw new AppError(500, 'Configuration paiement', 'PAYTECH_IPN_URL doit être une URL HTTPS valide.')
       }
     }
 
@@ -88,7 +97,11 @@ export class PayTechProvider implements PaymentProvider {
     const data = (await response.json().catch(() => ({}))) as PayTechRequestResponse
     const redirectUrl = data.redirect_url ?? data.redirectUrl
     if (!response.ok || data.success !== 1 || !data.token || !redirectUrl) {
-      throw new Error(data.message || 'PayTech a refusé la demande de paiement.')
+      throw new AppError(
+        502,
+        'Paiement refusé',
+        data.message || 'PayTech a refusé la demande de paiement. Vérifiez vos clés et PUBLIC_APP_URL.',
+      )
     }
 
     return { token: data.token, redirectUrl }

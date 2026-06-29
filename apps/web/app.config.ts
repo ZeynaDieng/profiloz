@@ -14,7 +14,8 @@ export default defineAppConfig({
     },
     drawer: {
       slots: {
-        overlay: 'fixed inset-0 bg-black/35',
+        overlay: 'fixed inset-0 z-[100] bg-black/35',
+        content: 'fixed z-[101]',
       },
       compoundVariants: [
         {

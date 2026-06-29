@@ -340,6 +340,7 @@ export class PdfService {
 
       const job = await prisma.pdfJob.create({
         data: {
+          guestSessionId: ctx?.guestSessionDbId,
           storageKey,
           status: 'completed',
           completedAt: new Date(),
@@ -355,6 +356,7 @@ export class PdfService {
       kind: 'cover_letter',
       templateSlug: letter.templateSlug,
       userId: ctx?.userId,
+      guestSessionId: ctx?.guestSessionDbId,
     })
 
     const renderId = randomUUID()
@@ -395,6 +397,7 @@ export class PdfService {
 
       const job = await prisma.pdfJob.create({
         data: {
+          guestSessionId: ctx?.guestSessionDbId,
           storageKey,
           status: 'completed',
           completedAt: new Date(),
@@ -407,6 +410,7 @@ export class PdfService {
         kind: 'cover_letter',
         templateSlug: letter.templateSlug,
         userId: ctx?.userId,
+        guestSessionId: ctx?.guestSessionDbId,
         durationMs: Date.now() - startedAt,
       })
 

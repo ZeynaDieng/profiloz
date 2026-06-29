@@ -1,6 +1,7 @@
 <template>
   <div>
     <LayoutAppHeader variant="marketing" />
+    <LayoutAppMarketingDrawer />
     <main>
       <slot />
     </main>

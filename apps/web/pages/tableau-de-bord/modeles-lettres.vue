@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import {
   COVER_LETTER_TEMPLATE_FILTERS,
   COVER_LETTER_TEMPLATE_REGISTRY,
@@ -30,6 +31,13 @@ const filteredTemplates = computed(() => {
   if (activeFilter.value === 'all') return COVER_LETTER_TEMPLATE_REGISTRY
   return COVER_LETTER_TEMPLATE_REGISTRY.filter((t) => t.category === activeFilter.value)
 })
+
+function selectTemplate(slug: CoverLetterTemplateSlug) {
+  const params = new URLSearchParams()
+  params.set('template', slug)
+  if (linkedResumeId.value) params.set('resumeId', linkedResumeId.value)
+  navigateTo(`/tableau-de-bord/lettres/nouvelle?${params.toString()}`)
+}
 
 onMounted(() => {
   authStore.loadFromStorage()
@@ -76,6 +84,7 @@ onMounted(() => {
         :selected="preselected === template.slug"
         :resume-id="linkedResumeId"
         class=""
+        @select="selectTemplate"
       >
         <div>
           <p class="font-bold text-on-surface">{{ template.name }}</p>

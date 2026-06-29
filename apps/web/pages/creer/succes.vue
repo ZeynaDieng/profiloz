@@ -5,14 +5,26 @@ definePageMeta({ layout: false })
 
 const authStore = useAuthStore()
 const resumeStore = useResumeStore()
+const coverLetterStore = useCoverLetterStore()
 const route = useRoute()
+
+const isLetter = computed(() => route.query.type === 'letter')
 
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
   if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery
+  if (isLetter.value && coverLetterStore.current) {
+    return buildCoverLetterPdfFilename(coverLetterStore.current.senderName)
+  }
   if (resumeStore.current) return buildResumePdfFilename(resumeStore.current)
-  return 'cv Profiloz.pdf'
+  return isLetter.value ? 'lettre Profiloz.pdf' : 'cv Profiloz.pdf'
 })
+
+const successHeadline = computed(() =>
+  isLetter.value ? MSG.guide.successLetterHeadline : MSG.guide.successHeadline,
+)
+
+const editLink = computed(() => (isLetter.value ? '/creer/lettre/editeur' : '/creer/editeur'))
 
 onMounted(() => {
   authStore.loadFromStorage()
@@ -44,7 +56,7 @@ onMounted(() => {
       <UiCard variant="glass" padding="lg" class="relative w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">
         <div class="text-5xl mb-4 sm:mb-6">🎉</div>
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
-        <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ MSG.guide.successHeadline }}</p>
+        <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ successHeadline }}</p>
         <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-8 sm:mb-10">
           {{ MSG.guide.successLead }}
         </p>
@@ -53,7 +65,7 @@ onMounted(() => {
           <NuxtLink to="/tableau-de-bord" class="block">
             <UiButton block>Voir mes dossiers</UiButton>
           </NuxtLink>
-          <NuxtLink to="/creer/editeur" class="block text-secondary font-semibold hover:underline min-h-11 inline-flex items-center justify-center w-full">
+          <NuxtLink :to="editLink" class="block text-secondary font-semibold hover:underline min-h-11 inline-flex items-center justify-center w-full">
             Continuer à modifier
           </NuxtLink>
         </div>
@@ -67,7 +79,7 @@ onMounted(() => {
             </li>
           </ul>
           <div class="flex flex-col gap-2">
-            <NuxtLink to="/inscription?redirect=/creer/editeur">
+            <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(editLink)}`">
               <UiButton variant="primary" block>{{ MSG.buttons.createAccount }}</UiButton>
             </NuxtLink>
             <NuxtLink to="/" class="text-secondary py-2 text-center font-semibold hover:underline min-h-11 inline-flex items-center justify-center">
@@ -85,7 +97,7 @@ onMounted(() => {
     </div>
 
     <UiStickyActionBar v-if="!authStore.isAuthenticated" class="sm:hidden">
-      <NuxtLink to="/inscription?redirect=/creer/editeur" class="block">
+      <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(editLink)}`" class="block">
         <UiButton variant="secondary" block icon="person_add">
           {{ MSG.buttons.createAccount }}
         </UiButton>

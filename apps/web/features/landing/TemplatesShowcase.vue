@@ -1,48 +1,22 @@
 <script setup lang="ts">
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
+import { COVER_LETTER_TEMPLATE_REGISTRY } from '~/features/cover-letter-templates/registry'
 import { TEMPLATE_REGISTRY } from '~/features/templates/registry'
 
 const POPULAR_SLUG = 'PROFESSIONNEL'
 const featuredCvTemplates = TEMPLATE_REGISTRY.slice(0, 4)
-
-const letterTemplates = [
-  {
-    slug: 'CLASSIQUE',
-    name: 'Classique',
-    category: 'Corporate',
-    description: 'Lettre élégante au format traditionnel.',
-    variant: 'serif' as const,
-  },
-  {
-    slug: 'MODERNE',
-    name: 'Moderne',
-    category: 'Professionnel',
-    description: 'Mise en page claire et contemporaine.',
-    variant: 'modern' as const,
-  },
-  {
-    slug: 'ACCENT',
-    name: 'Accent',
-    category: 'Distinctif',
-    description: 'Bandeau coloré pour se démarquer.',
-    variant: 'accent' as const,
-  },
-]
+const featuredLetterTemplates = COVER_LETTER_TEMPLATE_REGISTRY.slice(0, 3)
 
 function letterTemplateLink(slug: string) {
-  return `/inscription?redirect=${encodeURIComponent(`/tableau-de-bord/lettres/nouvelle?template=${slug}`)}`
+  return `/creer/lettre/modele?select=${slug}`
 }
 
 function cvTemplateLink(slug: string) {
   return `/creer/assistant/informations?template=${slug}`
 }
 
-const letterStartLink = '/inscription?redirect=/tableau-de-bord/modeles-lettres'
-
-function letterVariantClass(variant: 'serif' | 'modern' | 'accent') {
-  if (variant === 'serif') return 'font-[Georgia,Times,serif] text-on-surface'
-  return 'font-sans text-on-surface'
-}
+const letterStartLink = '/creer/lettre/modele'
 
 const { target, revealed } = useScrollReveal(0.25)
 </script>
@@ -160,51 +134,33 @@ const { target, revealed } = useScrollReveal(0.25)
 
       <div class="mobile-scroll-x sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 md:gap-10">
         <article
-          v-for="template in letterTemplates"
+          v-for="template in featuredLetterTemplates"
           :key="template.slug"
-          class="group flex flex-col mobile-scroll-card pz-template-card"
+          class="group flex flex-col mobile-scroll-card"
         >
-          <NuxtLink :to="letterTemplateLink(template.slug)" class="block">
-            <div
-              class="relative aspect-[3/4] min-h-[220px] sm:min-h-[340px] rounded-2xl border border-outline-variant overflow-hidden mb-3 sm:mb-4 bg-white sm:group-hover:border-secondary/40"
-            >
-              <div
-                class="absolute inset-0 p-5 sm:p-6"
-                :class="letterVariantClass(template.variant)"
+          <div
+            class="relative aspect-[3/4] min-h-[260px] sm:min-h-[360px] md:min-h-[400px] rounded-2xl border border-outline-variant overflow-hidden mb-3 sm:mb-4 pz-template-card sm:group-hover:border-secondary/40"
+          >
+            <div class="absolute inset-0 pz-template-preview">
+              <FeatureCoverLetterTemplatesA4PreviewFit :letter="buildCoverLetterDemoSnapshot(template.slug)" />
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              <NuxtLink
+                :to="letterTemplateLink(template.slug)"
+                class="btn-secondary w-full !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm"
               >
-                <p class="text-[10px] text-on-surface-variant text-right mb-4">15 juin 2026</p>
-                <p class="text-[11px] font-semibold mb-3">Madame, Monsieur,</p>
-                <p
-                  class="text-[10px] leading-relaxed text-on-surface-variant mb-3"
-                  :class="template.variant === 'accent' ? 'text-secondary font-medium' : ''"
-                >
-                  Objet : Candidature — Poste visé
-                </p>
-                <p class="text-[10px] leading-relaxed text-on-surface-variant">
-                  Je me permets de vous adresser ma candidature pour le poste mentionné. Mon parcours
-                  et mes compétences correspondent aux exigences de votre organisation...
-                </p>
-                <div
-                  v-if="template.variant === 'accent'"
-                  class="absolute bottom-0 left-0 right-0 h-1 bg-secondary"
-                />
-              </div>
-
-              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                <span class="btn-secondary !min-h-10 !py-2 !px-4 !text-sm shadow-lg">
-                  <UiPzIcon name="edit" class="text-[18px]" />
-                  Voir le modèle
-                </span>
-              </div>
+                Utiliser ce modèle
+              </NuxtLink>
             </div>
+          </div>
 
-            <div class="px-1">
-              <h4 class="font-bold text-on-surface text-base group-hover:text-secondary transition-colors">
-                {{ template.name }}
-              </h4>
-              <p class="text-label-xs text-on-surface-variant mt-0.5">{{ template.category }}</p>
-              <p class="text-sm text-on-surface-variant mt-1 hidden sm:block">{{ template.description }}</p>
-            </div>
+          <NuxtLink :to="letterTemplateLink(template.slug)" class="px-1 block">
+            <h4 class="font-bold text-on-surface text-base group-hover:text-secondary transition-colors">
+              {{ template.name }}
+            </h4>
+            <p class="text-label-xs text-on-surface-variant mt-0.5">{{ template.category }}</p>
+            <p class="text-sm text-on-surface-variant mt-1 hidden sm:block">{{ template.description }}</p>
           </NuxtLink>
         </article>
       </div>

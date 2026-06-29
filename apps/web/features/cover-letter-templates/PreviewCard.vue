@@ -8,23 +8,21 @@ const props = defineProps<{
   resumeId?: string | null
 }>()
 
-const previewLetter = computed(() => buildCoverLetterDemoSnapshot(props.slug))
+defineEmits<{ select: [slug: CoverLetterTemplateSlug] }>()
 
-const letterLink = computed(() => {
-  const base = `/tableau-de-bord/lettres/nouvelle?template=${props.slug}`
-  return props.resumeId ? `${base}&resumeId=${props.resumeId}` : base
-})
+const previewLetter = computed(() => buildCoverLetterDemoSnapshot(props.slug))
 </script>
 
 <template>
-  <NuxtLink
-    :to="letterLink"
+  <button
+    type="button"
     class="text-left rounded-2xl border overflow-hidden transition-all w-full block"
     :class="
       selected
         ? 'border-secondary shadow-lg ring-2 ring-secondary/20'
         : 'border-outline-variant hover:border-secondary/50'
     "
+    @click="$emit('select', slug)"
   >
     <div class="aspect-[3/4] overflow-hidden">
       <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
@@ -33,5 +31,5 @@ const letterLink = computed(() => {
       <slot />
       <UiPzIcon v-if="selected" name="check_circle" class="text-secondary shrink-0" />
     </div>
-  </NuxtLink>
+  </button>
 </template>

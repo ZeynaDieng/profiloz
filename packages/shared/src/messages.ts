@@ -63,6 +63,14 @@ export const MSG = {
     saveError: "Impossible d'enregistrer votre lettre pour le moment.",
   },
 
+  letterPdf: {
+    steps: [
+      'Préparation de votre lettre…',
+      'Mise en page du document…',
+      'Génération de votre PDF…',
+    ] as const,
+  },
+
   payment: {
     success: 'Paiement effectué avec succès.',
     cancelled: 'Le paiement a été annulé.',
@@ -152,10 +160,18 @@ export const MSG = {
     createCvCta: 'Créer mon CV',
     importCvLink: "J'ai déjà un CV à importer",
     importLetterLink: 'Importer une lettre existante',
+    createLetterLink: 'Créer une lettre de motivation',
+    createCvLink: 'Créer un CV à la place',
+    createLetterTitle: 'Rédigeons votre lettre',
+    createLetterSubtitle: 'Modèle professionnel, export PDF immédiat. Sans compte obligatoire.',
+    createLetterCta: 'Créer ma lettre',
+    letterModelStep: 'Étape 1 · Choisissez le modèle qui vous plaît.',
+    letterModelSelected: 'Parfait ! Il ne reste plus qu\'à personnaliser votre lettre.',
     infoStep: 'Étape 1 · Commençons par vos informations.',
     modelStep: 'Étape 2 · Choisissez le modèle qui vous plaît.',
     modelSelected: "Parfait ! Il ne reste plus qu'à compléter votre parcours.",
     successHeadline: 'Votre CV professionnel est prêt.',
+    successLetterHeadline: 'Votre lettre professionnelle est prête.',
     successLead:
       'Téléchargez-le maintenant ou créez un compte gratuit pour le retrouver et le modifier plus tard.',
     accountPitch: 'Créez un compte gratuit pour retrouver votre CV',

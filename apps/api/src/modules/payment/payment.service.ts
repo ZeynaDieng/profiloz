@@ -92,7 +92,7 @@ export class PaymentService {
       ipnUrl: process.env.PAYTECH_IPN_URL ?? '',
       successUrl: buildPublicAppPath('/paiement/succes', {
         ref: refCommand,
-        returnTo: safeReturnTo,
+        ...(safeReturnTo ? { returnTo: safeReturnTo } : {}),
       }),
       cancelUrl: buildPublicAppPath('/paiement/annule', { ref: refCommand }),
     })

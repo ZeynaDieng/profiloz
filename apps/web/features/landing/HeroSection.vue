@@ -5,13 +5,6 @@ const journeySteps = [
   'Exporter en PDF',
 ] as const
 
-const highlights = [
-  { icon: 'description', label: 'CV professionnels' },
-  { icon: 'mail', label: 'Lettres de motivation' },
-  { icon: 'palette', label: 'Modèles modernes' },
-  { icon: 'download', label: 'Export PDF' },
-] as const
-
 const config = useRuntimeConfig()
 const heroVariant = computed(() =>
   (config.public.heroVariant as string) === 'start' ? 'start' : 'transform',
@@ -41,27 +34,13 @@ const heroVariant = computed(() =>
           class="hero-enter text-[0.9375rem] sm:text-base text-on-surface-variant max-w-lg leading-relaxed"
           style="animation-delay: 80ms"
         >
-          Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF —
-          l'ensemble de votre dossier de candidature, au même endroit.
+          Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF.
+          L'ensemble de votre dossier de candidature, au même endroit.
         </p>
-
-        <ul
-          class="hero-enter flex flex-wrap gap-2 pt-0.5"
-          style="animation-delay: 120ms"
-        >
-          <li
-            v-for="item in highlights"
-            :key="item.label"
-            class="inline-flex items-center gap-1.5 rounded-full border border-outline-variant/40 bg-surface-container-lowest px-3 py-1 text-xs sm:text-sm text-on-surface"
-          >
-            <UiPzIcon :name="item.icon" class="text-[15px] text-secondary pz-icon-hover" />
-            {{ item.label }}
-          </li>
-        </ul>
 
         <div
           class="hero-enter flex flex-col sm:flex-row sm:items-center gap-2.5"
-          style="animation-delay: 180ms"
+          style="animation-delay: 120ms"
         >
           <NuxtLink
             to="/creer"
@@ -71,7 +50,7 @@ const heroVariant = computed(() =>
             <UiPzIcon name="arrow_forward" class="text-[17px]" />
           </NuxtLink>
           <NuxtLink
-            to="/inscription?redirect=/tableau-de-bord/lettres/nouvelle"
+            to="/creer/lettre"
             class="btn-outline w-full sm:w-auto whitespace-nowrap text-sm"
           >
             <UiPzIcon name="mail" class="text-[17px] opacity-70" />
@@ -81,14 +60,14 @@ const heroVariant = computed(() =>
 
         <p
           class="hero-enter text-sm text-on-surface-variant/80"
-          style="animation-delay: 260ms"
+          style="animation-delay: 200ms"
         >
-          CV sans inscription · Compte gratuit pour les lettres · PDF immédiat · Compatible ATS
+          CV et lettre sans inscription · PDF immédiat · Compatible ATS
         </p>
 
         <p
           class="hero-enter flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-on-surface-variant/75"
-          style="animation-delay: 320ms"
+          style="animation-delay: 260ms"
         >
           <template v-for="(step, i) in journeySteps" :key="step">
             <span v-if="i > 0" class="text-secondary/70 font-bold select-none" aria-hidden="true">→</span>

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
 
 const demoResume = buildPreviewSnapshot('PROFESSIONNEL')
+const demoLetter = buildCoverLetterDemoSnapshot('CLASSIQUE')
 
 const points = [
   'CV structuré, compatible ATS et prêt à envoyer',
@@ -47,7 +49,7 @@ const { target, revealed } = useScrollReveal()
               <UiPzIcon name="arrow_forward" class="text-[17px]" />
             </NuxtLink>
             <NuxtLink
-              to="/inscription?redirect=/tableau-de-bord/lettres/nouvelle"
+              to="/creer/lettre"
               class="btn-outline w-full sm:w-auto"
             >
               <UiPzIcon name="mail" class="text-[17px]" />
@@ -57,27 +59,24 @@ const { target, revealed } = useScrollReveal()
         </div>
 
         <div class="order-1 lg:order-2">
-          <FeaturesLandingProductScreenFrame label="Éditeur Profilo'Z" class="premium-shadow">
+          <FeaturesLandingProductScreenFrame label="Dossier Profilo'Z — Aminata Diallo" class="premium-shadow">
             <div class="grid grid-cols-2 gap-px bg-outline-variant/15 min-h-[280px]">
-              <div class="bg-white p-3 space-y-2 border-r border-outline-variant/10">
-                <p class="text-[10px] font-bold uppercase text-on-surface-variant">Dashboard</p>
-                <div class="rounded-lg border border-outline-variant/25 p-2 space-y-1.5">
-                  <div class="h-2 w-3/4 rounded bg-surface-container" />
-                  <div class="h-8 rounded bg-secondary/10 border border-secondary/20" />
-                </div>
-                <p class="text-[10px] font-bold uppercase text-on-surface-variant pt-1">Éditeur CV</p>
-                <div class="space-y-1">
-                  <div class="h-6 rounded border border-outline-variant/30 bg-surface-container-lowest" />
-                  <div class="h-6 rounded border border-outline-variant/30 bg-surface-container-lowest" />
-                </div>
-              </div>
               <div class="bg-[#eef2ff] relative overflow-hidden">
-                <div class="absolute inset-0 scale-[0.55] origin-top">
+                <div class="absolute inset-0">
                   <FeatureTemplatesA4PreviewFit :resume="demoResume" />
                 </div>
                 <div class="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 border border-outline-variant/20 px-2 py-1.5 flex items-center gap-1.5">
+                  <UiPzIcon name="description" class="text-secondary text-sm" />
+                  <span class="text-[10px] font-medium text-on-surface">CV · Aminata Diallo</span>
+                </div>
+              </div>
+              <div class="bg-[#eef2ff] relative overflow-hidden border-l border-outline-variant/10">
+                <div class="absolute inset-0">
+                  <FeatureCoverLetterTemplatesA4PreviewFit :letter="demoLetter" />
+                </div>
+                <div class="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 border border-outline-variant/20 px-2 py-1.5 flex items-center gap-1.5">
                   <UiPzIcon name="mail" class="text-secondary text-sm" />
-                  <span class="text-[10px] font-medium text-on-surface">Lettre · Aperçu PDF</span>
+                  <span class="text-[10px] font-medium text-on-surface">Lettre · Aminata Diallo</span>
                 </div>
               </div>
             </div>

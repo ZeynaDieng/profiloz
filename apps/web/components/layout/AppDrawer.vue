@@ -15,8 +15,9 @@ watch(
     direction="left"
     :handle="false"
     :ui="{
-      content: 'mobile-drawer-panel w-[min(88vw,320px)] h-full max-h-dvh rounded-none border-r border-outline-variant/30 bg-surface-container-lowest shadow-[8px_0_40px_rgba(15,23,42,0.14)]',
-      overlay: 'bg-black/40 backdrop-blur-[2px]',
+      overlay: 'z-[100] bg-black/40 backdrop-blur-[2px]',
+      content:
+        'z-[101] mobile-drawer-panel w-[min(88vw,320px)] h-full max-h-dvh rounded-none border-r border-outline-variant/30 bg-surface-container-lowest shadow-[8px_0_40px_rgba(15,23,42,0.14)]',
     }"
   >
     <template #content>

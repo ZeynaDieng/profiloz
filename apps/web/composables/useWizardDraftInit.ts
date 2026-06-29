@@ -5,6 +5,10 @@ export function useWizardDraftInit() {
     if (!resumeStore.current?.personalInfo.fullName) {
       resumeStore.rehydrateFromStorage()
     }
-    resumeStore.initDraft()
+    if (!resumeStore.current?.personalInfo.fullName?.trim()) {
+      resumeStore.loadDemoPersona()
+    } else {
+      resumeStore.initDraft()
+    }
   })
 }

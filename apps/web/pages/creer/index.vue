@@ -17,6 +17,11 @@
         </NuxtLink>
       </p>
       <p>
+        <NuxtLink to="/creer/lettre" class="text-on-surface-variant hover:text-secondary hover:underline">
+          {{ MSG.guide.createLetterLink }}
+        </NuxtLink>
+      </p>
+      <p>
         <NuxtLink to="/creer/importer/lettre" class="text-on-surface-variant hover:text-secondary hover:underline">
           {{ MSG.guide.importLetterLink }}
         </NuxtLink>
@@ -34,9 +39,6 @@ useGuestSession()
 const resumeStore = useResumeStore()
 
 onMounted(() => {
-  resumeStore.rehydrateFromStorage()
-  if (!resumeStore.current?.personalInfo.fullName) {
-    resumeStore.startNewDraft()
-  }
+  resumeStore.ensureDemoPersonaIfEmpty()
 })
 </script>

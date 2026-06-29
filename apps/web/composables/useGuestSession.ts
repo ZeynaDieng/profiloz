@@ -15,9 +15,12 @@ export function useGuestSession() {
     const { post } = useApiClient()
     try {
       await post('/guest/session', { sessionId: id })
-    } catch {
-      // Réessai une fois : la session doit exister côté API pour les appels invités.
-      await post('/guest/session', { sessionId: id })
+    } catch (first) {
+      try {
+        await post('/guest/session', { sessionId: id })
+      } catch {
+        throw first
+      }
     }
 
     return id

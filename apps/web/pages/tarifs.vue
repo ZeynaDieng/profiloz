@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatXof, MSG } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
+import { parseApiAuthError } from '~/utils/api-error'
 
 definePageMeta({ layout: 'default' })
 
@@ -55,15 +56,13 @@ onMounted(async () => {
 
 async function onChoose(plan: PlanDto) {
   error.value = ''
-  await ensureSession().catch(() => {})
-
   checkingOut.value = plan.slug
   try {
+    await ensureSession()
     const { redirectUrl } = await paymentService.checkout(plan.slug, returnTo.value ?? undefined)
     window.location.href = redirectUrl
   } catch (err) {
-    const problem = err as { detail?: string; title?: string }
-    error.value = problem.detail || problem.title || MSG.payment.error
+    error.value = parseApiAuthError(err, MSG.payment.error)
     checkingOut.value = null
   }
 }
