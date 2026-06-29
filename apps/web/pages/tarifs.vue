@@ -2,6 +2,7 @@
 import { formatXof, MSG } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
+import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
 import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
 
 definePageMeta({ layout: 'default' })
@@ -61,6 +62,10 @@ async function onChoose(plan: PlanDto) {
   try {
     await ensureSession()
     if (returnTo.value) savePaymentReturnTo(returnTo.value)
+    savePaymentDraftBackup(returnTo.value)
+    savePaymentGuestSession(
+      import.meta.client ? localStorage.getItem('profiloz:guest-session') : null,
+    )
     const { ref, redirectUrl } = await paymentService.checkout(plan.slug, returnTo.value ?? undefined)
     savePaymentRef(ref)
     window.location.href = redirectUrl

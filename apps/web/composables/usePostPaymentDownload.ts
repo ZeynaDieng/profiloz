@@ -1,5 +1,14 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
-import { isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
+import {
+  alignGuestSessionFromStoredDrafts,
+  findCoverLetterDraftInStorage,
+  findResumeSnapshotInStorage,
+} from '~/utils/guest-draft-sync'
+import {
+  clearPaymentDraftBackup,
+  loadPaymentDraftBackup,
+} from '~/utils/payment-draft-backup'
+import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
 const POLL_INTERVAL_MS = 1200
 const MAX_POLL_ATTEMPTS = 25
@@ -47,9 +56,59 @@ export function usePostPaymentDownload() {
     throw new Error('payment-not-confirmed')
   }
 
+  function loadResumeForDownload(): ResumeSnapshot | null {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'resume') {
+      if (backup.guestSessionId && import.meta.client) {
+        localStorage.setItem('profiloz:guest-session', backup.guestSessionId)
+      }
+      resumeStore.loadSnapshot(backup.snapshot)
+      return backup.snapshot
+    }
+
+    alignGuestSessionFromStoredDrafts()
+    const snapshot = findResumeSnapshotInStorage()
+    if (snapshot) {
+      resumeStore.loadSnapshot(snapshot)
+      return snapshot
+    }
+
+    resumeStore.rehydrateFromStorage()
+    if (resumeStore.current?.personalInfo.fullName?.trim()) {
+      return {
+        ...resumeStore.current,
+        templateConfig: { ...resumeStore.current.templateConfig },
+      }
+    }
+
+    return null
+  }
+
+  function loadLetterForDownload() {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'letter') {
+      if (backup.guestSessionId && import.meta.client) {
+        localStorage.setItem('profiloz:guest-session', backup.guestSessionId)
+      }
+      coverLetterStore.current = { ...backup.draft }
+      return coverLetterStore.toSnapshot()
+    }
+
+    alignGuestSessionFromStoredDrafts()
+    const draft = findCoverLetterDraftInStorage()
+    if (draft) {
+      coverLetterStore.current = { ...draft }
+      return coverLetterStore.toSnapshot()
+    }
+
+    coverLetterStore.rehydrateFromStorage()
+    return coverLetterStore.toSnapshot()
+  }
+
   async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
     if (!isGuestPdfReturnPath(returnTo)) return false
 
+    alignGuestSessionFromStoredDrafts()
     await waitForEntitlements(paymentRef)
     await ensureSession()
 
@@ -59,11 +118,11 @@ export function usePostPaymentDownload() {
       : 'Génération de votre PDF…'
 
     if (isLetterReturnPath(returnTo)) {
-      coverLetterStore.rehydrateFromStorage()
-      coverLetterStore.initDraft()
-      const snapshot = coverLetterStore.toSnapshot()
+      const snapshot = loadLetterForDownload()
       if (!snapshot?.content?.trim()) throw new Error('missing-letter')
       const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+      clearPaymentDraftBackup()
+      clearPaymentRef()
       await navigateTo(
         { path: '/creer/succes', query: { file: filename, type: 'letter' } },
         { replace: true },
@@ -71,17 +130,12 @@ export function usePostPaymentDownload() {
       return true
     }
 
-    resumeStore.rehydrateFromStorage()
-    resumeStore.initDraft()
-    if (!resumeStore.current?.personalInfo.fullName?.trim()) {
-      throw new Error('missing-resume')
-    }
+    const snapshot = loadResumeForDownload()
+    if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
 
-    const snapshot: ResumeSnapshot = {
-      ...resumeStore.current,
-      templateConfig: { ...resumeStore.current.templateConfig },
-    }
     const { filename } = await pdfService.generateAndDownload(snapshot)
+    clearPaymentDraftBackup()
+    clearPaymentRef()
     await navigateTo({ path: '/creer/succes', query: { file: filename } }, { replace: true })
     return true
   }

@@ -50,13 +50,17 @@ export async function POST(request: Request) {
     const letter = toPdfInput((body.snapshot ?? {}) as Record<string, unknown>)
 
     if (!ctx.userId && ctx.guestSessionDbId) {
-      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+      await paymentService.assertGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
     }
 
     const result = await pdfService.generateCoverLetterPdf(letter, {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
     })
+
+    if (!ctx.userId && ctx.guestSessionDbId) {
+      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+    }
     const response = jsonResponse(
       {
         jobId: result.jobId,

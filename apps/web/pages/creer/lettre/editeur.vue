@@ -4,6 +4,7 @@ import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
+import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 
 definePageMeta({ layout: false })
 
@@ -118,6 +119,7 @@ const pdfLoadingMessage = computed(() => {
 
 onMounted(async () => {
   authStore.loadFromStorage()
+  alignGuestSessionFromStoredDrafts()
   await ensureSession().catch(() => {})
 
   coverLetterStore.rehydrateFromStorage()

@@ -35,15 +35,22 @@ export function savePaymentRef(ref: string) {
   sessionStorage.setItem(REF_KEY, ref)
 }
 
+export function peekPaymentRef(): string | null {
+  if (typeof sessionStorage === 'undefined') return null
+  return sessionStorage.getItem(REF_KEY)
+}
+
 export function resolvePaymentRef(queryRef: unknown): string | null {
   if (typeof queryRef === 'string' && queryRef.startsWith('pz_')) {
-    sessionStorage.removeItem(REF_KEY)
+    savePaymentRef(queryRef)
     return queryRef
   }
-  if (typeof sessionStorage === 'undefined') return null
-  const stored = sessionStorage.getItem(REF_KEY)
-  if (stored) sessionStorage.removeItem(REF_KEY)
-  return stored
+  return peekPaymentRef()
+}
+
+export function clearPaymentRef() {
+  if (typeof sessionStorage === 'undefined') return
+  sessionStorage.removeItem(REF_KEY)
 }
 
 export function isGuestPdfReturnPath(path: string): boolean {

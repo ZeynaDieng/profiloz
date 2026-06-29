@@ -148,6 +148,24 @@ export class PaymentService {
   }
 
   /**
+   * Vérifie qu'un invité peut télécharger (sans consommer le crédit).
+   */
+  async assertGuestSnapshotDownload(owner: EntitlementOwner) {
+    requireOwner(owner)
+    if (owner.userId) return
+
+    const entitlements = await this.getEntitlements(owner)
+    if (entitlements.unlimitedActive) return
+    if (entitlements.creditsBalance <= 0) {
+      throw new AppError(
+        402,
+        'Payment Required',
+        'Aucun crédit disponible. Choisissez une offre pour télécharger votre CV.',
+      )
+    }
+  }
+
+  /**
    * Consomme 1 crédit pour un téléchargement PDF invité (snapshot, sans dossier en base).
    * Abonnement illimité actif → gratuit. Sinon 402 si aucun crédit.
    */

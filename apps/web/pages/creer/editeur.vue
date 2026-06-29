@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
+import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 
 definePageMeta({ layout: false })
 
@@ -71,6 +72,7 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
 
 onMounted(async () => {
   authStore.loadFromStorage()
+  alignGuestSessionFromStoredDrafts()
   await ensureSession().catch(() => {})
 
   const resumeId = route.query.id as string | undefined

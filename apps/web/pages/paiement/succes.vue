@@ -6,6 +6,8 @@ import {
   resolvePaymentRef,
   resolvePaymentReturnTo,
 } from '~/utils/payment-return'
+import { consumePaymentGuestSession } from '~/utils/payment-draft-backup'
+import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 
 definePageMeta({ layout: 'default' })
 
@@ -49,7 +51,7 @@ async function runAutoDownload() {
       code === 'payment-not-confirmed'
         ? 'Votre paiement est validé côté PayTech mais les crédits mettent du temps à arriver. Réessayez dans quelques secondes.'
         : code === 'missing-resume' || code === 'missing-letter'
-          ? 'Votre brouillon est introuvable sur cet appareil. Rouvrez votre CV depuis la page d’accueil puis retéléchargez.'
+          ? 'Votre brouillon est introuvable sur cet appareil. Rouvrez votre CV depuis le même navigateur (profiloz.com), sans vider l’historique, puis cliquez à nouveau sur Télécharger — ne repayez pas.'
           : MSG.pdf.error
   }
 }
@@ -60,6 +62,10 @@ onMounted(async () => {
   const gs = route.query.gs
   if (typeof gs === 'string' && gs.trim()) {
     applyGuestSessionId(gs.trim())
+  } else {
+    const storedGuest = consumePaymentGuestSession()
+    if (storedGuest) applyGuestSessionId(storedGuest)
+    else alignGuestSessionFromStoredDrafts()
   }
 
   await ensureSession().catch(() => {})

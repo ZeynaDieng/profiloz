@@ -25,13 +25,17 @@ export async function POST(request: Request) {
     const snapshot = sanitizeSnapshot(body.snapshot as ResumeSnapshot)
 
     if (!ctx.userId && ctx.guestSessionDbId) {
-      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+      await paymentService.assertGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
     }
 
     const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId, {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
     })
+
+    if (!ctx.userId && ctx.guestSessionDbId) {
+      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+    }
     const response = jsonResponse({
       jobId: result.jobId,
       status: 'completed',
