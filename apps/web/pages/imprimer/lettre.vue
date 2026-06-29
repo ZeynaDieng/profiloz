@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
-import { toCoverLetterSnapshot, normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
+import { toCoverLetterSnapshot } from '~/types/cover-letter'
+import { resolvePrintRenderApiBase } from '~/utils/print-render-api'
 
 definePageMeta({ layout: false })
 
@@ -13,9 +14,10 @@ const renderId = computed(() => {
 })
 
 function renderDataApiBase(): string {
-  const internal = config.apiInternalBaseUrl?.trim()
-  if (import.meta.server && internal) return internal.replace(/\/$/, '')
-  return config.public.apiBaseUrl.replace(/\/$/, '')
+  return resolvePrintRenderApiBase({
+    apiInternalBaseUrl: config.apiInternalBaseUrl,
+    publicApiBaseUrl: config.public.apiBaseUrl,
+  })
 }
 
 const { data: raw, error } = await useAsyncData(

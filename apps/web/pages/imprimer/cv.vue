@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { MSG } from '@profiloz/shared'
+import { resolvePrintRenderApiBase } from '~/utils/print-render-api'
 
 definePageMeta({ layout: false })
 
@@ -11,18 +12,16 @@ const renderId = computed(() => {
   return typeof value === 'string' ? value : ''
 })
 
-function renderDataApiBase(): string {
-  const internal = config.apiInternalBaseUrl?.trim()
-  if (import.meta.server && internal) return internal.replace(/\/$/, '')
-  return config.public.apiBaseUrl.replace(/\/$/, '')
-}
-
 const { data: resume, error } = await useAsyncData(
   () => `cv-print-${renderId.value}`,
   async () => {
     const id = renderId.value
     if (!id || !/^[a-f0-9-]{36}$/i.test(id)) return null
-    return $fetch<ResumeSnapshot>(`${renderDataApiBase()}/pdf/render-data/${id}`)
+    const apiBase = resolvePrintRenderApiBase({
+      apiInternalBaseUrl: config.apiInternalBaseUrl,
+      publicApiBaseUrl: config.public.apiBaseUrl,
+    })
+    return $fetch<ResumeSnapshot>(`${apiBase}/pdf/render-data/${id}`)
   },
   { watch: [renderId] },
 )

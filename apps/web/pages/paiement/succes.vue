@@ -46,13 +46,15 @@ async function runAutoDownload() {
   try {
     await downloadFromReturnPath(returnTo.value, paymentRef.value)
   } catch (err) {
+    const problem = err as { status?: number; detail?: string }
     const code = err instanceof Error ? err.message : ''
     autoDownloadError.value =
-      code === 'payment-not-confirmed'
+      problem.detail ||
+      (code === 'payment-not-confirmed'
         ? 'Votre paiement est validé côté PayTech mais les crédits mettent du temps à arriver. Réessayez dans quelques secondes.'
         : code === 'missing-resume' || code === 'missing-letter'
           ? 'Votre brouillon est introuvable sur cet appareil. Rouvrez votre CV depuis le même navigateur (profiloz.com), sans vider l’historique, puis cliquez à nouveau sur Télécharger — ne repayez pas.'
-          : MSG.pdf.error
+          : MSG.pdf.error)
   }
 }
 

@@ -32,6 +32,7 @@ RUN pnpm --filter @profiloz/api build
 FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV STORAGE_LOCAL_PATH=/app/storage/persistent
 ENV STORAGE_PERSISTENT_PATH=/app/storage/persistent
 ENV STORAGE_TEMP_PATH=/app/storage/temp
 WORKDIR /app

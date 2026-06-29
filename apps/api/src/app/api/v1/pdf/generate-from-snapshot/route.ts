@@ -1,20 +1,9 @@
-import type { ResumeSnapshot } from '@profiloz/shared'
-import { sanitizePhotoReference } from '@profiloz/shared'
+import { normalizeResumeSnapshotForPdf, toPdfGenerationError } from '@/lib/pdf/normalize-resume-snapshot'
 import { paymentService } from '@/modules/payment/payment.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
-
-function sanitizeSnapshot(snapshot: ResumeSnapshot): ResumeSnapshot {
-  return {
-    ...snapshot,
-    personalInfo: {
-      ...snapshot.personalInfo,
-      photoUrl: sanitizePhotoReference(snapshot.personalInfo.photoUrl),
-    },
-  }
-}
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
@@ -22,7 +11,7 @@ export async function POST(request: Request) {
     const ctx = await requireGuestOrAuth(request)
     assertPdfRateLimit(request, ctx)
     const body = await request.json()
-    const snapshot = sanitizeSnapshot(body.snapshot as ResumeSnapshot)
+    const snapshot = normalizeResumeSnapshotForPdf(body.snapshot)
 
     if (!ctx.userId && ctx.guestSessionDbId) {
       await paymentService.assertGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
@@ -36,6 +25,7 @@ export async function POST(request: Request) {
     if (!ctx.userId && ctx.guestSessionDbId) {
       await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
     }
+
     const response = jsonResponse({
       jobId: result.jobId,
       status: 'completed',
@@ -44,7 +34,7 @@ export async function POST(request: Request) {
     }, 202)
     return withCors(response, origin)
   } catch (error) {
-    const response = problemResponse(error as Error)
+    const response = problemResponse(toPdfGenerationError(error))
     return withCors(response, origin)
   }
 }
