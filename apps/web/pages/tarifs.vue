@@ -2,6 +2,7 @@
 import { formatXof, MSG } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
+import { savePaymentReturnTo } from '~/utils/payment-return'
 
 definePageMeta({ layout: 'default' })
 
@@ -59,6 +60,7 @@ async function onChoose(plan: PlanDto) {
   checkingOut.value = plan.slug
   try {
     await ensureSession()
+    if (returnTo.value) savePaymentReturnTo(returnTo.value)
     const { redirectUrl } = await paymentService.checkout(plan.slug, returnTo.value ?? undefined)
     window.location.href = redirectUrl
   } catch (err) {
