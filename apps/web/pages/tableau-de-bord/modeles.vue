@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { TemplateSlug } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
+import { cvTemplateStartLink } from '~/utils/template-links'
 
 definePageMeta({ layout: 'dashboard' })
 
@@ -13,7 +14,7 @@ const filteredTemplates = computed(() => {
 })
 
 function useTemplate(slug: TemplateSlug) {
-  navigateTo(`/creer/modele?select=${slug}`)
+  navigateTo(cvTemplateStartLink(slug))
 }
 
 onMounted(() => {

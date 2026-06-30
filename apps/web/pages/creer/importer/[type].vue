@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { TemplateSlug } from '@profiloz/shared'
+import { TEMPLATE_SLUGS } from '@profiloz/shared'
 import { MSG } from '@profiloz/shared'
 import type { ResumeSnapshot } from '@profiloz/shared'
 
@@ -29,9 +31,13 @@ onMounted(() => {
 
 function onConfirm(data: Partial<ResumeSnapshot>) {
   resumeStore.mergeImportedData(data, { documentType: meta.value.type })
-  // On passe par l'étape Informations pour que l'utilisateur vérifie/corrige
-  // son identité (le nom détecté par l'OCR peut être imparfait).
-  navigateTo('/creer/assistant/informations')
+  const template = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
+  if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
+    resumeStore.setTemplate(template as TemplateSlug)
+    navigateTo(`/creer/modele?select=${template}&flow=import`)
+    return
+  }
+  navigateTo('/creer/assistant/informations?fresh=1')
 }
 
 function onReset() {

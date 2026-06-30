@@ -10,27 +10,43 @@ type PaymentDraftBackup =
   | { kind: 'resume'; snapshot: ResumeSnapshot; guestSessionId: string | null; savedAt: string }
   | { kind: 'letter'; draft: CoverLetterDraft; guestSessionId: string | null; savedAt: string }
 
+function writeSession(key: string, value: string) {
+  if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, value)
+  if (typeof localStorage !== 'undefined') localStorage.setItem(key, value)
+}
+
+function readSession(key: string): string | null {
+  if (typeof sessionStorage !== 'undefined') {
+    const fromSession = sessionStorage.getItem(key)
+    if (fromSession) return fromSession
+  }
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem(key)
+  }
+  return null
+}
+
+function removeSession(key: string) {
+  if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(key)
+  if (typeof localStorage !== 'undefined') localStorage.removeItem(key)
+}
+
 export function savePaymentGuestSession(guestSessionId: string | null) {
-  if (typeof sessionStorage === 'undefined' || !guestSessionId) return
-  sessionStorage.setItem(GUEST_KEY, guestSessionId)
+  if (!guestSessionId) return
+  writeSession(GUEST_KEY, guestSessionId)
 }
 
 export function peekPaymentGuestSession(): string | null {
-  if (typeof sessionStorage === 'undefined') return null
-  return sessionStorage.getItem(GUEST_KEY)
+  return readSession(GUEST_KEY)
 }
 
 export function consumePaymentGuestSession(): string | null {
   const value = peekPaymentGuestSession()
-  if (value) sessionStorage.removeItem(GUEST_KEY)
+  if (value) removeSession(GUEST_KEY)
   return value
 }
 
 export function savePaymentDraftBackup(returnTo?: string | null) {
-  if (typeof sessionStorage === 'undefined') return
-
-  alignGuestSessionFromStoredDrafts()
-
   const guestSessionId =
     typeof localStorage !== 'undefined' ? localStorage.getItem('profiloz:guest-session') : null
 
@@ -44,7 +60,7 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
       guestSessionId,
       savedAt: new Date().toISOString(),
     }
-    sessionStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
+    writeSession(BACKUP_KEY, JSON.stringify(backup))
     return
   }
 
@@ -57,12 +73,11 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
     guestSessionId,
     savedAt: new Date().toISOString(),
   }
-  sessionStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
+  writeSession(BACKUP_KEY, JSON.stringify(backup))
 }
 
 export function loadPaymentDraftBackup(): PaymentDraftBackup | null {
-  if (typeof sessionStorage === 'undefined') return null
-  const raw = sessionStorage.getItem(BACKUP_KEY)
+  const raw = readSession(BACKUP_KEY)
   if (!raw) return null
 
   try {
@@ -73,7 +88,6 @@ export function loadPaymentDraftBackup(): PaymentDraftBackup | null {
 }
 
 export function clearPaymentDraftBackup() {
-  if (typeof sessionStorage === 'undefined') return
-  sessionStorage.removeItem(BACKUP_KEY)
-  sessionStorage.removeItem(GUEST_KEY)
+  removeSession(BACKUP_KEY)
+  removeSession(GUEST_KEY)
 }

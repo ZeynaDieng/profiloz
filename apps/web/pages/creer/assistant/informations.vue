@@ -56,8 +56,10 @@ useWizardDraftInit()
 
 onMounted(() => {
   const template = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
-  if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
-    resumeStore.setTemplate(template as TemplateSlug)
+  const select = typeof route.query.select === 'string' ? route.query.select.toUpperCase() : ''
+  const slug = (template || select) as TemplateSlug
+  if (TEMPLATE_SLUGS.includes(slug)) {
+    resumeStore.setTemplate(slug)
   }
   syncFormFromStore()
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TemplateSlug } from '@profiloz/shared'
-import { MSG } from '@profiloz/shared'
+import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
@@ -16,7 +16,14 @@ onMounted(() => {
     resumeStore.rehydrateFromStorage()
   }
   resumeStore.initDraft()
-  if (!selectedSlug.value && resumeStore.current?.templateSlug) {
+
+  const select = typeof route.query.select === 'string' ? route.query.select.toUpperCase() : ''
+  const template = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
+  const slug = (select || template) as TemplateSlug
+  if (slug && TEMPLATE_SLUGS.includes(slug as TemplateSlug)) {
+    selectedSlug.value = slug as TemplateSlug
+    resumeStore.setTemplate(slug as TemplateSlug)
+  } else if (!selectedSlug.value && resumeStore.current?.templateSlug) {
     selectedSlug.value = resumeStore.current.templateSlug
   }
   if (selectedSlug.value) {

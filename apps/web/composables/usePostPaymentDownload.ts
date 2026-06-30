@@ -1,6 +1,5 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import {
-  alignGuestSessionFromStoredDrafts,
   findCoverLetterDraftInStorage,
   findResumeSnapshotInStorage,
 } from '~/utils/guest-draft-sync'
@@ -11,7 +10,7 @@ import {
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
 const POLL_INTERVAL_MS = 1200
-const MAX_POLL_ATTEMPTS = 25
+const MAX_POLL_ATTEMPTS = 40
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -22,10 +21,23 @@ export function usePostPaymentDownload() {
   const pdfService = usePdfService()
   const resumeStore = useResumeStore()
   const coverLetterStore = useCoverLetterStore()
-  const { ensureSession } = useGuestSession()
+  const { ensureSession, applyGuestSessionId } = useGuestSession()
 
   const phase = ref<'idle' | 'confirming' | 'downloading'>('idle')
   const message = ref('')
+
+  async function applyGuestSessionFromConfirm(ref: string) {
+    try {
+      const result = await paymentService.confirmReturn(ref)
+      if (result.guestSessionClientId) {
+        applyGuestSessionId(result.guestSessionClientId)
+        await ensureSession()
+      }
+      return result.entitlements
+    } catch {
+      return null
+    }
+  }
 
   async function waitForEntitlements(paymentRef?: string | null) {
     phase.value = 'confirming'
@@ -35,11 +47,9 @@ export function usePostPaymentDownload() {
       if (attempt > 0) await sleep(POLL_INTERVAL_MS)
 
       if (paymentRef) {
-        try {
-          await paymentService.confirmReturn(paymentRef)
-        } catch (err) {
-          const problem = err as { status?: number }
-          if (problem.status === 403 || problem.status === 404) throw err
+        const entitlements = await applyGuestSessionFromConfirm(paymentRef)
+        if (entitlements && (entitlements.unlimitedActive || entitlements.creditsBalance > 0)) {
+          return entitlements
         }
       }
 
@@ -66,7 +76,6 @@ export function usePostPaymentDownload() {
       return backup.snapshot
     }
 
-    alignGuestSessionFromStoredDrafts()
     const snapshot = findResumeSnapshotInStorage()
     if (snapshot) {
       resumeStore.loadSnapshot(snapshot)
@@ -94,7 +103,6 @@ export function usePostPaymentDownload() {
       return coverLetterStore.toSnapshot()
     }
 
-    alignGuestSessionFromStoredDrafts()
     const draft = findCoverLetterDraftInStorage()
     if (draft) {
       coverLetterStore.current = { ...draft }
@@ -108,7 +116,6 @@ export function usePostPaymentDownload() {
   async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
     if (!isGuestPdfReturnPath(returnTo)) return false
 
-    alignGuestSessionFromStoredDrafts()
     await waitForEntitlements(paymentRef)
     await ensureSession()
 

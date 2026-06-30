@@ -3,20 +3,17 @@ import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
 import { COVER_LETTER_TEMPLATE_REGISTRY } from '~/features/cover-letter-templates/registry'
 import { TEMPLATE_REGISTRY } from '~/features/templates/registry'
+import {
+  cvTemplateGalleryLink,
+  cvTemplateStartLink,
+  letterTemplateStartLink,
+} from '~/utils/template-links'
 
 const POPULAR_SLUG = 'PROFESSIONNEL'
 const featuredCvTemplates = TEMPLATE_REGISTRY.slice(0, 4)
 const featuredLetterTemplates = COVER_LETTER_TEMPLATE_REGISTRY.slice(0, 3)
 
-function letterTemplateLink(slug: string) {
-  return `/creer/lettre/modele?select=${slug}`
-}
-
-function cvTemplateLink(slug: string) {
-  return `/creer/assistant/informations?template=${slug}`
-}
-
-const letterStartLink = '/creer/lettre/modele'
+const letterStartLink = '/creer/lettre'
 
 const { target, revealed } = useScrollReveal(0.25)
 </script>
@@ -86,13 +83,13 @@ const { target, revealed } = useScrollReveal(0.25)
             <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <div class="flex gap-2">
                 <NuxtLink
-                  :to="cvTemplateLink(template.slug)"
+                  :to="cvTemplateGalleryLink(template.slug)"
                   class="btn-outline flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm !bg-white/95 !border-white/30"
                 >
                   Aperçu
                 </NuxtLink>
                 <NuxtLink
-                  :to="cvTemplateLink(template.slug)"
+                  :to="cvTemplateStartLink(template.slug)"
                   class="btn-secondary flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm"
                 >
                   Utiliser
@@ -147,7 +144,7 @@ const { target, revealed } = useScrollReveal(0.25)
 
             <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <NuxtLink
-                :to="letterTemplateLink(template.slug)"
+                :to="letterTemplateStartLink(template.slug)"
                 class="btn-secondary w-full !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm"
               >
                 Utiliser ce modèle
@@ -155,7 +152,7 @@ const { target, revealed } = useScrollReveal(0.25)
             </div>
           </div>
 
-          <NuxtLink :to="letterTemplateLink(template.slug)" class="px-1 block">
+          <NuxtLink :to="letterTemplateStartLink(template.slug)" class="px-1 block">
             <h4 class="font-bold text-on-surface text-base group-hover:text-secondary transition-colors">
               {{ template.name }}
             </h4>

@@ -38,7 +38,11 @@ export function usePaymentService() {
 
   /** Confirme le paiement au retour PayTech (fallback si IPN absent ou lent). */
   async function confirmReturn(ref: string) {
-    return post<{ status: string; entitlements?: Entitlements }>('/payments/confirm-return', { ref })
+    return post<{
+      status: string
+      entitlements?: Entitlements
+      guestSessionClientId?: string
+    }>('/payments/confirm-return', { ref })
   }
 
   return { listPlans, getEntitlements, checkout, confirmReturn }

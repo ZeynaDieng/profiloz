@@ -18,9 +18,12 @@ onMounted(() => {
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
   coverLetterStore.initDraft()
-  if (!coverLetterStore.current?.senderName?.trim()) {
+
+  const skipDemo = route.query.fresh === '1' || Boolean(route.query.select || route.query.template)
+  if (!skipDemo && !coverLetterStore.current?.senderName?.trim()) {
     coverLetterStore.loadDemoPersona(resumeStore.current)
   }
+
   if (!selectedSlug.value && coverLetterStore.current?.templateSlug) {
     selectedSlug.value = coverLetterStore.current.templateSlug
   }

@@ -228,20 +228,60 @@ export class PaymentService {
         status: true,
         amountXof: true,
         providerToken: true,
+        guestSession: { select: { id: true, sessionId: true } },
       },
     })
     if (!payment) throw new AppError(404, 'Not Found', 'Commande introuvable')
-    assertPaymentOwner(payment, owner)
+
+    const guestSessionClientId = payment.guestSession?.sessionId
+    const paymentGuestOwner: EntitlementOwner | null = payment.guestSessionId
+      ? { guestSessionDbId: payment.guestSessionId }
+      : null
+
+    let ownerMatches = true
+    try {
+      assertPaymentOwner(payment, owner)
+    } catch {
+      ownerMatches = false
+    }
+
+    // Compte connecté : la commande doit correspondre au compte.
+    if (payment.userId) {
+      if (!ownerMatches) {
+        throw new AppError(403, 'Forbidden', 'Cette commande ne correspond pas à votre compte.')
+      }
+      if (payment.status === 'PAID') {
+        return { status: 'already_paid' as const, entitlements: await this.getEntitlements(owner) }
+      }
+      if (payment.status !== 'PENDING') {
+        throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
+      }
+      await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
+      return { status: 'paid' as const, entitlements: await this.getEntitlements(owner) }
+    }
+
+    // Invité : la ref PayTech suffit — créditer la session liée au paiement même si le navigateur a basculé.
+    if (!paymentGuestOwner) {
+      throw new AppError(400, 'Bad Request', 'Commande invité invalide')
+    }
 
     if (payment.status === 'PAID') {
-      return { status: 'already_paid' as const, entitlements: await this.getEntitlements(owner) }
+      return {
+        status: 'already_paid' as const,
+        entitlements: await this.getEntitlements(paymentGuestOwner),
+        guestSessionClientId,
+      }
     }
     if (payment.status !== 'PENDING') {
       throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
     }
 
     await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
-    return { status: 'paid' as const, entitlements: await this.getEntitlements(owner) }
+    return {
+      status: 'paid' as const,
+      entitlements: await this.getEntitlements(paymentGuestOwner),
+      guestSessionClientId,
+    }
   }
 
   /**

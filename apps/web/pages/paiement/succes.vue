@@ -6,7 +6,7 @@ import {
   resolvePaymentRef,
   resolvePaymentReturnTo,
 } from '~/utils/payment-return'
-import { consumePaymentGuestSession } from '~/utils/payment-draft-backup'
+import { consumePaymentGuestSession, peekPaymentGuestSession } from '~/utils/payment-draft-backup'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 
 definePageMeta({ layout: 'default' })
@@ -59,15 +59,20 @@ async function runAutoDownload() {
 }
 
 onMounted(async () => {
+  const gsFromQuery = typeof route.query.gs === 'string' ? route.query.gs.trim() : ''
+  const gsFromBackup = peekPaymentGuestSession()
+  const hasPaymentContext = Boolean(route.query.ref || gsFromQuery || gsFromBackup)
+
   authStore.loadFromStorage()
 
-  const gs = route.query.gs
-  if (typeof gs === 'string' && gs.trim()) {
-    applyGuestSessionId(gs.trim())
+  if (gsFromQuery) {
+    applyGuestSessionId(gsFromQuery)
+  } else if (gsFromBackup) {
+    applyGuestSessionId(consumePaymentGuestSession() ?? gsFromBackup)
+  } else if (hasPaymentContext) {
+    // Ne pas réaligner sur un autre brouillon pendant un retour paiement.
   } else {
-    const storedGuest = consumePaymentGuestSession()
-    if (storedGuest) applyGuestSessionId(storedGuest)
-    else alignGuestSessionFromStoredDrafts()
+    alignGuestSessionFromStoredDrafts()
   }
 
   await ensureSession().catch(() => {})
@@ -82,6 +87,9 @@ onMounted(async () => {
 
   try {
     entitlements.value = await paymentService.getEntitlements()
+    if (entitlements.value?.creditsBalance && autoDownloadError.value.includes('crédits mettent du temps')) {
+      autoDownloadError.value = ''
+    }
   } catch {
     entitlements.value = null
   }
