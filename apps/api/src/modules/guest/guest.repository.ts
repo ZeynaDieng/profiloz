@@ -19,8 +19,12 @@ export class GuestSessionRepository {
     const existing = await this.findBySessionId(sessionId)
     if (existing) {
       if (existing.expiresAt < new Date()) {
-        await prisma.guestSession.delete({ where: { id: existing.id } })
-        return this.create(sessionId)
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + GUEST_SESSION_TTL_DAYS)
+        return prisma.guestSession.update({
+          where: { id: existing.id },
+          data: { expiresAt },
+        })
       }
       return existing
     }

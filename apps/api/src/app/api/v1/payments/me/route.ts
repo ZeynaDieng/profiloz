@@ -17,6 +17,7 @@ export async function GET(request: Request) {
         unlimitedActive: result.unlimitedActive,
         activePlanSlug: result.activePlanSlug,
         features: result.features,
+        canDownloadSnapshot: result.canDownloadSnapshot,
       }),
       origin,
     )

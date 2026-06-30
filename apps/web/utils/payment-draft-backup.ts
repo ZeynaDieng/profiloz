@@ -1,7 +1,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import type { CoverLetterDraft } from '~/stores/cover-letter.store'
 import { isLetterReturnPath } from '~/utils/payment-return'
-import { alignGuestSessionFromStoredDrafts, findCoverLetterDraftInStorage, findResumeSnapshotInStorage } from '~/utils/guest-draft-sync'
+import { findCoverLetterDraftInStorage, findResumeSnapshotInStorage } from '~/utils/guest-draft-sync'
 
 const BACKUP_KEY = 'profiloz:payment-draft-backup'
 const GUEST_KEY = 'profiloz:payment-guest-session'
@@ -31,6 +31,39 @@ function removeSession(key: string) {
   if (typeof localStorage !== 'undefined') localStorage.removeItem(key)
 }
 
+/** Priorité au store Pinia (dernières modifs en mémoire), puis localStorage. */
+function resolveResumeSnapshotForBackup(): ResumeSnapshot | null {
+  if (import.meta.client) {
+    try {
+      const resumeStore = useResumeStore()
+      if (resumeStore.current?.personalInfo.fullName?.trim()) {
+        return {
+          ...resumeStore.current,
+          templateConfig: { ...resumeStore.current.templateConfig },
+        }
+      }
+    } catch {
+      // Pinia indisponible (SSR ou contexte hors composant)
+    }
+  }
+  return findResumeSnapshotInStorage()
+}
+
+function resolveLetterDraftForBackup(): CoverLetterDraft | null {
+  if (import.meta.client) {
+    try {
+      const coverLetterStore = useCoverLetterStore()
+      const draft = coverLetterStore.current
+      if (draft?.content?.trim() || draft?.senderName?.trim()) {
+        return { ...draft }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return findCoverLetterDraftInStorage()
+}
+
 export function savePaymentGuestSession(guestSessionId: string | null) {
   if (!guestSessionId) return
   writeSession(GUEST_KEY, guestSessionId)
@@ -51,7 +84,7 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
     typeof localStorage !== 'undefined' ? localStorage.getItem('profiloz:guest-session') : null
 
   if (returnTo && isLetterReturnPath(returnTo)) {
-    const draft = findCoverLetterDraftInStorage()
+    const draft = resolveLetterDraftForBackup()
     if (!draft) return
 
     const backup: PaymentDraftBackup = {
@@ -64,7 +97,7 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
     return
   }
 
-  const snapshot = findResumeSnapshotInStorage()
+  const snapshot = resolveResumeSnapshotForBackup()
   if (!snapshot) return
 
   const backup: PaymentDraftBackup = {

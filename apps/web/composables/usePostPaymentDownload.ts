@@ -1,4 +1,5 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import type { Entitlements } from '~/services/payment.service'
 import {
   findCoverLetterDraftInStorage,
   findResumeSnapshotInStorage,
@@ -9,11 +10,18 @@ import {
 } from '~/utils/payment-draft-backup'
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
-const POLL_INTERVAL_MS = 1200
-const MAX_POLL_ATTEMPTS = 40
+const POLL_INTERVAL_MS = 1500
+const MAX_POLL_ATTEMPTS = 12
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function hasDownloadAccess(entitlements?: Entitlements | null) {
+  if (!entitlements) return false
+  return entitlements.unlimitedActive
+    || entitlements.creditsBalance > 0
+    || entitlements.canDownloadSnapshot === true
 }
 
 export function usePostPaymentDownload() {
@@ -26,36 +34,70 @@ export function usePostPaymentDownload() {
   const phase = ref<'idle' | 'confirming' | 'downloading'>('idle')
   const message = ref('')
 
-  async function applyGuestSessionFromConfirm(ref: string) {
-    try {
-      const result = await paymentService.confirmReturn(ref)
-      if (result.guestSessionClientId) {
-        applyGuestSessionId(result.guestSessionClientId)
-        await ensureSession()
-      }
-      return result.entitlements
-    } catch {
-      return null
+  async function confirmPaymentOnce(paymentRef: string) {
+    const result = await paymentService.confirmReturn(paymentRef)
+
+    const shouldSwitchSession = Boolean(
+      result.guestSessionClientId
+      && hasDownloadAccess(result.entitlements)
+      && !hasDownloadAccess(await paymentService.getEntitlements().catch(() => null)),
+    )
+
+    if (shouldSwitchSession && result.guestSessionClientId) {
+      applyGuestSessionId(result.guestSessionClientId)
+      await ensureSession()
     }
+
+    if (hasDownloadAccess(result.entitlements)) {
+      return result.entitlements!
+    }
+
+    const afterSwitch = await paymentService.getEntitlements()
+    if (hasDownloadAccess(afterSwitch)) {
+      return afterSwitch
+    }
+
+    return null
   }
 
   async function waitForEntitlements(paymentRef?: string | null) {
     phase.value = 'confirming'
     message.value = 'Confirmation de votre paiement…'
 
-    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
-      if (attempt > 0) await sleep(POLL_INTERVAL_MS)
+    try {
+      const current = await paymentService.getEntitlements()
+      if (hasDownloadAccess(current)) return current
+    } catch {
+      // continue
+    }
 
-      if (paymentRef) {
-        const entitlements = await applyGuestSessionFromConfirm(paymentRef)
-        if (entitlements && (entitlements.unlimitedActive || entitlements.creditsBalance > 0)) {
-          return entitlements
+    if (paymentRef) {
+      try {
+        const confirmed = await confirmPaymentOnce(paymentRef)
+        if (confirmed) return confirmed
+      } catch {
+        // IPN peut être en retard — on poll /me seulement ensuite
+      }
+    }
+
+    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        message.value = 'Finalisation de votre accès au téléchargement…'
+        await sleep(POLL_INTERVAL_MS)
+      }
+
+      if (paymentRef && (attempt === 2 || attempt === 6)) {
+        try {
+          const confirmed = await confirmPaymentOnce(paymentRef)
+          if (confirmed) return confirmed
+        } catch {
+          // ignore
         }
       }
 
       try {
         const entitlements = await paymentService.getEntitlements()
-        if (entitlements.unlimitedActive || entitlements.creditsBalance > 0) {
+        if (hasDownloadAccess(entitlements)) {
           return entitlements
         }
       } catch {
@@ -147,5 +189,5 @@ export function usePostPaymentDownload() {
     return true
   }
 
-  return { phase, message, downloadFromReturnPath }
+  return { phase, message, downloadFromReturnPath, hasDownloadAccess }
 }

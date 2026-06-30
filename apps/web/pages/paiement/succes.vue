@@ -87,7 +87,13 @@ onMounted(async () => {
 
   try {
     entitlements.value = await paymentService.getEntitlements()
-    if (entitlements.value?.creditsBalance && autoDownloadError.value.includes('crédits mettent du temps')) {
+    if (
+      entitlements.value
+      && (entitlements.value.creditsBalance > 0
+        || entitlements.value.canDownloadSnapshot
+        || entitlements.value.unlimitedActive)
+      && autoDownloadError.value.includes('crédits mettent du temps')
+    ) {
       autoDownloadError.value = ''
     }
   } catch {
@@ -130,7 +136,7 @@ onMounted(async () => {
 
       <div v-if="showManualActions" class="flex flex-col gap-3">
         <UiButton
-          v-if="canAutoDownload || entitlements?.creditsBalance"
+          v-if="canAutoDownload || entitlements?.creditsBalance || entitlements?.canDownloadSnapshot"
           variant="secondary"
           block
           icon="download"

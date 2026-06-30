@@ -183,7 +183,11 @@ async function downloadPdf() {
 
     try {
       const entitlements = await paymentService.getEntitlements()
-      if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
+      if (
+        !entitlements.unlimitedActive
+        && entitlements.creditsBalance <= 0
+        && !entitlements.canDownloadSnapshot
+      ) {
         await navigateTo({
           path: '/tarifs',
           query: { reason: 'unlock', returnTo: route.fullPath },

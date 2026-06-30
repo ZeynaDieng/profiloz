@@ -18,6 +18,7 @@ export interface Entitlements {
   unlimitedActive: boolean
   activePlanSlug: SubscriptionPlanSlug | null
   features: PlanFeatures
+  canDownloadSnapshot?: boolean
 }
 
 export function usePaymentService() {

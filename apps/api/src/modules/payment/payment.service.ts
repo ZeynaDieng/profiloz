@@ -262,13 +262,41 @@ export class PaymentService {
 
     // Invité : la ref PayTech suffit — créditer la session liée au paiement même si le navigateur a basculé.
     if (!paymentGuestOwner) {
+      if (payment.status === 'PAID') {
+        return {
+          status: 'already_paid' as const,
+          entitlements: await this.getEntitlements(owner),
+        }
+      }
       throw new AppError(400, 'Bad Request', 'Commande invité invalide')
     }
 
     if (payment.status === 'PAID') {
+      const paymentEntitlements = await this.getEntitlements(paymentGuestOwner)
+
+      // Ne pas écraser une session navigateur déjà créditée par une session paiement orpheline à 0.
+      if (
+        owner.guestSessionDbId &&
+        owner.guestSessionDbId !== payment.guestSessionId &&
+        paymentEntitlements.creditsBalance <= 0 &&
+        !paymentEntitlements.canDownloadSnapshot
+      ) {
+        const currentEntitlements = await this.getEntitlements(owner)
+        if (
+          currentEntitlements.creditsBalance > 0
+          || currentEntitlements.canDownloadSnapshot
+          || currentEntitlements.unlimitedActive
+        ) {
+          return {
+            status: 'already_paid' as const,
+            entitlements: currentEntitlements,
+          }
+        }
+      }
+
       return {
         status: 'already_paid' as const,
-        entitlements: await this.getEntitlements(paymentGuestOwner),
+        entitlements: paymentEntitlements,
         guestSessionClientId,
       }
     }
@@ -509,21 +537,27 @@ export class PaymentService {
         subscriptionPlanSlug = mergeSubscriptionPlanSlug(subscriptionPlanSlug, orgSlug)
       }
 
-      return resolveEntitlements({
+      const resolved = resolveEntitlements({
         creditsBalance: user?.creditsBalance ?? 0,
         unlimitedUntil,
         subscriptionPlanSlug,
       })
+      const canDownloadSnapshot = await isUserSnapshotDossierUnlocked(owner.userId)
+      return { ...resolved, canDownloadSnapshot }
     }
     const guest = await prisma.guestSession.findUnique({
       where: { id: owner.guestSessionDbId! },
       select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
     })
-    return resolveEntitlements({
+    const resolved = resolveEntitlements({
       creditsBalance: guest?.creditsBalance ?? 0,
       unlimitedUntil: guest?.unlimitedUntil ?? null,
       subscriptionPlanSlug: asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
     })
+    const canDownloadSnapshot = owner.guestSessionDbId
+      ? await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId)
+      : false
+    return { ...resolved, canDownloadSnapshot }
   }
 
   /**
