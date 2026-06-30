@@ -130,7 +130,7 @@ onMounted(async () => {
       </p>
 
       <p v-if="entitlements && showManualActions" class="text-sm text-on-surface mb-6">
-        <template v-else-if="entitlements.unlimitedActive">
+        <template v-if="entitlements.unlimitedActive">
           <span v-if="entitlements.activePlanSlug === 'business'">Offre Business active.</span>
           <span v-else>Offre Illimité active.</span>
         </template>
