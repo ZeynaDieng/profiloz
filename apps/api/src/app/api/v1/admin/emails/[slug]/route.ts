@@ -2,24 +2,28 @@ import { adminService } from '@/modules/admin/admin.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { requirePlatformAdmin } from '@/lib/request-context'
 
-export async function GET(request: Request) {
+type Params = { params: Promise<{ slug: string }> }
+
+export async function GET(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
     await requirePlatformAdmin(request)
-    const settings = await adminService.getPlatformSettings()
-    return withCors(jsonResponse(settings), origin)
+    const { slug } = await params
+    const template = await adminService.getEmailTemplate(slug)
+    return withCors(jsonResponse({ template }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
     const actorId = await requirePlatformAdmin(request)
+    const { slug } = await params
     const body = await request.json()
-    const settings = await adminService.updatePlatformSettings(body, actorId)
-    return withCors(jsonResponse(settings), origin)
+    const template = await adminService.updateEmailTemplate(slug, body, actorId)
+    return withCors(jsonResponse({ template }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)
   }

@@ -43,6 +43,7 @@ const columns = [
           <option value="downloads">Téléchargements</option>
           <option value="errors">Erreurs</option>
           <option value="ocr">OCR</option>
+          <option value="admin">Actions admin</option>
         </select>
         <input v-model="q" type="search" placeholder="Rechercher…" class="rounded-lg border border-outline-variant/40 px-3 py-2 text-sm" @keyup.enter="load">
         <UiButton variant="secondary" @click="load">Filtrer</UiButton>

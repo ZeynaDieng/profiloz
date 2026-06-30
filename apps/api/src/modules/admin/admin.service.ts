@@ -1,10 +1,22 @@
 import type { OrganizationType, PaymentStatus } from '@profiloz/shared'
 import { PLANS } from '@profiloz/shared'
-import { adminUpdateOrganizationSchema, adminUpdateTemplateSchema, adminUpdateUserSchema } from '@profiloz/validators'
+import {
+  adminSendNotificationSchema,
+  adminUpdateEmailTemplateSchema,
+  adminUpdateOrganizationSchema,
+  adminUpdatePlanSchema,
+  adminUpdatePlatformSettingsSchema,
+  adminUpdateTemplateSchema,
+  adminUpdateUserSchema,
+} from '@profiloz/validators'
+import bcrypt from 'bcryptjs'
 import { AppError } from '@/lib/errors'
 import { checkPdfRenderReadiness } from '@/lib/pdf/pdf-readiness'
 import { prisma } from '@/lib/prisma'
+import { authService } from '@/modules/auth/auth.service'
 import { organizationRepository } from '@/modules/organization/organization.repository'
+import { logAdminAction } from './admin-audit.service'
+import { getPlatformSetting, listPlatformSettings, upsertPlatformSetting } from './platform-settings.repository'
 import {
   bucketByDay,
   bucketPaymentsByDay,
@@ -34,6 +46,12 @@ const EMAIL_TEMPLATES = [
   { slug: 'password_reset', name: 'Réinitialisation du mot de passe', description: 'Lien de réinitialisation.' },
   { slug: 'order_confirmation', name: 'Confirmation de commande', description: 'Récapitulatif de commande.' },
 ] as const
+
+function generateTempPassword() {
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+}
+
+type PlanOverride = { priceXof?: number; active?: boolean; description?: string }
 
 function toAdminOrganizationDto(
   org: NonNullable<Awaited<ReturnType<typeof organizationRepository.findOrganizationById>>>,
@@ -315,6 +333,7 @@ export class AdminService {
           subscriptionPlanSlug: true,
           createdAt: true,
           lastLoginAt: true,
+          suspendedAt: true,
           _count: { select: { resumes: true, coverLetters: true, payments: true } },
         },
       }),
@@ -331,7 +350,13 @@ export class AdminService {
         resumeCount: u._count.resumes,
         letterCount: u._count.coverLetters,
         paymentCount: u._count.payments,
-        status: isSubscriptionActive(u.unlimitedUntil) ? 'premium' : u.creditsBalance > 0 ? 'credits' : 'free',
+        status: u.suspendedAt
+          ? 'suspended'
+          : isSubscriptionActive(u.unlimitedUntil)
+            ? 'premium'
+            : u.creditsBalance > 0
+              ? 'credits'
+              : 'free',
         role: u.role,
         creditsBalance: u.creditsBalance,
         subscriptionPlanSlug: u.subscriptionPlanSlug,
@@ -362,6 +387,7 @@ export class AdminService {
       creditsBalance: user.creditsBalance,
       unlimitedUntil: user.unlimitedUntil?.toISOString() ?? null,
       subscriptionPlanSlug: user.subscriptionPlanSlug,
+      suspendedAt: user.suspendedAt?.toISOString() ?? null,
       createdAt: user.createdAt.toISOString(),
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       resumes: user.resumes.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() })),
@@ -759,6 +785,9 @@ export class AdminService {
 
   async listTemplates() {
     const cvTemplates = await prisma.template.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] })
+    const letterOverrides = await getPlatformSetting<Array<{ slug: string; isActive: boolean }>>('letter_templates')
+    const overrideMap = new Map((letterOverrides ?? []).map((t) => [t.slug, t.isActive]))
+
     return {
       cv: cvTemplates.map((t) => ({
         id: t.id,
@@ -770,7 +799,10 @@ export class AdminService {
         isActive: t.isActive,
         sortOrder: t.sortOrder,
       })),
-      letters: COVER_LETTER_TEMPLATES.map((t) => ({ ...t })),
+      letters: COVER_LETTER_TEMPLATES.map((t) => ({
+        ...t,
+        isActive: overrideMap.has(t.slug) ? overrideMap.get(t.slug)! : t.isActive,
+      })),
     }
   }
 
@@ -799,21 +831,225 @@ export class AdminService {
     }
   }
 
-  listPlans() {
-    return PLANS.map((plan) => ({
-      ...plan,
-      credits: Number.isFinite(plan.credits) ? plan.credits : null,
-      active: true,
-      editable: false,
-      note: 'Catalogue défini dans le code — édition avancée à venir.',
+  async listPlans() {
+    const overrides = await getPlatformSetting<Record<string, PlanOverride>>('plan_overrides') ?? {}
+    return PLANS.map((plan) => {
+      const override = overrides[plan.slug] ?? {}
+      return {
+        ...plan,
+        priceXof: override.priceXof ?? plan.priceXof,
+        description: override.description ?? plan.description,
+        credits: Number.isFinite(plan.credits) ? plan.credits : null,
+        active: override.active ?? true,
+        editable: true,
+      }
+    })
+  }
+
+  async updatePlan(slug: string, body: unknown, actorId: string) {
+    const plan = PLANS.find((p) => p.slug === slug)
+    if (!plan) throw new AppError(404, 'Not Found', 'Offre introuvable')
+
+    const input = adminUpdatePlanSchema.parse(body)
+    const overrides = (await getPlatformSetting<Record<string, PlanOverride>>('plan_overrides')) ?? {}
+    const current = overrides[slug] ?? {}
+    overrides[slug] = {
+      ...current,
+      ...input,
+    }
+    await upsertPlatformSetting('plan_overrides', overrides)
+    await logAdminAction({
+      actorId,
+      action: 'plan.update',
+      targetType: 'plan',
+      targetId: slug,
+      metadata: input as Record<string, unknown>,
+    })
+    return (await this.listPlans()).find((p) => p.slug === slug)
+  }
+
+  async listEmailTemplates() {
+    const rows = await prisma.emailTemplate.findMany({ orderBy: { slug: 'asc' } })
+    if (rows.length === 0) {
+      return EMAIL_TEMPLATES.map((t) => ({ ...t, editable: true }))
+    }
+    return rows.map((t) => ({
+      slug: t.slug,
+      name: t.name,
+      description: t.description,
+      subject: t.subject,
+      bodyHtml: t.bodyHtml,
+      bodyText: t.bodyText,
+      isActive: t.isActive,
+      updatedAt: t.updatedAt.toISOString(),
+      editable: true,
     }))
   }
 
-  listEmailTemplates() {
-    return EMAIL_TEMPLATES.map((t) => ({
-      ...t,
-      editable: false,
-      note: 'Contenu géré côté application — éditeur CMS à venir.',
+  async getEmailTemplate(slug: string) {
+    const row = await prisma.emailTemplate.findUnique({ where: { slug } })
+    if (!row) throw new AppError(404, 'Not Found', 'Template email introuvable')
+    return {
+      slug: row.slug,
+      name: row.name,
+      description: row.description,
+      subject: row.subject,
+      bodyHtml: row.bodyHtml,
+      bodyText: row.bodyText,
+      isActive: row.isActive,
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  }
+
+  async updateEmailTemplate(slug: string, body: unknown, actorId: string) {
+    const input = adminUpdateEmailTemplateSchema.parse(body)
+    const existing = await prisma.emailTemplate.findUnique({ where: { slug } })
+    if (!existing) throw new AppError(404, 'Not Found', 'Template email introuvable')
+
+    const updated = await prisma.emailTemplate.update({
+      where: { slug },
+      data: {
+        name: input.name,
+        description: input.description,
+        subject: input.subject,
+        bodyHtml: input.bodyHtml,
+        bodyText: input.bodyText,
+        isActive: input.isActive,
+      },
+    })
+
+    await logAdminAction({
+      actorId,
+      action: 'email_template.update',
+      targetType: 'email_template',
+      targetId: slug,
+    })
+
+    return this.getEmailTemplate(updated.slug)
+  }
+
+  async suspendUser(id: string, actorId: string) {
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
+    if (user.role === 'ADMIN') throw new AppError(400, 'Bad Request', 'Impossible de suspendre un administrateur.')
+
+    await prisma.user.update({ where: { id }, data: { suspendedAt: new Date() } })
+    await logAdminAction({ actorId, action: 'user.suspend', targetType: 'user', targetId: id })
+    return this.getUser(id)
+  }
+
+  async unsuspendUser(id: string, actorId: string) {
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
+
+    await prisma.user.update({ where: { id }, data: { suspendedAt: null } })
+    await logAdminAction({ actorId, action: 'user.unsuspend', targetType: 'user', targetId: id })
+    return this.getUser(id)
+  }
+
+  async resetUserPassword(id: string, actorId: string) {
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
+
+    const temporaryPassword = generateTempPassword()
+    const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+    await prisma.user.update({ where: { id }, data: { passwordHash } })
+    await logAdminAction({
+      actorId,
+      action: 'user.reset_password',
+      targetType: 'user',
+      targetId: id,
+    })
+
+    return { temporaryPassword, user: await this.getUser(id) }
+  }
+
+  async impersonateUser(id: string, actorId: string) {
+    const target = await prisma.user.findUnique({ where: { id } })
+    if (!target) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
+    if (target.role === 'ADMIN') {
+      throw new AppError(400, 'Bad Request', 'Impossible de se connecter en tant qu’un administrateur.')
+    }
+
+    const session = await authService.createSessionForUser(id, { impersonatedBy: actorId })
+    await logAdminAction({
+      actorId,
+      action: 'user.impersonate',
+      targetType: 'user',
+      targetId: id,
+    })
+    return session
+  }
+
+  async sendNotification(body: unknown, actorId: string) {
+    const input = adminSendNotificationSchema.parse(body)
+    const audienceMap = { all: 'ALL', business: 'BUSINESS', premium: 'PREMIUM' } as const
+    const audience = audienceMap[input.audience]
+    const now = new Date()
+
+    let recipientCount = 0
+    if (audience === 'ALL') {
+      recipientCount = await prisma.user.count({ where: { suspendedAt: null, role: 'USER' } })
+    } else if (audience === 'BUSINESS') {
+      recipientCount = await prisma.organizationMember.count({
+        where: { organization: { subscriptionPlanSlug: 'business', unlimitedUntil: { gt: now } } },
+      })
+    } else {
+      recipientCount = await prisma.user.count({
+        where: {
+          suspendedAt: null,
+          OR: [
+            { unlimitedUntil: { gt: now } },
+            { subscriptionPlanSlug: { in: ['illimite', 'business'] } },
+          ],
+        },
+      })
+    }
+
+    const notification = await prisma.platformNotification.create({
+      data: {
+        title: input.title,
+        body: input.body,
+        audience,
+        recipientCount,
+        sentAt: now,
+        createdById: actorId,
+      },
+    })
+
+    await logAdminAction({
+      actorId,
+      action: 'notification.send',
+      targetType: 'notification',
+      targetId: notification.id,
+      metadata: { audience: input.audience, recipientCount },
+    })
+
+    return {
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      audience: input.audience,
+      recipientCount,
+      sentAt: notification.sentAt?.toISOString() ?? null,
+    }
+  }
+
+  async listNotifications(limit = 20) {
+    const rows = await prisma.platformNotification.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: { createdBy: { select: { email: true, firstName: true, lastName: true } } },
+    })
+    return rows.map((n) => ({
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      audience: n.audience.toLowerCase(),
+      recipientCount: n.recipientCount,
+      sentAt: n.sentAt?.toISOString() ?? null,
+      createdAt: n.createdAt.toISOString(),
+      createdBy: formatPersonName(n.createdBy),
     }))
   }
 
@@ -977,6 +1213,23 @@ export class AdminService {
       )
     }
 
+    if (type === 'all' || type === 'admin') {
+      const audits = await prisma.adminAuditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+        include: { actor: { select: { email: true } } },
+      })
+      rows.push(
+        ...audits.map((a) => ({
+          id: `admin-${a.id}`,
+          type: 'admin',
+          message: `Admin · ${a.action}${a.targetId ? ` · ${a.targetId}` : ''}`,
+          meta: a.actor.email,
+          at: a.createdAt.toISOString(),
+        })),
+      )
+    }
+
     const filtered = q
       ? rows.filter((r) => r.message.toLowerCase().includes(q.toLowerCase()) || r.meta?.toLowerCase().includes(q.toLowerCase()))
       : rows
@@ -1009,17 +1262,21 @@ export class AdminService {
     }
   }
 
-  getPlatformSettings() {
+  async getPlatformSettings() {
+    const stored = await listPlatformSettings()
+    const branding = (stored.branding ?? {}) as { appName?: string; logoUrl?: string }
+    const seo = (stored.seo ?? {}) as { title?: string; description?: string }
+
     return {
       branding: {
-        appName: "Profilo'Z",
-        logoUrl: '/logo.png',
-        editable: false,
+        appName: branding.appName ?? "Profilo'Z",
+        logoUrl: branding.logoUrl ?? '/logo.png',
+        editable: true,
       },
       seo: {
-        title: "Profilo'Z | Créateur de CV professionnel",
-        description: 'Créez un CV professionnel en quelques minutes.',
-        editable: false,
+        title: seo.title ?? "Profilo'Z | Créateur de CV professionnel",
+        description: seo.description ?? 'Créez un CV professionnel en quelques minutes.',
+        editable: true,
       },
       smtp: {
         host: process.env.SMTP_HOST ? '***' : null,
@@ -1046,8 +1303,34 @@ export class AdminService {
         PUBLIC_APP_URL: process.env.PUBLIC_APP_URL ?? null,
         NUXT_PUBLIC_API_BASE_URL: process.env.NUXT_PUBLIC_API_BASE_URL ?? null,
       },
-      note: 'Les paramètres sensibles restent dans les variables d’environnement. Un éditeur persisté arrive prochainement.',
+      letterTemplates: (stored.letter_templates as unknown) ?? null,
+      note: 'Logo, SEO et modèles lettres sont persistés en base. SMTP, PayTech et clés API restent dans l’environnement.',
     }
+  }
+
+  async updatePlatformSettings(body: unknown, actorId: string) {
+    const input = adminUpdatePlatformSettingsSchema.parse(body)
+
+    if (input.branding) {
+      const current = (await getPlatformSetting<Record<string, unknown>>('branding')) ?? {}
+      await upsertPlatformSetting('branding', { ...current, ...input.branding })
+    }
+    if (input.seo) {
+      const current = (await getPlatformSetting<Record<string, unknown>>('seo')) ?? {}
+      await upsertPlatformSetting('seo', { ...current, ...input.seo })
+    }
+    if (input.letterTemplates) {
+      await upsertPlatformSetting('letter_templates', input.letterTemplates)
+    }
+
+    await logAdminAction({
+      actorId,
+      action: 'platform_settings.update',
+      targetType: 'platform_settings',
+      metadata: input as Record<string, unknown>,
+    })
+
+    return this.getPlatformSettings()
   }
 
   async listOrganizations() {

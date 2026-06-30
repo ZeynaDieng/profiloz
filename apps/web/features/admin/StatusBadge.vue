@@ -12,6 +12,7 @@ const classes = computed(() => {
     case 'FAILED':
     case 'failed':
     case 'error':
+    case 'suspended':
       return 'bg-error/10 text-error'
     case 'PENDING':
     case 'processing':
@@ -27,6 +28,7 @@ const label = computed(() => {
     premium: 'Premium',
     credits: 'Crédits',
     free: 'Gratuit',
+    suspended: 'Suspendu',
     PAID: 'Payé',
     PENDING: 'En attente',
     FAILED: 'Échoué',

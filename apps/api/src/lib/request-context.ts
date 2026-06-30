@@ -38,6 +38,15 @@ export async function getRequestContext(request: Request): Promise<RequestContex
 export async function requireAuth(request: Request): Promise<string> {
   const ctx = await getRequestContext(request)
   if (!ctx.userId) throw new AppError(401, 'Unauthorized', 'Authentification requise')
+
+  const user = await prisma.user.findUnique({
+    where: { id: ctx.userId },
+    select: { suspendedAt: true },
+  })
+  if (user?.suspendedAt) {
+    throw new AppError(403, 'Forbidden', 'Ce compte est suspendu.')
+  }
+
   return ctx.userId
 }
 

@@ -108,6 +108,7 @@ export class AuthService {
   async login(input: LoginInput) {
     const user = await authRepository.findByEmail(input.email)
     if (!user) throw new Error('INVALID_CREDENTIALS')
+    if (user.suspendedAt) throw new Error('USER_SUSPENDED')
 
     const valid = await bcrypt.compare(input.password, user.passwordHash)
     if (!valid) throw new Error('INVALID_CREDENTIALS')
@@ -144,7 +145,39 @@ export class AuthService {
   }
 
   verifyAccessToken(token: string) {
-    return jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
+    return jwt.verify(token, JWT_SECRET) as { sub: string; email: string; impersonatedBy?: string }
+  }
+
+  async createSessionForUser(userId: string, options?: { impersonatedBy?: string }) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, role: true, firstName: true, lastName: true, suspendedAt: true },
+    })
+    if (!user) throw new Error('USER_NOT_FOUND')
+    if (user.suspendedAt) throw new Error('USER_SUSPENDED')
+
+    const payload: { sub: string; email: string; impersonatedBy?: string } = {
+      sub: user.id,
+      email: user.email,
+    }
+    if (options?.impersonatedBy) payload.impersonatedBy = options.impersonatedBy
+
+    const signOptions: SignOptions = { expiresIn: JWT_EXPIRES_IN as SignOptions['expiresIn'] }
+    const accessToken = jwt.sign(payload, JWT_SECRET, signOptions)
+    const refreshToken = await this.createRefreshToken(user.id)
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      accessToken,
+      refreshToken,
+      impersonatedBy: options?.impersonatedBy ?? null,
+    }
   }
 }
 

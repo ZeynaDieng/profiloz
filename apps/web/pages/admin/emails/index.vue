@@ -21,7 +21,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <AdminPageHeader title="Emails" subtitle="Templates transactionnels de la plateforme." />
+    <AdminPageHeader title="Emails" subtitle="Templates transactionnels éditables en base." />
 
     <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
 
@@ -39,9 +39,10 @@ onMounted(async () => {
             <p class="font-semibold text-on-surface">{{ t.name }}</p>
             <p class="text-sm text-on-surface-variant">{{ t.description }}</p>
           </div>
-          <UiButton variant="ghost" disabled>Modifier</UiButton>
+          <NuxtLink :to="`/admin/emails/${t.slug}`">
+            <UiButton variant="secondary" size="sm">Modifier</UiButton>
+          </NuxtLink>
         </div>
-        <p class="text-sm text-on-surface-variant pt-2">Éditeur d’emails persisté en base — prochainement.</p>
       </div>
     </UiCard>
   </div>

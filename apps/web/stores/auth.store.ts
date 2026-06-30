@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
     user: null as AuthUser | null,
     accessToken: null as string | null,
     isAuthenticated: false,
+    impersonating: false,
   }),
   getters: {
     isPlatformAdmin: (state) => state.user?.role === 'ADMIN',
@@ -36,6 +37,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = JSON.parse(userRaw) as AuthUser
       this.isAuthenticated = true
       if (!this.user.role) this.user.role = 'USER'
+      this.impersonating = Boolean(localStorage.getItem('profiloz:admin-backup'))
     },
     async refreshProfile() {
       if (!this.isAuthenticated) return
@@ -62,9 +64,11 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.accessToken = null
       this.isAuthenticated = false
+      this.impersonating = false
       if (import.meta.client) {
         localStorage.removeItem('profiloz:access-token')
         localStorage.removeItem('profiloz:user')
+        localStorage.removeItem('profiloz:admin-backup')
         localStorage.removeItem('profiloz:guest-session')
         clearLegacyResumeDraft()
         localStorage.setItem('profiloz:guest-session', crypto.randomUUID())
@@ -91,6 +95,25 @@ export const useAuthStore = defineStore('auth', {
       )
       this.setSession({ ...result.user, role: result.user.role ?? 'USER' }, result.accessToken)
       return result
+    },
+    startImpersonation(user: AuthUser, accessToken: string) {
+      if (import.meta.client && !this.impersonating) {
+        localStorage.setItem('profiloz:admin-backup', JSON.stringify({
+          user: this.user,
+          accessToken: this.accessToken,
+        }))
+      }
+      this.setSession({ ...user, role: user.role ?? 'USER' }, accessToken)
+      this.impersonating = true
+    },
+    stopImpersonation() {
+      if (!import.meta.client) return
+      const raw = localStorage.getItem('profiloz:admin-backup')
+      if (!raw) return
+      const backup = JSON.parse(raw) as { user: AuthUser; accessToken: string }
+      localStorage.removeItem('profiloz:admin-backup')
+      this.setSession(backup.user, backup.accessToken)
+      this.impersonating = false
     },
   },
 })

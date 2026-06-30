@@ -83,7 +83,7 @@ export interface AdminUserRow {
 }
 
 export function useAdminService() {
-  const { get, patch, delete: del } = useApiClient()
+  const { get, patch, post, delete: del } = useApiClient()
 
   async function getStats() {
     return get<AdminStats>('/admin/stats')
@@ -111,6 +111,27 @@ export function useAdminService() {
 
   async function deleteUser(id: string) {
     return del(`/admin/users/${id}`)
+  }
+
+  async function suspendUser(id: string) {
+    return post<{ user: Record<string, unknown> }>(`/admin/users/${id}/suspend`, {})
+  }
+
+  async function unsuspendUser(id: string) {
+    return post<{ user: Record<string, unknown> }>(`/admin/users/${id}/unsuspend`, {})
+  }
+
+  async function resetUserPassword(id: string) {
+    return post<{ temporaryPassword: string; user: Record<string, unknown> }>(`/admin/users/${id}/reset-password`, {})
+  }
+
+  async function impersonateUser(id: string) {
+    return post<{
+      user: { id: string; email: string; role: string; firstName?: string | null; lastName?: string | null }
+      accessToken: string
+      refreshToken: string
+      impersonatedBy: string | null
+    }>(`/admin/users/${id}/impersonate`, {})
   }
 
   async function listResumes(params?: Record<string, string | number | undefined>) {
@@ -185,6 +206,30 @@ export function useAdminService() {
     return get<{ data: Record<string, unknown>[] }>('/admin/emails')
   }
 
+  async function getEmailTemplate(slug: string) {
+    return get<{ template: Record<string, unknown> }>(`/admin/emails/${slug}`)
+  }
+
+  async function updateEmailTemplate(slug: string, input: Record<string, unknown>) {
+    return patch<{ template: Record<string, unknown> }>(`/admin/emails/${slug}`, input)
+  }
+
+  async function updatePlan(slug: string, input: Record<string, unknown>) {
+    return patch<{ plan: Record<string, unknown> }>(`/admin/plans/${slug}`, input)
+  }
+
+  async function updateSettings(input: Record<string, unknown>) {
+    return patch<Record<string, unknown>>('/admin/settings', input)
+  }
+
+  async function sendNotification(input: { title: string; body: string; audience: 'all' | 'business' | 'premium' }) {
+    return post<{ notification: Record<string, unknown> }>('/admin/notifications', input)
+  }
+
+  async function listNotifications() {
+    return get<{ data: Record<string, unknown>[] }>('/admin/notifications')
+  }
+
   async function search(q: string) {
     return get<{
       users: Array<{ id: string; label: string; sublabel?: string; href: string }>
@@ -246,6 +291,10 @@ export function useAdminService() {
     getUser,
     updateUser,
     deleteUser,
+    suspendUser,
+    unsuspendUser,
+    resetUserPassword,
+    impersonateUser,
     listResumes,
     listLetters,
     listPdfJobs,
@@ -256,6 +305,12 @@ export function useAdminService() {
     updateTemplate,
     listPlans,
     listEmailTemplates,
+    getEmailTemplate,
+    updateEmailTemplate,
+    updatePlan,
+    updateSettings,
+    sendNotification,
+    listNotifications,
     search,
     getLogs,
     getHealth,

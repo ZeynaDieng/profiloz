@@ -2,12 +2,15 @@ import { adminService } from '@/modules/admin/admin.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { requirePlatformAdmin } from '@/lib/request-context'
 
-export async function GET(request: Request) {
+type Params = { params: Promise<{ id: string }> }
+
+export async function POST(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
-    await requirePlatformAdmin(request)
-    const plans = await adminService.listPlans()
-    return withCors(jsonResponse({ data: plans }), origin)
+    const actorId = await requirePlatformAdmin(request)
+    const { id } = await params
+    const user = await adminService.suspendUser(id, actorId)
+    return withCors(jsonResponse({ user }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)
   }

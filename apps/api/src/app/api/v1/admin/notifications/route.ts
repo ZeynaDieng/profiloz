@@ -6,8 +6,20 @@ export async function GET(request: Request) {
   const origin = request.headers.get('origin')
   try {
     await requirePlatformAdmin(request)
-    const data = await adminService.listEmailTemplates()
+    const data = await adminService.listNotifications()
     return withCors(jsonResponse({ data }), origin)
+  } catch (error) {
+    return withCors(problemResponse(error as Error), origin)
+  }
+}
+
+export async function POST(request: Request) {
+  const origin = request.headers.get('origin')
+  try {
+    const actorId = await requirePlatformAdmin(request)
+    const body = await request.json()
+    const notification = await adminService.sendNotification(body, actorId)
+    return withCors(jsonResponse({ notification }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)
   }

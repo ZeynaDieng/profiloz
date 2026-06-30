@@ -37,6 +37,24 @@ async function toggleTemplate(slug: string, isActive: boolean) {
   }
 }
 
+async function toggleLetterTemplate(slug: string, isActive: boolean) {
+  savingSlug.value = slug
+  message.value = ''
+  try {
+    const merged = letterTemplates.value.map((t) => ({
+      slug: String(t.slug),
+      isActive: String(t.slug) === slug ? !isActive : Boolean(t.isActive),
+    }))
+    await adminService.updateSettings({ letterTemplates: merged })
+    message.value = 'Modèle lettre mis à jour.'
+    await load()
+  } catch {
+    message.value = 'Échec de la mise à jour.'
+  } finally {
+    savingSlug.value = ''
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -87,10 +105,19 @@ onMounted(load)
             <p class="font-semibold text-on-surface">{{ t.name }}</p>
             <p class="text-sm text-on-surface-variant">{{ t.slug }} · {{ t.category }}</p>
           </div>
-          <AdminStatusBadge status="active" />
+          <div class="flex items-center gap-2">
+            <AdminStatusBadge :status="t.isActive ? 'active' : 'FAILED'" />
+            <UiButton
+              variant="ghost"
+              size="sm"
+              :disabled="savingSlug === t.slug"
+              @click="toggleLetterTemplate(String(t.slug), Boolean(t.isActive))"
+            >
+              {{ t.isActive ? 'Désactiver' : 'Activer' }}
+            </UiButton>
+          </div>
         </div>
       </div>
-      <p class="text-xs text-on-surface-variant mt-4">Les modèles lettres sont définis dans le code — activation/désactivation éditable prochainement.</p>
     </UiCard>
   </div>
 </template>
