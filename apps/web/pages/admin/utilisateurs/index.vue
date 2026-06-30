@@ -52,6 +52,7 @@ const columns = [
   <div>
     <AdminPageHeader title="Utilisateurs" subtitle="Gestion des comptes et abonnements.">
       <template #actions>
+        <UiButton variant="ghost" size="sm" icon="download" @click="adminService.exportUsersCsv()">Export CSV</UiButton>
         <input
           v-model="q"
           type="search"

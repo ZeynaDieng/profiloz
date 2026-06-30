@@ -6,6 +6,7 @@ import { guestSessionRepository } from '@/modules/guest/guest.repository'
 import { paymentService } from '@/modules/payment/payment.service'
 import { resumeService } from '@/modules/resume/resume.service'
 import { ensurePlatformOwnerRole } from '@/lib/platform-admin'
+import { sendEmailTemplate } from '@/lib/email/mail.service'
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m'
@@ -92,6 +93,11 @@ export class AuthService {
 
     const accessToken = this.signAccessToken(user.id, user.email)
     const refreshToken = await this.createRefreshToken(user.id)
+
+    void sendEmailTemplate('welcome', user.email, {
+      email: user.email,
+      firstName: user.email.split('@')[0] ?? 'Utilisateur',
+    }).catch((error) => console.warn('[mail] welcome failed:', error))
 
     return {
       user: {

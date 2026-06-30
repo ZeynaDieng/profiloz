@@ -66,6 +66,7 @@ onMounted(() => {
       </div>
 
       <div v-else-if="variant === 'dashboard'" class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <LayoutNotificationBell class="hidden sm:block" />
         <button
           type="button"
           class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"

@@ -17,6 +17,9 @@ import { authService } from '@/modules/auth/auth.service'
 import { organizationRepository } from '@/modules/organization/organization.repository'
 import { logAdminAction } from './admin-audit.service'
 import { getPlatformSetting, listPlatformSettings, upsertPlatformSetting } from './platform-settings.repository'
+import { listAdminPlans, savePlanOverride } from '@/modules/plan/plan-catalog.service'
+import { sendEmailTemplate } from '@/lib/email/mail.service'
+import { deliverUserNotifications, resolveNotificationRecipients } from '@/modules/notification/notification.service'
 import {
   bucketByDay,
   bucketPaymentsByDay,
@@ -29,6 +32,7 @@ import {
   startOfDay,
   startOfMonth,
   startOfWeek,
+  csvEscape,
   type PaginationInput,
 } from './admin.utils'
 
@@ -50,8 +54,6 @@ const EMAIL_TEMPLATES = [
 function generateTempPassword() {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12)
 }
-
-type PlanOverride = { priceXof?: number; active?: boolean; description?: string }
 
 function toAdminOrganizationDto(
   org: NonNullable<Awaited<ReturnType<typeof organizationRepository.findOrganizationById>>>,
@@ -832,18 +834,7 @@ export class AdminService {
   }
 
   async listPlans() {
-    const overrides = await getPlatformSetting<Record<string, PlanOverride>>('plan_overrides') ?? {}
-    return PLANS.map((plan) => {
-      const override = overrides[plan.slug] ?? {}
-      return {
-        ...plan,
-        priceXof: override.priceXof ?? plan.priceXof,
-        description: override.description ?? plan.description,
-        credits: Number.isFinite(plan.credits) ? plan.credits : null,
-        active: override.active ?? true,
-        editable: true,
-      }
-    })
+    return listAdminPlans()
   }
 
   async updatePlan(slug: string, body: unknown, actorId: string) {
@@ -851,13 +842,7 @@ export class AdminService {
     if (!plan) throw new AppError(404, 'Not Found', 'Offre introuvable')
 
     const input = adminUpdatePlanSchema.parse(body)
-    const overrides = (await getPlatformSetting<Record<string, PlanOverride>>('plan_overrides')) ?? {}
-    const current = overrides[slug] ?? {}
-    overrides[slug] = {
-      ...current,
-      ...input,
-    }
-    await upsertPlatformSetting('plan_overrides', overrides)
+    await savePlanOverride(slug, input)
     await logAdminAction({
       actorId,
       action: 'plan.update',
@@ -961,6 +946,11 @@ export class AdminService {
       targetId: id,
     })
 
+    void sendEmailTemplate('password_reset', user.email, {
+      email: user.email,
+      temporaryPassword,
+    }).catch((error) => console.warn('[mail] password_reset failed:', error))
+
     return { temporaryPassword, user: await this.getUser(id) }
   }
 
@@ -987,31 +977,18 @@ export class AdminService {
     const audience = audienceMap[input.audience]
     const now = new Date()
 
-    let recipientCount = 0
-    if (audience === 'ALL') {
-      recipientCount = await prisma.user.count({ where: { suspendedAt: null, role: 'USER' } })
-    } else if (audience === 'BUSINESS') {
-      recipientCount = await prisma.organizationMember.count({
-        where: { organization: { subscriptionPlanSlug: 'business', unlimitedUntil: { gt: now } } },
-      })
-    } else {
-      recipientCount = await prisma.user.count({
-        where: {
-          suspendedAt: null,
-          OR: [
-            { unlimitedUntil: { gt: now } },
-            { subscriptionPlanSlug: { in: ['illimite', 'business'] } },
-          ],
-        },
-      })
-    }
+    const recipients = await resolveNotificationRecipients(audience)
+    const recipientCount = recipients.length
+    const userIds = recipients.map((r) => r.id)
+
+    const delivered = await deliverUserNotifications(userIds, input.title, input.body)
 
     const notification = await prisma.platformNotification.create({
       data: {
         title: input.title,
         body: input.body,
         audience,
-        recipientCount,
+        recipientCount: delivered,
         sentAt: now,
         createdById: actorId,
       },
@@ -1022,7 +999,7 @@ export class AdminService {
       action: 'notification.send',
       targetType: 'notification',
       targetId: notification.id,
-      metadata: { audience: input.audience, recipientCount },
+      metadata: { audience: input.audience, recipientCount: delivered },
     })
 
     return {
@@ -1030,7 +1007,7 @@ export class AdminService {
       title: notification.title,
       body: notification.body,
       audience: input.audience,
-      recipientCount,
+      recipientCount: delivered,
       sentAt: notification.sentAt?.toISOString() ?? null,
     }
   }
@@ -1425,6 +1402,84 @@ export class AdminService {
 
     await organizationRepository.removeMember(organizationId, userId)
     return this.getOrganization(organizationId)
+  }
+
+  async exportUsersCsv() {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        creditsBalance: true,
+        suspendedAt: true,
+        unlimitedUntil: true,
+        createdAt: true,
+        lastLoginAt: true,
+        _count: { select: { resumes: true, coverLetters: true, payments: true } },
+      },
+    })
+
+    const header = 'id,email,nom,role,statut,credits,cv,lettres,paiements,inscription,derniere_connexion\n'
+    const rows = users.map((u) => {
+      const status = u.suspendedAt
+        ? 'suspendu'
+        : isSubscriptionActive(u.unlimitedUntil)
+          ? 'premium'
+          : u.creditsBalance > 0
+            ? 'credits'
+            : 'gratuit'
+      return [
+        csvEscape(u.id),
+        csvEscape(u.email),
+        csvEscape(formatPersonName(u)),
+        csvEscape(u.role),
+        csvEscape(status),
+        csvEscape(u.creditsBalance),
+        csvEscape(u._count.resumes),
+        csvEscape(u._count.coverLetters),
+        csvEscape(u._count.payments),
+        csvEscape(u.createdAt.toISOString()),
+        csvEscape(u.lastLoginAt?.toISOString() ?? ''),
+      ].join(',')
+    })
+
+    return `${header}${rows.join('\n')}`
+  }
+
+  async exportPaymentsCsv() {
+    const payments = await prisma.payment.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+      select: {
+        id: true,
+        providerRef: true,
+        planSlug: true,
+        amountXof: true,
+        status: true,
+        paymentMethod: true,
+        createdAt: true,
+        paidAt: true,
+        user: { select: { email: true } },
+      },
+    })
+
+    const header = 'id,reference,email,offre,montant_fcfa,statut,methode,creé,payé\n'
+    const rows = payments.map((p) => [
+      csvEscape(p.id),
+      csvEscape(p.providerRef),
+      csvEscape(p.user?.email ?? ''),
+      csvEscape(p.planSlug),
+      csvEscape(p.amountXof),
+      csvEscape(p.status),
+      csvEscape(p.paymentMethod ?? ''),
+      csvEscape(p.createdAt.toISOString()),
+      csvEscape(p.paidAt?.toISOString() ?? ''),
+    ].join(','))
+
+    return `${header}${rows.join('\n')}`
   }
 }
 

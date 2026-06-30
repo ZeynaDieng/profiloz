@@ -52,6 +52,7 @@ const columns = [
   <div>
     <AdminPageHeader title="Paiements" subtitle="Suivi financier et transactions PayTech.">
       <template #actions>
+        <UiButton variant="ghost" size="sm" icon="download" @click="adminService.exportPaymentsCsv()">Export CSV</UiButton>
         <select v-model="status" class="rounded-lg border border-outline-variant/40 px-3 py-2 text-sm" @change="load(1)">
           <option value="">Tous statuts</option>
           <option value="PAID">Payés</option>

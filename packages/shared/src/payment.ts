@@ -91,6 +91,31 @@ export function getPlan(slug: string): Plan | undefined {
   return PLANS.find((p) => p.slug === slug)
 }
 
+/** Surcharges admin persistées en base (clé = slug d’offre). */
+export type PlanOverride = {
+  priceXof?: number
+  active?: boolean
+  description?: string
+}
+
+export type ResolvedPlan = Plan & { active: boolean }
+
+export function resolvePlanCatalog(overrides: Record<string, PlanOverride> = {}): ResolvedPlan[] {
+  return PLANS.map((plan) => {
+    const override = overrides[plan.slug] ?? {}
+    return {
+      ...plan,
+      priceXof: override.priceXof ?? plan.priceXof,
+      description: override.description ?? plan.description,
+      active: override.active ?? true,
+    }
+  })
+}
+
+export function resolvePlanFromCatalog(slug: string, overrides: Record<string, PlanOverride> = {}): ResolvedPlan | undefined {
+  return resolvePlanCatalog(overrides).find((p) => p.slug === slug)
+}
+
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELED'
 
 export function formatXof(amount: number): string {

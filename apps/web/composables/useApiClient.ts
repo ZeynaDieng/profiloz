@@ -72,6 +72,24 @@ export function useApiClient() {
     return `${base}${normalized}`
   }
 
+  async function download(path: string, filename: string) {
+    const headers = getHeaders('')
+    delete headers['Content-Type']
+    const response = await fetch(`${config.public.apiBaseUrl}${path}`, { headers })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      handleUnauthorized(error)
+      throw error
+    }
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   return {
     get: <T>(path: string) => request<T>(path),
     post: <T>(path: string, body?: unknown) =>
@@ -90,6 +108,7 @@ export function useApiClient() {
     },
     upload,
     getDownloadUrl,
+    download,
     apiBaseUrl: config.public.apiBaseUrl,
   }
 }

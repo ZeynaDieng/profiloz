@@ -5,6 +5,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const adminService = useAdminService()
+const { confirm } = useConfirm()
 const { formatDate, formatXof } = useAdminFormat()
 
 const user = ref<Record<string, unknown> | null>(null)
@@ -94,6 +95,26 @@ async function impersonate() {
   }
 }
 
+async function removeUser() {
+  if (!user.value || user.value.role === 'ADMIN') return
+  const accepted = await confirm({
+    title: 'Supprimer cet utilisateur ?',
+    message: 'Cette action est irréversible. Tous les dossiers associés seront supprimés.',
+    confirmLabel: 'Supprimer',
+    destructive: true,
+  })
+  if (!accepted) return
+  saving.value = true
+  try {
+    await adminService.deleteUser(String(user.value.id))
+    await router.push('/admin/utilisateurs')
+  } catch {
+    message.value = 'Suppression impossible.'
+  } finally {
+    saving.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -156,6 +177,15 @@ onMounted(load)
               @click="toggleSuspend"
             >
               {{ isSuspended ? 'Réactiver le compte' : 'Suspendre' }}
+            </UiButton>
+            <UiButton
+              variant="ghost"
+              class="w-full justify-start text-error"
+              icon="delete"
+              :disabled="saving || user.role === 'ADMIN'"
+              @click="removeUser"
+            >
+              Supprimer
             </UiButton>
           </div>
         </UiCard>

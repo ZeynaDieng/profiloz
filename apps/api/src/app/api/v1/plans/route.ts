@@ -1,11 +1,11 @@
-import { PLANS } from '@profiloz/shared'
+import { listPublicPlans } from '@/modules/plan/plan-catalog.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 
 export async function GET(request: Request) {
   const origin = request.headers.get('origin')
   try {
-    // Infinity n'est pas sérialisable en JSON : on l'expose comme null (= illimité).
-    const data = PLANS.map((plan) => ({
+    const plans = await listPublicPlans()
+    const data = plans.map((plan) => ({
       ...plan,
       credits: Number.isFinite(plan.credits) ? plan.credits : null,
     }))

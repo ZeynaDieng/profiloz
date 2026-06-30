@@ -116,6 +116,7 @@ model User {
   orgMemberships OrganizationMember[]
   adminAuditLogs AdminAuditLog[]
   platformNotificationsCreated PlatformNotification[]
+  notifications UserNotification[]
 
   @@map("users")
 }
@@ -521,4 +522,17 @@ model PlatformNotification {
 
   @@index([createdAt])
   @@map("platform_notifications")
+}
+
+model UserNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String    @db.Text
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("user_notifications")
 }

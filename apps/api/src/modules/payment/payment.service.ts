@@ -14,6 +14,8 @@ import { paytechProvider } from './paytech.provider'
 import type { PaymentProvider } from './payment.provider'
 import { organizationRepository } from '@/modules/organization/organization.repository'
 import { organizationService } from '@/modules/organization/organization.service'
+import { getResolvedPlan } from '@/modules/plan/plan-catalog.service'
+import { sendEmailTemplate } from '@/lib/email/mail.service'
 
 /** Propriétaire des droits : un utilisateur connecté OU une session invitée. */
 export interface EntitlementOwner {
@@ -179,6 +181,28 @@ export class PaymentService {
         businessUserId,
         plan!.durationDays ?? 30,
       )
+    }
+
+    if (payment.userId) {
+      const [user, paid] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: payment.userId },
+          select: { email: true, firstName: true },
+        }),
+        prisma.payment.findUnique({
+          where: { id: payment.id },
+          select: { amountXof: true },
+        }),
+      ])
+      const resolvedPlan = (await getResolvedPlan(payment.planSlug)) ?? plan
+      if (user?.email && resolvedPlan && paid) {
+        void sendEmailTemplate('payment_receipt', user.email, {
+          email: user.email,
+          firstName: user.firstName ?? user.email.split('@')[0] ?? 'Client',
+          amount: `${paid.amountXof.toLocaleString('fr-FR')} FCFA`,
+          planName: resolvedPlan.name,
+        }).catch((error) => console.warn('[mail] payment_receipt failed:', error))
+      }
     }
   }
 
@@ -348,8 +372,8 @@ export class PaymentService {
     guestSessionClientId?: string | null,
   ) {
     requireOwner(owner)
-    const plan = getPlan(planSlug)
-    if (!plan) throw new AppError(400, 'Bad Request', 'Offre inconnue')
+    const plan = await getResolvedPlan(planSlug)
+    if (!plan) throw new AppError(400, 'Bad Request', 'Offre inconnue ou inactive')
 
     const refCommand = `pz_${randomUUID().replace(/-/g, '')}`
     const credits = Number.isFinite(plan.credits) ? plan.credits : 0

@@ -230,6 +230,16 @@ export function useAdminService() {
     return get<{ data: Record<string, unknown>[] }>('/admin/notifications')
   }
 
+  async function exportUsersCsv() {
+    const { download } = useApiClient()
+    return download('/admin/users/export', 'profiloz-utilisateurs.csv')
+  }
+
+  async function exportPaymentsCsv() {
+    const { download } = useApiClient()
+    return download('/admin/payments/export', 'profiloz-paiements.csv')
+  }
+
   async function search(q: string) {
     return get<{
       users: Array<{ id: string; label: string; sublabel?: string; href: string }>
@@ -311,6 +321,8 @@ export function useAdminService() {
     updateSettings,
     sendNotification,
     listNotifications,
+    exportUsersCsv,
+    exportPaymentsCsv,
     search,
     getLogs,
     getHealth,

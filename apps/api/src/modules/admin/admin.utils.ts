@@ -117,3 +117,9 @@ export function formatPersonName(input: {
 export function isSubscriptionActive(unlimitedUntil: Date | null | undefined) {
   return Boolean(unlimitedUntil && unlimitedUntil.getTime() > Date.now())
 }
+
+export function csvEscape(value: string | number | null | undefined) {
+  const raw = value == null ? '' : String(value)
+  if (/[",\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`
+  return raw
+}
