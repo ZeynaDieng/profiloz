@@ -19,10 +19,10 @@ export async function GET(request: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
-    await requirePlatformAdmin(request)
+    const actorId = await requirePlatformAdmin(request)
     const { id } = await params
     const body = await request.json()
-    const user = await adminService.updateUser(id, body)
+    const user = await adminService.updateUser(id, body, actorId)
     return withCors(jsonResponse({ user }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)
@@ -32,9 +32,9 @@ export async function PATCH(request: Request, { params }: Params) {
 export async function DELETE(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
-    await requirePlatformAdmin(request)
+    const actorId = await requirePlatformAdmin(request)
     const { id } = await params
-    const result = await adminService.deleteUser(id)
+    const result = await adminService.deleteUser(id, actorId)
     return withCors(jsonResponse(result), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)

@@ -7,6 +7,7 @@ export interface AdminNavItem {
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin', label: 'Tableau de bord', icon: 'dashboard', exact: true },
+  { to: '/admin/supervision', label: 'Supervision', icon: 'monitor_heart' },
   { to: '/admin/utilisateurs', label: 'Utilisateurs', icon: 'group' },
   { to: '/admin/cv', label: 'CV', icon: 'description' },
   { to: '/admin/lettres', label: 'Lettres de motivation', icon: 'mail' },
@@ -17,6 +18,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/templates', label: 'Templates', icon: 'view_quilt' },
   { to: '/admin/offres', label: 'Offres & Packs', icon: 'sell' },
   { to: '/admin/organisations', label: 'Organisations', icon: 'domain' },
+  { to: '/admin/contenu/landing', label: 'Landing', icon: 'web' },
+  { to: '/admin/contenu/blog', label: 'Blog', icon: 'article' },
+  { to: '/admin/contenu/faq', label: 'FAQ', icon: 'quiz' },
+  { to: '/admin/medias', label: 'Médiathèque', icon: 'perm_media' },
   { to: '/admin/emails', label: 'Emails', icon: 'forward_to_inbox' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' },
   { to: '/admin/journaux', label: 'Journaux', icon: 'receipt_long' },

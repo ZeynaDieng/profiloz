@@ -37,6 +37,10 @@ const flatResults = computed(() => {
     ...results.value.payments.map((r) => ({ ...r, group: 'Paiements' })),
     ...results.value.organizations.map((r) => ({ ...r, group: 'Organisations' })),
     ...results.value.templates.map((r) => ({ ...r, group: 'Templates' })),
+    ...results.value.emails.map((r) => ({ ...r, group: 'Emails' })),
+    ...results.value.blog.map((r) => ({ ...r, group: 'Blog' })),
+    ...results.value.faq.map((r) => ({ ...r, group: 'FAQ' })),
+    ...results.value.media.map((r) => ({ ...r, group: 'Médias' })),
   ]
 })
 
@@ -58,7 +62,7 @@ function onBlur() {
       <input
         v-model="query"
         type="search"
-        placeholder="Rechercher utilisateur, CV, paiement…"
+        placeholder="Rechercher utilisateur, CV, blog, média…"
         class="w-full bg-transparent outline-none text-sm text-on-surface placeholder:text-on-surface-variant"
         @focus="open = query.trim().length >= 2"
         @blur="onBlur"

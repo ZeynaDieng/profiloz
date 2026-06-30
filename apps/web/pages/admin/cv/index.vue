@@ -40,6 +40,7 @@ const columns = [
   { key: 'isGuest', label: 'Type' },
   { key: 'createdAt', label: 'Créé' },
   { key: 'status', label: 'Statut' },
+  { key: 'actions', label: 'Actions' },
 ]
 </script>
 
@@ -65,6 +66,11 @@ const columns = [
       <template #cell-isGuest="{ row }">{{ row.isGuest ? 'Invité' : 'Compte' }}</template>
       <template #cell-createdAt="{ row }">{{ formatDate(row.createdAt as string) }}</template>
       <template #cell-status="{ row }"><AdminStatusBadge :status="String(row.status).toLowerCase()" /></template>
+      <template #cell-actions="{ row }">
+        <NuxtLink :to="`/admin/cv/${row.id}`" class="text-sm text-secondary font-semibold hover:underline">Gérer</NuxtLink>
+      </template>
     </AdminDataTable>
+
+    <AdminPagination :page="meta.page" :total-pages="meta.totalPages" :total="meta.total" @change="load" />
   </div>
 </template>

@@ -28,6 +28,18 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
+export async function DELETE(request: Request, { params }: Params) {
+  const origin = request.headers.get('origin')
+  try {
+    const actorId = await requirePlatformAdmin(request)
+    const { id } = await params
+    const result = await adminService.deleteOrganization(id, actorId)
+    return withCors(jsonResponse(result), origin)
+  } catch (error) {
+    return withCors(problemResponse(error as Error), origin)
+  }
+}
+
 export async function OPTIONS(request: Request) {
   return handleOptions(request)
 }

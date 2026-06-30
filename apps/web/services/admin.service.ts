@@ -248,6 +248,10 @@ export function useAdminService() {
       payments: Array<{ id: string; label: string; sublabel?: string; href: string }>
       organizations: Array<{ id: string; label: string; sublabel?: string; href: string }>
       templates: Array<{ id: string; label: string; sublabel?: string; href: string }>
+      emails: Array<{ id: string; label: string; sublabel?: string; href: string }>
+      blog: Array<{ id: string; label: string; sublabel?: string; href: string }>
+      faq: Array<{ id: string; label: string; sublabel?: string; href: string }>
+      media: Array<{ id: string; label: string; sublabel?: string; href: string }>
     }>(`/admin/search?q=${encodeURIComponent(q)}`)
   }
 
@@ -294,6 +298,128 @@ export function useAdminService() {
     return del(`/admin/organizations/${organizationId}/members/${userId}`)
   }
 
+  async function createOrganization(input: Record<string, unknown>) {
+    return post<{ organization: AdminOrganizationDetail }>('/admin/organizations', input)
+  }
+
+  async function deleteOrganization(id: string) {
+    return del(`/admin/organizations/${id}`)
+  }
+
+  async function getResume(id: string) {
+    return get<{ resume: Record<string, unknown> }>(`/admin/resumes/${id}`)
+  }
+
+  async function updateResume(id: string, input: Record<string, unknown>) {
+    return patch<{ resume: Record<string, unknown> }>(`/admin/resumes/${id}`, input)
+  }
+
+  async function deleteResume(id: string) {
+    return del(`/admin/resumes/${id}`)
+  }
+
+  async function getLetter(id: string) {
+    return get<{ letter: Record<string, unknown> }>(`/admin/letters/${id}`)
+  }
+
+  async function updateLetter(id: string, input: Record<string, unknown>) {
+    return patch<{ letter: Record<string, unknown> }>(`/admin/letters/${id}`, input)
+  }
+
+  async function deleteLetter(id: string) {
+    return del(`/admin/letters/${id}`)
+  }
+
+  async function getPayment(id: string) {
+    return get<{ payment: Record<string, unknown> }>(`/admin/payments/${id}`)
+  }
+
+  async function updatePayment(id: string, input: Record<string, unknown>) {
+    return patch<{ payment: Record<string, unknown> }>(`/admin/payments/${id}`, input)
+  }
+
+  async function listFaq() {
+    return get<{ data: Record<string, unknown>[] }>('/admin/faq')
+  }
+
+  async function createFaq(input: Record<string, unknown>) {
+    return post<{ item: Record<string, unknown> }>('/admin/faq', input)
+  }
+
+  async function updateFaq(id: string, input: Record<string, unknown>) {
+    return patch<{ item: Record<string, unknown> }>(`/admin/faq/${id}`, input)
+  }
+
+  async function deleteFaq(id: string) {
+    return del(`/admin/faq/${id}`)
+  }
+
+  async function reorderFaq(items: Array<{ id: string; sortOrder: number }>) {
+    return post('/admin/faq/reorder', { items })
+  }
+
+  async function listLandingSections() {
+    return get<{ data: Record<string, unknown>[] }>('/admin/landing')
+  }
+
+  async function updateLandingSection(key: string, input: Record<string, unknown>) {
+    return patch<{ section: Record<string, unknown> }>(`/admin/landing/${key}`, input)
+  }
+
+  async function listBlogPosts(params?: Record<string, string | number | undefined>) {
+    const search = new URLSearchParams()
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== '') search.set(k, String(v))
+      }
+    }
+    const qs = search.toString()
+    return get<{ data: Record<string, unknown>[]; meta: PaginatedMeta }>(`/admin/blog${qs ? `?${qs}` : ''}`)
+  }
+
+  async function getBlogPost(id: string) {
+    return get<{ post: Record<string, unknown> }>(`/admin/blog/${id}`)
+  }
+
+  async function createBlogPost(input: Record<string, unknown>) {
+    return post<{ post: Record<string, unknown> }>('/admin/blog', input)
+  }
+
+  async function updateBlogPost(id: string, input: Record<string, unknown>) {
+    return patch<{ post: Record<string, unknown> }>(`/admin/blog/${id}`, input)
+  }
+
+  async function deleteBlogPost(id: string) {
+    return del(`/admin/blog/${id}`)
+  }
+
+  async function listMedia(params?: Record<string, string | number | undefined>) {
+    const search = new URLSearchParams()
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== '') search.set(k, String(v))
+      }
+    }
+    const qs = search.toString()
+    return get<{ data: Record<string, unknown>[]; meta: PaginatedMeta }>(`/admin/media${qs ? `?${qs}` : ''}`)
+  }
+
+  async function uploadMedia(file: File, folderId?: string) {
+    const { upload } = useApiClient()
+    const form = new FormData()
+    form.append('file', file)
+    if (folderId) form.append('folderId', folderId)
+    return upload<{ asset: Record<string, unknown> }>('/admin/media', form)
+  }
+
+  async function deleteMedia(id: string) {
+    return del(`/admin/media/${id}`)
+  }
+
+  async function listMediaFolders() {
+    return get<{ data: Record<string, unknown>[] }>('/admin/media/folders')
+  }
+
   return {
     getStats,
     getDashboard,
@@ -331,5 +457,31 @@ export function useAdminService() {
     getOrganization,
     updateOrganization,
     removeMember,
+    createOrganization,
+    deleteOrganization,
+    getResume,
+    updateResume,
+    deleteResume,
+    getLetter,
+    updateLetter,
+    deleteLetter,
+    getPayment,
+    updatePayment,
+    listFaq,
+    createFaq,
+    updateFaq,
+    deleteFaq,
+    reorderFaq,
+    listLandingSections,
+    updateLandingSection,
+    listBlogPosts,
+    getBlogPost,
+    createBlogPost,
+    updateBlogPost,
+    deleteBlogPost,
+    listMedia,
+    uploadMedia,
+    deleteMedia,
+    listMediaFolders,
   }
 }

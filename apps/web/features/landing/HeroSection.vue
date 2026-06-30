@@ -1,14 +1,26 @@
 <script setup lang="ts">
-const journeySteps = [
-  'CV ou lettre',
-  'Choisir un modèle',
-  'Exporter en PDF',
-] as const
-
 const config = useRuntimeConfig()
+const { content, load, section } = useLandingContent()
+
+onMounted(() => load())
+
 const heroVariant = computed(() =>
   (config.public.heroVariant as string) === 'start' ? 'start' : 'transform',
 )
+
+const hero = computed(() => section<{
+  titleTransform?: string
+  titleStart?: string
+  subtitle?: string
+  ctaPrimary?: string
+  ctaPrimaryLink?: string
+  ctaSecondary?: string
+  ctaSecondaryLink?: string
+  trustLine?: string
+  journeySteps?: string[]
+}>('hero'))
+
+const journeySteps = computed(() => hero.value.journeySteps ?? ['CV ou lettre', 'Choisir un modèle', 'Exporter en PDF'])
 </script>
 
 <template>
@@ -22,11 +34,10 @@ const heroVariant = computed(() =>
           style="animation-delay: 0ms"
         >
           <template v-if="heroVariant === 'transform'">
-            Créez votre CV et votre lettre de motivation<br class="hidden sm:block">
-            en quelques minutes.
+            {{ hero.titleTransform || 'Créez votre CV et votre lettre de motivation en quelques minutes.' }}
           </template>
           <template v-else>
-            Tout ce qu'il faut pour réussir votre candidature.
+            {{ hero.titleStart || "Tout ce qu'il faut pour réussir votre candidature." }}
           </template>
         </h1>
 
@@ -34,8 +45,7 @@ const heroVariant = computed(() =>
           class="hero-enter text-[0.9375rem] sm:text-base text-on-surface-variant max-w-lg leading-relaxed"
           style="animation-delay: 80ms"
         >
-          Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF.
-          L'ensemble de votre dossier de candidature, au même endroit.
+          {{ hero.subtitle || "Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF. L'ensemble de votre dossier de candidature, au même endroit." }}
         </p>
 
         <div
@@ -43,18 +53,18 @@ const heroVariant = computed(() =>
           style="animation-delay: 120ms"
         >
           <NuxtLink
-            to="/creer"
+            :to="hero.ctaPrimaryLink || '/creer'"
             class="btn-primary w-full sm:w-auto whitespace-nowrap text-sm sm:text-base premium-shadow-sm"
           >
-            Commencer gratuitement
+            {{ hero.ctaPrimary || 'Commencer gratuitement' }}
             <UiPzIcon name="arrow_forward" class="text-[17px]" />
           </NuxtLink>
           <NuxtLink
-            to="/creer/lettre"
+            :to="hero.ctaSecondaryLink || '/creer/lettre'"
             class="btn-outline w-full sm:w-auto whitespace-nowrap text-sm"
           >
             <UiPzIcon name="mail" class="text-[17px] opacity-70" />
-            Créer une lettre
+            {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>
         </div>
 
@@ -62,7 +72,7 @@ const heroVariant = computed(() =>
           class="hero-enter text-sm text-on-surface-variant/80"
           style="animation-delay: 200ms"
         >
-          CV et lettre sans inscription · PDF immédiat · Compatible ATS
+          {{ hero.trustLine || 'CV et lettre sans inscription · PDF immédiat · Compatible ATS' }}
         </p>
 
         <p
@@ -78,7 +88,7 @@ const heroVariant = computed(() =>
 
       <div
         class="hero-enter order-2 w-full max-w-[560px] lg:max-w-none mx-auto lg:mx-0"
-        style="animation-delay: 420ms"
+        style="animation-delay: 160ms"
       >
         <FeaturesLandingHeroProductDemo />
       </div>

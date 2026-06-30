@@ -2,10 +2,14 @@ import type { OrganizationType, PaymentStatus } from '@profiloz/shared'
 import { PLANS } from '@profiloz/shared'
 import {
   adminSendNotificationSchema,
+  adminCreateOrganizationSchema,
+  adminUpdateCoverLetterSchema,
   adminUpdateEmailTemplateSchema,
   adminUpdateOrganizationSchema,
+  adminUpdatePaymentSchema,
   adminUpdatePlanSchema,
   adminUpdatePlatformSettingsSchema,
+  adminUpdateResumeSchema,
   adminUpdateTemplateSchema,
   adminUpdateUserSchema,
 } from '@profiloz/validators'
@@ -408,7 +412,7 @@ export class AdminService {
     }
   }
 
-  async updateUser(id: string, body: unknown) {
+  async updateUser(id: string, body: unknown, actorId?: string) {
     const input = adminUpdateUserSchema.parse(body)
     const existing = await prisma.user.findUnique({ where: { id } })
     if (!existing) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
@@ -427,16 +431,34 @@ export class AdminService {
         subscriptionPlanSlug: input.subscriptionPlanSlug,
       },
     })
+    if (actorId) {
+      await logAdminAction({
+        actorId,
+        action: 'user.update',
+        targetType: 'user',
+        targetId: id,
+        metadata: input as Record<string, unknown>,
+      })
+    }
     return this.getUser(id)
   }
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string, actorId?: string) {
     const existing = await prisma.user.findUnique({ where: { id } })
     if (!existing) throw new AppError(404, 'Not Found', 'Utilisateur introuvable')
     if (existing.role === 'ADMIN') {
       throw new AppError(400, 'Bad Request', 'Impossible de supprimer un administrateur plateforme.')
     }
     await prisma.user.delete({ where: { id } })
+    if (actorId) {
+      await logAdminAction({
+        actorId,
+        action: 'user.delete',
+        targetType: 'user',
+        targetId: id,
+        metadata: { email: existing.email },
+      })
+    }
     return { ok: true }
   }
 
@@ -500,11 +522,72 @@ export class AdminService {
         templateSlug: r.templateSlug,
         status: r.status,
         isGuest: Boolean(r.guestSessionId && !r.userId),
+        userId: r.userId,
         createdAt: r.createdAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
       })),
       meta: paginationMeta(page, limit, total),
     }
+  }
+
+  async getResume(id: string) {
+    const row = await prisma.resume.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        guestSession: { select: { id: true } },
+      },
+    })
+    if (!row) throw new AppError(404, 'Not Found', 'CV introuvable')
+    return {
+      id: row.id,
+      title: row.title,
+      fullName: row.fullName,
+      email: row.email,
+      templateSlug: row.templateSlug,
+      status: row.status,
+      userId: row.userId,
+      guestSessionId: row.guestSessionId,
+      owner: formatPersonName({ fullName: row.fullName, ...row.user }),
+      ownerEmail: row.user?.email ?? null,
+      isGuest: Boolean(row.guestSessionId && !row.userId),
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  }
+
+  async updateResume(id: string, body: unknown, actorId: string) {
+    const input = adminUpdateResumeSchema.parse(body)
+    const existing = await prisma.resume.findUnique({ where: { id } })
+    if (!existing) throw new AppError(404, 'Not Found', 'CV introuvable')
+    await prisma.resume.update({
+      where: { id },
+      data: {
+        title: input.title,
+        status: input.status,
+      },
+    })
+    await logAdminAction({
+      actorId,
+      action: 'resume.update',
+      targetType: 'resume',
+      targetId: id,
+      metadata: input as Record<string, unknown>,
+    })
+    return this.getResume(id)
+  }
+
+  async deleteResume(id: string, actorId: string) {
+    const existing = await prisma.resume.findUnique({ where: { id } })
+    if (!existing) throw new AppError(404, 'Not Found', 'CV introuvable')
+    await prisma.resume.delete({ where: { id } })
+    await logAdminAction({
+      actorId,
+      action: 'resume.delete',
+      targetType: 'resume',
+      targetId: id,
+    })
+    return { ok: true }
   }
 
   async listCoverLetters(searchParams: URLSearchParams) {
@@ -564,6 +647,63 @@ export class AdminService {
       })),
       meta: paginationMeta(page, limit, total),
     }
+  }
+
+  async getCoverLetter(id: string) {
+    const row = await prisma.coverLetter.findUnique({
+      where: { id },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
+    })
+    if (!row) throw new AppError(404, 'Not Found', 'Lettre introuvable')
+    return {
+      id: row.id,
+      title: row.title,
+      senderName: row.senderName,
+      senderEmail: row.senderEmail,
+      companyName: row.companyName,
+      position: row.position,
+      templateId: row.templateId,
+      content: row.content,
+      userId: row.userId,
+      owner: formatPersonName({ fullName: row.senderName, ...row.user }),
+      ownerEmail: row.user.email,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  }
+
+  async updateCoverLetter(id: string, body: unknown, actorId: string) {
+    const input = adminUpdateCoverLetterSchema.parse(body)
+    const existing = await prisma.coverLetter.findUnique({ where: { id } })
+    if (!existing) throw new AppError(404, 'Not Found', 'Lettre introuvable')
+    await prisma.coverLetter.update({
+      where: { id },
+      data: {
+        title: input.title,
+        content: input.content,
+      },
+    })
+    await logAdminAction({
+      actorId,
+      action: 'cover_letter.update',
+      targetType: 'cover_letter',
+      targetId: id,
+      metadata: input as Record<string, unknown>,
+    })
+    return this.getCoverLetter(id)
+  }
+
+  async deleteCoverLetter(id: string, actorId: string) {
+    const existing = await prisma.coverLetter.findUnique({ where: { id } })
+    if (!existing) throw new AppError(404, 'Not Found', 'Lettre introuvable')
+    await prisma.coverLetter.delete({ where: { id } })
+    await logAdminAction({
+      actorId,
+      action: 'cover_letter.delete',
+      targetType: 'cover_letter',
+      targetId: id,
+    })
+    return { ok: true }
   }
 
   async listPdfJobs(searchParams: URLSearchParams) {
@@ -682,7 +822,7 @@ export class AdminService {
         monthRevenue: monthRevenue._sum.amountXof ?? 0,
         paidCount,
         failedCount,
-        refundsCount: canceledCount,
+        canceledCount,
       },
       data: rows.map((p) => ({
         id: p.id,
@@ -699,6 +839,54 @@ export class AdminService {
       })),
       meta: paginationMeta(page, limit, total),
     }
+  }
+
+  async getPayment(id: string) {
+    const row = await prisma.payment.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        organization: { select: { id: true, name: true } },
+      },
+    })
+    if (!row) throw new AppError(404, 'Not Found', 'Paiement introuvable')
+    return {
+      id: row.id,
+      planSlug: row.planSlug,
+      amountXof: row.amountXof,
+      credits: row.credits,
+      status: row.status,
+      provider: row.provider,
+      providerRef: row.providerRef,
+      providerToken: row.providerToken,
+      paymentMethod: row.paymentMethod,
+      user: row.user
+        ? { id: row.user.id, name: formatPersonName(row.user), email: row.user.email }
+        : null,
+      organization: row.organization,
+      createdAt: row.createdAt.toISOString(),
+      paidAt: row.paidAt?.toISOString() ?? null,
+    }
+  }
+
+  async updatePayment(id: string, body: unknown, actorId: string) {
+    const input = adminUpdatePaymentSchema.parse(body)
+    const existing = await prisma.payment.findUnique({ where: { id } })
+    if (!existing) throw new AppError(404, 'Not Found', 'Paiement introuvable')
+    await prisma.payment.update({
+      where: { id },
+      data: {
+        status: input.status,
+      },
+    })
+    await logAdminAction({
+      actorId,
+      action: 'payment.update',
+      targetType: 'payment',
+      targetId: id,
+      metadata: { status: input.status, note: input.note },
+    })
+    return this.getPayment(id)
   }
 
   async getAnalytics() {
@@ -1033,10 +1221,32 @@ export class AdminService {
   async globalSearch(q: string) {
     const term = q.trim()
     if (term.length < 2) {
-      return { users: [], resumes: [], letters: [], payments: [], organizations: [], templates: [] }
+      return {
+        users: [],
+        resumes: [],
+        letters: [],
+        payments: [],
+        organizations: [],
+        templates: [],
+        emails: [],
+        blog: [],
+        faq: [],
+        media: [],
+      }
     }
 
-    const [users, resumes, letters, payments, organizations, templates] = await Promise.all([
+    const [
+      users,
+      resumes,
+      letters,
+      payments,
+      organizations,
+      templates,
+      emails,
+      blogPosts,
+      faqItems,
+      mediaAssets,
+    ] = await Promise.all([
       prisma.user.findMany({
         where: {
           OR: [
@@ -1059,7 +1269,12 @@ export class AdminService {
         select: { id: true, title: true, fullName: true },
       }),
       prisma.coverLetter.findMany({
-        where: { title: { contains: term, mode: 'insensitive' } },
+        where: {
+          OR: [
+            { title: { contains: term, mode: 'insensitive' } },
+            { senderName: { contains: term, mode: 'insensitive' } },
+          ],
+        },
         take: 5,
         select: { id: true, title: true, senderName: true },
       }),
@@ -1083,15 +1298,49 @@ export class AdminService {
         take: 5,
         select: { slug: true, name: true },
       }),
+      prisma.emailTemplate.findMany({
+        where: {
+          OR: [
+            { name: { contains: term, mode: 'insensitive' } },
+            { slug: { contains: term, mode: 'insensitive' } },
+          ],
+        },
+        take: 5,
+        select: { slug: true, name: true },
+      }),
+      prisma.blogPost.findMany({
+        where: {
+          OR: [
+            { title: { contains: term, mode: 'insensitive' } },
+            { slug: { contains: term, mode: 'insensitive' } },
+          ],
+        },
+        take: 5,
+        select: { id: true, slug: true, title: true },
+      }),
+      prisma.faqItem.findMany({
+        where: { question: { contains: term, mode: 'insensitive' } },
+        take: 5,
+        select: { id: true, question: true },
+      }),
+      prisma.mediaAsset.findMany({
+        where: { filename: { contains: term, mode: 'insensitive' } },
+        take: 5,
+        select: { id: true, filename: true, publicUrl: true },
+      }),
     ])
 
     return {
       users: users.map((u) => ({ id: u.id, label: formatPersonName(u), sublabel: u.email, href: `/admin/utilisateurs/${u.id}` })),
-      resumes: resumes.map((r) => ({ id: r.id, label: r.title, sublabel: r.fullName, href: `/admin/cv?q=${r.id}` })),
-      letters: letters.map((l) => ({ id: l.id, label: l.title, sublabel: l.senderName, href: `/admin/lettres?q=${l.id}` })),
-      payments: payments.map((p) => ({ id: p.id, label: p.providerRef, sublabel: `${p.amountXof} FCFA · ${p.status}`, href: `/admin/paiements?q=${p.providerRef}` })),
+      resumes: resumes.map((r) => ({ id: r.id, label: r.title, sublabel: r.fullName, href: `/admin/cv/${r.id}` })),
+      letters: letters.map((l) => ({ id: l.id, label: l.title, sublabel: l.senderName, href: `/admin/lettres/${l.id}` })),
+      payments: payments.map((p) => ({ id: p.id, label: p.providerRef, sublabel: `${p.amountXof} FCFA · ${p.status}`, href: `/admin/paiements/${p.id}` })),
       organizations: organizations.map((o) => ({ id: o.id, label: o.name, sublabel: 'Organisation', href: `/admin/organisations/${o.id}` })),
       templates: templates.map((t) => ({ id: t.slug, label: t.name, sublabel: 'Template CV', href: `/admin/templates?slug=${t.slug}` })),
+      emails: emails.map((e) => ({ id: e.slug, label: e.name, sublabel: 'Email', href: `/admin/emails/${e.slug}` })),
+      blog: blogPosts.map((b) => ({ id: b.id, label: b.title, sublabel: b.slug, href: `/admin/contenu/blog/${b.id}` })),
+      faq: faqItems.map((f) => ({ id: f.id, label: f.question, sublabel: 'FAQ', href: `/admin/contenu/faq` })),
+      media: mediaAssets.map((m) => ({ id: m.id, label: m.filename, sublabel: 'Média', href: `/admin/medias` })),
     }
   }
 
@@ -1220,22 +1469,99 @@ export class AdminService {
   }
 
   async getPlatformHealth() {
+    type ServiceStatus = 'ok' | 'degraded' | 'down'
+
+    let dbStatus: ServiceStatus = 'ok'
+    let dbLatencyMs = 0
+    try {
+      const start = Date.now()
+      await prisma.$queryRaw`SELECT 1`
+      dbLatencyMs = Date.now() - start
+      if (dbLatencyMs > 800) dbStatus = 'degraded'
+    } catch {
+      dbStatus = 'down'
+    }
+
+    let redisStatus: ServiceStatus = 'ok'
+    let redisMessage = 'Non configuré'
+    if (process.env.REDIS_URL?.trim()) {
+      try {
+        const { default: Redis } = await import('ioredis')
+        const client = new Redis(process.env.REDIS_URL, {
+          connectTimeout: 2000,
+          maxRetriesPerRequest: 1,
+          lazyConnect: true,
+        })
+        await client.connect()
+        const start = Date.now()
+        await client.ping()
+        const latency = Date.now() - start
+        await client.quit()
+        redisMessage = `${latency} ms`
+        if (latency > 500) redisStatus = 'degraded'
+      } catch {
+        redisStatus = 'down'
+        redisMessage = 'Connexion impossible'
+      }
+    }
+
     const pdfRender = await checkPdfRenderReadiness()
+    const paytechConfigured = Boolean(process.env.PAYTECH_API_KEY?.trim() && process.env.PAYTECH_API_SECRET?.trim())
+    const smtpConfigured = Boolean(process.env.SMTP_HOST?.trim())
+    const storageConfigured = Boolean(process.env.S3_BUCKET?.trim() || process.env.R2_BUCKET?.trim() || process.env.STORAGE_LOCAL_PATH?.trim())
+
+    let smtpStatus: ServiceStatus = smtpConfigured ? 'ok' : 'degraded'
+    if (smtpConfigured) {
+      try {
+        const nodemailer = await import('nodemailer')
+        const transport = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT ?? 587),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: process.env.SMTP_USER
+            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+            : undefined,
+          connectionTimeout: 3000,
+        })
+        await transport.verify()
+      } catch {
+        smtpStatus = 'degraded'
+      }
+    }
+
+    const services = [
+      { key: 'api', name: 'API', status: 'ok' as ServiceStatus, message: 'Opérationnelle' },
+      { key: 'postgresql', name: 'PostgreSQL', status: dbStatus, message: dbStatus === 'down' ? 'Indisponible' : `${dbLatencyMs} ms` },
+      { key: 'redis', name: 'Redis', status: process.env.REDIS_URL?.trim() ? redisStatus : ('ok' as ServiceStatus), message: redisMessage },
+      { key: 'paytech', name: 'PayTech', status: (paytechConfigured ? 'ok' : 'degraded') as ServiceStatus, message: paytechConfigured ? 'Configuré' : 'Clés manquantes' },
+      { key: 'smtp', name: 'SMTP', status: smtpStatus, message: smtpConfigured ? 'Configuré' : 'Non configuré' },
+      { key: 'ocr', name: 'OCR', status: 'ok' as ServiceStatus, message: 'Tesseract actif' },
+      { key: 'storage', name: 'Stockage', status: (storageConfigured ? 'ok' : 'degraded') as ServiceStatus, message: storageConfigured ? 'Disponible' : 'Local par défaut' },
+      { key: 'pdf', name: 'Rendu PDF', status: (pdfRender.ok ? 'ok' : 'degraded') as ServiceStatus, message: pdfRender.ok ? 'Prêt' : pdfRender.error ?? 'Non prêt' },
+    ]
+
+    const overall = services.some((s) => s.status === 'down')
+      ? 'down'
+      : services.some((s) => s.status === 'degraded')
+        ? 'degraded'
+        : 'ok'
+
     return {
-      status: 'ok',
+      status: overall,
       timestamp: new Date().toISOString(),
+      services,
       pdfRender,
       payments: {
-        paytechConfigured: Boolean(process.env.PAYTECH_API_KEY?.trim() && process.env.PAYTECH_API_SECRET?.trim()),
+        paytechConfigured,
         publicAppUrl: process.env.PUBLIC_APP_URL ?? null,
         paytechEnv: process.env.PAYTECH_ENV ?? null,
         ipnConfigured: Boolean(process.env.PAYTECH_IPN_URL?.trim()),
       },
-      database: { connected: true },
-      storage: { configured: Boolean(process.env.S3_BUCKET?.trim() || process.env.R2_BUCKET?.trim()) },
+      database: { connected: dbStatus !== 'down', latencyMs: dbLatencyMs },
+      storage: { configured: storageConfigured },
       ai: { configured: Boolean(process.env.OPENAI_API_KEY?.trim()) },
       ocr: { provider: 'tesseract', configured: true },
-      smtp: { configured: Boolean(process.env.SMTP_HOST?.trim()) },
+      smtp: { configured: smtpConfigured },
     }
   }
 
@@ -1390,7 +1716,43 @@ export class AdminService {
     return this.getOrganization(id)
   }
 
-  async removeMember(organizationId: string, userId: string) {
+  async createOrganization(body: unknown, actorId: string) {
+    const input = adminCreateOrganizationSchema.parse(body)
+    const owner = await prisma.user.findUnique({ where: { id: input.ownerUserId } })
+    if (!owner) throw new AppError(404, 'Not Found', 'Propriétaire introuvable')
+
+    const org = await organizationRepository.createOrganization({
+      name: input.name,
+      type: input.type,
+      ownerUserId: input.ownerUserId,
+      unlimitedUntil: input.unlimitedUntil ? new Date(input.unlimitedUntil) : undefined,
+      subscriptionPlanSlug: input.subscriptionPlanSlug ?? undefined,
+    })
+
+    await logAdminAction({
+      actorId,
+      action: 'organization.create',
+      targetType: 'organization',
+      targetId: org.id,
+    })
+
+    return this.getOrganization(org.id)
+  }
+
+  async deleteOrganization(id: string, actorId: string) {
+    const existing = await organizationRepository.findOrganizationById(id)
+    if (!existing) throw new AppError(404, 'Not Found', 'Organisation introuvable')
+    await prisma.organization.delete({ where: { id } })
+    await logAdminAction({
+      actorId,
+      action: 'organization.delete',
+      targetType: 'organization',
+      targetId: id,
+    })
+    return { ok: true }
+  }
+
+  async removeMember(organizationId: string, userId: string, actorId?: string) {
     const org = await organizationRepository.findOrganizationById(organizationId)
     if (!org) throw new AppError(404, 'Not Found', 'Organisation introuvable')
 
@@ -1401,6 +1763,15 @@ export class AdminService {
     }
 
     await organizationRepository.removeMember(organizationId, userId)
+    if (actorId) {
+      await logAdminAction({
+        actorId,
+        action: 'organization.member.remove',
+        targetType: 'organization',
+        targetId: organizationId,
+        metadata: { userId },
+      })
+    }
     return this.getOrganization(organizationId)
   }
 

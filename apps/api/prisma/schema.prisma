@@ -90,6 +90,19 @@ enum NotificationAudience {
   PREMIUM
 }
 
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -117,6 +130,7 @@ model User {
   adminAuditLogs AdminAuditLog[]
   platformNotificationsCreated PlatformNotification[]
   notifications UserNotification[]
+  mediaAssetsUploaded MediaAsset[]
 
   @@map("users")
 }
@@ -535,4 +549,83 @@ model UserNotification {
 
   @@index([userId, createdAt])
   @@map("user_notifications")
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  sortOrder Int      @default(0)
+  locale    String   @default("fr-FR")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locale, isActive, sortOrder])
+  @@map("faq_items")
+}
+
+model LandingSection {
+  id        String   @id @default(cuid())
+  key       String
+  locale    String   @default("fr-FR")
+  content   Json
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, locale])
+  @@map("landing_sections")
+}
+
+model MediaFolder {
+  id        String        @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    MediaFolder?  @relation("MediaFolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  MediaFolder[] @relation("MediaFolderTree")
+  assets    MediaAsset[]
+  createdAt DateTime      @default(now())
+
+  @@index([parentId])
+  @@map("media_folders")
+}
+
+model MediaAsset {
+  id           String       @id @default(cuid())
+  filename     String
+  storageKey   String       @unique
+  mimeType     String
+  sizeBytes    Int
+  kind         MediaKind    @default(OTHER)
+  alt          String?
+  folderId     String?
+  folder       MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  uploadedById String?
+  uploadedBy   User?        @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  publicUrl    String
+  createdAt    DateTime     @default(now())
+  blogPosts    BlogPost[]
+
+  @@index([folderId])
+  @@index([kind])
+  @@map("media_assets")
+}
+
+model BlogPost {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  excerpt        String?
+  content        String         @db.Text
+  coverMediaId   String?
+  coverMedia     MediaAsset?    @relation(fields: [coverMediaId], references: [id], onDelete: SetNull)
+  status         BlogPostStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
 }

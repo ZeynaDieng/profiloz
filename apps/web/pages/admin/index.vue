@@ -36,8 +36,8 @@ function healthPaytechStatus() {
 }
 
 function healthPdfStatus() {
-  const pdf = health.value?.pdfRender as { ready?: boolean } | undefined
-  return pdf?.ready ? 'active' : 'FAILED'
+  const pdf = health.value?.pdfRender as { ok?: boolean } | undefined
+  return pdf?.ok ? 'active' : 'FAILED'
 }
 
 function healthStorageStatus() {
@@ -115,8 +115,8 @@ function healthStorageStatus() {
               <AdminStatusBadge :status="healthStorageStatus()" />
             </li>
           </ul>
-          <NuxtLink to="/admin/parametres" class="inline-block mt-4 text-sm text-secondary font-semibold hover:underline">
-            Voir les paramètres →
+          <NuxtLink to="/admin/supervision" class="inline-block mt-4 text-sm text-secondary font-semibold hover:underline">
+            Centre de supervision →
           </NuxtLink>
         </UiCard>
       </div>

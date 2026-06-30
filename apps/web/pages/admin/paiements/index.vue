@@ -45,6 +45,7 @@ const columns = [
   { key: 'amountXof', label: 'Montant' },
   { key: 'status', label: 'Statut' },
   { key: 'createdAt', label: 'Date' },
+  { key: 'actions', label: 'Actions' },
 ]
 </script>
 
@@ -72,7 +73,7 @@ const columns = [
       <AdminStatCard label="Ce mois" :value="formatXof(summary.monthRevenue ?? 0)" />
       <AdminStatCard label="Réussis" :value="String(summary.paidCount ?? 0)" />
       <AdminStatCard label="Échoués" :value="String(summary.failedCount ?? 0)" />
-      <AdminStatCard label="Remboursements" :value="String(summary.refundsCount ?? 0)" />
+      <AdminStatCard label="Annulés" :value="String(summary.canceledCount ?? summary.refundsCount ?? 0)" />
     </div>
 
     <AdminDataTable :columns="columns" :rows="rows" :loading="loading">
@@ -80,6 +81,11 @@ const columns = [
       <template #cell-amountXof="{ row }">{{ formatXof(Number(row.amountXof)) }}</template>
       <template #cell-status="{ row }"><AdminStatusBadge :status="String(row.status)" /></template>
       <template #cell-createdAt="{ row }">{{ formatDate(String(row.createdAt), true) }}</template>
+      <template #cell-actions="{ row }">
+        <NuxtLink :to="`/admin/paiements/${row.id}`" class="text-sm text-secondary font-semibold hover:underline">Détail</NuxtLink>
+      </template>
     </AdminDataTable>
+
+    <AdminPagination :page="meta.page" :total-pages="meta.totalPages" :total="meta.total" @change="load" />
   </div>
 </template>
