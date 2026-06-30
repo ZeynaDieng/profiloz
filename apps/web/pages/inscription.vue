@@ -47,9 +47,12 @@ async function onSubmit() {
     const draft = resumeStore.current
     const resumeSnapshot =
       draft?.personalInfo.fullName ? draft : undefined
-    await authStore.register(email.value, password.value, resumeSnapshot)
+    const result = await authStore.register(email.value, password.value, resumeSnapshot)
     success.value = true
-    setTimeout(() => navigateTo(redirectTo.value), 1500)
+    const destination = result.migratedResumeId
+      ? `/tableau-de-bord/dossiers/${result.migratedResumeId}`
+      : redirectTo.value
+    setTimeout(() => navigateTo(destination), 1500)
   } catch (err) {
     error.value = parseRegisterError(err)
   } finally {

@@ -3,6 +3,7 @@ import { createCoverLetterSchema, updateCoverLetterSchema } from '@profiloz/vali
 import { AppError } from '@/lib/errors'
 import type { CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
+import { paymentService } from '@/modules/payment/payment.service'
 import { coverLetterRepository } from './cover-letter.repository'
 
 function toDto(letter: {
@@ -134,6 +135,10 @@ export class CoverLetterService {
   async generatePdf(id: string, userId: string) {
     const letter = await coverLetterRepository.findById(id, userId)
     if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
+
+    if (letter.resumeId) {
+      await paymentService.unlockResume({ userId }, letter.resumeId)
+    }
 
     const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf(
       {

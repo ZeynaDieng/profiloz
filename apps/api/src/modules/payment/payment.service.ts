@@ -53,6 +53,22 @@ function assertPaymentOwner(
   }
 }
 
+type GuestSessionMeta = { snapshotUnlockedAt?: string }
+
+function readGuestSessionMeta(data: unknown): GuestSessionMeta {
+  if (!data || typeof data !== 'object') return {}
+  const raw = data as GuestSessionMeta
+  return typeof raw.snapshotUnlockedAt === 'string' ? { snapshotUnlockedAt: raw.snapshotUnlockedAt } : {}
+}
+
+async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string): Promise<boolean> {
+  const guest = await prisma.guestSession.findUnique({
+    where: { id: guestSessionDbId },
+    select: { data: true },
+  })
+  return Boolean(readGuestSessionMeta(guest?.data).snapshotUnlockedAt)
+}
+
 export class PaymentService {
   constructor(private readonly provider: PaymentProvider = paytechProvider) {}
 
@@ -156,18 +172,18 @@ export class PaymentService {
 
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return
+    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) return
     if (entitlements.creditsBalance <= 0) {
       throw new AppError(
         402,
         'Payment Required',
-        'Aucun crédit disponible. Choisissez une offre pour télécharger votre CV.',
+        'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
       )
     }
   }
 
   /**
-   * Consomme 1 crédit pour un téléchargement PDF invité (snapshot, sans dossier en base).
-   * Abonnement illimité actif → gratuit. Sinon 402 si aucun crédit.
+   * Débloque le dossier invité (1 crédit = CV + lettre, retéléchargements gratuits).
    */
   async consumeGuestSnapshotDownload(owner: EntitlementOwner) {
     requireOwner(owner)
@@ -176,19 +192,40 @@ export class PaymentService {
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return { consumed: false }
 
-    const decremented = await prisma.guestSession.updateMany({
-      where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
-      data: { creditsBalance: { decrement: 1 } },
-    })
-
-    if (decremented.count === 0) {
-      throw new AppError(
-        402,
-        'Payment Required',
-        'Aucun crédit disponible. Choisissez une offre pour télécharger votre CV.',
-      )
+    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
+      return { consumed: false }
     }
-    return { consumed: true }
+
+    return prisma.$transaction(async (tx) => {
+      const guest = await tx.guestSession.findUnique({
+        where: { id: owner.guestSessionDbId },
+        select: { data: true, creditsBalance: true },
+      })
+      if (!guest) throw new AppError(404, 'Not Found', 'Session invité introuvable')
+
+      const meta = readGuestSessionMeta(guest.data)
+      if (meta.snapshotUnlockedAt) return { consumed: false }
+
+      const decremented = await tx.guestSession.updateMany({
+        where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+        data: {
+          creditsBalance: { decrement: 1 },
+          data: {
+            ...meta,
+            snapshotUnlockedAt: new Date().toISOString(),
+          },
+        },
+      })
+
+      if (decremented.count === 0) {
+        throw new AppError(
+          402,
+          'Payment Required',
+          'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+        )
+      }
+      return { consumed: true }
+    })
   }
 
   /** Démarre un paiement : crée la commande PENDING et renvoie l'URL de redirection PayTech. */

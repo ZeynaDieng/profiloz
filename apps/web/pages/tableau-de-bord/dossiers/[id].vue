@@ -56,7 +56,7 @@ const addLetterLink = computed(() => `/tableau-de-bord/lettres/nouvelle?resumeId
 onMounted(async () => {
   authStore.loadFromStorage()
   if (!authStore.isAuthenticated) {
-    await navigateTo('/connexion')
+    await navigateTo({ path: '/connexion', query: { redirect: route.fullPath } })
     return
   }
 
@@ -160,8 +160,13 @@ async function onDownloadLetter(id: string) {
   error.value = ''
   try {
     await coverLetterService.downloadPdf(id)
-  } catch {
-    error.value = MSG.pdf.error
+  } catch (err) {
+    const problem = err as { status?: number; detail?: string }
+    if (problem?.status === 402) {
+      await navigateTo(`/tarifs?resumeId=${dossierId.value}&reason=unlock`)
+      return
+    }
+    error.value = problem.detail || MSG.pdf.error
   } finally {
     letterDownloadingId.value = null
   }

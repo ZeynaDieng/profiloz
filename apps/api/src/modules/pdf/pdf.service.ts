@@ -389,20 +389,30 @@ export class PdfService {
     let pdfBuffer: Buffer
     try {
       pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'unknown'
+    } catch (printError) {
+      const printDetail = printError instanceof Error ? printError.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_error',
+        event: 'pdf_generate_print_fallback',
         kind: 'cover_letter',
         templateSlug: letter.templateSlug,
         userId: ctx?.userId,
         durationMs: Date.now() - startedAt,
-        error: detail,
+        error: printDetail,
       })
-      throw new Error(
-        `Impossible de générer le PDF de la lettre (${detail}). ` +
-          'Vérifiez que l\'application web est démarrée (pnpm run dev sur le port 3000).',
-      )
+      try {
+        pdfBuffer = await htmlToPdf(renderCoverLetterHtml(letter))
+      } catch (fallbackError) {
+        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
+        logPdfEvent({
+          event: 'pdf_generate_error',
+          kind: 'cover_letter',
+          templateSlug: letter.templateSlug,
+          userId: ctx?.userId,
+          durationMs: Date.now() - startedAt,
+          error: `${printDetail} | fallback: ${fallbackDetail}`,
+        })
+        throw new Error(`Impossible de générer le PDF de la lettre (${fallbackDetail}).`)
+      }
     } finally {
       await storageProvider.delete(snapshotKey)
     }

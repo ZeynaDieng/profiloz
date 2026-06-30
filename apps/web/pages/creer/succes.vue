@@ -6,9 +6,11 @@ definePageMeta({ layout: false })
 const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 const coverLetterStore = useCoverLetterStore()
+const paymentService = usePaymentService()
 const route = useRoute()
 
 const isLetter = computed(() => route.query.type === 'letter')
+const signupRedirect = '/tableau-de-bord'
 
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
@@ -25,19 +27,45 @@ const successHeadline = computed(() =>
 )
 
 const editLink = computed(() => (isLetter.value ? '/creer/lettre/editeur' : '/creer/editeur'))
+const crossSellLink = computed(() =>
+  isLetter.value ? '/creer' : '/creer/lettre',
+)
+const crossSellTitle = computed(() =>
+  isLetter.value ? MSG.guide.successCrossSellLetterTitle : MSG.guide.successCrossSellCvTitle,
+)
+const crossSellBody = computed(() =>
+  isLetter.value ? MSG.guide.successCrossSellLetterBody : MSG.guide.successCrossSellCvBody,
+)
+const crossSellCta = computed(() =>
+  isLetter.value ? MSG.guide.successCrossSellCtaCv : MSG.guide.successCrossSellCtaLetter,
+)
 
-onMounted(() => {
+const hasPaidAccess = ref(false)
+
+onMounted(async () => {
   authStore.loadFromStorage()
+  resumeStore.rehydrateFromStorage()
+  coverLetterStore.rehydrateFromStorage()
+
   const container = document.getElementById('confetti-container')
-  if (!container) return
-  const colors = ['#316bf3', '#71f8e4', '#b4c5ff', '#0051d5']
-  for (let i = 0; i < 30; i++) {
-    const el = document.createElement('div')
-    el.className = 'confetti-piece'
-    el.style.left = `${Math.random() * 100}%`
-    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)] ?? '#316bf3'
-    el.style.animationDelay = `${Math.random() * 2}s`
-    container.appendChild(el)
+  if (container) {
+    const colors = ['#316bf3', '#71f8e4', '#b4c5ff', '#0051d5']
+    for (let i = 0; i < 30; i++) {
+      const el = document.createElement('div')
+      el.className = 'confetti-piece'
+      el.style.left = `${Math.random() * 100}%`
+      el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)] ?? '#316bf3'
+      el.style.animationDelay = `${Math.random() * 2}s`
+      container.appendChild(el)
+    }
+  }
+
+  try {
+    await useGuestSession().ensureSession()
+    const e = await paymentService.getEntitlements()
+    hasPaidAccess.value = e.unlimitedActive || e.creditsBalance > 0
+  } catch {
+    hasPaidAccess.value = authStore.isAuthenticated
   }
 })
 </script>
@@ -61,9 +89,31 @@ onMounted(() => {
           {{ MSG.guide.successLead }}
         </p>
 
+        <UiCard
+          variant="default"
+          padding="md"
+          class="mb-6 text-left !bg-secondary/5 border-secondary/20"
+        >
+          <div class="flex items-start gap-3">
+            <UiPzIcon name="redeem" class="text-secondary text-[28px] shrink-0 mt-0.5" />
+            <div class="min-w-0">
+              <h3 class="font-bold text-on-surface mb-1">{{ crossSellTitle }}</h3>
+              <p class="text-sm text-on-surface-variant mb-3">{{ crossSellBody }}</p>
+              <NuxtLink :to="crossSellLink">
+                <UiButton variant="secondary" size="sm" icon="arrow_forward">
+                  {{ crossSellCta }}
+                </UiButton>
+              </NuxtLink>
+              <p v-if="hasPaidAccess" class="text-xs text-secondary font-semibold mt-2">
+                Inclus dans votre offre — aucun paiement supplémentaire.
+              </p>
+            </div>
+          </div>
+        </UiCard>
+
         <div v-if="authStore.isAuthenticated" class="space-y-3 mb-6">
           <NuxtLink to="/tableau-de-bord" class="block">
-            <UiButton block>Voir mes dossiers</UiButton>
+            <UiButton block>{{ MSG.guide.successCrossSellDashboard }}</UiButton>
           </NuxtLink>
           <NuxtLink :to="editLink" class="block text-secondary font-semibold hover:underline min-h-11 inline-flex items-center justify-center w-full">
             Continuer à modifier
@@ -79,7 +129,7 @@ onMounted(() => {
             </li>
           </ul>
           <div class="flex flex-col gap-2">
-            <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(editLink)}`">
+            <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`">
               <UiButton variant="primary" block>{{ MSG.buttons.createAccount }}</UiButton>
             </NuxtLink>
             <NuxtLink to="/" class="text-secondary py-2 text-center font-semibold hover:underline min-h-11 inline-flex items-center justify-center">
@@ -97,7 +147,7 @@ onMounted(() => {
     </div>
 
     <UiStickyActionBar v-if="!authStore.isAuthenticated" class="sm:hidden">
-      <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(editLink)}`" class="block">
+      <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`" class="block">
         <UiButton variant="secondary" block icon="person_add">
           {{ MSG.buttons.createAccount }}
         </UiButton>

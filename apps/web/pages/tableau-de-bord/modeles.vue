@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { TemplateSlug } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
 
 definePageMeta({ layout: 'dashboard' })
 
-const authStore = useAuthStore()
+const resumeStore = useResumeStore()
 const activeFilter = ref('all')
 
 const filteredTemplates = computed(() => {
@@ -11,9 +12,12 @@ const filteredTemplates = computed(() => {
   return TEMPLATE_REGISTRY.filter((t) => t.category === activeFilter.value)
 })
 
+function useTemplate(slug: TemplateSlug) {
+  navigateTo(`/creer/modele?select=${slug}`)
+}
+
 onMounted(() => {
-  authStore.loadFromStorage()
-  if (!authStore.isAuthenticated) navigateTo('/connexion')
+  resumeStore.rehydrateFromStorage()
 })
 </script>
 
@@ -44,24 +48,18 @@ onMounted(() => {
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
-      <article
+      <FeatureTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"
-        class="glass-card rounded-xl border border-outline-variant overflow-hidden hover:border-secondary transition-colors"
+        :slug="template.slug"
+        :user-snapshot="resumeStore.current"
+        @select="useTemplate"
       >
-        <div class="aspect-[3/4] bg-gradient-to-b from-surface-container-high to-surface-container flex items-center justify-center p-6">
-          <span class="text-center font-bold text-on-surface">{{ template.name }}</span>
-        </div>
-        <div class="p-4">
+        <div>
           <h2 class="font-bold text-on-surface">{{ template.name }}</h2>
-          <p class="text-xs text-on-surface-variant mt-1">{{ template.category }}</p>
-          <NuxtLink :to="`/creer/modele?select=${template.slug}`" class="block mt-3">
-            <UiButton variant="secondary" size="sm" block>
-              Utiliser ce modèle
-            </UiButton>
-          </NuxtLink>
+          <p class="text-xs text-on-surface-variant">{{ template.category }}</p>
         </div>
-      </article>
+      </FeatureTemplatesPreviewCard>
     </div>
   </div>
 </template>
