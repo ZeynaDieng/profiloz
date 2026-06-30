@@ -8,6 +8,7 @@ import {
 } from '~/utils/payment-return'
 import { consumePaymentGuestSession, peekPaymentGuestSession } from '~/utils/payment-draft-backup'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
 definePageMeta({ layout: 'default' })
 
@@ -75,10 +76,16 @@ onMounted(async () => {
     alignGuestSessionFromStoredDrafts()
   }
 
-  await ensureSession().catch(() => {})
-
   paymentRef.value = resolvePaymentRef(route.query.ref)
   returnTo.value = resolvePaymentReturnTo(route.query.returnTo)
+
+  const earlyConfirm = paymentRef.value
+    ? paymentService.confirmReturn(paymentRef.value).then((result) => {
+        if (result.guestSessionClientId) applyGuestSessionId(result.guestSessionClientId)
+      }).catch(() => {})
+    : Promise.resolve()
+
+  await Promise.all([ensureSession().catch(() => {}), earlyConfirm])
 
   if (paymentRef.value || returnTo.value) {
     await runAutoDownload()
@@ -89,9 +96,7 @@ onMounted(async () => {
     entitlements.value = await paymentService.getEntitlements()
     if (
       entitlements.value
-      && (entitlements.value.creditsBalance > 0
-        || entitlements.value.canDownloadSnapshot
-        || entitlements.value.unlimitedActive)
+      && hasDossierDownloadAccess(entitlements.value)
       && autoDownloadError.value.includes('crédits mettent du temps')
     ) {
       autoDownloadError.value = ''
@@ -125,9 +130,12 @@ onMounted(async () => {
       </p>
 
       <p v-if="entitlements && showManualActions" class="text-sm text-on-surface mb-6">
-        <template v-if="entitlements.unlimitedActive">
+        <template v-else-if="entitlements.unlimitedActive">
           <span v-if="entitlements.activePlanSlug === 'business'">Offre Business active.</span>
           <span v-else>Offre Illimité active.</span>
+        </template>
+        <template v-else-if="entitlements.canDownloadSnapshot">
+          Dossier débloqué — CV et lettre inclus.
         </template>
         <template v-else-if="entitlements.creditsBalance > 0">
           Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong>

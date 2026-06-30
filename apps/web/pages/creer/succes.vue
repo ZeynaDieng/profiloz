@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
 definePageMeta({ layout: false })
 
@@ -63,7 +64,7 @@ onMounted(async () => {
   try {
     await useGuestSession().ensureSession()
     const e = await paymentService.getEntitlements()
-    hasPaidAccess.value = e.unlimitedActive || e.creditsBalance > 0
+    hasPaidAccess.value = hasDossierDownloadAccess(e)
   } catch {
     hasPaidAccess.value = authStore.isAuthenticated
   }

@@ -2,6 +2,7 @@
 import { formatXof, MSG } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
 import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
 
@@ -50,6 +51,10 @@ onMounted(async () => {
 
   try {
     entitlements.value = await paymentService.getEntitlements()
+    if (returnTo.value && fromPaywall.value && hasDossierDownloadAccess(entitlements.value)) {
+      await navigateTo(returnTo.value, { replace: true })
+      return
+    }
   } catch {
     entitlements.value = null
   }

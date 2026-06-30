@@ -2,6 +2,7 @@
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
 definePageMeta({ layout: false })
 
@@ -183,11 +184,7 @@ async function downloadPdf() {
 
     try {
       const entitlements = await paymentService.getEntitlements()
-      if (
-        !entitlements.unlimitedActive
-        && entitlements.creditsBalance <= 0
-        && !entitlements.canDownloadSnapshot
-      ) {
+      if (!hasDossierDownloadAccess(entitlements)) {
         await navigateTo({
           path: '/tarifs',
           query: { reason: 'unlock', returnTo: route.fullPath },

@@ -1,27 +1,20 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
-import type { Entitlements } from '~/services/payment.service'
 import {
   findCoverLetterDraftInStorage,
   findResumeSnapshotInStorage,
 } from '~/utils/guest-draft-sync'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
   clearPaymentDraftBackup,
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
-const POLL_INTERVAL_MS = 1500
-const MAX_POLL_ATTEMPTS = 12
+const POLL_INTERVAL_MS = 800
+const MAX_POLL_ATTEMPTS = 8
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function hasDownloadAccess(entitlements?: Entitlements | null) {
-  if (!entitlements) return false
-  return entitlements.unlimitedActive
-    || entitlements.creditsBalance > 0
-    || entitlements.canDownloadSnapshot === true
 }
 
 export function usePostPaymentDownload() {
@@ -39,8 +32,8 @@ export function usePostPaymentDownload() {
 
     const shouldSwitchSession = Boolean(
       result.guestSessionClientId
-      && hasDownloadAccess(result.entitlements)
-      && !hasDownloadAccess(await paymentService.getEntitlements().catch(() => null)),
+      && hasDossierDownloadAccess(result.entitlements)
+      && !hasDossierDownloadAccess(await paymentService.getEntitlements().catch(() => null)),
     )
 
     if (shouldSwitchSession && result.guestSessionClientId) {
@@ -48,12 +41,12 @@ export function usePostPaymentDownload() {
       await ensureSession()
     }
 
-    if (hasDownloadAccess(result.entitlements)) {
+    if (hasDossierDownloadAccess(result.entitlements)) {
       return result.entitlements!
     }
 
     const afterSwitch = await paymentService.getEntitlements()
-    if (hasDownloadAccess(afterSwitch)) {
+    if (hasDossierDownloadAccess(afterSwitch)) {
       return afterSwitch
     }
 
@@ -64,19 +57,24 @@ export function usePostPaymentDownload() {
     phase.value = 'confirming'
     message.value = 'Confirmation de votre paiement…'
 
-    try {
-      const current = await paymentService.getEntitlements()
-      if (hasDownloadAccess(current)) return current
-    } catch {
-      // continue
-    }
-
     if (paymentRef) {
+      const [currentResult, confirmResult] = await Promise.allSettled([
+        paymentService.getEntitlements(),
+        confirmPaymentOnce(paymentRef),
+      ])
+
+      if (currentResult.status === 'fulfilled' && hasDossierDownloadAccess(currentResult.value)) {
+        return currentResult.value
+      }
+      if (confirmResult.status === 'fulfilled' && confirmResult.value) {
+        return confirmResult.value
+      }
+    } else {
       try {
-        const confirmed = await confirmPaymentOnce(paymentRef)
-        if (confirmed) return confirmed
+        const current = await paymentService.getEntitlements()
+        if (hasDossierDownloadAccess(current)) return current
       } catch {
-        // IPN peut être en retard — on poll /me seulement ensuite
+        // continue
       }
     }
 
@@ -86,7 +84,7 @@ export function usePostPaymentDownload() {
         await sleep(POLL_INTERVAL_MS)
       }
 
-      if (paymentRef && (attempt === 2 || attempt === 6)) {
+      if (paymentRef && attempt > 0 && attempt % 2 === 0) {
         try {
           const confirmed = await confirmPaymentOnce(paymentRef)
           if (confirmed) return confirmed
@@ -97,7 +95,7 @@ export function usePostPaymentDownload() {
 
       try {
         const entitlements = await paymentService.getEntitlements()
-        if (hasDownloadAccess(entitlements)) {
+        if (hasDossierDownloadAccess(entitlements)) {
           return entitlements
         }
       } catch {
@@ -159,15 +157,19 @@ export function usePostPaymentDownload() {
     if (!isGuestPdfReturnPath(returnTo)) return false
 
     await waitForEntitlements(paymentRef)
-    await ensureSession()
 
     phase.value = 'downloading'
     message.value = isLetterReturnPath(returnTo)
       ? 'Génération de votre lettre…'
       : 'Génération de votre PDF…'
 
+    const snapshot = isLetterReturnPath(returnTo)
+      ? loadLetterForDownload()
+      : loadResumeForDownload()
+
+    await ensureSession()
+
     if (isLetterReturnPath(returnTo)) {
-      const snapshot = loadLetterForDownload()
       if (!snapshot?.content?.trim()) throw new Error('missing-letter')
       const { filename } = await pdfService.generateLetterAndDownload(snapshot)
       clearPaymentDraftBackup()
@@ -179,15 +181,15 @@ export function usePostPaymentDownload() {
       return true
     }
 
-    const snapshot = loadResumeForDownload()
-    if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
+    const resumeSnapshot = snapshot as ResumeSnapshot | null
+    if (!resumeSnapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
 
-    const { filename } = await pdfService.generateAndDownload(snapshot)
+    const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
     clearPaymentDraftBackup()
     clearPaymentRef()
     await navigateTo({ path: '/creer/succes', query: { file: filename } }, { replace: true })
     return true
   }
 
-  return { phase, message, downloadFromReturnPath, hasDownloadAccess }
+  return { phase, message, downloadFromReturnPath, hasDownloadAccess: hasDossierDownloadAccess }
 }
