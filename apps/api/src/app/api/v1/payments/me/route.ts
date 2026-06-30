@@ -15,6 +15,8 @@ export async function GET(request: Request) {
         creditsBalance: result.creditsBalance,
         unlimitedUntil: result.unlimitedUntil ? result.unlimitedUntil.toISOString() : null,
         unlimitedActive: result.unlimitedActive,
+        activePlanSlug: result.activePlanSlug,
+        features: result.features,
       }),
       origin,
     )

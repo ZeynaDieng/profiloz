@@ -18,7 +18,7 @@ const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
 
 const plans = ref<PlanDto[]>([])
-const entitlements = ref<{ creditsBalance: number; unlimitedActive: boolean } | null>(null)
+const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
 const loading = ref(true)
 const checkingOut = ref<string | null>(null)
 const error = ref('')
@@ -49,8 +49,7 @@ onMounted(async () => {
   }
 
   try {
-    const e = await paymentService.getEntitlements()
-    entitlements.value = { creditsBalance: e.creditsBalance, unlimitedActive: e.unlimitedActive }
+    entitlements.value = await paymentService.getEntitlements()
   } catch {
     entitlements.value = null
   }
@@ -96,7 +95,10 @@ async function onChoose(plan: PlanDto) {
       v-if="entitlements"
       class="max-w-2xl mx-auto mb-8 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-center text-on-surface"
     >
-      <template v-if="entitlements.unlimitedActive">Vous avez un accès illimité actif.</template>
+      <template v-if="entitlements.unlimitedActive">
+        <span v-if="entitlements.activePlanSlug === 'business'">Votre offre Business est active.</span>
+        <span v-else>Votre offre Illimité est active.</span>
+      </template>
       <template v-else>
         Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong>
       </template>

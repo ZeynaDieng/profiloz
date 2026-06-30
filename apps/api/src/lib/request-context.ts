@@ -1,6 +1,8 @@
 import { AppError } from '@/lib/errors'
+import { ensurePlatformOwnerRole } from '@/lib/platform-admin'
 import { authService } from '@/modules/auth/auth.service'
 import { guestSessionRepository } from '@/modules/guest/guest.repository'
+import { prisma } from '@/lib/prisma'
 
 export interface RequestContext {
   userId?: string
@@ -45,4 +47,24 @@ export async function requireGuestOrAuth(request: Request): Promise<RequestConte
     throw new AppError(401, 'Unauthorized', 'Session invité ou authentification requise')
   }
   return ctx
+}
+
+export async function requirePlatformAdmin(request: Request): Promise<string> {
+  const userId = await requireAuth(request)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, email: true },
+  })
+  if (!user) throw new AppError(401, 'Unauthorized', 'Authentification requise')
+
+  await ensurePlatformOwnerRole(userId, user.email)
+
+  const refreshed = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
+  if (refreshed?.role !== 'ADMIN') {
+    throw new AppError(403, 'Forbidden', 'Accès réservé à l’administration Profilo’Z.')
+  }
+  return userId
 }

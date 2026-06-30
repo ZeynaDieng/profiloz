@@ -10,8 +10,17 @@ export async function GET(request: Request) {
     const resumes = await resumeService.list(userId)
     const response = jsonResponse({
       data: resumes.map((r) => ({
-        ...r,
+        id: r.id,
+        title: r.title,
+        status: r.status,
+        templateSlug: r.templateSlug,
+        completeness: r.completeness,
+        fullName: r.fullName,
+        jobTitle: r.jobTitle,
         updatedAt: r.updatedAt.toISOString(),
+        organizationId: r.organizationId,
+        isShared: Boolean(r.organizationId && r.userId !== userId),
+        authorName: [r.user?.firstName, r.user?.lastName].filter(Boolean).join(' ').trim() || r.user?.email,
       })),
       meta: { total: resumes.length },
     })

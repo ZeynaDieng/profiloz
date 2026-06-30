@@ -1,4 +1,4 @@
-import type { PlanSlug } from '@profiloz/shared'
+import type { PlanFeatures, PlanSlug, SubscriptionPlanSlug } from '@profiloz/shared'
 
 export interface PlanDto {
   slug: PlanSlug
@@ -16,6 +16,8 @@ export interface Entitlements {
   creditsBalance: number
   unlimitedUntil: string | null
   unlimitedActive: boolean
+  activePlanSlug: SubscriptionPlanSlug | null
+  features: PlanFeatures
 }
 
 export function usePaymentService() {

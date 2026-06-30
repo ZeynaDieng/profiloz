@@ -11,6 +11,13 @@ export const primaryNavItems: AppNavItem[] = [
   { to: '/tableau-de-bord/documents', icon: 'folder_open', label: 'Documents', match: '/documents' },
 ]
 
+export const organizationNavItem: AppNavItem = {
+  to: '/tableau-de-bord/organisation',
+  icon: 'domain',
+  label: 'Organisation',
+  match: '/organisation',
+}
+
 export const secondaryNavItems: AppNavItem[] = [
   { to: '/tableau-de-bord/lettres', icon: 'mail', label: 'Lettres', match: '/lettres' },
   { to: '/tableau-de-bord/modeles', icon: 'dashboard_customize', label: 'Modèles CV', match: '/modeles', exact: true },
@@ -20,6 +27,22 @@ export const secondaryNavItems: AppNavItem[] = [
 
 export function useAppNavigation() {
   const route = useRoute()
+  const paymentService = usePaymentService()
+  const hasBusinessOrg = ref(false)
+
+  onMounted(async () => {
+    try {
+      const entitlements = await paymentService.getEntitlements()
+      hasBusinessOrg.value = entitlements.features.businessOrg
+    } catch {
+      hasBusinessOrg.value = false
+    }
+  })
+
+  const visiblePrimaryNavItems = computed(() => {
+    if (!hasBusinessOrg.value) return primaryNavItems
+    return [...primaryNavItems, organizationNavItem]
+  })
 
   function isActive(item: AppNavItem) {
     if (item.exact) {
@@ -28,5 +51,5 @@ export function useAppNavigation() {
     return route.path.includes(item.match)
   }
 
-  return { primaryNavItems, secondaryNavItems, isActive }
+  return { primaryNavItems: visiblePrimaryNavItems, secondaryNavItems, isActive, hasBusinessOrg }
 }

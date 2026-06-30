@@ -1,11 +1,7 @@
 import { defineStore } from 'pinia'
 import { isAccessTokenExpired } from '~/utils/auth-token'
 import { clearLegacyResumeDraft } from '~/utils/resume-draft-storage'
-
-interface AuthUser {
-  id: string
-  email: string
-}
+import type { AuthUser } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -13,6 +9,9 @@ export const useAuthStore = defineStore('auth', {
     accessToken: null as string | null,
     isAuthenticated: false,
   }),
+  getters: {
+    isPlatformAdmin: (state) => state.user?.role === 'ADMIN',
+  },
   actions: {
     setSession(user: AuthUser, accessToken: string) {
       this.user = user
@@ -36,6 +35,20 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = token
       this.user = JSON.parse(userRaw) as AuthUser
       this.isAuthenticated = true
+      if (!this.user.role) this.user.role = 'USER'
+    },
+    async refreshProfile() {
+      if (!this.isAuthenticated) return
+      const { get } = useApiClient()
+      try {
+        const result = await get<{ user: AuthUser }>('/auth/me')
+        this.user = result.user
+        if (import.meta.client) {
+          localStorage.setItem('profiloz:user', JSON.stringify(result.user))
+        }
+      } catch {
+        // ignore
+      }
     },
     /** Déconnecte si le token en mémoire a expiré pendant la session */
     syncSession() {
@@ -61,7 +74,7 @@ export const useAuthStore = defineStore('auth', {
     async login(email: string, password: string) {
       const { post } = useApiClient()
       const result = await post<{ user: AuthUser; accessToken: string }>('/auth/login', { email, password })
-      this.setSession(result.user, result.accessToken)
+      this.setSession({ ...result.user, role: result.user.role ?? 'USER' }, result.accessToken)
       return result
     },
     async register(email: string, password: string, resumeSnapshot?: unknown) {
@@ -76,7 +89,7 @@ export const useAuthStore = defineStore('auth', {
           resumeSnapshot,
         },
       )
-      this.setSession(result.user, result.accessToken)
+      this.setSession({ ...result.user, role: result.user.role ?? 'USER' }, result.accessToken)
       return result
     },
   },

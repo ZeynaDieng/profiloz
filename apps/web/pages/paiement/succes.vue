@@ -19,7 +19,7 @@ const paymentService = usePaymentService()
 const { ensureSession, applyGuestSessionId } = useGuestSession()
 const { phase, message, downloadFromReturnPath } = usePostPaymentDownload()
 
-const entitlements = ref<{ creditsBalance: number; unlimitedActive: boolean } | null>(null)
+const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
 const autoDownloadError = ref('')
 const autoDownloadStarted = ref(false)
 const returnTo = ref<string | null>(null)
@@ -81,8 +81,7 @@ onMounted(async () => {
   }
 
   try {
-    const e = await paymentService.getEntitlements()
-    entitlements.value = { creditsBalance: e.creditsBalance, unlimitedActive: e.unlimitedActive }
+    entitlements.value = await paymentService.getEntitlements()
   } catch {
     entitlements.value = null
   }
@@ -112,7 +111,10 @@ onMounted(async () => {
       </p>
 
       <p v-if="entitlements && showManualActions" class="text-sm text-on-surface mb-6">
-        <template v-if="entitlements.unlimitedActive">Accès illimité actif.</template>
+        <template v-if="entitlements.unlimitedActive">
+          <span v-if="entitlements.activePlanSlug === 'business'">Offre Business active.</span>
+          <span v-else>Offre Illimité active.</span>
+        </template>
         <template v-else-if="entitlements.creditsBalance > 0">
           Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong>
         </template>

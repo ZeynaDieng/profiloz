@@ -4,6 +4,7 @@ export default defineNuxtPlugin(() => {
 
   if (!import.meta.client) return
 
+  void authStore.refreshProfile()
   void registerGuestSession()
 })
 

@@ -6,8 +6,9 @@ definePageMeta({ layout: 'dashboard' })
 const authStore = useAuthStore()
 const { confirm } = useConfirm()
 
-onMounted(() => {
+onMounted(async () => {
   authStore.loadFromStorage()
+  await authStore.refreshProfile()
   if (!authStore.isAuthenticated) navigateTo('/connexion')
 })
 
@@ -54,6 +55,23 @@ async function logout() {
             <h2 class="font-bold text-on-surface mb-1">Préférences</h2>
             <p class="text-sm text-on-surface-variant">Langue : Français (fr-FR)</p>
             <p class="text-xs text-on-surface-variant/70 mt-2">D'autres options seront disponibles prochainement.</p>
+          </div>
+        </div>
+      </UiCard>
+
+      <UiCard v-if="authStore.isPlatformAdmin" variant="glass" padding="lg">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+            <UiPzIcon name="admin_panel_settings" />
+          </div>
+          <div class="flex-1">
+            <h2 class="font-bold text-on-surface mb-1">Administration Profilo’Z</h2>
+            <p class="text-sm text-on-surface-variant mb-4">
+              Gérez les organisations, abonnements Business et membres de la plateforme.
+            </p>
+            <NuxtLink to="/admin">
+              <UiButton variant="secondary" icon="dashboard">Ouvrir le back-office</UiButton>
+            </NuxtLink>
           </div>
         </div>
       </UiCard>

@@ -1,0 +1,4 @@
+-- Promouvoir le propriétaire Profilo'Z si PROFILOZ_OWNER_EMAIL est appliqué manuellement en SQL.
+-- En production, préférez la variable d'environnement PROFILOZ_OWNER_EMAIL (promotion auto à la connexion).
+-- Exemple :
+-- UPDATE "users" SET "role" = 'ADMIN' WHERE lower("email") = lower('votre-email@profiloz.com');

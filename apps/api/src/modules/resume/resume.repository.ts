@@ -89,11 +89,17 @@ function snapshotScalarData(snapshot: ResumeSnapshot) {
 }
 
 export class ResumeRepository {
-  createFromSnapshot(snapshot: ResumeSnapshot, userId?: string, guestSessionId?: string) {
+  createFromSnapshot(
+    snapshot: ResumeSnapshot,
+    userId?: string,
+    guestSessionId?: string,
+    organizationId?: string,
+  ) {
     return prisma.resume.create({
       data: {
         userId,
         guestSessionId,
+        organizationId,
         ...snapshotScalarData(snapshot),
         ...snapshotRelationData(snapshot),
       },
@@ -109,7 +115,7 @@ export class ResumeRepository {
   }
 
   async updateFromSnapshot(id: string, userId: string, snapshot: ResumeSnapshot) {
-    const existing = await prisma.resume.findFirst({ where: { id, userId } })
+    const existing = await this.findAccessibleById(id, userId)
     if (!existing) return null
 
     return prisma.$transaction(async (tx) => {
@@ -139,31 +145,44 @@ export class ResumeRepository {
   }
 
   async duplicate(id: string, userId: string) {
-    const source = await this.findById(id, userId)
+    const source = await this.findAccessibleById(id, userId)
     if (!source) return null
 
     const snapshot = resumeEntityToSnapshot(source)
     snapshot.title = `${snapshot.title} (copie)`
-    return this.createFromSnapshot(snapshot, userId)
+    return this.createFromSnapshot(snapshot, userId, undefined, source.organizationId ?? undefined)
   }
 
   updateTitle(id: string, userId: string, title: string) {
-    return prisma.resume.updateMany({
-      where: { id, userId },
-      data: { title },
+    return this.findAccessibleById(id, userId).then(async (resume) => {
+      if (!resume) return { count: 0 }
+      return prisma.resume.updateMany({
+        where: { id, ...(resume.userId === userId ? { userId } : { organizationId: resume.organizationId }) },
+        data: { title },
+      })
     })
   }
 
   archive(id: string, userId: string) {
-    return prisma.resume.updateMany({
-      where: { id, userId },
-      data: { status: 'ARCHIVED' },
+    return this.findAccessibleById(id, userId).then(async (resume) => {
+      if (!resume) return { count: 0 }
+      if (resume.userId !== userId) return { count: 0 }
+      return prisma.resume.updateMany({
+        where: { id, userId },
+        data: { status: 'ARCHIVED' },
+      })
     })
   }
 
-  listByUser(userId: string) {
+  async listAccessibleByUser(userId: string, organizationId?: string | null) {
     return prisma.resume.findMany({
-      where: { userId, status: { not: 'ARCHIVED' } },
+      where: {
+        status: { not: 'ARCHIVED' },
+        OR: [
+          { userId },
+          ...(organizationId ? [{ organizationId }] : []),
+        ],
+      },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
@@ -174,13 +193,51 @@ export class ResumeRepository {
         fullName: true,
         jobTitle: true,
         updatedAt: true,
+        userId: true,
+        organizationId: true,
+        user: {
+          select: { firstName: true, lastName: true, email: true },
+        },
       },
     })
   }
 
+  listByUser(userId: string) {
+    return this.listAccessibleByUser(userId)
+  }
+
+  async findAccessibleById(id: string, userId: string) {
+    const resume = await prisma.resume.findFirst({
+      where: { id, status: { not: 'ARCHIVED' } },
+      include: {
+        experiences: { orderBy: { sortOrder: 'asc' } },
+        educations: { orderBy: { sortOrder: 'asc' } },
+        skills: { orderBy: { sortOrder: 'asc' } },
+        certifications: { orderBy: { sortOrder: 'asc' } },
+        interests: { orderBy: { sortOrder: 'asc' } },
+        languages: { orderBy: { sortOrder: 'asc' } },
+      },
+    })
+    if (!resume) return null
+    if (resume.userId === userId) return resume
+    if (resume.organizationId) {
+      const member = await prisma.organizationMember.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId: resume.organizationId,
+            userId,
+          },
+        },
+      })
+      if (member) return resume
+    }
+    return null
+  }
+
   findById(id: string, userId?: string) {
+    if (userId) return this.findAccessibleById(id, userId)
     return prisma.resume.findFirst({
-      where: { id, ...(userId ? { userId } : {}) },
+      where: { id },
       include: {
         experiences: { orderBy: { sortOrder: 'asc' } },
         educations: { orderBy: { sortOrder: 'asc' } },

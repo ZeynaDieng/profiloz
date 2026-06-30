@@ -168,32 +168,38 @@ async function downloadPdf() {
   try {
     await ensureSession()
 
-    if (authStore.isAuthenticated && resumeStore.isDirty) {
+    if (authStore.isAuthenticated) {
       const saved = await saveResume(true)
       if (!saved) return
+      const resumeId = (route.query.id as string | undefined) ?? resumeStore.savedResumeId
+      if (!resumeId) {
+        pdfError.value = MSG.save.error
+        return
+      }
+      const { filename } = await pdfService.downloadResumeCv(resumeId, currentSnapshot())
+      await navigateTo({ path: '/creer/succes', query: { file: filename } })
+      return
     }
 
-    if (!authStore.isAuthenticated) {
-      try {
-        const entitlements = await paymentService.getEntitlements()
-        if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
-          await navigateTo({
-            path: '/tarifs',
-            query: { reason: 'unlock', returnTo: route.fullPath },
-          })
-          return
-        }
-      } catch (err) {
-        const problem = err as { status?: number }
-        if (problem.status === 402) {
-          await navigateTo({
-            path: '/tarifs',
-            query: { reason: 'unlock', returnTo: route.fullPath },
-          })
-          return
-        }
-        throw err
+    try {
+      const entitlements = await paymentService.getEntitlements()
+      if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
+        await navigateTo({
+          path: '/tarifs',
+          query: { reason: 'unlock', returnTo: route.fullPath },
+        })
+        return
       }
+    } catch (err) {
+      const problem = err as { status?: number }
+      if (problem.status === 402) {
+        await navigateTo({
+          path: '/tarifs',
+          query: { reason: 'unlock', returnTo: route.fullPath },
+        })
+        return
+      }
+      throw err
     }
 
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())

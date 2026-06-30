@@ -173,27 +173,25 @@ async function downloadPdf() {
     syncStoreFromRefs()
     await ensureSession()
 
-    if (!authStore.isAuthenticated) {
-      try {
-        const entitlements = await paymentService.getEntitlements()
-        if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
-          await navigateTo({
-            path: '/tarifs',
-            query: { reason: 'unlock', returnTo: route.fullPath },
-          })
-          return
-        }
-      } catch (err) {
-        const problem = err as { status?: number }
-        if (problem.status === 402) {
-          await navigateTo({
-            path: '/tarifs',
-            query: { reason: 'unlock', returnTo: route.fullPath },
-          })
-          return
-        }
-        throw err
+    try {
+      const entitlements = await paymentService.getEntitlements()
+      if (!entitlements.unlimitedActive && entitlements.creditsBalance <= 0) {
+        await navigateTo({
+          path: '/tarifs',
+          query: { reason: 'unlock', returnTo: route.fullPath },
+        })
+        return
       }
+    } catch (err) {
+      const problem = err as { status?: number }
+      if (problem.status === 402) {
+        await navigateTo({
+          path: '/tarifs',
+          query: { reason: 'unlock', returnTo: route.fullPath },
+        })
+        return
+      }
+      throw err
     }
 
     const snapshot = coverLetterStore.toSnapshot()

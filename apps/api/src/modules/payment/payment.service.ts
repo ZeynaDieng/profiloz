@@ -1,10 +1,19 @@
 import { randomUUID } from 'crypto'
-import { getPlan } from '@profiloz/shared'
+import {
+  getPlan,
+  isSubscriptionPlanSlug,
+  mergeSubscriptionPlanSlug,
+  resolveEntitlements,
+  type PlanFeatures,
+  type SubscriptionPlanSlug,
+} from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
 import { buildPublicAppPathForRequest } from '@/lib/pdf/app-url'
 import { prisma } from '@/lib/prisma'
 import { paytechProvider } from './paytech.provider'
 import type { PaymentProvider } from './payment.provider'
+import { organizationRepository } from '@/modules/organization/organization.repository'
+import { organizationService } from '@/modules/organization/organization.service'
 
 /** Propriétaire des droits : un utilisateur connecté OU une session invitée. */
 export interface EntitlementOwner {
@@ -69,6 +78,18 @@ async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string): Promise
   return Boolean(readGuestSessionMeta(guest?.data).snapshotUnlockedAt)
 }
 
+async function isUserSnapshotDossierUnlocked(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { dossierUnlockedAt: true },
+  })
+  return Boolean(user?.dossierUnlockedAt)
+}
+
+function asSubscriptionPlanSlug(value: string | null | undefined): SubscriptionPlanSlug | null {
+  return value && isSubscriptionPlanSlug(value) ? value : null
+}
+
 export class PaymentService {
   constructor(private readonly provider: PaymentProvider = paytechProvider) {}
 
@@ -78,6 +99,7 @@ export class PaymentService {
   ) {
     const plan = getPlan(payment.planSlug)
     const isSubscription = plan?.kind === 'subscription'
+    let businessUserId: string | null = null
 
     await prisma.$transaction(async (tx) => {
       await tx.payment.update({
@@ -92,12 +114,29 @@ export class PaymentService {
 
       if (payment.userId) {
         if (isSubscription) {
-          const user = await tx.user.findUnique({ where: { id: payment.userId }, select: { unlimitedUntil: true } })
+          const user = await tx.user.findUnique({
+            where: { id: payment.userId },
+            select: { unlimitedUntil: true, subscriptionPlanSlug: true },
+          })
           const start = isUnlimitedActive(user?.unlimitedUntil) ? user!.unlimitedUntil! : new Date()
+          const incomingSlug = asSubscriptionPlanSlug(payment.planSlug)
+          if (!incomingSlug) {
+            throw new AppError(400, 'Bad Request', 'Offre abonnement invalide')
+          }
+          const mergedSlug = mergeSubscriptionPlanSlug(
+            asSubscriptionPlanSlug(user?.subscriptionPlanSlug),
+            incomingSlug,
+          )
           await tx.user.update({
             where: { id: payment.userId },
-            data: { unlimitedUntil: addDays(start, plan!.durationDays ?? 30) },
+            data: {
+              unlimitedUntil: addDays(start, plan!.durationDays ?? 30),
+              subscriptionPlanSlug: mergedSlug,
+            },
           })
+          if (incomingSlug === 'business') {
+            businessUserId = payment.userId
+          }
         } else {
           await tx.user.update({
             where: { id: payment.userId },
@@ -108,12 +147,23 @@ export class PaymentService {
         if (isSubscription) {
           const guest = await tx.guestSession.findUnique({
             where: { id: payment.guestSessionId },
-            select: { unlimitedUntil: true },
+            select: { unlimitedUntil: true, subscriptionPlanSlug: true },
           })
           const start = isUnlimitedActive(guest?.unlimitedUntil) ? guest!.unlimitedUntil! : new Date()
+          const incomingSlug = asSubscriptionPlanSlug(payment.planSlug)
+          if (!incomingSlug) {
+            throw new AppError(400, 'Bad Request', 'Offre abonnement invalide')
+          }
+          const mergedSlug = mergeSubscriptionPlanSlug(
+            asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
+            incomingSlug,
+          )
           await tx.guestSession.update({
             where: { id: payment.guestSessionId },
-            data: { unlimitedUntil: addDays(start, plan!.durationDays ?? 30) },
+            data: {
+              unlimitedUntil: addDays(start, plan!.durationDays ?? 30),
+              subscriptionPlanSlug: mergedSlug,
+            },
           })
         } else {
           await tx.guestSession.update({
@@ -123,6 +173,13 @@ export class PaymentService {
         }
       }
     })
+
+    if (businessUserId) {
+      await organizationService.ensureBusinessOrganization(
+        businessUserId,
+        plan!.durationDays ?? 30,
+      )
+    }
   }
 
   /**
@@ -164,15 +221,14 @@ export class PaymentService {
   }
 
   /**
-   * Vérifie qu'un invité peut télécharger (sans consommer le crédit).
+   * Vérifie qu'un propriétaire peut télécharger depuis un snapshot (sans consommer le crédit).
    */
-  async assertGuestSnapshotDownload(owner: EntitlementOwner) {
+  async assertSnapshotDownload(owner: EntitlementOwner) {
     requireOwner(owner)
-    if (owner.userId) return
-
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return
     if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) return
+    if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) return
     if (entitlements.creditsBalance <= 0) {
       throw new AppError(
         402,
@@ -182,15 +238,44 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Débloque le dossier invité (1 crédit = CV + lettre, retéléchargements gratuits).
-   */
-  async consumeGuestSnapshotDownload(owner: EntitlementOwner) {
-    requireOwner(owner)
-    if (owner.userId) return { consumed: false }
+  /** @deprecated Utiliser assertSnapshotDownload */
+  async assertGuestSnapshotDownload(owner: EntitlementOwner) {
+    return this.assertSnapshotDownload(owner)
+  }
 
+  /**
+   * Débloque le dossier snapshot (1 crédit = CV + lettre, retéléchargements gratuits).
+   */
+  async consumeSnapshotDownload(owner: EntitlementOwner) {
+    requireOwner(owner)
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return { consumed: false }
+
+    if (owner.userId) {
+      if (await isUserSnapshotDossierUnlocked(owner.userId)) return { consumed: false }
+
+      return prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: owner.userId },
+          select: { dossierUnlockedAt: true, creditsBalance: true },
+        })
+        if (user?.dossierUnlockedAt) return { consumed: false }
+
+        const decremented = await tx.user.updateMany({
+          where: { id: owner.userId, creditsBalance: { gt: 0 } },
+          data: { creditsBalance: { decrement: 1 }, dossierUnlockedAt: new Date() },
+        })
+
+        if (decremented.count === 0) {
+          throw new AppError(
+            402,
+            'Payment Required',
+            'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+          )
+        }
+        return { consumed: true }
+      })
+    }
 
     if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
       return { consumed: false }
@@ -226,6 +311,32 @@ export class PaymentService {
       }
       return { consumed: true }
     })
+  }
+
+  /** @deprecated Utiliser consumeSnapshotDownload */
+  async consumeGuestSnapshotDownload(owner: EntitlementOwner) {
+    return this.consumeSnapshotDownload(owner)
+  }
+
+  /** Vérifie l'accès à une fonctionnalité incluse dans les offres. */
+  async assertFeature(owner: EntitlementOwner, feature: keyof PlanFeatures) {
+    requireOwner(owner)
+    const entitlements = await this.getEntitlements(owner)
+    if (entitlements.features[feature]) return
+
+    const messages: Partial<Record<keyof PlanFeatures, string>> = {
+      historique: "L'historique de vos documents est inclus dans les offres Illimité et Business.",
+      importScan: "L'import & scan depuis votre espace est inclus dans les offres Illimité et Business.",
+      unlimitedUnlocks: 'Les dossiers illimités sont inclus dans les offres Illimité et Business.',
+      businessOrg: "L'espace organisation est réservé à l'offre Business.",
+      multiCollaborators: 'Le multi-collaborateurs est réservé à l\'offre Business.',
+    }
+
+    throw new AppError(
+      402,
+      'Payment Required',
+      messages[feature] ?? 'Cette fonctionnalité nécessite une offre supérieure.',
+    )
   }
 
   /** Démarre un paiement : crée la commande PENDING et renvoie l'URL de redirection PayTech. */
@@ -311,29 +422,44 @@ export class PaymentService {
     return { status: 'paid' as const }
   }
 
-  /** État des droits du propriétaire (crédits + abonnement). */
+  /** État des droits du propriétaire (crédits + abonnement + fonctionnalités par pack). */
   async getEntitlements(owner: EntitlementOwner) {
     requireOwner(owner)
     if (owner.userId) {
       const user = await prisma.user.findUnique({
         where: { id: owner.userId },
-        select: { creditsBalance: true, unlimitedUntil: true },
+        select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
       })
-      return {
-        creditsBalance: user?.creditsBalance ?? 0,
-        unlimitedUntil: user?.unlimitedUntil ?? null,
-        unlimitedActive: isUnlimitedActive(user?.unlimitedUntil),
+
+      let unlimitedUntil = user?.unlimitedUntil ?? null
+      let subscriptionPlanSlug = asSubscriptionPlanSlug(user?.subscriptionPlanSlug)
+      const membership = await organizationRepository.findMembershipByUserId(owner.userId)
+
+      if (membership?.organization && isUnlimitedActive(membership.organization.unlimitedUntil)) {
+        const orgUntil = membership.organization.unlimitedUntil!
+        if (!unlimitedUntil || orgUntil.getTime() > unlimitedUntil.getTime()) {
+          unlimitedUntil = orgUntil
+        }
+        const orgSlug =
+          asSubscriptionPlanSlug(membership.organization.subscriptionPlanSlug) ?? 'business'
+        subscriptionPlanSlug = mergeSubscriptionPlanSlug(subscriptionPlanSlug, orgSlug)
       }
+
+      return resolveEntitlements({
+        creditsBalance: user?.creditsBalance ?? 0,
+        unlimitedUntil,
+        subscriptionPlanSlug,
+      })
     }
     const guest = await prisma.guestSession.findUnique({
       where: { id: owner.guestSessionDbId! },
-      select: { creditsBalance: true, unlimitedUntil: true },
+      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
     })
-    return {
+    return resolveEntitlements({
       creditsBalance: guest?.creditsBalance ?? 0,
       unlimitedUntil: guest?.unlimitedUntil ?? null,
-      unlimitedActive: isUnlimitedActive(guest?.unlimitedUntil),
-    }
+      subscriptionPlanSlug: asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
+    })
   }
 
   /**
@@ -345,12 +471,17 @@ export class PaymentService {
    */
   async unlockResume(owner: EntitlementOwner, resumeId: string) {
     requireOwner(owner)
+
+    if (owner.userId) {
+      await organizationService.assertResumeAccess(owner.userId, resumeId)
+    }
+
     const ownerWhere = owner.userId
-      ? { userId: owner.userId }
-      : { guestSessionId: owner.guestSessionDbId }
+      ? { id: resumeId }
+      : { id: resumeId, guestSessionId: owner.guestSessionDbId }
 
     const resume = await prisma.resume.findFirst({
-      where: { id: resumeId, ...ownerWhere },
+      where: ownerWhere,
       select: { id: true, unlockedAt: true },
     })
     if (!resume) throw new AppError(404, 'Not Found', 'Dossier introuvable')
@@ -362,9 +493,19 @@ export class PaymentService {
       return { unlocked: true, consumedCredit: false }
     }
 
+    if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
+      await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
+      return { unlocked: true, consumedCredit: false }
+    }
+
+    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
+      await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
+      return { unlocked: true, consumedCredit: false }
+    }
+
     return prisma.$transaction(async (tx) => {
       const fresh = await tx.resume.findFirst({
-        where: { id: resumeId, ...ownerWhere },
+        where: ownerWhere,
         select: { unlockedAt: true },
       })
       if (fresh?.unlockedAt) return { unlocked: true, consumedCredit: false }
@@ -398,38 +539,68 @@ export class PaymentService {
   async migrateGuestToUser(userId: string, guestSessionDbId: string) {
     const guest = await prisma.guestSession.findUnique({
       where: { id: guestSessionDbId },
-      select: { creditsBalance: true, unlimitedUntil: true },
+      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true, data: true },
     })
     if (!guest) return
 
+    const guestSnapshotUnlocked = readGuestSessionMeta(guest.data).snapshotUnlockedAt
+
     await prisma.$transaction(async (tx) => {
-      // Réassignation des dossiers invités.
       await tx.resume.updateMany({
         where: { guestSessionId: guestSessionDbId },
         data: { userId, guestSessionId: null },
       })
-      // Réassignation des paiements invités.
       await tx.payment.updateMany({
         where: { guestSessionId: guestSessionDbId },
         data: { userId, guestSessionId: null },
       })
-      // Transfert des crédits et de l'abonnement.
-      const user = await tx.user.findUnique({ where: { id: userId }, select: { unlimitedUntil: true } })
+
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { unlimitedUntil: true, subscriptionPlanSlug: true, dossierUnlockedAt: true },
+      })
       const mergedUntil = [guest.unlimitedUntil, user?.unlimitedUntil]
         .filter((d): d is Date => Boolean(d))
         .sort((a, b) => b.getTime() - a.getTime())[0]
+
+      const guestSlug = asSubscriptionPlanSlug(guest.subscriptionPlanSlug)
+      const mergedSlug = guestSlug
+        ? mergeSubscriptionPlanSlug(asSubscriptionPlanSlug(user?.subscriptionPlanSlug), guestSlug)
+        : asSubscriptionPlanSlug(user?.subscriptionPlanSlug)
+
+      const dossierUnlockedAt =
+        user?.dossierUnlockedAt ??
+        (guestSnapshotUnlocked ? new Date(guestSnapshotUnlocked) : undefined)
+
       await tx.user.update({
         where: { id: userId },
         data: {
           creditsBalance: { increment: guest.creditsBalance },
           ...(mergedUntil ? { unlimitedUntil: mergedUntil } : {}),
+          ...(mergedSlug ? { subscriptionPlanSlug: mergedSlug } : {}),
+          ...(dossierUnlockedAt ? { dossierUnlockedAt } : {}),
         },
       })
       await tx.guestSession.update({
         where: { id: guestSessionDbId },
-        data: { creditsBalance: 0, unlimitedUntil: null },
+        data: { creditsBalance: 0, unlimitedUntil: null, subscriptionPlanSlug: null },
       })
     })
+
+    const guestHadBusiness =
+      asSubscriptionPlanSlug(guest.subscriptionPlanSlug) === 'business' &&
+      isUnlimitedActive(guest.unlimitedUntil)
+    if (guestHadBusiness) {
+      await organizationService.ensureBusinessOrganization(
+        userId,
+        Math.max(
+          1,
+          Math.ceil(
+            ((guest.unlimitedUntil?.getTime() ?? Date.now()) - Date.now()) / (1000 * 60 * 60 * 24),
+          ),
+        ),
+      )
+    }
   }
 }
 

@@ -15,6 +15,7 @@ definePageMeta({ layout: 'dashboard' })
 
 const authStore = useAuthStore()
 const documentService = useDocumentService()
+const paymentService = usePaymentService()
 const { confirm } = useConfirm()
 
 const documents = ref<DocumentItem[]>([])
@@ -41,6 +42,21 @@ onMounted(async () => {
     await navigateTo('/connexion')
     return
   }
+
+  try {
+    const entitlements = await paymentService.getEntitlements()
+    if (!entitlements.features.historique) {
+      await navigateTo({
+        path: '/tarifs',
+        query: { reason: 'historique', returnTo: '/tableau-de-bord/documents' },
+      })
+      return
+    }
+  } catch {
+    await navigateTo('/tarifs')
+    return
+  }
+
   await loadDocuments()
 })
 
@@ -74,7 +90,7 @@ async function deleteDocument(id: string) {
 }
 
 const importLinks = [
-  { to: '/creer/importer/cv', label: 'Importer un CV', icon: 'description', desc: 'Analyse OCR automatique' },
+  { to: '/creer/importer/cv', label: 'Importer un CV', icon: 'description', desc: 'Import & scan automatique' },
   { to: '/creer/importer/lettre', label: 'Importer une lettre', icon: 'mail', desc: 'Préremplissage instantané' },
 ]
 </script>

@@ -5,6 +5,7 @@ import type { LoginInput, RegisterInput } from '@profiloz/validators'
 import { guestSessionRepository } from '@/modules/guest/guest.repository'
 import { paymentService } from '@/modules/payment/payment.service'
 import { resumeService } from '@/modules/resume/resume.service'
+import { ensurePlatformOwnerRole } from '@/lib/platform-admin'
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m'
@@ -13,6 +14,13 @@ const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d'
 export class AuthRepository {
   findByEmail(email: string) {
     return prisma.user.findUnique({ where: { email } })
+  }
+
+  findById(id: string) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, firstName: true, lastName: true },
+    })
   }
 
   createUser(data: { email: string; passwordHash: string }) {
@@ -56,6 +64,8 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(input.password, 12)
     const user = await authRepository.createUser({ email: input.email, passwordHash })
+    await ensurePlatformOwnerRole(user.id, user.email)
+    const refreshed = await authRepository.findById(user.id)
 
     let migratedResumeId: string | undefined
     if (input.guestSessionId && input.resumeSnapshot) {
@@ -84,7 +94,11 @@ export class AuthService {
     const refreshToken = await this.createRefreshToken(user.id)
 
     return {
-      user: { id: user.id, email: user.email },
+      user: {
+        id: refreshed?.id ?? user.id,
+        email: refreshed?.email ?? user.email,
+        role: refreshed?.role ?? user.role,
+      },
       accessToken,
       refreshToken,
       migratedResumeId,
@@ -103,14 +117,30 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     })
 
+    await ensurePlatformOwnerRole(user.id, user.email)
+    const refreshed = await authRepository.findById(user.id)
+
     const accessToken = this.signAccessToken(user.id, user.email)
     const refreshToken = await this.createRefreshToken(user.id)
 
     return {
-      user: { id: user.id, email: user.email },
+      user: {
+        id: refreshed?.id ?? user.id,
+        email: refreshed?.email ?? user.email,
+        role: refreshed?.role ?? user.role,
+      },
       accessToken,
       refreshToken,
     }
+  }
+
+  async me(userId: string) {
+    const user = await authRepository.findById(userId)
+    if (!user) throw new Error('USER_NOT_FOUND')
+    await ensurePlatformOwnerRole(user.id, user.email)
+    const refreshed = await authRepository.findById(userId)
+    if (!refreshed) throw new Error('USER_NOT_FOUND')
+    return refreshed
   }
 
   verifyAccessToken(token: string) {

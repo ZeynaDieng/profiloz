@@ -1,11 +1,14 @@
+import { paymentService } from '@/modules/payment/payment.service'
 import { documentService } from '@/modules/document/document.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
-import { requireAuth } from '@/lib/request-context'
+import { getRequestContext, requireAuth } from '@/lib/request-context'
 
 export async function GET(request: Request) {
   const origin = request.headers.get('origin')
   try {
     const userId = await requireAuth(request)
+    const ctx = await getRequestContext(request)
+    await paymentService.assertFeature({ userId, guestSessionDbId: ctx.guestSessionDbId }, 'historique')
     const documents = await documentService.listForUser(userId)
     const response = jsonResponse({
       data: documents.map((d) => ({

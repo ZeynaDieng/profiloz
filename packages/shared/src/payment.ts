@@ -21,10 +21,25 @@ export interface Plan {
   popular?: boolean
 }
 
+/** Fonctionnalités communes à tout dossier débloqué (crédits ou abonnement). */
+const DOSSIER_QUALITY_FEATURES = [
+  'PDF haute qualité',
+  'Téléchargements illimités',
+  'Modifications illimitées',
+] as const
+
+/** Fonctionnalités des abonnements Illimité et Business (liste explicite, pas de raccourci). */
+const SUBSCRIPTION_CORE_FEATURES = [
+  'Dossiers illimités',
+  'Historique de vos dossiers',
+  'Import & scan de documents',
+  ...DOSSIER_QUALITY_FEATURES,
+] as const
+
 /**
  * Catalogue des offres Profilo'Z V1.
  * Le paiement intervient à la fin du parcours (au téléchargement du dossier).
- * 1 dossier débloqué = 1 crédit. Les téléchargements ne consomment jamais de crédit.
+ * 1 dossier débloqué = 1 crédit (CV + lettre). Les téléchargements ne consomment jamais de crédit.
  */
 export const PLANS: Plan[] = [
   {
@@ -34,7 +49,7 @@ export const PLANS: Plan[] = [
     kind: 'credits',
     credits: 1,
     description: 'Un dossier complet, prêt à envoyer.',
-    features: ['1 dossier (CV + lettre)', 'PDF haute qualité', 'Téléchargements illimités', 'Modifications illimitées'],
+    features: ['1 dossier (CV + lettre)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'pack_10',
@@ -43,7 +58,7 @@ export const PLANS: Plan[] = [
     kind: 'credits',
     credits: 10,
     description: 'Idéal pour multiplier les candidatures.',
-    features: ['10 dossiers', 'PDF haute qualité', 'Téléchargements illimités', 'Modifications illimitées'],
+    features: ['10 dossiers (CV + lettre chacun)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'illimite',
@@ -53,7 +68,7 @@ export const PLANS: Plan[] = [
     credits: Number.POSITIVE_INFINITY,
     durationDays: 30,
     description: 'Tout, sans limite, chaque mois.',
-    features: ['Dossiers illimités', 'Historique', 'OCR', 'IA (à venir)'],
+    features: [...SUBSCRIPTION_CORE_FEATURES],
     popular: true,
   },
   {
@@ -64,7 +79,11 @@ export const PLANS: Plan[] = [
     credits: Number.POSITIVE_INFINITY,
     durationDays: 30,
     description: 'Pour les entreprises, écoles et cabinets RH.',
-    features: ['Tout Illimité', 'Multi-collaborateurs (à venir)', 'Espace organisation (à venir)'],
+    features: [
+      ...SUBSCRIPTION_CORE_FEATURES,
+      'Multi-collaborateurs',
+      'Espace organisation',
+    ],
   },
 ]
 

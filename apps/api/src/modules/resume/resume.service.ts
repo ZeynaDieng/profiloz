@@ -3,6 +3,7 @@ import { migrateResumeSchema, renameResumeSchema, saveResumeSnapshotSchema } fro
 import { randomUUID } from 'crypto'
 import { AppError } from '@/lib/errors'
 import { guestSessionRepository } from '@/modules/guest/guest.repository'
+import { organizationService } from '@/modules/organization/organization.service'
 import { calculateCompleteness, getMissingSections } from './completeness'
 import { resumeEntityToSnapshot, resumeRepository } from './resume.repository'
 
@@ -58,8 +59,9 @@ export class ResumeService {
     return { migratedResumeId: resume.id, resume }
   }
 
-  list(userId: string) {
-    return resumeRepository.listByUser(userId)
+  async list(userId: string) {
+    const organizationId = await organizationService.getActiveOrganizationId(userId)
+    return resumeRepository.listAccessibleByUser(userId, organizationId)
   }
 
   async get(id: string, userId: string) {
@@ -71,11 +73,23 @@ export class ResumeService {
   async create(userId: string, body: unknown) {
     const input = saveResumeSnapshotSchema.parse(body)
     const snapshot = normalizeSnapshot(inputToSnapshot(input))
-    const resume = await resumeRepository.createFromSnapshot(snapshot, userId)
+    const organizationId = await organizationService.getActiveOrganizationId(userId)
+    const resume = await resumeRepository.createFromSnapshot(
+      snapshot,
+      userId,
+      undefined,
+      organizationId ?? undefined,
+    )
     return resumeEntityToSnapshot(resume)
   }
 
   async update(id: string, userId: string, body: unknown) {
+    const existing = await resumeRepository.findAccessibleById(id, userId)
+    if (!existing) throw new AppError(404, 'Not Found', 'CV introuvable')
+    if (existing.userId !== userId) {
+      throw new AppError(403, 'Forbidden', 'Seul le créateur du dossier peut le modifier.')
+    }
+
     const input = saveResumeSnapshotSchema.parse(body)
     const snapshot = normalizeSnapshot(inputToSnapshot(input))
     snapshot.id = id

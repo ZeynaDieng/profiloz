@@ -68,6 +68,22 @@ enum LanguageLevel {
   NATIVE
 }
 
+enum OrgRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum OrganizationType {
+  COMPANY
+  SCHOOL
+  UNIVERSITY
+  RH_AGENCY
+  TRAINING_CENTER
+  OTHER
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -79,6 +95,8 @@ model User {
   locale        String    @default("fr-FR")
   creditsBalance Int      @default(0)
   unlimitedUntil DateTime?
+  subscriptionPlanSlug String?
+  dossierUnlockedAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
@@ -88,6 +106,7 @@ model User {
   coverLetters  CoverLetter[]
   refreshTokens RefreshToken[]
   payments      Payment[]
+  orgMemberships OrganizationMember[]
 
   @@map("users")
 }
@@ -110,6 +129,7 @@ model GuestSession {
   data           Json?
   creditsBalance Int       @default(0)
   unlimitedUntil DateTime?
+  subscriptionPlanSlug String?
   expiresAt      DateTime
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -124,12 +144,46 @@ model GuestSession {
   @@map("guest_sessions")
 }
 
+model Organization {
+  id                   String           @id @default(cuid())
+  name                 String
+  type                 OrganizationType @default(OTHER)
+  unlimitedUntil       DateTime?
+  subscriptionPlanSlug String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  members      OrganizationMember[]
+  resumes      Resume[]
+  documents    Document[]
+  coverLetters CoverLetter[]
+  payments     Payment[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           OrgRole      @default(MEMBER)
+  joinedAt       DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
 model Resume {
   id             String        @id @default(cuid())
   userId         String?
   user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   guestSessionId String?
   guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   title          String       @default("Mon CV")
   status         ResumeStatus @default(DRAFT)
@@ -164,6 +218,7 @@ model Resume {
 
   @@index([userId])
   @@index([guestSessionId])
+  @@index([organizationId])
   @@index([status])
   @@map("resumes")
 }
@@ -277,6 +332,8 @@ model Document {
   user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   guestSessionId String?
   guestSession   GuestSession?  @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   type           DocumentType
   status         DocumentStatus @default(UPLOADED)
@@ -293,6 +350,7 @@ model Document {
 
   @@index([userId])
   @@index([guestSessionId])
+  @@index([organizationId])
   @@index([type])
   @@map("documents")
 }
@@ -332,6 +390,8 @@ model Payment {
   user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   guestSessionId String?
   guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   planSlug     String
   amountXof    Int
@@ -350,6 +410,7 @@ model Payment {
 
   @@index([userId])
   @@index([guestSessionId])
+  @@index([organizationId])
   @@index([status])
   @@map("payments")
 }
@@ -360,6 +421,8 @@ model CoverLetter {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   resumeId      String?
   resume        Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization  Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   title         String   @default("Lettre de motivation")
   senderName      String?
@@ -378,6 +441,7 @@ model CoverLetter {
   updatedAt     DateTime @updatedAt
 
   @@index([userId])
+  @@index([organizationId])
   @@map("cover_letters")
 }
 

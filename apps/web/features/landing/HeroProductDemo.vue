@@ -3,7 +3,7 @@ import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 
 const steps = [
   { id: 'import', label: 'Import PDF', icon: 'upload_file' },
-  { id: 'ocr', label: 'Analyse OCR', icon: 'document_scanner' },
+  { id: 'ocr', label: 'Import & scan', icon: 'document_scanner' },
   { id: 'fill', label: 'Remplissage', icon: 'auto_fix_high' },
   { id: 'edit', label: 'Édition', icon: 'edit_note' },
   { id: 'template', label: 'Modèle', icon: 'palette' },
@@ -64,7 +64,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- OCR -->
+        <!-- Import & scan -->
         <div v-else-if="activeStep === 'ocr'" key="ocr" class="absolute inset-0 p-4 flex flex-col justify-center gap-3">
           <p class="text-xs font-semibold text-on-surface text-center">Analyse en cours…</p>
           <div class="mx-auto w-full max-w-[240px] h-2 rounded-full bg-surface-container overflow-hidden">

@@ -12,9 +12,13 @@ export async function POST(request: Request) {
     assertPdfRateLimit(request, ctx)
     const body = await request.json()
     const snapshot = normalizeResumeSnapshotForPdf(body.snapshot)
+    const resumeId = typeof body.resumeId === 'string' ? body.resumeId : undefined
+    const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId }
 
-    if (!ctx.userId && ctx.guestSessionDbId) {
-      await paymentService.assertGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+    if (owner.userId && resumeId) {
+      await paymentService.unlockResume(owner, resumeId)
+    } else {
+      await paymentService.assertSnapshotDownload(owner)
     }
 
     const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId, {
@@ -22,8 +26,8 @@ export async function POST(request: Request) {
       guestSessionDbId: ctx.guestSessionDbId,
     })
 
-    if (!ctx.userId && ctx.guestSessionDbId) {
-      await paymentService.consumeGuestSnapshotDownload({ guestSessionDbId: ctx.guestSessionDbId })
+    if (!owner.userId || !resumeId) {
+      await paymentService.consumeSnapshotDownload(owner)
     }
 
     const response = jsonResponse({
