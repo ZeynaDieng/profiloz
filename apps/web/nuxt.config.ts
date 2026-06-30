@@ -42,6 +42,7 @@ export default defineNuxtConfig({
     { path: '~/features/templates', prefix: 'FeatureTemplates' },
     { path: '~/features/cover-letter-templates', prefix: 'FeatureCoverLetterTemplates' },
     { path: '~/features/cover-letter', prefix: 'FeatureCoverLetter' },
+    { path: '~/features/admin', prefix: 'Admin' },
   ],
   vite: {
     resolve: {

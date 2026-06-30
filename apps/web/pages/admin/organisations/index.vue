@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ORGANIZATION_TYPE_LABELS } from '@profiloz/shared'
 import type { AdminOrganizationSummary } from '~/services/admin.service'
 
 definePageMeta({ layout: 'admin' })
@@ -47,9 +46,9 @@ function formatDate(iso: string | null) {
     </div>
 
     <div v-else class="rounded-xl border border-outline-variant/30 overflow-hidden">
-      <div class="hidden md:grid md:grid-cols-[1.4fr_1fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+      <div class="hidden md:grid md:grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
         <span>Organisation</span>
-        <span>Type</span>
+        <span>Administrateur</span>
         <span>Abonnement</span>
         <span>Contenu</span>
         <span />
@@ -58,13 +57,13 @@ function formatDate(iso: string | null) {
         v-for="org in organizations"
         :key="org.id"
         :to="`/admin/organisations/${org.id}`"
-        class="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr_auto] gap-2 md:gap-3 px-4 py-4 border-t border-outline-variant/20 bg-surface-container-lowest/60 hover:bg-surface-container transition-colors"
+        class="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 md:gap-3 px-4 py-4 border-t border-outline-variant/20 bg-surface-container-lowest/60 hover:bg-surface-container transition-colors"
       >
         <div>
           <p class="font-semibold text-on-surface">{{ org.name }}</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Créée le {{ formatDate(org.createdAt) }}</p>
         </div>
-        <p class="text-sm text-on-surface-variant">{{ ORGANIZATION_TYPE_LABELS[org.type] }}</p>
+        <p class="text-sm text-on-surface-variant">{{ org.adminName || '—' }}</p>
         <p class="text-sm">
           <span
             class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold"
