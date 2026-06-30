@@ -64,6 +64,7 @@ services:
       STRICT_PDF_READINESS: ${STRICT_PDF_READINESS:-true}
       RUN_SEED: ${RUN_SEED:-true}
       CRON_SECRET: ${CRON_SECRET:-change-me-cron-secret}
+      PROFILOZ_OWNER_EMAIL: ${PROFILOZ_OWNER_EMAIL:-}
     volumes:
       - storage_persistent:/app/storage/persistent
       - storage_temp:/app/storage/temp
