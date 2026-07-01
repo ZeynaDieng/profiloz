@@ -42,6 +42,22 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     needs: typecheck
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: profiloz
+          POSTGRES_PASSWORD: profiloz
+          POSTGRES_DB: profiloz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U profiloz -d profiloz"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://profiloz:profiloz@localhost:5432/profiloz
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -54,6 +70,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
       - run: pnpm --filter @profiloz/shared build && pnpm --filter @profiloz/validators build
+      - run: pnpm db:migrate:deploy
       - run: pnpm --filter @profiloz/api test
 
   build-api:
