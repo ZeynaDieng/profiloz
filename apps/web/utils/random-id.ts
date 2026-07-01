@@ -1,5 +1,3 @@
-import { randomUUID as nodeRandomUUID } from 'node:crypto'
-
 /** UUID v4 compatible navigateur (sans Web Crypto). */
 function fallbackRandomId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
@@ -9,12 +7,8 @@ function fallbackRandomId(): string {
   })
 }
 
-/** Identifiant aléatoire sûr en SSR (Nitro) et côté client. */
+/** Identifiant aléatoire côté client (navigateur). */
 export function createRandomId(): string {
-  if (import.meta.server) {
-    return nodeRandomUUID()
-  }
-
   if (typeof globalThis.crypto?.randomUUID === 'function') {
     return globalThis.crypto.randomUUID()
   }
