@@ -3,7 +3,10 @@ import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
-import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import {
+  markGuestDossierDownload,
+  restorePaidGuestSession,
+} from '~/utils/guest-dossier-state'
 import {
   findCoverLetterDraftInStorage,
   findResumeSnapshotInStorage,
@@ -81,6 +84,7 @@ export function useGuestDownload() {
         const snapshot = loadLetterSnapshot()
         if (!snapshot?.content?.trim()) throw new Error('missing-letter')
         const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+        markGuestDossierDownload('letter')
         lastFilename.value = filename
         saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
         return filename
@@ -89,6 +93,7 @@ export function useGuestDownload() {
       const snapshot = loadResumeSnapshot()
       if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
       const { filename } = await pdfService.generateAndDownload(snapshot)
+      markGuestDossierDownload('cv')
       lastFilename.value = filename
       saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
       return filename

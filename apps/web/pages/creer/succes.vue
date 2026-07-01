@@ -47,8 +47,8 @@ const showCrossSell = computed(() => Boolean(nextDocument.value) && hasPaidAcces
 
 const crossSellLink = computed(() => {
   if (nextDocument.value === 'letter') return '/creer/lettre/editeur'
-  if (nextDocument.value === 'cv') return '/creer/modele'
-  return isLetter.value ? '/creer/modele' : '/creer/lettre/editeur'
+  if (nextDocument.value === 'cv') return '/creer/editeur'
+  return isLetter.value ? '/creer/editeur' : '/creer/lettre/editeur'
 })
 
 const crossSellTitle = computed(() => {
@@ -73,6 +73,7 @@ const hasPaidAccess = ref(false)
 
 async function triggerDownload() {
   await downloadKind(isLetter.value ? 'letter' : 'cv')
+  dossierState.value = loadGuestDossierState()
 }
 
 onMounted(async () => {
@@ -105,6 +106,7 @@ onMounted(async () => {
 
   if (hasPaidAccess.value && route.query.file) {
     await triggerDownload()
+    dossierState.value = loadGuestDossierState()
   }
 })
 </script>

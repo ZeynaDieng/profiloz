@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'profiloz:guest-dossier'
+const GUEST_SESSION_KEY = 'profiloz:guest-session'
 
 export type GuestDossierOrigin = 'cv' | 'letter'
 
@@ -30,11 +31,50 @@ export function loadGuestDossierState(): GuestDossierState | null {
   return readStorage()
 }
 
+export function getPaidGuestSessionId(): string | null {
+  return readStorage()?.guestSessionId ?? null
+}
+
+export function isPaidGuestDossierActive(): boolean {
+  const state = readStorage()
+  return Boolean(state?.paidAt && state.guestSessionId)
+}
+
+/** Force la session invité liée au paiement (ne jamais la remplacer par un autre brouillon). */
+export function pinPaidGuestSession(guestSessionId?: string | null): string | null {
+  const id = guestSessionId ?? readStorage()?.guestSessionId
+  if (!id || typeof localStorage === 'undefined') return null
+  localStorage.setItem(GUEST_SESSION_KEY, id)
+  return id
+}
+
 export function initGuestDossier(guestSessionId: string, origin: GuestDossierOrigin): GuestDossierState {
   const existing = readStorage()
+
+  if (existing?.paidAt && existing.guestSessionId !== guestSessionId) {
+    const state: GuestDossierState = {
+      guestSessionId,
+      origin,
+      cvDownloaded: false,
+      letterDownloaded: false,
+      paidAt: new Date().toISOString(),
+    }
+    pinPaidGuestSession(guestSessionId)
+    writeStorage(state)
+    return state
+  }
+
+  if (existing?.paidAt) {
+    pinPaidGuestSession(existing.guestSessionId)
+    if (!existing.origin) existing.origin = origin
+    writeStorage(existing)
+    return existing
+  }
+
   if (existing?.guestSessionId === guestSessionId) {
     if (!existing.origin) existing.origin = origin
     writeStorage(existing)
+    pinPaidGuestSession(guestSessionId)
     return existing
   }
 
@@ -45,6 +85,7 @@ export function initGuestDossier(guestSessionId: string, origin: GuestDossierOri
     letterDownloaded: false,
     paidAt: new Date().toISOString(),
   }
+  pinPaidGuestSession(guestSessionId)
   writeStorage(state)
   return state
 }
@@ -52,6 +93,7 @@ export function initGuestDossier(guestSessionId: string, origin: GuestDossierOri
 export function markGuestDossierDownload(kind: 'cv' | 'letter'): GuestDossierState | null {
   const state = readStorage()
   if (!state) return null
+  pinPaidGuestSession(state.guestSessionId)
   if (kind === 'cv') state.cvDownloaded = true
   else state.letterDownloaded = true
   writeStorage(state)
@@ -68,16 +110,22 @@ export function nextIncludedDocument(
   state: GuestDossierState | null = readStorage(),
 ): 'cv' | 'letter' | null {
   if (!state || isGuestDossierComplete(state)) return null
-  if (!state.letterDownloaded) return 'letter'
+
+  if (state.origin === 'letter') {
+    if (!state.letterDownloaded) return 'letter'
+    if (!state.cvDownloaded) return 'cv'
+    return null
+  }
+
   if (!state.cvDownloaded) return 'cv'
+  if (!state.letterDownloaded) return 'letter'
   return null
 }
 
 export function restorePaidGuestSession(): string | null {
   const state = readStorage()
-  if (!state?.guestSessionId || typeof localStorage === 'undefined') return null
-  localStorage.setItem('profiloz:guest-session', state.guestSessionId)
-  return state.guestSessionId
+  if (!state?.guestSessionId) return null
+  return pinPaidGuestSession(state.guestSessionId)
 }
 
 export function clearGuestDossierState() {

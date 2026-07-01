@@ -8,6 +8,7 @@ describe('resolveAppUrl', () => {
   beforeEach(() => {
     process.env = { ...env }
     delete process.env.APP_URL
+    delete process.env.PDF_RENDER_INTERNAL_URL
     delete process.env.PUBLIC_APP_URL
     delete process.env.NUXT_PUBLIC_APP_URL
     delete process.env.CORS_ORIGIN
@@ -25,6 +26,18 @@ describe('resolveAppUrl', () => {
 
   it('retombe sur localhost en dev', () => {
     expect(resolveAppUrl()).toBe('http://127.0.0.1:3000')
+  })
+
+  it('utilise le service web interne quand APP_URL est un domaine public en production', () => {
+    process.env.NODE_ENV = 'production'
+    process.env.APP_URL = 'https://profiloz.com'
+    expect(resolveAppUrl()).toBe('http://web:3000')
+  })
+
+  it('priorise PDF_RENDER_INTERNAL_URL', () => {
+    process.env.APP_URL = 'https://profiloz.com'
+    process.env.PDF_RENDER_INTERNAL_URL = 'http://web:3000'
+    expect(resolveAppUrl()).toBe('http://web:3000')
   })
 })
 

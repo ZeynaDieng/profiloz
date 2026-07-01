@@ -7,6 +7,7 @@ import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
   initGuestDossier,
   markGuestDossierDownload,
+  pinPaidGuestSession,
   restorePaidGuestSession,
 } from '~/utils/guest-dossier-state'
 import {
@@ -25,8 +26,7 @@ function sleep(ms: number) {
 
 function applyPaidGuestSession(guestSessionId: string | null | undefined) {
   if (!guestSessionId || !import.meta.client) return
-  localStorage.setItem('profiloz:guest-session', guestSessionId)
-  restorePaidGuestSession()
+  pinPaidGuestSession(guestSessionId)
 }
 
 export function usePostPaymentDownload() {
@@ -121,6 +121,8 @@ export function usePostPaymentDownload() {
   }
 
   function loadResumeForDownload(): ResumeSnapshot | null {
+    restorePaidGuestSession()
+
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'resume') {
       applyPaidGuestSession(backup.guestSessionId)
@@ -128,7 +130,6 @@ export function usePostPaymentDownload() {
       return backup.snapshot
     }
 
-    restorePaidGuestSession()
     const snapshot = findResumeSnapshotInStorage()
     if (snapshot) {
       resumeStore.loadSnapshot(snapshot)
@@ -147,6 +148,8 @@ export function usePostPaymentDownload() {
   }
 
   function loadLetterForDownload() {
+    restorePaidGuestSession()
+
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'letter') {
       applyPaidGuestSession(backup.guestSessionId)
@@ -154,7 +157,6 @@ export function usePostPaymentDownload() {
       return coverLetterStore.toSnapshot()
     }
 
-    restorePaidGuestSession()
     const draft = findCoverLetterDraftInStorage()
     if (draft) {
       coverLetterStore.current = { ...draft }
@@ -176,13 +178,6 @@ export function usePostPaymentDownload() {
     }
 
     await waitForEntitlements(paymentRef)
-
-    const guestSessionId = import.meta.client
-      ? localStorage.getItem('profiloz:guest-session')
-      : null
-    if (guestSessionId) {
-      initGuestDossier(guestSessionId, isLetterReturnPath(returnTo) ? 'letter' : 'cv')
-    }
 
     phase.value = 'downloading'
     message.value = isLetterReturnPath(returnTo)

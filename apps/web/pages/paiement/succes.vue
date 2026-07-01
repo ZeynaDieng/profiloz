@@ -3,11 +3,16 @@ import { MSG } from '@profiloz/shared'
 import {
   guessGuestPdfReturnPath,
   isGuestPdfReturnPath,
+  isLetterReturnPath,
   resolvePaymentRef,
   resolvePaymentReturnTo,
 } from '~/utils/payment-return'
-import { consumePaymentGuestSession, peekPaymentGuestSession } from '~/utils/payment-draft-backup'
-import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import {
+  consumePaymentGuestSession,
+  loadPaymentDraftBackup,
+  peekPaymentGuestSession,
+} from '~/utils/payment-draft-backup'
+import { initGuestDossier, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
@@ -84,7 +89,17 @@ onMounted(async () => {
 
   const earlyConfirm = paymentRef.value
     ? paymentService.confirmReturn(paymentRef.value).then((result) => {
-        if (result.guestSessionClientId) applyGuestSessionId(result.guestSessionClientId)
+        if (result.guestSessionClientId) {
+          applyGuestSessionId(result.guestSessionClientId)
+          const backup = loadPaymentDraftBackup()
+          const origin =
+            backup?.returnTo && isLetterReturnPath(backup.returnTo)
+              ? 'letter'
+              : backup?.kind === 'letter'
+                ? 'letter'
+                : 'cv'
+          initGuestDossier(result.guestSessionClientId, origin)
+        }
       }).catch(() => {})
     : Promise.resolve()
 

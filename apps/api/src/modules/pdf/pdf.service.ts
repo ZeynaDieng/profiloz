@@ -282,7 +282,7 @@ export class PdfService {
     } catch (printError) {
       const printDetail = printError instanceof Error ? printError.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_print_fallback',
+        event: 'pdf_generate_error',
         kind: 'resume',
         templateSlug: snapshot.templateSlug,
         userId: ctx?.userId,
@@ -290,21 +290,7 @@ export class PdfService {
         durationMs: Date.now() - startedAt,
         error: printDetail,
       })
-      try {
-        pdfBuffer = await renderResumePdfFromHtml(snapshot)
-      } catch (fallbackError) {
-        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
-        logPdfEvent({
-          event: 'pdf_generate_error',
-          kind: 'resume',
-          templateSlug: snapshot.templateSlug,
-          userId: ctx?.userId,
-          guestSessionId: guestSessionDbId,
-          durationMs: Date.now() - startedAt,
-          error: `${printDetail} | fallback: ${fallbackDetail}`,
-        })
-        throw new Error(`Impossible de générer le PDF (${fallbackDetail}).`)
-      }
+      throw new Error(`Impossible de générer le PDF (${printDetail}).`)
     } finally {
       await storageProvider.delete(snapshotKey)
     }
@@ -392,27 +378,14 @@ export class PdfService {
     } catch (printError) {
       const printDetail = printError instanceof Error ? printError.message : 'unknown'
       logPdfEvent({
-        event: 'pdf_generate_print_fallback',
+        event: 'pdf_generate_error',
         kind: 'cover_letter',
         templateSlug: letter.templateSlug,
         userId: ctx?.userId,
         durationMs: Date.now() - startedAt,
         error: printDetail,
       })
-      try {
-        pdfBuffer = await htmlToPdf(renderCoverLetterHtml(letter))
-      } catch (fallbackError) {
-        const fallbackDetail = fallbackError instanceof Error ? fallbackError.message : 'unknown'
-        logPdfEvent({
-          event: 'pdf_generate_error',
-          kind: 'cover_letter',
-          templateSlug: letter.templateSlug,
-          userId: ctx?.userId,
-          durationMs: Date.now() - startedAt,
-          error: `${printDetail} | fallback: ${fallbackDetail}`,
-        })
-        throw new Error(`Impossible de générer le PDF de la lettre (${fallbackDetail}).`)
-      }
+      throw new Error(`Impossible de générer le PDF de la lettre (${printDetail}).`)
     } finally {
       await storageProvider.delete(snapshotKey)
     }

@@ -5,7 +5,7 @@ import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
-import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
+import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 
 definePageMeta({ layout: false })
@@ -193,6 +193,8 @@ async function downloadPdf() {
   }, 1200)
   try {
     syncStoreFromRefs()
+    restorePaidGuestSession()
+    await syncGuestSessionForEditor()
     await ensureSession()
 
     try {
@@ -220,12 +222,11 @@ async function downloadPdf() {
     if (!snapshot) throw new Error('missing snapshot')
 
     const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+    restorePaidGuestSession()
     const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
-    if (guestId) {
-      if (!loadGuestDossierState()) initGuestDossier(guestId, 'letter')
-      markGuestDossierDownload('letter')
-      saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
-    }
+    if (guestId && !loadGuestDossierState()) initGuestDossier(guestId, 'letter')
+    markGuestDossierDownload('letter')
+    saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
     const problem = err as { status?: number }

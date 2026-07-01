@@ -2,6 +2,7 @@ import type { ResumeSnapshot } from '@profiloz/shared'
 import type { CoverLetterDraft } from '~/stores/cover-letter.store'
 import { isLetterReturnPath } from '~/utils/payment-return'
 import { findCoverLetterDraftInStorage, findResumeSnapshotInStorage } from '~/utils/guest-draft-sync'
+import { pinPaidGuestSession } from '~/utils/guest-dossier-state'
 
 const BACKUP_KEY = 'profiloz:payment-draft-backup'
 const GUEST_KEY = 'profiloz:payment-guest-session'
@@ -79,6 +80,7 @@ function resolveLetterDraftForBackup(): CoverLetterDraft | null {
 export function savePaymentGuestSession(guestSessionId: string | null) {
   if (!guestSessionId) return
   writeSession(GUEST_KEY, guestSessionId)
+  pinPaidGuestSession(guestSessionId)
 }
 
 export function peekPaymentGuestSession(): string | null {

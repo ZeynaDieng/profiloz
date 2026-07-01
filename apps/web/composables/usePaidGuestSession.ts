@@ -1,6 +1,6 @@
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
-import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { isPaidGuestDossierActive, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 
 /** Restaure la session invité payée et évite de la remplacer par un autre brouillon. */
 export async function syncGuestSessionForEditor() {
@@ -23,7 +23,7 @@ export async function syncGuestSessionForEditor() {
     // continue
   }
 
-  if (!paidSessionId) {
+  if (!paidSessionId && !isPaidGuestDossierActive()) {
     alignGuestSessionFromStoredDrafts()
     await ensureSession().catch(() => {})
   }

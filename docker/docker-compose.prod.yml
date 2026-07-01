@@ -55,6 +55,7 @@ services:
       STORAGE_TEMP_PATH: /app/storage/temp
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
       APP_URL: ${APP_URL:-http://web:3000}
+      PDF_RENDER_INTERNAL_URL: ${PDF_RENDER_INTERNAL_URL:-http://web:3000}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost}
       PAYTECH_API_KEY: ${PAYTECH_API_KEY:-}
       PAYTECH_API_SECRET: ${PAYTECH_API_SECRET:-}

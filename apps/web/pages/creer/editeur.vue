@@ -2,7 +2,7 @@
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
-import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
+import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 
 definePageMeta({ layout: false })
 
@@ -174,6 +174,8 @@ async function downloadPdf() {
     }
   }, 1200)
   try {
+    restorePaidGuestSession()
+    await syncGuestSessionForEditor()
     await ensureSession()
 
     if (authStore.isAuthenticated) {
@@ -211,12 +213,11 @@ async function downloadPdf() {
     }
 
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())
+    restorePaidGuestSession()
     const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
-    if (guestId) {
-      if (!loadGuestDossierState()) initGuestDossier(guestId, 'cv')
-      markGuestDossierDownload('cv')
-      saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
-    }
+    if (guestId && !loadGuestDossierState()) initGuestDossier(guestId, 'cv')
+    markGuestDossierDownload('cv')
+    saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch (err) {
     const problem = err as { status?: number }

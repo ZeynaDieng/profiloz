@@ -27,8 +27,28 @@ export function normalizeAbsoluteUrl(raw?: string): string | null {
 
 /** URL joignable par Puppeteer (/imprimer/cv). En Docker : http://web:3000 */
 export function resolveAppUrl(): string {
+  const internalOverride = normalizeAbsoluteUrl(process.env.PDF_RENDER_INTERNAL_URL)
+  if (internalOverride) return internalOverride
+
+  const appUrl = normalizeAbsoluteUrl(process.env.APP_URL)
+  if (appUrl) {
+    const { hostname } = new URL(appUrl)
+    if (
+      DOCKER_INTERNAL_HOSTS.has(hostname)
+      || hostname === 'localhost'
+      || hostname === '127.0.0.1'
+    ) {
+      return appUrl
+    }
+
+    const dockerWeb = normalizeAbsoluteUrl('http://web:3000')
+    if (dockerWeb && process.env.NODE_ENV === 'production') {
+      return dockerWeb
+    }
+    return appUrl
+  }
+
   return (
-    normalizeAbsoluteUrl(process.env.APP_URL) ??
     normalizeAbsoluteUrl(process.env.NUXT_PUBLIC_APP_URL) ??
     normalizeAbsoluteUrl(process.env.CORS_ORIGIN?.split(',')[0]) ??
     'http://127.0.0.1:3000'
