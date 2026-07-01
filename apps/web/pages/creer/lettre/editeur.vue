@@ -5,7 +5,7 @@ import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
-import { initGuestDossierState, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
+import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 
 definePageMeta({ layout: false })
