@@ -5,6 +5,7 @@ import {
   isGuestDossierComplete,
   loadGuestDossierState,
   nextIncludedDocument,
+  reconcileGuestDossierFlags,
   type GuestDossierState,
 } from '~/utils/guest-dossier-state'
 import { loadLastDownloadContext } from '~/utils/last-download-context'
@@ -80,7 +81,8 @@ onMounted(async () => {
   authStore.loadFromStorage()
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
-  dossierState.value = loadGuestDossierState()
+  const hasLetterContent = Boolean(coverLetterStore.current?.content?.trim())
+  dossierState.value = reconcileGuestDossierFlags(hasLetterContent) ?? loadGuestDossierState()
 
   const container = document.getElementById('confetti-container')
   if (container) {
@@ -181,7 +183,7 @@ onMounted(async () => {
           class="mb-6 text-left !bg-surface-container-low border-outline-variant/30"
         >
           <div class="flex items-start gap-3">
-            <UiPzIcon name="task_alt" class="text-secondary text-[28px] shrink-0 mt-0.5" />
+            <UiPzIcon name="check_circle" class="text-secondary text-[28px] shrink-0 mt-0.5" />
             <div>
               <h3 class="font-bold text-on-surface mb-1">{{ MSG.guide.successDossierCompleteTitle }}</h3>
               <p class="text-sm text-on-surface-variant">{{ MSG.guide.successDossierCompleteBody }}</p>

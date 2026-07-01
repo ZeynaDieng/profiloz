@@ -98,7 +98,7 @@ onMounted(async () => {
               : backup?.kind === 'letter'
                 ? 'letter'
                 : 'cv'
-          initGuestDossier(result.guestSessionClientId, origin)
+          initGuestDossier(result.guestSessionClientId, origin, { freshPayment: true })
         }
       }).catch(() => {})
     : Promise.resolve()

@@ -51,7 +51,7 @@ export function usePostPaymentDownload() {
           : backup?.kind === 'letter'
             ? 'letter'
             : 'cv'
-      initGuestDossier(result.guestSessionClientId, origin)
+      initGuestDossier(result.guestSessionClientId, origin, { freshPayment: true })
       await ensureSession()
     }
 

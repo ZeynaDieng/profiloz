@@ -29,6 +29,7 @@ watch(
     direction="left"
     title="Navigation"
     :handle="false"
+    :should-scale-background="false"
     :ui="{
       overlay: 'z-[100] bg-black/40 backdrop-blur-[2px]',
       content:
@@ -58,9 +59,7 @@ watch(
             <li
               v-for="(link, i) in marketingLinks"
               :key="link.href"
-              class="mobile-drawer-item"
-              :class="open && 'is-visible'"
-              :style="open ? { transitionDelay: `${80 + i * 45}ms` } : undefined"
+              class="mobile-drawer-item is-visible"
             >
               <NuxtLink
                 v-if="'isRoute' in link && link.isRoute"

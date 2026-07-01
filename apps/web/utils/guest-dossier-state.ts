@@ -1,3 +1,5 @@
+import { loadLastDownloadContext } from '~/utils/last-download-context'
+
 const STORAGE_KEY = 'profiloz:guest-dossier'
 const GUEST_SESSION_KEY = 'profiloz:guest-session'
 
@@ -48,8 +50,36 @@ export function pinPaidGuestSession(guestSessionId?: string | null): string | nu
   return id
 }
 
-export function initGuestDossier(guestSessionId: string, origin: GuestDossierOrigin): GuestDossierState {
+export function initGuestDossier(
+  guestSessionId: string,
+  origin: GuestDossierOrigin,
+  options?: { freshPayment?: boolean },
+): GuestDossierState {
   const existing = readStorage()
+
+  if (options?.freshPayment) {
+    if (
+      existing?.paidAt
+      && existing.guestSessionId === guestSessionId
+      && !isGuestDossierComplete(existing)
+    ) {
+      if (!existing.origin) existing.origin = origin
+      writeStorage(existing)
+      pinPaidGuestSession(guestSessionId)
+      return existing
+    }
+
+    const state: GuestDossierState = {
+      guestSessionId,
+      origin,
+      cvDownloaded: false,
+      letterDownloaded: false,
+      paidAt: new Date().toISOString(),
+    }
+    pinPaidGuestSession(guestSessionId)
+    writeStorage(state)
+    return state
+  }
 
   if (existing?.paidAt && existing.guestSessionId !== guestSessionId) {
     const state: GuestDossierState = {
@@ -126,6 +156,27 @@ export function restorePaidGuestSession(): string | null {
   const state = readStorage()
   if (!state?.guestSessionId) return null
   return pinPaidGuestSession(state.guestSessionId)
+}
+
+export function reconcileGuestDossierFlags(hasLetterContent: boolean): GuestDossierState | null {
+  const state = readStorage()
+  if (!state?.paidAt) return state
+
+  if (state.letterDownloaded && !hasLetterContent && state.origin === 'cv' && !state.cvDownloaded) {
+    state.letterDownloaded = false
+    writeStorage(state)
+    return state
+  }
+
+  if (state.letterDownloaded && !hasLetterContent && state.origin === 'cv' && state.cvDownloaded) {
+    const lastKind = loadLastDownloadContext()?.kind
+    if (lastKind !== 'letter') {
+      state.letterDownloaded = false
+      writeStorage(state)
+    }
+  }
+
+  return state
 }
 
 export function clearGuestDossierState() {

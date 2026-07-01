@@ -18,6 +18,7 @@ watch(
     direction="left"
     title="Menu"
     :handle="false"
+    :should-scale-background="false"
     :ui="{
       overlay: 'z-[100] bg-black/40 backdrop-blur-[2px]',
       content:

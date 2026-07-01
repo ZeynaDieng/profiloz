@@ -47,5 +47,5 @@ onMounted(() => {
       </div>
     </div>
   </header>
-  <LayoutAppMarketingDrawer />
+  <LayoutGuestFlowDrawer />
 </template>
