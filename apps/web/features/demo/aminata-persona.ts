@@ -1,6 +1,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
+import { createRandomId } from '~/utils/random-id'
 
 /** Persona démo Profilo'Z — alignée sur le hero (Aminata Diallo, marketing, Dakar). */
 export const AMINATA_PERSONA = {
@@ -141,7 +142,7 @@ export function createAminataDemoLetter(
 export function createAminataCoverLetterDraft() {
   const letter = createAminataDemoLetter()
   return {
-    id: crypto.randomUUID(),
+    id: createRandomId(),
     templateSlug: letter.templateSlug,
     senderName: letter.senderName ?? '',
     senderEmail: letter.senderEmail ?? '',

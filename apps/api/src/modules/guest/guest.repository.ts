@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { GUEST_SESSION_TTL_DAYS } from '@profiloz/shared'
 import { prisma } from '@/lib/prisma'
 
@@ -20,18 +21,21 @@ export class GuestSessionRepository {
 
   /** Crée ou prolonge une session invité (atomique — évite les 500 sur requêtes parallèles). */
   async upsert(sessionId: string) {
-    const existing = await this.findBySessionId(sessionId)
-    if (existing && existing.expiresAt >= new Date()) {
-      return existing
-    }
-
     const expiresAt = buildGuestSessionExpiry()
 
-    return prisma.guestSession.upsert({
-      where: { sessionId },
-      create: { sessionId, expiresAt },
-      update: { expiresAt },
-    })
+    try {
+      return await prisma.guestSession.upsert({
+        where: { sessionId },
+        create: { sessionId, expiresAt },
+        update: { expiresAt },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const existing = await this.findBySessionId(sessionId)
+        if (existing) return existing
+      }
+      throw error
+    }
   }
 }
 

@@ -1,3 +1,5 @@
+import { createRandomId } from '~/utils/random-id'
+
 export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
   authStore.loadFromStorage()
@@ -11,7 +13,7 @@ export default defineNuxtPlugin(() => {
 async function registerGuestSession() {
   let id = localStorage.getItem('profiloz:guest-session')
   if (!id) {
-    id = crypto.randomUUID()
+    id = createRandomId()
     localStorage.setItem('profiloz:guest-session', id)
   }
 

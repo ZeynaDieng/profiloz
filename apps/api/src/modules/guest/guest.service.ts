@@ -27,6 +27,15 @@ export class GuestSessionService {
         if (error.code === 'P1001' || error.code === 'P1002') {
           throw new AppError(503, 'Service Unavailable', 'Impossible de joindre la base de données.')
         }
+        if (error.code === 'P2002') {
+          const existing = await guestSessionRepository.findBySessionId(trimmed)
+          if (existing) {
+            return {
+              sessionId: existing.sessionId,
+              expiresAt: existing.expiresAt.toISOString(),
+            }
+          }
+        }
       }
       throw error
     }

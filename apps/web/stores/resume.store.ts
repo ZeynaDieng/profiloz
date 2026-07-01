@@ -14,10 +14,11 @@ import { calculateCompleteness } from '~/utils/completeness'
 import { stripLegacyBase64Photo } from '~/utils/photoUrl'
 import { clearLegacyResumeDraft, createScopedResumeDraftStorage } from '~/utils/resume-draft-storage'
 import { createAminataDemoResume } from '~/features/demo/aminata-persona'
+import { createRandomId } from '~/utils/random-id'
 
 function createEmptyResume(): ResumeSnapshot {
   return {
-    id: crypto.randomUUID(),
+    id: createRandomId(),
     title: 'Mon CV',
     templateSlug: 'PROFESSIONNEL',
     templateConfig: {},

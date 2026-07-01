@@ -1,3 +1,5 @@
+import { createRandomId } from '~/utils/random-id'
+
 export function useGuestSession() {
   const guestSessionId = useState<string | null>('guestSessionId', () => null)
 
@@ -12,7 +14,7 @@ export function useGuestSession() {
 
     let id = localStorage.getItem('profiloz:guest-session')
     if (!id) {
-      id = crypto.randomUUID()
+      id = createRandomId()
       localStorage.setItem('profiloz:guest-session', id)
     }
 

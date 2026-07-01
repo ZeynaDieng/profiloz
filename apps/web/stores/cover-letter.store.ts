@@ -5,6 +5,7 @@ import { DEFAULT_LETTER_CONTENT } from '~/features/cover-letter-templates/regist
 import { createScopedCoverLetterDraftStorage } from '~/utils/cover-letter-draft-storage'
 import { coverLetterDraftFromResume } from '~/features/demo/aminata-persona'
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { createRandomId } from '~/utils/random-id'
 
 export interface CoverLetterDraft {
   id: string
@@ -24,7 +25,7 @@ export interface CoverLetterDraft {
 
 function createEmptyDraft(): CoverLetterDraft {
   return {
-    id: crypto.randomUUID(),
+    id: createRandomId(),
     templateSlug: 'CLASSIQUE',
     senderName: '',
     senderEmail: '',

@@ -44,6 +44,10 @@ export default defineNuxtConfig({
     { path: '~/features/cover-letter', prefix: 'FeatureCoverLetter' },
     { path: '~/features/admin', prefix: 'Admin' },
   ],
+  routeRules: {
+    // Puppeteer n'a besoin que du HTML SSR (pas d'hydratation client).
+    '/imprimer/**': { ssr: true, noScripts: true },
+  },
   vite: {
     resolve: {
       dedupe: ['vue'],

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { isAccessTokenExpired } from '~/utils/auth-token'
 import { clearLegacyResumeDraft } from '~/utils/resume-draft-storage'
+import { createRandomId } from '~/utils/random-id'
 import type { AuthUser } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', {
@@ -71,7 +72,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('profiloz:admin-backup')
         localStorage.removeItem('profiloz:guest-session')
         clearLegacyResumeDraft()
-        localStorage.setItem('profiloz:guest-session', crypto.randomUUID())
+        localStorage.setItem('profiloz:guest-session', createRandomId())
         useResumeStore().rehydrateFromStorage()
       }
     },

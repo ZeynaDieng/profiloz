@@ -105,18 +105,72 @@ export function renderResumeHtml(snapshot: ResumeSnapshot): string {
 </html>`
 }
 
-async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
+async function waitForPrintPageMarker(page: import('puppeteer-core').Page) {
+  await page.waitForFunction(
+    () =>
+      Boolean(
+        document.querySelector('[data-cv-ready="true"]')
+        || document.querySelector('[data-cv-error="true"]'),
+      ),
+    { timeout: 60_000 },
+  )
+
+  const serverError = await page.evaluate(() => {
+    const text = document.body?.innerText ?? ''
+    if (/^\s*500\s/m.test(text) || text.includes('randomUUID')) {
+      return text.replace(/\s+/g, ' ').trim().slice(0, 300)
+    }
+    return null
+  })
+  if (serverError) {
+    throw new Error(`Erreur serveur sur la page d'impression (${serverError})`)
+  }
+
+  const errorHandle = await page.$('[data-cv-error="true"]')
+  if (errorHandle) {
+    const errorText = await page
+      .$eval('[data-cv-error="true"]', (el) => el.textContent?.trim() || '')
+      .catch(() => '')
+    throw new Error(
+      errorText
+        ? `La page d'impression n'a pas pu charger le CV (${errorText})`
+        : "La page d'impression n'a pas pu charger le CV",
+    )
+  }
+
+  const readyHandle = await page.$('[data-cv-ready="true"]')
+  if (!readyHandle) {
+    throw new Error("La page d'impression n'a pas signalé sa disponibilité")
+  }
+}
+
+function isAllowedPrintRequest(url: string): boolean {
+  if (url.startsWith('data:') || url.startsWith('blob:')) return true
+
   const blockedUrlPrefixes = [
     'https://fonts.googleapis.com',
     'https://fonts.gstatic.com',
     'https://fonts.bunny.net',
   ]
+  if (blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))) return false
 
+  try {
+    const { hostname, protocol } = new URL(url)
+    if (protocol !== 'http:' && protocol !== 'https:') return false
+    if (hostname === 'web' || hostname === 'api') return true
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true
+    return false
+  } catch {
+    return false
+  }
+}
+
+async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
   return withPuppeteerPage(async (page) => {
     await page.setRequestInterception(true)
     page.on('request', (request) => {
       const url = request.url()
-      if (blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))) {
+      if (!isAllowedPrintRequest(url)) {
         void request.abort()
         return
       }
@@ -124,21 +178,9 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
     })
 
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 })
-    await page.goto(printUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+    await page.goto(printUrl, { waitUntil: 'load', timeout: 60_000 })
 
-    const errorHandle = await page.$('[data-cv-error="true"]')
-    if (errorHandle) {
-      const errorText = await page
-        .$eval('[data-cv-error="true"]', (el) => el.textContent?.trim() || '')
-        .catch(() => '')
-      throw new Error(
-        errorText
-          ? `La page d'impression n'a pas pu charger le CV (${errorText})`
-          : "La page d'impression n'a pas pu charger le CV",
-      )
-    }
-
-    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 30_000 })
+    await waitForPrintPageMarker(page)
     await page.evaluate(async () => {
       if (document.fonts?.ready) {
         await Promise.race([
