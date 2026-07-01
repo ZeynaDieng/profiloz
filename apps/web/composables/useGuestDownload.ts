@@ -1,0 +1,119 @@
+import { MSG } from '@profiloz/shared'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import {
+  loadPaymentDraftBackup,
+} from '~/utils/payment-draft-backup'
+import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import {
+  findCoverLetterDraftInStorage,
+  findResumeSnapshotInStorage,
+} from '~/utils/guest-draft-sync'
+import { saveLastDownloadContext, type LastDownloadKind } from '~/utils/last-download-context'
+
+export function useGuestDownload() {
+  const pdfService = usePdfService()
+  const paymentService = usePaymentService()
+  const resumeStore = useResumeStore()
+  const coverLetterStore = useCoverLetterStore()
+  const { ensureSession } = useGuestSession()
+
+  const downloading = ref(false)
+  const downloadError = ref('')
+  const lastFilename = ref('')
+
+  async function preparePaidSession() {
+    restorePaidGuestSession()
+    await ensureSession().catch(() => {})
+    await syncGuestSessionForEditor()
+    const entitlements = await paymentService.getEntitlements()
+    if (!hasDossierDownloadAccess(entitlements)) {
+      throw new Error('payment-required')
+    }
+  }
+
+  function loadResumeSnapshot() {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'resume') {
+      resumeStore.loadSnapshot(backup.snapshot)
+      return backup.snapshot
+    }
+
+    const fromStorage = findResumeSnapshotInStorage()
+    if (fromStorage) {
+      resumeStore.loadSnapshot(fromStorage)
+      return fromStorage
+    }
+
+    resumeStore.rehydrateFromStorage()
+    if (!resumeStore.current?.personalInfo.fullName?.trim()) return null
+    return {
+      ...resumeStore.current,
+      templateConfig: { ...resumeStore.current.templateConfig },
+    }
+  }
+
+  function loadLetterSnapshot() {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'letter') {
+      coverLetterStore.current = { ...backup.draft }
+      return coverLetterStore.toSnapshot()
+    }
+
+    const draft = findCoverLetterDraftInStorage()
+    if (draft) {
+      coverLetterStore.current = { ...draft }
+      return coverLetterStore.toSnapshot()
+    }
+
+    coverLetterStore.rehydrateFromStorage()
+    return coverLetterStore.toSnapshot()
+  }
+
+  async function downloadKind(kind: LastDownloadKind) {
+    downloading.value = true
+    downloadError.value = ''
+    lastFilename.value = ''
+
+    try {
+      await preparePaidSession()
+
+      if (kind === 'letter') {
+        const snapshot = loadLetterSnapshot()
+        if (!snapshot?.content?.trim()) throw new Error('missing-letter')
+        const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+        lastFilename.value = filename
+        saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+        return filename
+      }
+
+      const snapshot = loadResumeSnapshot()
+      if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
+      const { filename } = await pdfService.generateAndDownload(snapshot)
+      lastFilename.value = filename
+      saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+      return filename
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      if (code === 'payment-required') {
+        downloadError.value = MSG.payment.error
+      } else if (code === 'missing-resume' || code === 'missing-letter') {
+        downloadError.value =
+          'Votre brouillon est introuvable sur cet appareil. Rouvrez votre document depuis le même navigateur, sans vider l’historique.'
+      } else {
+        downloadError.value = MSG.pdf.error
+      }
+      throw err
+    } finally {
+      downloading.value = false
+    }
+  }
+
+  return {
+    downloading,
+    downloadError,
+    lastFilename,
+    downloadKind,
+    downloadCv: () => downloadKind('cv'),
+    downloadLetter: () => downloadKind('letter'),
+  }
+}

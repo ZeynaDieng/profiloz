@@ -1,0 +1,38 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web
+        run: pnpm --filter @profiloz/web build
+        env:
+          NUXT_PUBLIC_API_BASE_URL: https://api.profiloz.com/api/v1
+          NUXT_PUBLIC_APP_URL: https://profiloz.com
+
+      - name: Build API
+        run: pnpm --filter @profiloz/api build
+
+      - name: Deploy reminder
+        run: |
+          echo "Build OK. Pour mettre à jour la production, exécutez sur le serveur :"
+          echo "cd /path/to/ProfiloZ && git pull && docker/scripts/deploy.sh"

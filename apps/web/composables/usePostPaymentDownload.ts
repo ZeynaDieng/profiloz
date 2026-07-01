@@ -14,6 +14,7 @@ import {
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
+import { saveLastDownloadContext } from '~/utils/last-download-context'
 
 const POLL_INTERVAL_MS = 800
 const MAX_POLL_ATTEMPTS = 20
@@ -194,6 +195,7 @@ export function usePostPaymentDownload() {
       if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
       const { filename } = await pdfService.generateLetterAndDownload(letterSnapshot)
       markGuestDossierDownload('letter')
+      saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
       clearPaymentDraftBackup()
       clearPaymentRef()
       await navigateTo(
@@ -209,6 +211,7 @@ export function usePostPaymentDownload() {
 
     const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
     markGuestDossierDownload('cv')
+    saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     clearPaymentDraftBackup()
     clearPaymentRef()
     await navigateTo({ path: '/creer/succes', query: { file: filename } }, { replace: true })

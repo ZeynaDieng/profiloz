@@ -14,6 +14,7 @@ const pdfService = usePdfService()
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
 const { isDesktop } = useBreakpoints()
+const { openMenu } = useMarketingMenuState()
 const editorValidation = useResumeEditorValidation()
 
 const loading = ref(true)
@@ -214,6 +215,7 @@ async function downloadPdf() {
     if (guestId) {
       if (!loadGuestDossierState()) initGuestDossier(guestId, 'cv')
       markGuestDossierDownload('cv')
+      saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     }
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch (err) {
@@ -280,6 +282,14 @@ async function downloadPdf() {
         </div>
 
         <!-- Mobile : menu options -->
+        <button
+          type="button"
+          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          aria-label="Menu"
+          @click="openMenu($event.currentTarget as HTMLElement)"
+        >
+          <UiPzIcon name="menu" />
+        </button>
         <button
           type="button"
           class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
@@ -381,6 +391,8 @@ async function downloadPdf() {
         </div>
       </template>
     </UDrawer>
+
+    <LayoutAppMarketingDrawer />
 
     <UiMessageBanner
       v-if="pdfError"

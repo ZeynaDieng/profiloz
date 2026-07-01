@@ -11,7 +11,7 @@ import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'guest-flow' })
 
 useSeoMeta({ title: "Paiement réussi | Profilo'Z" })
 
@@ -111,7 +111,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page-container max-w-lg mx-auto py-12 md:py-20 text-center">
+  <div class="page-container max-w-lg mx-auto py-8 md:py-16 text-center pb-28">
     <div
       v-if="autoDownloadStarted && !autoDownloadError && phase !== 'idle'"
       class="space-y-6"
@@ -145,12 +145,13 @@ onMounted(async () => {
         </template>
       </p>
 
-      <div v-if="showManualActions" class="flex flex-col gap-3">
+      <div v-if="showManualActions" class="flex flex-col gap-3 pb-4">
         <UiButton
           v-if="canAutoDownload || entitlements?.creditsBalance || entitlements?.canDownloadSnapshot"
           variant="secondary"
           block
           icon="download"
+          class="min-h-[52px]"
           @click="runAutoDownload"
         >
           {{ MSG.buttons.downloadPdf }}
@@ -172,5 +173,20 @@ onMounted(async () => {
         </NuxtLink>
       </div>
     </template>
+
+    <UiStickyActionBar
+      v-if="showManualActions && (canAutoDownload || entitlements?.creditsBalance || entitlements?.canDownloadSnapshot)"
+      class="sm:hidden"
+    >
+      <UiButton
+        variant="secondary"
+        block
+        icon="download"
+        class="min-h-[52px]"
+        @click="runAutoDownload"
+      >
+        {{ MSG.buttons.downloadPdf }}
+      </UiButton>
+    </UiStickyActionBar>
   </div>
 </template>

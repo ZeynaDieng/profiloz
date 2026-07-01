@@ -7,14 +7,16 @@ import {
   nextIncludedDocument,
   type GuestDossierState,
 } from '~/utils/guest-dossier-state'
+import { loadLastDownloadContext } from '~/utils/last-download-context'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: 'guest-flow' })
 
 const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 const coverLetterStore = useCoverLetterStore()
 const paymentService = usePaymentService()
 const route = useRoute()
+const { downloading, downloadError, lastFilename, downloadKind } = useGuestDownload()
 
 const isLetter = computed(() => route.query.type === 'letter')
 const signupRedirect = '/tableau-de-bord'
@@ -23,6 +25,9 @@ const dossierState = ref<GuestDossierState | null>(null)
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
   if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery
+  if (lastFilename.value) return lastFilename.value
+  const last = loadLastDownloadContext()
+  if (last?.filename) return last.filename
   if (isLetter.value && coverLetterStore.current) {
     return buildCoverLetterPdfFilename(coverLetterStore.current.senderName)
   }
@@ -66,6 +71,10 @@ const crossSellCta = computed(() => {
 
 const hasPaidAccess = ref(false)
 
+async function triggerDownload() {
+  await downloadKind(isLetter.value ? 'letter' : 'cv')
+}
+
 onMounted(async () => {
   authStore.loadFromStorage()
   resumeStore.rehydrateFromStorage()
@@ -93,27 +102,52 @@ onMounted(async () => {
   } catch {
     hasPaidAccess.value = authStore.isAuthenticated
   }
+
+  if (hasPaidAccess.value && route.query.file) {
+    await triggerDownload()
+  }
 })
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-background">
-    <header class="flex justify-between items-center gap-3 px-margin-mobile py-2.5 border-b border-outline-variant/30 bg-surface/90 backdrop-blur-sm shrink-0">
-      <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
-      <LayoutAuthStatus icon-only class="sm:hidden" />
-      <LayoutAuthStatus compact class="hidden sm:flex" />
-    </header>
+  <div class="flex flex-col min-h-[calc(100vh-3.25rem)] relative overflow-hidden gradient-mesh pb-28 sm:pb-8">
+    <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
 
-    <div class="flex-1 flex flex-col items-center justify-center p-margin-mobile relative overflow-hidden gradient-mesh pb-28 sm:pb-8">
-      <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
-
-      <UiCard variant="glass" padding="lg" class="relative w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">
+    <div class="relative flex-1 flex flex-col items-center justify-center p-margin-mobile">
+      <UiCard variant="glass" padding="lg" class="w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">
         <div class="text-5xl mb-4 sm:mb-6">🎉</div>
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
         <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ successHeadline }}</p>
-        <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-8 sm:mb-10">
-          {{ dossierComplete ? MSG.guide.successDossierCompleteLead : MSG.guide.successLead }}
+        <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-6">
+          {{ dossierComplete ? MSG.guide.successDossierCompleteLead : MSG.guide.successDownloadReady }}
         </p>
+
+        <UiMessageBanner
+          v-if="downloadError"
+          variant="error"
+          :message="downloadError"
+          class="mb-4 text-left"
+        />
+
+        <div class="mb-6 space-y-3">
+          <UiButton
+            variant="secondary"
+            block
+            icon="download"
+            :loading="downloading"
+            class="min-h-[52px] text-base"
+            @click="triggerDownload"
+          >
+            {{ MSG.guide.successDownloadAgain }}
+          </UiButton>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            {{ MSG.guide.successDownloadMobileHint }}
+          </p>
+          <div class="inline-flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-outline-variant/30 max-w-full w-full justify-center">
+            <UiPzIcon name="picture_as_pdf" class="text-error shrink-0" />
+            <span class="text-sm text-on-surface font-medium truncate">{{ downloadedFilename }}</span>
+          </div>
+        </div>
 
         <UiCard
           v-if="showCrossSell"
@@ -127,7 +161,7 @@ onMounted(async () => {
               <h3 class="font-bold text-on-surface mb-1">{{ crossSellTitle }}</h3>
               <p class="text-sm text-on-surface-variant mb-3">{{ crossSellBody }}</p>
               <NuxtLink :to="crossSellLink">
-                <UiButton variant="secondary" size="sm" icon="arrow_forward">
+                <UiButton variant="outline" size="sm" icon="arrow_forward">
                   {{ crossSellCta }}
                 </UiButton>
               </NuxtLink>
@@ -153,7 +187,7 @@ onMounted(async () => {
           </div>
         </UiCard>
 
-        <div v-if="authStore.isAuthenticated" class="space-y-3 mb-6">
+        <div v-if="authStore.isAuthenticated" class="space-y-3">
           <NuxtLink to="/tableau-de-bord" class="block">
             <UiButton block>{{ MSG.guide.successCrossSellDashboard }}</UiButton>
           </NuxtLink>
@@ -162,7 +196,7 @@ onMounted(async () => {
           </NuxtLink>
         </div>
 
-        <UiCard v-else variant="default" padding="md" class="mb-6 text-left !bg-surface-container-low">
+        <UiCard v-else variant="default" padding="md" class="text-left !bg-surface-container-low">
           <h3 class="font-bold text-primary mb-3">{{ MSG.guide.accountPitch }}</h3>
           <ul class="space-y-2 text-on-surface-variant text-sm mb-4">
             <li v-for="benefit in MSG.guide.accountBenefits" :key="benefit" class="flex items-center gap-2">
@@ -179,21 +213,20 @@ onMounted(async () => {
             </NuxtLink>
           </div>
         </UiCard>
-
-        <div class="inline-flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-outline-variant/30 max-w-full">
-          <UiPzIcon name="picture_as_pdf" class="text-error shrink-0" />
-          <span class="text-sm text-on-surface-variant truncate">{{ downloadedFilename }}</span>
-          <UiPzIcon name="download" class="text-on-surface-variant/50 text-[18px] shrink-0" />
-        </div>
       </UiCard>
     </div>
 
-    <UiStickyActionBar v-if="!authStore.isAuthenticated" class="sm:hidden">
-      <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`" class="block">
-        <UiButton variant="secondary" block icon="person_add">
-          {{ MSG.buttons.createAccount }}
-        </UiButton>
-      </NuxtLink>
+    <UiStickyActionBar class="sm:hidden">
+      <UiButton
+        variant="secondary"
+        block
+        icon="download"
+        :loading="downloading"
+        class="min-h-[52px]"
+        @click="triggerDownload"
+      >
+        {{ MSG.guide.successDownloadAgain }}
+      </UiButton>
     </UiStickyActionBar>
   </div>
 </template>

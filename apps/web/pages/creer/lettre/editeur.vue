@@ -5,7 +5,8 @@ import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
-import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
+import { initGuestDossierState, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
+import { saveLastDownloadContext } from '~/utils/last-download-context'
 
 definePageMeta({ layout: false })
 
@@ -18,6 +19,7 @@ const pdfService = usePdfService()
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
 const { isDesktop } = useBreakpoints()
+const { openMenu } = useMarketingMenuState()
 
 const loading = ref(true)
 const pdfLoading = ref(false)
@@ -222,6 +224,7 @@ async function downloadPdf() {
     if (guestId) {
       if (!loadGuestDossierState()) initGuestDossier(guestId, 'letter')
       markGuestDossierDownload('letter')
+      saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     }
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
@@ -258,8 +261,21 @@ async function downloadPdf() {
           <h1 class="font-bold text-on-surface truncate">Ma lettre de motivation</h1>
         </div>
       </div>
-      <LayoutAuthStatus compact class="hidden sm:flex shrink-0" />
+      <div class="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          class="sm:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          aria-label="Menu"
+          @click="openMenu($event.currentTarget as HTMLElement)"
+        >
+          <UiPzIcon name="menu" />
+        </button>
+        <LayoutAuthStatus icon-only class="sm:hidden" />
+        <LayoutAuthStatus compact class="hidden sm:flex" />
+      </div>
     </header>
+
+    <LayoutAppMarketingDrawer />
 
     <main class="flex-1 page-container pb-28 xl:pb-6">
       <div class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter mt-4">

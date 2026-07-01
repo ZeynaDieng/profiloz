@@ -194,6 +194,11 @@ export const MSG = {
       'Vous avez téléchargé votre CV et votre lettre de motivation. Aucun autre document n’est inclus dans ce paiement.',
     successDossierCompleteLead:
       'Votre dossier est complet. Conservez vos fichiers PDF ou créez un compte gratuit pour les retrouver plus tard.',
+    successDownloadReady:
+      'Votre PDF a été généré. Appuyez sur le bouton ci-dessous pour le télécharger sur votre appareil.',
+    successDownloadMobileHint:
+      'Sur iPhone : ouvrez l’app Fichiers → Téléchargements. Sur Android : notification ou dossier Téléchargements.',
+    successDownloadAgain: 'Télécharger mon PDF',
     dashboardPrompt: "Que souhaitez-vous faire aujourd'hui ?",
     recentFolders: 'Vos dossiers récents',
   },
