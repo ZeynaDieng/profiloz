@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const snapshot = normalizeResumeSnapshotForPdf(body.snapshot)
     const resumeId = typeof body.resumeId === 'string' ? body.resumeId : undefined
-    const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId }
+    const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId, resumeId }
 
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
@@ -21,19 +21,16 @@ export async function POST(request: Request) {
       await paymentService.assertSnapshotDownload(owner)
     }
 
-    const result = await pdfService.generateFromSnapshot(snapshot, ctx.guestSessionDbId, {
+    const result = await pdfService.startSnapshotPdfJob(snapshot, ctx.guestSessionDbId, {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
-    })
-
-    if (!owner.userId || !resumeId) {
-      await paymentService.consumeSnapshotDownload(owner)
-    }
+    }, owner)
 
     const response = jsonResponse({
       jobId: result.jobId,
-      status: 'completed',
-      downloadUrl: `/pdf/download/${result.jobId}`,
+      status: result.status,
+      downloadUrl:
+        result.status === 'completed' ? `/pdf/download/${result.jobId}` : null,
       expiresAt: result.expiresAt.toISOString(),
     }, 202)
     return withCors(response, origin)

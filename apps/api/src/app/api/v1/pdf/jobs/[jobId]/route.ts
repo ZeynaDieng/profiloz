@@ -13,7 +13,8 @@ export async function GET(_request: Request, { params }: Params) {
     const response = jsonResponse({
       id: job.id,
       status: job.status,
-      downloadUrl: job.storageKey ? `/pdf/download/${job.id}` : null,
+      downloadUrl: job.storageKey && job.status === 'completed' ? `/pdf/download/${job.id}` : null,
+      errorMessage: job.errorMessage,
       expiresAt: job.expiresAt?.toISOString(),
     })
     return withCors(response, origin)

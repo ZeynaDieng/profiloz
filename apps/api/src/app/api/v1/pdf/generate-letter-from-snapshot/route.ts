@@ -4,6 +4,7 @@ import { pdfService, type CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
+
 const COVER_LETTER_TEMPLATE_SLUGS = ['CLASSIQUE', 'MODERNE', 'ACCENT', 'PROFESSIONNEL', 'CREATIF'] as const
 
 function normalizeCoverLetterTemplateSlug(value?: string): (typeof COVER_LETTER_TEMPLATE_SLUGS)[number] {
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const letter = toPdfInput((body.snapshot ?? {}) as Record<string, unknown>)
     const resumeId = typeof body.resumeId === 'string' ? body.resumeId : undefined
-    const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId }
+    const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId, resumeId }
 
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
@@ -57,19 +58,17 @@ export async function POST(request: Request) {
       await paymentService.assertSnapshotDownload(owner)
     }
 
-    const result = await pdfService.generateCoverLetterPdf(letter, {
+    const result = await pdfService.startCoverLetterPdfJob(letter, {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
-    })
+    }, owner)
 
-    if (!owner.userId || !resumeId) {
-      await paymentService.consumeSnapshotDownload(owner)
-    }
     const response = jsonResponse(
       {
         jobId: result.jobId,
-        status: 'completed',
-        downloadUrl: `/pdf/download/${result.jobId}`,
+        status: result.status,
+        downloadUrl:
+          result.status === 'completed' ? `/pdf/download/${result.jobId}` : null,
         expiresAt: result.expiresAt.toISOString(),
       },
       202,

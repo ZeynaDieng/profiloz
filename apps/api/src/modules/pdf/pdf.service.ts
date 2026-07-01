@@ -106,9 +106,25 @@ export function renderResumeHtml(snapshot: ResumeSnapshot): string {
 }
 
 async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
+  const blockedUrlPrefixes = [
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+    'https://fonts.bunny.net',
+  ]
+
   return withPuppeteerPage(async (page) => {
+    await page.setRequestInterception(true)
+    page.on('request', (request) => {
+      const url = request.url()
+      if (blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))) {
+        void request.abort()
+        return
+      }
+      void request.continue()
+    })
+
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 })
-    await page.goto(printUrl, { waitUntil: 'load', timeout: 90_000 })
+    await page.goto(printUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
 
     const errorHandle = await page.$('[data-cv-error="true"]')
     if (errorHandle) {
@@ -122,11 +138,15 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
       )
     }
 
-    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 60_000 })
+    await page.waitForSelector('[data-cv-ready="true"]', { timeout: 30_000 })
     await page.evaluate(async () => {
-      if (document.fonts?.ready) await document.fonts.ready
+      if (document.fonts?.ready) {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+        ])
+      }
     })
-    await new Promise((resolve) => setTimeout(resolve, 400))
 
     return Buffer.from(
       await page.pdf({
@@ -228,7 +248,146 @@ type GenerateContext = {
   guestSessionDbId?: string
 }
 
+type SnapshotJobOwner = {
+  userId?: string
+  guestSessionDbId?: string
+  resumeId?: string
+}
+
+function buildPdfExpiresAt(): Date {
+  const expiresAt = new Date()
+  expiresAt.setHours(expiresAt.getHours() + PDF_TTL_HOURS)
+  return expiresAt
+}
+
+async function maybeConsumeSnapshotCredit(owner?: SnapshotJobOwner) {
+  if (!owner) return
+  if (owner.userId && owner.resumeId) return
+  const { paymentService } = await import('@/modules/payment/payment.service')
+  await paymentService.consumeSnapshotDownload({
+    userId: owner.userId,
+    guestSessionDbId: owner.guestSessionDbId,
+  })
+}
+
 export class PdfService {
+  /** Démarre la génération PDF CV (async) — évite les timeouts nginx sur requêtes longues. */
+  async startSnapshotPdfJob(
+    snapshot: ResumeSnapshot,
+    guestSessionDbId?: string,
+    ctx?: GenerateContext,
+    owner?: SnapshotJobOwner,
+  ) {
+    const expiresAt = buildPdfExpiresAt()
+
+    const cachedPdf = await pdfCacheService.get(snapshot, 'resume')
+    if (cachedPdf) {
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(cachedPdf, storageKey, 'application/pdf')
+      const job = await prisma.pdfJob.create({
+        data: {
+          guestSessionId: guestSessionDbId,
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+      await maybeConsumeSnapshotCredit(owner)
+      return { jobId: job.id, status: 'completed' as const, expiresAt }
+    }
+
+    const job = await prisma.pdfJob.create({
+      data: {
+        guestSessionId: guestSessionDbId,
+        status: 'processing',
+        expiresAt,
+      },
+    })
+
+    void this.runSnapshotPdfJob(job.id, snapshot, guestSessionDbId, ctx, owner)
+
+    return { jobId: job.id, status: 'processing' as const, expiresAt }
+  }
+
+  private async runSnapshotPdfJob(
+    jobId: string,
+    snapshot: ResumeSnapshot,
+    guestSessionDbId?: string,
+    ctx?: GenerateContext,
+    owner?: SnapshotJobOwner,
+  ) {
+    const startedAt = Date.now()
+    logPdfEvent({
+      event: 'pdf_generate_start',
+      kind: 'resume',
+      templateSlug: snapshot.templateSlug,
+      userId: ctx?.userId,
+      guestSessionId: guestSessionDbId,
+    })
+
+    try {
+      const renderId = randomUUID()
+      const snapshotKey = `pdf-render/${renderId}.json`
+      await storageProvider.upload(Buffer.from(JSON.stringify(snapshot), 'utf-8'), snapshotKey, 'application/json')
+
+      const printUrl = `${resolveAppUrl()}/imprimer/cv?renderId=${renderId}`
+      let pdfBuffer: Buffer
+      try {
+        pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
+      } finally {
+        await storageProvider.delete(snapshotKey)
+      }
+
+      await pdfCacheService.set(snapshot, 'resume', pdfBuffer)
+
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(pdfBuffer, storageKey, 'application/pdf')
+      const expiresAt = buildPdfExpiresAt()
+
+      await prisma.pdfJob.update({
+        where: { id: jobId },
+        data: {
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      await maybeConsumeSnapshotCredit(owner)
+
+      logPdfEvent({
+        event: 'pdf_generate_success',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+      })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'unknown'
+      await prisma.pdfJob.update({
+        where: { id: jobId },
+        data: {
+          status: 'failed',
+          errorMessage: detail.slice(0, 500),
+          completedAt: new Date(),
+        },
+      })
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'resume',
+        templateSlug: snapshot.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+        error: detail,
+      })
+    }
+  }
+
+  /** @deprecated Préférer startSnapshotPdfJob pour éviter les timeouts HTTP. */
   async generateFromSnapshot(snapshot: ResumeSnapshot, guestSessionDbId?: string, ctx?: GenerateContext) {
     const startedAt = Date.now()
 
@@ -324,6 +483,122 @@ export class PdfService {
     })
 
     return { jobId: job.id, storageKey, expiresAt, cached: false }
+  }
+
+  async startCoverLetterPdfJob(
+    letter: CoverLetterPdfInput,
+    ctx?: GenerateContext,
+    owner?: SnapshotJobOwner,
+  ) {
+    const expiresAt = buildPdfExpiresAt()
+    const guestSessionDbId = ctx?.guestSessionDbId
+
+    const cachedPdf = await pdfCacheService.get(letter, 'cover_letter')
+    if (cachedPdf) {
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(cachedPdf, storageKey, 'application/pdf')
+      const job = await prisma.pdfJob.create({
+        data: {
+          guestSessionId: guestSessionDbId,
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+      await maybeConsumeSnapshotCredit(owner)
+      return { jobId: job.id, status: 'completed' as const, expiresAt }
+    }
+
+    const job = await prisma.pdfJob.create({
+      data: {
+        guestSessionId: guestSessionDbId,
+        status: 'processing',
+        expiresAt,
+      },
+    })
+
+    void this.runCoverLetterPdfJob(job.id, letter, ctx, owner)
+
+    return { jobId: job.id, status: 'processing' as const, expiresAt }
+  }
+
+  private async runCoverLetterPdfJob(
+    jobId: string,
+    letter: CoverLetterPdfInput,
+    ctx?: GenerateContext,
+    owner?: SnapshotJobOwner,
+  ) {
+    const startedAt = Date.now()
+    const guestSessionDbId = ctx?.guestSessionDbId
+
+    logPdfEvent({
+      event: 'pdf_generate_start',
+      kind: 'cover_letter',
+      templateSlug: letter.templateSlug,
+      userId: ctx?.userId,
+      guestSessionId: guestSessionDbId,
+    })
+
+    try {
+      const renderId = randomUUID()
+      const snapshotKey = `pdf-render/${renderId}.json`
+      await storageProvider.upload(Buffer.from(JSON.stringify(letter), 'utf-8'), snapshotKey, 'application/json')
+
+      const printUrl = `${resolveAppUrl()}/imprimer/lettre?renderId=${renderId}`
+      let pdfBuffer: Buffer
+      try {
+        pdfBuffer = await withTransientRetry(() => renderPdfFromPrintUrl(printUrl))
+      } finally {
+        await storageProvider.delete(snapshotKey)
+      }
+
+      await pdfCacheService.set(letter, 'cover_letter', pdfBuffer)
+
+      const storageKey = `pdf/${randomUUID()}.pdf`
+      await storageProvider.upload(pdfBuffer, storageKey, 'application/pdf')
+      const expiresAt = buildPdfExpiresAt()
+
+      await prisma.pdfJob.update({
+        where: { id: jobId },
+        data: {
+          storageKey,
+          status: 'completed',
+          completedAt: new Date(),
+          expiresAt,
+        },
+      })
+
+      await maybeConsumeSnapshotCredit(owner)
+
+      logPdfEvent({
+        event: 'pdf_generate_success',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+      })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'unknown'
+      await prisma.pdfJob.update({
+        where: { id: jobId },
+        data: {
+          status: 'failed',
+          errorMessage: detail.slice(0, 500),
+          completedAt: new Date(),
+        },
+      })
+      logPdfEvent({
+        event: 'pdf_generate_error',
+        kind: 'cover_letter',
+        templateSlug: letter.templateSlug,
+        userId: ctx?.userId,
+        guestSessionId: guestSessionDbId,
+        durationMs: Date.now() - startedAt,
+        error: detail,
+      })
+    }
   }
 
   async generateCoverLetterPdf(letter: CoverLetterPdfInput, ctx?: GenerateContext) {

@@ -54,9 +54,23 @@ test.describe('Parcours invité — PDF', () => {
 
     const payload = await generateResponse.json()
     expect(payload.jobId).toBeTruthy()
-    expect(payload.downloadUrl).toMatch(/^\/pdf\/download\//)
 
-    const downloadResponse = await request.get(`${API_BASE}${payload.downloadUrl}`, {
+    let downloadUrl: string | null = payload.downloadUrl
+    for (let attempt = 0; attempt < 120 && !downloadUrl; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const jobResponse = await request.get(`${API_BASE}/pdf/jobs/${payload.jobId}`, {
+        headers: { 'X-Guest-Session-Id': sessionId },
+      })
+      expect(jobResponse.ok()).toBeTruthy()
+      const job = await jobResponse.json()
+      if (job.status === 'failed') {
+        throw new Error(job.errorMessage || 'PDF job failed')
+      }
+      downloadUrl = job.downloadUrl
+    }
+    expect(downloadUrl).toMatch(/^\/pdf\/download\//)
+
+    const downloadResponse = await request.get(`${API_BASE}${downloadUrl}`, {
       headers: { 'X-Guest-Session-Id': sessionId },
     })
     expect(downloadResponse.ok()).toBeTruthy()

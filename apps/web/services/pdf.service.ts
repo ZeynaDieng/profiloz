@@ -1,20 +1,68 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { useApiClient } from '~/composables/useApiClient'
 import { getStoredAccessToken } from '~/utils/auth-token'
 import { buildCoverLetterPdfFilename } from '~/utils/coverLetterPdfFilename'
 import { buildResumePdfFilename, encodeContentDispositionFilename } from '~/utils/resumePdfFilename'
 
+type PdfJobResponse = {
+  jobId: string
+  status: string
+  downloadUrl: string | null
+  expiresAt: string
+}
+
+type PdfJobStatus = {
+  id: string
+  status: string
+  downloadUrl: string | null
+  errorMessage?: string | null
+}
+
+const PDF_POLL_INTERVAL_MS = 1000
+const PDF_POLL_MAX_ATTEMPTS = 120
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export function usePdfService() {
-  const { post, getDownloadUrl } = useApiClient()
+  const { post, get, getDownloadUrl } = useApiClient()
+
+  async function waitForPdfJob(jobId: string): Promise<{ jobId: string; downloadUrl: string }> {
+    for (let attempt = 0; attempt < PDF_POLL_MAX_ATTEMPTS; attempt++) {
+      if (attempt > 0) await sleep(PDF_POLL_INTERVAL_MS)
+
+      const job = await get<PdfJobStatus>(`/pdf/jobs/${jobId}`)
+      if (job.status === 'completed' && job.downloadUrl) {
+        return { jobId: job.id, downloadUrl: job.downloadUrl }
+      }
+      if (job.status === 'failed') {
+        throw {
+          status: 503,
+          detail: job.errorMessage || MSG.pdf.error,
+        }
+      }
+    }
+
+    throw {
+      status: 504,
+      detail: MSG.network.timeout,
+    }
+  }
 
   async function generateFromSnapshot(snapshot: ResumeSnapshot) {
-    return post<{
-      jobId: string
-      status: string
-      downloadUrl: string
-      expiresAt: string
-    }>('/pdf/generate-from-snapshot', { snapshot })
+    const started = await post<PdfJobResponse>('/pdf/generate-from-snapshot', { snapshot })
+    if (started.status === 'completed' && started.downloadUrl) {
+      return started
+    }
+    const ready = await waitForPdfJob(started.jobId)
+    return {
+      ...started,
+      status: 'completed',
+      downloadUrl: ready.downloadUrl,
+    }
   }
 
   async function downloadWithAuth(relativePath: string, filename = 'cv Profiloz.pdf') {
@@ -52,12 +100,16 @@ export function usePdfService() {
   }
 
   async function generateLetterFromSnapshot(snapshot: CoverLetterSnapshot) {
-    return post<{
-      jobId: string
-      status: string
-      downloadUrl: string
-      expiresAt: string
-    }>('/pdf/generate-letter-from-snapshot', { snapshot })
+    const started = await post<PdfJobResponse>('/pdf/generate-letter-from-snapshot', { snapshot })
+    if (started.status === 'completed' && started.downloadUrl) {
+      return started
+    }
+    const ready = await waitForPdfJob(started.jobId)
+    return {
+      ...started,
+      status: 'completed',
+      downloadUrl: ready.downloadUrl,
+    }
   }
 
   async function generateLetterAndDownload(snapshot: CoverLetterSnapshot) {
