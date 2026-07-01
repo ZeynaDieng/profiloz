@@ -20,9 +20,6 @@ function renderDataApiBase(): string {
   })
 }
 
-const printState = ref<'loading' | 'ready' | 'error'>('loading')
-const printError = ref('')
-
 const { data: raw, error: fetchError } = await useAsyncData(
   () => `letter-print-${renderId.value}`,
   async () => {
@@ -56,30 +53,18 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
   })
 })
 
-if (fetchError.value || !letter.value) {
-  printState.value = 'error'
-  printError.value = fetchError.value?.message || MSG.error.loadPrintLetter
-} else {
-  printState.value = 'ready'
-}
-
-onErrorCaptured((err) => {
-  printState.value = 'error'
-  printError.value = err instanceof Error ? err.message : MSG.error.loadPrintLetter
-  return false
-})
+const printErrorMessage = computed(
+  () => fetchError.value?.message || MSG.error.loadPrintLetter,
+)
 </script>
 
 <template>
   <div class="min-h-screen bg-white print:bg-white print:min-h-0">
-    <div v-if="printState === 'error'" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
-      {{ printError || MSG.error.loadPrintLetter }}
+    <div v-if="fetchError || !letter" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
+      {{ printErrorMessage }}
     </div>
-    <div v-else-if="printState === 'ready' && letter" data-cv-ready="true" class="flex justify-center print:block">
+    <div v-else data-cv-ready="true" class="flex justify-center print:block">
       <CoverLetterPreviewA4 :letter="letter" />
-    </div>
-    <div v-else data-cv-pending="true" class="p-8 text-center text-sm text-on-surface-variant">
-      Chargement…
     </div>
   </div>
 </template>

@@ -12,9 +12,6 @@ const renderId = computed(() => {
   return typeof value === 'string' ? value : ''
 })
 
-const printState = ref<'loading' | 'ready' | 'error'>('loading')
-const printError = ref('')
-
 const { data: resume, error: fetchError } = await useAsyncData(
   () => `cv-print-${renderId.value}`,
   async () => {
@@ -34,30 +31,18 @@ const { data: resume, error: fetchError } = await useAsyncData(
   { watch: [renderId] },
 )
 
-if (fetchError.value || !resume.value) {
-  printState.value = 'error'
-  printError.value = fetchError.value?.message || MSG.error.loadPrintCv
-} else {
-  printState.value = 'ready'
-}
-
-onErrorCaptured((err) => {
-  printState.value = 'error'
-  printError.value = err instanceof Error ? err.message : MSG.error.loadPrintCv
-  return false
-})
+const printErrorMessage = computed(
+  () => fetchError.value?.message || MSG.error.loadPrintCv,
+)
 </script>
 
 <template>
   <div class="min-h-screen bg-white print:bg-white print:min-h-0">
-    <div v-if="printState === 'error'" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
-      {{ printError || MSG.error.loadPrintCv }}
+    <div v-if="fetchError || !resume" data-cv-error="true" class="p-8 text-center text-sm text-on-surface-variant">
+      {{ printErrorMessage }}
     </div>
-    <div v-else-if="printState === 'ready' && resume" data-cv-ready="true" class="flex justify-center print:block">
+    <div v-else data-cv-ready="true" class="flex justify-center print:block">
       <ResumePreviewA4 :resume="resume" />
-    </div>
-    <div v-else data-cv-pending="true" class="p-8 text-center text-sm text-on-surface-variant">
-      Chargement…
     </div>
   </div>
 </template>

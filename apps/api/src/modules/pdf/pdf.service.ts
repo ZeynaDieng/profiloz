@@ -116,10 +116,16 @@ async function waitForPrintPageMarker(page: import('puppeteer').Page) {
   )
 
   const serverError = await page.evaluate(() => {
-    const text = document.body?.innerText ?? ''
-    if (/^\s*500\s/m.test(text) || text.includes('randomUUID')) {
-      return text.replace(/\s+/g, ' ').trim().slice(0, 300)
+    const bodyText = document.body?.innerText ?? ''
+    if (bodyText.includes('crypto.randomUUID is not a function')) {
+      return 'crypto.randomUUID is not a function'
     }
+
+    const heading = document.querySelector('h1')?.textContent?.trim()
+    if (heading === '500' || heading === '404') {
+      return bodyText.replace(/\s+/g, ' ').trim().slice(0, 300)
+    }
+
     return null
   })
   if (serverError) {
@@ -144,25 +150,15 @@ async function waitForPrintPageMarker(page: import('puppeteer').Page) {
   }
 }
 
-function isAllowedPrintRequest(url: string): boolean {
-  if (url.startsWith('data:') || url.startsWith('blob:')) return true
+function isBlockedPrintRequest(url: string): boolean {
+  if (url.startsWith('data:') || url.startsWith('blob:')) return false
 
   const blockedUrlPrefixes = [
     'https://fonts.googleapis.com',
     'https://fonts.gstatic.com',
     'https://fonts.bunny.net',
   ]
-  if (blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))) return false
-
-  try {
-    const { hostname, protocol } = new URL(url)
-    if (protocol !== 'http:' && protocol !== 'https:') return false
-    if (hostname === 'web' || hostname === 'api') return true
-    if (hostname === 'localhost' || hostname === '127.0.0.1') return true
-    return false
-  } catch {
-    return false
-  }
+  return blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))
 }
 
 async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
@@ -170,7 +166,7 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
     await page.setRequestInterception(true)
     page.on('request', (request) => {
       const url = request.url()
-      if (!isAllowedPrintRequest(url)) {
+      if (isBlockedPrintRequest(url)) {
         void request.abort()
         return
       }
@@ -178,7 +174,7 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
     })
 
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 })
-    await page.goto(printUrl, { waitUntil: 'load', timeout: 60_000 })
+    await page.goto(printUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 })
 
     await waitForPrintPageMarker(page)
     await page.evaluate(async () => {
