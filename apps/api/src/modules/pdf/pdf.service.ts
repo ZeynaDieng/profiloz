@@ -105,7 +105,7 @@ export function renderResumeHtml(snapshot: ResumeSnapshot): string {
 </html>`
 }
 
-async function waitForPrintPageMarker(page: import('puppeteer-core').Page) {
+async function waitForPrintPageMarker(page: import('puppeteer').Page) {
   await page.waitForFunction(
     () =>
       Boolean(
