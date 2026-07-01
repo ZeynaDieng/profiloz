@@ -5,14 +5,18 @@ import { AppError, handleOptions, jsonResponse, problemResponse, withCors } from
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
-    let sessionId = request.headers.get('x-guest-session-id')
+    let sessionId = request.headers.get('x-guest-session-id')?.trim() || ''
 
     if (!sessionId) {
       const body = await request.json().catch(() => ({}))
-      sessionId = typeof body.sessionId === 'string' ? body.sessionId : randomUUID()
+      if (typeof body.sessionId === 'string' && body.sessionId.trim()) {
+        sessionId = body.sessionId.trim()
+      } else {
+        sessionId = randomUUID()
+      }
     }
 
-    const session = await guestSessionService.initOrValidate(sessionId!)
+    const session = await guestSessionService.initOrValidate(sessionId)
     const response = jsonResponse(session, 201)
     return withCors(response, origin)
   } catch (error) {
