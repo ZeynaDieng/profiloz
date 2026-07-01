@@ -29,7 +29,7 @@ describe('resolveAppUrl', () => {
   })
 
   it('utilise le service web interne quand APP_URL est un domaine public en production', () => {
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     process.env.APP_URL = 'https://profiloz.com'
     expect(resolveAppUrl()).toBe('http://web:3000')
   })
