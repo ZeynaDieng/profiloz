@@ -14,7 +14,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const success = ref(false)
-const error = ref('')
+const { fieldError, formError, clearAll, setFieldError, setFromZod, scrollToFirstError } = useFormValidation()
 
 const redirectTo = computed(() => {
   const target = route.query.redirect
@@ -27,9 +27,12 @@ const loginLink = computed(() => ({
 }))
 
 async function onSubmit() {
-  error.value = ''
+  clearAll()
+
   if (password.value !== confirmPassword.value) {
-    error.value = MSG.validation.passwordMismatch
+    setFieldError('confirmPassword', MSG.validation.passwordMismatch)
+    formError.value = MSG.validation.passwordMismatch
+    scrollToFirstError()
     return
   }
 
@@ -38,7 +41,8 @@ async function onSubmit() {
     password: password.value,
   })
   if (!validation.success) {
-    error.value = validation.error.errors.map((e) => e.message).join('. ')
+    setFromZod(validation.error, MSG.validation.invalidData)
+    scrollToFirstError()
     return
   }
 
@@ -54,7 +58,7 @@ async function onSubmit() {
       : redirectTo.value
     setTimeout(() => navigateTo(destination), 1500)
   } catch (err) {
-    error.value = parseRegisterError(err)
+    formError.value = parseRegisterError(err)
   } finally {
     loading.value = false
   }
@@ -77,41 +81,42 @@ onMounted(() => {
       </div>
 
       <form class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
-        <UiFormField label="E-mail">
+        <Transition name="form-field__error">
+          <UiMessageBanner
+            v-if="formError && !fieldError('email') && !fieldError('password') && !fieldError('confirmPassword')"
+            variant="error"
+            :message="formError"
+          />
+        </Transition>
+        <UiFormField label="E-mail" :error="fieldError('email')">
           <input
             v-model="email"
             type="email"
-            required
             autocomplete="email"
             inputmode="email"
             class="form-input form-input--white w-full"
             placeholder="vous@exemple.com"
           >
         </UiFormField>
-        <UiFormField label="Mot de passe">
+        <UiFormField label="Mot de passe" :error="fieldError('password')">
           <input
             v-model="password"
             type="password"
-            required
             minlength="8"
             autocomplete="new-password"
             class="form-input form-input--white w-full"
             placeholder="8 car. min, 1 majuscule, 1 chiffre"
           >
         </UiFormField>
-        <UiFormField label="Confirmer le mot de passe">
+        <UiFormField label="Confirmer le mot de passe" :error="fieldError('confirmPassword')">
           <input
             v-model="confirmPassword"
             type="password"
-            required
             autocomplete="new-password"
             class="form-input form-input--white w-full"
             placeholder="Répétez le mot de passe"
           >
         </UiFormField>
-        <Transition name="form-field__error">
-          <UiMessageBanner v-if="error" variant="error" :message="error" />
-        </Transition>
         <UiButton type="submit" variant="secondary" block :loading="loading" class="mt-1">
           Créer mon compte
         </UiButton>

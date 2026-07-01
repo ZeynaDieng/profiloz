@@ -4,6 +4,7 @@ import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
+import { withAutoDownloadQuery } from '~/utils/payment-auto-download'
 import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
 
 definePageMeta({ layout: 'default' })
@@ -52,7 +53,7 @@ onMounted(async () => {
   try {
     entitlements.value = await paymentService.getEntitlements()
     if (returnTo.value && fromPaywall.value && hasDossierDownloadAccess(entitlements.value)) {
-      await navigateTo(returnTo.value, { replace: true })
+      await navigateTo(withAutoDownloadQuery(returnTo.value), { replace: true })
       return
     }
   } catch {

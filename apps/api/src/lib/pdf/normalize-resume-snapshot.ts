@@ -1,9 +1,10 @@
 import { randomUUID } from 'crypto'
 import type { ResumeSnapshot } from '@profiloz/shared'
-import { sanitizePhotoReference } from '@profiloz/shared'
+import { TEMPLATE_SLUGS, sanitizePhotoReference } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
 
 const DEFAULT_TEMPLATE = 'PROFESSIONNEL' as ResumeSnapshot['templateSlug']
+const VALID_TEMPLATES = new Set<string>(TEMPLATE_SLUGS)
 
 /** Normalise un snapshot invité avant génération PDF (évite les 500 sur champs manquants). */
 export function normalizeResumeSnapshotForPdf(input: unknown): ResumeSnapshot {
@@ -13,11 +14,15 @@ export function normalizeResumeSnapshotForPdf(input: unknown): ResumeSnapshot {
 
   const raw = input as Partial<ResumeSnapshot>
   const personalInfo = raw.personalInfo && typeof raw.personalInfo === 'object' ? raw.personalInfo : {}
+  const rawTemplate =
+    typeof raw.templateSlug === 'string' && VALID_TEMPLATES.has(raw.templateSlug)
+      ? raw.templateSlug
+      : DEFAULT_TEMPLATE
 
   const snapshot: ResumeSnapshot = {
     id: typeof raw.id === 'string' && raw.id.trim() ? raw.id : randomUUID(),
     title: typeof raw.title === 'string' && raw.title.trim() ? raw.title : 'Mon CV',
-    templateSlug: (typeof raw.templateSlug === 'string' ? raw.templateSlug : DEFAULT_TEMPLATE) as ResumeSnapshot['templateSlug'],
+    templateSlug: rawTemplate as ResumeSnapshot['templateSlug'],
     templateConfig: raw.templateConfig && typeof raw.templateConfig === 'object' ? raw.templateConfig : {},
     personalInfo: {
       ...personalInfo,

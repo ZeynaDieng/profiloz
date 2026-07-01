@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'admin' })
 
 const adminService = useAdminService()
@@ -9,22 +11,39 @@ const body = ref('')
 const audience = ref<'all' | 'business' | 'premium'>('all')
 const sending = ref(false)
 const message = ref('')
-const error = ref('')
 const history = ref<Record<string, unknown>[]>([])
+const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
 
 async function loadHistory() {
   try {
     const result = await adminService.listNotifications()
     history.value = result.data
   } catch {
-    error.value = 'Impossible de charger l’historique.'
+    formError.value = 'Impossible de charger l’historique.'
   }
 }
 
+function validateNotificationForm(): boolean {
+  clearAll()
+  if (!title.value.trim()) {
+    setFieldError('title', MSG.validation.required)
+  }
+  if (!body.value.trim()) {
+    setFieldError('body', MSG.validation.required)
+  }
+  if (fieldError('title') || fieldError('body')) {
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return false
+  }
+  return true
+}
+
 async function sendNotification() {
+  if (!validateNotificationForm()) return
+
   sending.value = true
   message.value = ''
-  error.value = ''
   try {
     const result = await adminService.sendNotification({
       title: title.value,
@@ -34,9 +53,10 @@ async function sendNotification() {
     message.value = `Notification envoyée à ${result.notification.recipientCount} destinataire(s).`
     title.value = ''
     body.value = ''
+    clearAll()
     await loadHistory()
   } catch {
-    error.value = 'Échec de l’envoi.'
+    formError.value = 'Échec de l’envoi.'
   } finally {
     sending.value = false
   }
@@ -49,32 +69,39 @@ onMounted(loadHistory)
   <div>
     <AdminPageHeader title="Notifications" subtitle="Annonces enregistrées et comptabilisées par audience." />
 
-    <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
+    <UiMessageBanner v-if="formError && !fieldError('title') && !fieldError('body')" variant="error" :message="formError" class="mb-4" />
     <UiMessageBanner v-if="message" variant="success" :message="message" class="mb-4" />
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
       <UiCard padding="lg">
-        <div class="space-y-4">
-          <label class="block">
-            <span class="text-sm font-medium text-on-surface">Audience</span>
-            <select v-model="audience" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2 text-sm">
+        <form class="space-y-4" @submit.prevent="sendNotification">
+          <UiFormField label="Audience">
+            <select v-model="audience" class="form-input w-full text-sm">
               <option value="all">Tous les utilisateurs</option>
               <option value="business">Comptes Business uniquement</option>
               <option value="premium">Utilisateurs Premium</option>
             </select>
-          </label>
-          <label class="block">
-            <span class="text-sm font-medium text-on-surface">Titre</span>
-            <input v-model="title" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2 text-sm">
-          </label>
-          <label class="block">
-            <span class="text-sm font-medium text-on-surface">Message</span>
-            <textarea v-model="body" rows="5" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2 text-sm" />
-          </label>
-          <UiButton variant="secondary" icon="send" :disabled="sending || !title.trim() || !body.trim()" @click="sendNotification">
+          </UiFormField>
+          <UiFormField label="Titre" required :error="fieldError('title')">
+            <input
+              v-model="title"
+              type="text"
+              class="form-input w-full text-sm"
+              @input="clearField('title')"
+            >
+          </UiFormField>
+          <UiFormField label="Message" required :error="fieldError('body')">
+            <textarea
+              v-model="body"
+              rows="5"
+              class="form-input w-full text-sm resize-y"
+              @input="clearField('body')"
+            />
+          </UiFormField>
+          <UiButton type="submit" variant="secondary" icon="send" :loading="sending">
             Envoyer
           </UiButton>
-        </div>
+        </form>
       </UiCard>
 
       <UiCard padding="lg">

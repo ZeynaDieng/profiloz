@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import {
+  isGuestDossierComplete,
+  loadGuestDossierState,
+  nextIncludedDocument,
+  type GuestDossierState,
+} from '~/utils/guest-dossier-state'
 
 definePageMeta({ layout: false })
 
@@ -12,6 +18,7 @@ const route = useRoute()
 
 const isLetter = computed(() => route.query.type === 'letter')
 const signupRedirect = '/tableau-de-bord'
+const dossierState = ref<GuestDossierState | null>(null)
 
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
@@ -28,18 +35,34 @@ const successHeadline = computed(() =>
 )
 
 const editLink = computed(() => (isLetter.value ? '/creer/lettre/editeur' : '/creer/editeur'))
-const crossSellLink = computed(() =>
-  isLetter.value ? '/creer' : '/creer/lettre',
-)
-const crossSellTitle = computed(() =>
-  isLetter.value ? MSG.guide.successCrossSellLetterTitle : MSG.guide.successCrossSellCvTitle,
-)
-const crossSellBody = computed(() =>
-  isLetter.value ? MSG.guide.successCrossSellLetterBody : MSG.guide.successCrossSellCvBody,
-)
-const crossSellCta = computed(() =>
-  isLetter.value ? MSG.guide.successCrossSellCtaCv : MSG.guide.successCrossSellCtaLetter,
-)
+
+const dossierComplete = computed(() => isGuestDossierComplete(dossierState.value))
+const nextDocument = computed(() => nextIncludedDocument(dossierState.value))
+const showCrossSell = computed(() => Boolean(nextDocument.value) && hasPaidAccess.value)
+
+const crossSellLink = computed(() => {
+  if (nextDocument.value === 'letter') return '/creer/lettre/editeur'
+  if (nextDocument.value === 'cv') return '/creer/modele'
+  return isLetter.value ? '/creer/modele' : '/creer/lettre/editeur'
+})
+
+const crossSellTitle = computed(() => {
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvTitle
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterTitle
+  return isLetter.value ? MSG.guide.successCrossSellLetterTitle : MSG.guide.successCrossSellCvTitle
+})
+
+const crossSellBody = computed(() => {
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvBody
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterBody
+  return isLetter.value ? MSG.guide.successCrossSellLetterBody : MSG.guide.successCrossSellCvBody
+})
+
+const crossSellCta = computed(() => {
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCtaLetter
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellCtaCv
+  return isLetter.value ? MSG.guide.successCrossSellCtaCv : MSG.guide.successCrossSellCtaLetter
+})
 
 const hasPaidAccess = ref(false)
 
@@ -47,6 +70,7 @@ onMounted(async () => {
   authStore.loadFromStorage()
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
+  dossierState.value = loadGuestDossierState()
 
   const container = document.getElementById('confetti-container')
   if (container) {
@@ -63,6 +87,7 @@ onMounted(async () => {
 
   try {
     await useGuestSession().ensureSession()
+    await syncGuestSessionForEditor()
     const e = await paymentService.getEntitlements()
     hasPaidAccess.value = hasDossierDownloadAccess(e)
   } catch {
@@ -87,10 +112,11 @@ onMounted(async () => {
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
         <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ successHeadline }}</p>
         <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-8 sm:mb-10">
-          {{ MSG.guide.successLead }}
+          {{ dossierComplete ? MSG.guide.successDossierCompleteLead : MSG.guide.successLead }}
         </p>
 
         <UiCard
+          v-if="showCrossSell"
           variant="default"
           padding="md"
           class="mb-6 text-left !bg-secondary/5 border-secondary/20"
@@ -105,9 +131,24 @@ onMounted(async () => {
                   {{ crossSellCta }}
                 </UiButton>
               </NuxtLink>
-              <p v-if="hasPaidAccess" class="text-xs text-secondary font-semibold mt-2">
+              <p class="text-xs text-secondary font-semibold mt-2">
                 Inclus dans votre offre — aucun paiement supplémentaire.
               </p>
+            </div>
+          </div>
+        </UiCard>
+
+        <UiCard
+          v-else-if="dossierComplete && hasPaidAccess"
+          variant="default"
+          padding="md"
+          class="mb-6 text-left !bg-surface-container-low border-outline-variant/30"
+        >
+          <div class="flex items-start gap-3">
+            <UiPzIcon name="task_alt" class="text-secondary text-[28px] shrink-0 mt-0.5" />
+            <div>
+              <h3 class="font-bold text-on-surface mb-1">{{ MSG.guide.successDossierCompleteTitle }}</h3>
+              <p class="text-sm text-on-surface-variant">{{ MSG.guide.successDossierCompleteBody }}</p>
             </div>
           </div>
         </UiCard>

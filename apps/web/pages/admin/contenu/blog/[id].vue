@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'admin' })
 
 const route = useRoute()
@@ -10,6 +12,7 @@ const isNew = computed(() => route.params.id === 'new')
 const loading = ref(!isNew.value)
 const saving = ref(false)
 const message = ref('')
+const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
 
 const form = ref({
   slug: '',
@@ -42,6 +45,22 @@ async function load() {
 }
 
 async function save() {
+  clearAll()
+  if (!form.value.title.trim()) {
+    setFieldError('title', MSG.validation.required)
+  }
+  if (isNew.value && !form.value.slug.trim()) {
+    setFieldError('slug', MSG.validation.required)
+  }
+  if (!form.value.content.trim()) {
+    setFieldError('content', MSG.validation.required)
+  }
+  if (fieldError('title') || fieldError('slug') || fieldError('content')) {
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+
   saving.value = true
   message.value = ''
   try {
@@ -54,7 +73,7 @@ async function save() {
       message.value = 'Article enregistré.'
     }
   } catch {
-    message.value = 'Échec de l’enregistrement.'
+    formError.value = 'Échec de l’enregistrement.'
   } finally {
     saving.value = false
   }
@@ -84,6 +103,7 @@ onMounted(load)
       </template>
     </AdminPageHeader>
 
+    <UiMessageBanner v-if="formError && !fieldError('title') && !fieldError('slug') && !fieldError('content')" variant="error" :message="formError" class="mb-4" />
     <UiMessageBanner v-if="message" variant="success" :message="message" class="mb-4" />
 
     <div v-if="loading" class="space-y-3">
@@ -92,23 +112,35 @@ onMounted(load)
 
     <UiCard v-else padding="md" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label class="block text-sm">
-          <span class="font-semibold">Titre</span>
-          <input v-model="form.title" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2">
-        </label>
-        <label class="block text-sm">
-          <span class="font-semibold">Slug</span>
-          <input v-model="form.slug" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2" :disabled="!isNew">
-        </label>
+        <UiFormField label="Titre" required :error="fieldError('title')">
+          <input
+            v-model="form.title"
+            type="text"
+            class="form-input w-full"
+            @input="clearField('title')"
+          >
+        </UiFormField>
+        <UiFormField label="Slug" :required="isNew" :error="fieldError('slug')">
+          <input
+            v-model="form.slug"
+            type="text"
+            class="form-input w-full"
+            :disabled="!isNew"
+            @input="clearField('slug')"
+          >
+        </UiFormField>
       </div>
-      <label class="block text-sm">
-        <span class="font-semibold">Extrait</span>
-        <textarea v-model="form.excerpt" rows="2" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2" />
-      </label>
-      <label class="block text-sm">
-        <span class="font-semibold">Contenu</span>
-        <textarea v-model="form.content" rows="14" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2 font-mono text-xs" />
-      </label>
+      <UiFormField label="Extrait">
+        <textarea v-model="form.excerpt" rows="2" class="form-input w-full resize-y" />
+      </UiFormField>
+      <UiFormField label="Contenu" required :error="fieldError('content')">
+        <textarea
+          v-model="form.content"
+          rows="14"
+          class="form-input w-full resize-y font-mono text-xs"
+          @input="clearField('content')"
+        />
+      </UiFormField>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <label class="block text-sm">
           <span class="font-semibold">Statut</span>

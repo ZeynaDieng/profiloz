@@ -1,4 +1,5 @@
 import { getCoverLetterDraftStorageKey } from '~/utils/cover-letter-draft-storage'
+import { loadPaymentDraftBackup } from '~/utils/payment-draft-backup'
 import { getResumeDraftStorageKey } from '~/utils/resume-draft-storage'
 
 const RETURN_KEY = 'profiloz:payment-return-to'
@@ -62,8 +63,27 @@ export function isLetterReturnPath(path: string): boolean {
   return (path.split('?')[0] ?? path) === '/creer/lettre/editeur'
 }
 
+import { loadGuestDossierState } from '~/utils/guest-dossier-state'
+
 /** Devine la cible PDF si returnTo a été perdu (PayTech / changement de domaine). */
 export function guessGuestPdfReturnPath(): string {
+  const dossier = loadGuestDossierState()
+  if (dossier) {
+    if (dossier.origin === 'cv' && !dossier.cvDownloaded) return '/creer/editeur'
+    if (dossier.origin === 'letter' && !dossier.letterDownloaded) return '/creer/lettre/editeur'
+    if (!dossier.letterDownloaded) return '/creer/lettre/editeur'
+    if (!dossier.cvDownloaded) return '/creer/editeur'
+  }
+
+  const backup = loadPaymentDraftBackup()
+  if (backup?.returnTo && isGuestPdfReturnPath(backup.returnTo)) {
+    return backup.returnTo.split('?')[0] === '/creer/lettre/editeur'
+      ? '/creer/lettre/editeur'
+      : '/creer/editeur'
+  }
+  if (backup?.kind === 'letter') return '/creer/lettre/editeur'
+  if (backup?.kind === 'resume') return '/creer/editeur'
+
   if (typeof localStorage === 'undefined') return '/creer/editeur'
 
   for (let i = 0; i < localStorage.length; i++) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  MSG,
   ORG_ROLE_LABELS,
   ORGANIZATION_TYPE_LABELS,
   type OrganizationType,
@@ -15,8 +16,8 @@ const { confirm } = useConfirm()
 const organization = ref<AdminOrganizationDetail | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const error = ref('')
 const success = ref('')
+const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
 
 const editName = ref('')
 const editType = ref<OrganizationType>('OTHER')
@@ -29,7 +30,7 @@ onMounted(loadOrganization)
 
 async function loadOrganization() {
   loading.value = true
-  error.value = ''
+  clearAll()
   try {
     const result = await adminService.getOrganization(orgId.value)
     organization.value = result.organization
@@ -39,7 +40,7 @@ async function loadOrganization() {
       ? result.organization.unlimitedUntil.slice(0, 10)
       : ''
   } catch {
-    error.value = 'Organisation introuvable.'
+    formError.value = 'Organisation introuvable.'
   } finally {
     loading.value = false
   }
@@ -47,8 +48,15 @@ async function loadOrganization() {
 
 async function saveOrganization() {
   if (!organization.value) return
+  clearAll()
+  if (!editName.value.trim()) {
+    setFieldError('name', MSG.validation.required)
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+
   saving.value = true
-  error.value = ''
   success.value = ''
   try {
     const unlimitedUntil = editUntil.value
@@ -64,7 +72,7 @@ async function saveOrganization() {
     success.value = 'Organisation mise à jour.'
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Enregistrement impossible.'
+    formError.value = problem.detail ?? 'Enregistrement impossible.'
   } finally {
     saving.value = false
   }
@@ -79,7 +87,7 @@ async function removeMember(userId: string, name: string) {
   })
   if (!ok) return
 
-  error.value = ''
+  clearAll()
   success.value = ''
   try {
     await adminService.removeMember(orgId.value, userId)
@@ -87,7 +95,7 @@ async function removeMember(userId: string, name: string) {
     success.value = 'Membre retiré.'
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Suppression impossible.'
+    formError.value = problem.detail ?? 'Suppression impossible.'
   }
 }
 
@@ -105,7 +113,7 @@ function formatDate(iso: string) {
       <h1 v-if="organization" class="text-2xl md:text-3xl font-bold text-on-surface mt-2">{{ organization.name }}</h1>
     </header>
 
-    <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
+    <UiMessageBanner v-if="formError && !fieldError('name')" variant="error" :message="formError" class="mb-4" />
     <UiMessageBanner v-if="success" variant="success" :message="success" class="mb-4" />
 
     <div v-if="loading" class="space-y-4">
@@ -117,12 +125,12 @@ function formatDate(iso: string) {
       <UiCard padding="lg">
         <h2 class="font-bold text-on-surface mb-4">Paramètres</h2>
         <form class="grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="saveOrganization">
-          <UiFormField label="Nom">
+          <UiFormField label="Nom" required :error="fieldError('name')">
             <input
               v-model="editName"
               type="text"
-              class="w-full rounded-xl border border-outline-variant/40 bg-surface px-4 py-3"
-              required
+              class="form-input w-full"
+              @input="clearField('name')"
             >
           </UiFormField>
           <UiFormField label="Type">

@@ -20,7 +20,12 @@ const closingText = defineModel<string>('closingText', { default: DEFAULT_CLOSIN
 
 defineProps<{
   showTemplatePicker?: boolean
+  fieldErrors?: Record<string, string>
 }>()
+
+function fieldError(fieldErrors: Record<string, string> | undefined, key: string) {
+  return fieldErrors?.[key] ?? ''
+}
 </script>
 
 <template>
@@ -48,11 +53,11 @@ defineProps<{
 
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Expéditeur</h2>
-      <UiFormField label="Nom complet">
+      <UiFormField label="Nom complet" required :error="fieldError(fieldErrors, 'senderName')">
         <input v-model="senderName" type="text" class="form-input form-input--white w-full" placeholder="Jean Dupont" />
       </UiFormField>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-sm">
-        <UiFormField label="E-mail">
+        <UiFormField label="E-mail" :error="fieldError(fieldErrors, 'senderEmail')">
           <input v-model="senderEmail" type="email" class="form-input form-input--white w-full" />
         </UiFormField>
         <UiFormField label="Téléphone">
@@ -66,14 +71,14 @@ defineProps<{
 
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Destinataire</h2>
-      <UiFormField label="Entreprise">
+      <UiFormField label="Entreprise" required :error="fieldError(fieldErrors, 'companyName')">
         <input v-model="companyName" type="text" class="form-input form-input--white w-full" placeholder="Acme Corp" />
       </UiFormField>
       <UiFormField label="Adresse entreprise (optionnel)">
         <textarea v-model="companyAddress" rows="2" class="form-input form-input--white w-full resize-y" />
       </UiFormField>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-sm">
-        <UiFormField label="Poste visé">
+        <UiFormField label="Poste visé" required :error="fieldError(fieldErrors, 'position')">
           <input v-model="position" type="text" class="form-input form-input--white w-full" />
         </UiFormField>
         <UiFormField label="Nom du recruteur (optionnel)">
@@ -84,8 +89,8 @@ defineProps<{
 
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Contenu</h2>
-      <UiFormField label="Corps de la lettre">
-        <textarea v-model="content" rows="10" required class="form-input form-input--white w-full resize-y" />
+      <UiFormField label="Corps de la lettre" required :error="fieldError(fieldErrors, 'content')">
+        <textarea v-model="content" rows="10" class="form-input form-input--white w-full resize-y" />
       </UiFormField>
       <UiFormField label="Formule de politesse">
         <textarea v-model="closingText" rows="2" class="form-input form-input--white w-full resize-y" />

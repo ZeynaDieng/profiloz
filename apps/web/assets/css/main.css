@@ -51,6 +51,16 @@ html {
   @apply bg-white;
 }
 
+.form-field--error .form-input,
+.form-field--error textarea.form-input {
+  border-color: var(--color-error);
+}
+
+.form-field--error .form-input:focus,
+.form-field--error textarea.form-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
 /* ── Mobile First layout utilities ── */
 
 .page-container {

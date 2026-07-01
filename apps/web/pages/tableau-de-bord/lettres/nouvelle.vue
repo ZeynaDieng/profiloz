@@ -42,8 +42,29 @@ const content = ref(DEFAULT_LETTER_CONTENT)
 const closingText = ref(DEFAULT_CLOSING_TEXT)
 
 const loading = ref(false)
-const error = ref('')
+const apiError = ref('')
 const previewOpen = ref(false)
+const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
+
+function validateForm(): boolean {
+  clearAll()
+  const result = validateCoverLetterFields({
+    senderName: senderName.value,
+    senderEmail: senderEmail.value,
+    companyName: companyName.value,
+    position: position.value,
+    content: content.value,
+  })
+  for (const [key, message] of Object.entries(result.fieldErrors)) {
+    setFieldError(key, message)
+  }
+  formError.value = result.formError
+  if (result.formError) {
+    scrollToFirstError()
+    return false
+  }
+  return true
+}
 
 const previewLetter = computed(() =>
   coverLetterService.toSnapshot({
@@ -102,7 +123,9 @@ onMounted(async () => {
 })
 
 async function onSubmit() {
-  error.value = ''
+  apiError.value = ''
+  if (!validateForm()) return
+
   loading.value = true
   try {
     const letter = await coverLetterService.create({
@@ -122,7 +145,7 @@ async function onSubmit() {
     await navigateTo(`/tableau-de-bord/lettres/${letter.id}`)
   } catch (err) {
     const problem = err as { detail?: string; title?: string }
-    error.value = problem.detail || problem.title || MSG.letter.createError
+    apiError.value = problem.detail || problem.title || MSG.letter.createError
   } finally {
     loading.value = false
   }
@@ -150,6 +173,14 @@ async function onSubmit() {
 
     <form class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter" @submit.prevent="onSubmit">
       <UiCard variant="glass" padding="lg" class="">
+        <Transition name="form-field__error">
+          <UiMessageBanner
+            v-if="formError"
+            variant="error"
+            :message="formError"
+            class="mb-4"
+          />
+        </Transition>
         <FeatureCoverLetterForm
           v-model:template-id="templateId"
           v-model:sender-name="senderName"
@@ -162,8 +193,9 @@ async function onSubmit() {
           v-model:recruiter-name="recruiterName"
           v-model:content="content"
           v-model:closing-text="closingText"
+          :field-errors="fieldErrors"
         />
-        <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-4" />
+        <UiMessageBanner v-if="apiError" variant="error" :message="apiError" class="mt-4" />
         <div class="hidden md:flex flex-wrap justify-end gap-3 mt-stack-lg">
           <NuxtLink :to="backLink">
             <UiButton variant="ghost">Annuler</UiButton>

@@ -17,8 +17,29 @@ const letter = ref<CoverLetter | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const pdfLoading = ref(false)
-const error = ref('')
+const pageError = ref('')
 const previewOpen = ref(false)
+const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
+
+function validateForm(): boolean {
+  clearAll()
+  const result = validateCoverLetterFields({
+    senderName: senderName.value,
+    senderEmail: senderEmail.value,
+    companyName: companyName.value,
+    position: position.value,
+    content: content.value,
+  })
+  for (const [key, message] of Object.entries(result.fieldErrors)) {
+    setFieldError(key, message)
+  }
+  formError.value = result.formError
+  if (result.formError) {
+    scrollToFirstError()
+    return false
+  }
+  return true
+}
 
 const templateId = ref<CoverLetterTemplateSlug>('CLASSIQUE')
 const senderName = ref('')
@@ -71,7 +92,7 @@ onMounted(async () => {
     content.value = data.content
     closingText.value = data.closingText ?? DEFAULT_CLOSING_TEXT
   } catch {
-    error.value = 'Lettre introuvable.'
+    pageError.value = 'Lettre introuvable.'
   } finally {
     loading.value = false
   }
@@ -79,8 +100,10 @@ onMounted(async () => {
 
 async function onSave() {
   if (!letter.value) return
+  if (!validateForm()) return
+
   saving.value = true
-  error.value = ''
+  clearAll()
   try {
     letter.value = await coverLetterService.update(letter.value.id, {
       templateId: templateId.value,
@@ -97,7 +120,7 @@ async function onSave() {
     })
   } catch (err) {
     const problem = err as { detail?: string; title?: string }
-    error.value = problem.detail || problem.title || MSG.letter.saveError
+    formError.value = problem.detail || problem.title || MSG.letter.saveError
   } finally {
     saving.value = false
   }
@@ -105,12 +128,15 @@ async function onSave() {
 
 async function onDownloadPdf() {
   if (!letter.value) return
+  if (!validateForm()) return
+
   pdfLoading.value = true
   try {
     await onSave()
+    if (formError.value) return
     await coverLetterService.downloadPdf(letter.value.id)
   } catch {
-    error.value = MSG.pdf.error
+    formError.value = MSG.pdf.error
   } finally {
     pdfLoading.value = false
   }
@@ -140,11 +166,20 @@ async function onDelete() {
       <UiSkeleton variant="text" :lines="2" />
       <UiSkeleton variant="rect" height="12rem" />
     </div>
-    <UiMessageBanner v-else-if="error && !letter" variant="error" :message="error" class="mb-4" />
+    <UiMessageBanner v-else-if="pageError && !letter" variant="error" :message="pageError" class="mb-4" />
 
     <div v-else-if="letter" class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter">
       <form class="glass-card rounded-xl p-stack-md md:p-stack-lg border border-outline-variant space-y-stack-lg" @submit.prevent="onSave">
         <h1 class="text-xl md:text-2xl font-bold text-on-surface">{{ letter.title }}</h1>
+
+        <Transition name="form-field__error">
+          <UiMessageBanner
+            v-if="formError"
+            variant="error"
+            :message="formError"
+            class="mb-4"
+          />
+        </Transition>
 
         <FeatureCoverLetterForm
           v-model:template-id="templateId"
@@ -158,9 +193,8 @@ async function onDelete() {
           v-model:recruiter-name="recruiterName"
           v-model:content="content"
           v-model:closing-text="closingText"
+          :field-errors="fieldErrors"
         />
-
-        <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-2" />
 
         <!-- Actions desktop -->
         <div class="hidden md:flex flex-wrap gap-3">

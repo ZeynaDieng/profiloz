@@ -8,7 +8,11 @@ defineProps<{
 </script>
 
 <template>
-  <div class="relative">
+  <div
+    class="relative"
+    :class="{ 'form-field--error': error }"
+    :data-form-error="error ? '' : undefined"
+  >
     <label v-if="label" class="font-label-sm text-on-surface block mb-2">
       {{ label }}
       <span v-if="required" class="text-error" aria-hidden="true">*</span>

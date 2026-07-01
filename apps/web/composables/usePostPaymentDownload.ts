@@ -5,16 +5,27 @@ import {
 } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
+  initGuestDossier,
+  markGuestDossierDownload,
+  restorePaidGuestSession,
+} from '~/utils/guest-dossier-state'
+import {
   clearPaymentDraftBackup,
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 
 const POLL_INTERVAL_MS = 800
-const MAX_POLL_ATTEMPTS = 8
+const MAX_POLL_ATTEMPTS = 20
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function applyPaidGuestSession(guestSessionId: string | null | undefined) {
+  if (!guestSessionId || !import.meta.client) return
+  localStorage.setItem('profiloz:guest-session', guestSessionId)
+  restorePaidGuestSession()
 }
 
 export function usePostPaymentDownload() {
@@ -30,14 +41,16 @@ export function usePostPaymentDownload() {
   async function confirmPaymentOnce(paymentRef: string) {
     const result = await paymentService.confirmReturn(paymentRef)
 
-    const shouldSwitchSession = Boolean(
-      result.guestSessionClientId
-      && hasDossierDownloadAccess(result.entitlements)
-      && !hasDossierDownloadAccess(await paymentService.getEntitlements().catch(() => null)),
-    )
-
-    if (shouldSwitchSession && result.guestSessionClientId) {
+    if (result.guestSessionClientId) {
       applyGuestSessionId(result.guestSessionClientId)
+      const backup = loadPaymentDraftBackup()
+      const origin =
+        backup?.returnTo && isLetterReturnPath(backup.returnTo)
+          ? 'letter'
+          : backup?.kind === 'letter'
+            ? 'letter'
+            : 'cv'
+      initGuestDossier(result.guestSessionClientId, origin)
       await ensureSession()
     }
 
@@ -109,13 +122,12 @@ export function usePostPaymentDownload() {
   function loadResumeForDownload(): ResumeSnapshot | null {
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'resume') {
-      if (backup.guestSessionId && import.meta.client) {
-        localStorage.setItem('profiloz:guest-session', backup.guestSessionId)
-      }
+      applyPaidGuestSession(backup.guestSessionId)
       resumeStore.loadSnapshot(backup.snapshot)
       return backup.snapshot
     }
 
+    restorePaidGuestSession()
     const snapshot = findResumeSnapshotInStorage()
     if (snapshot) {
       resumeStore.loadSnapshot(snapshot)
@@ -136,13 +148,12 @@ export function usePostPaymentDownload() {
   function loadLetterForDownload() {
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'letter') {
-      if (backup.guestSessionId && import.meta.client) {
-        localStorage.setItem('profiloz:guest-session', backup.guestSessionId)
-      }
+      applyPaidGuestSession(backup.guestSessionId)
       coverLetterStore.current = { ...backup.draft }
       return coverLetterStore.toSnapshot()
     }
 
+    restorePaidGuestSession()
     const draft = findCoverLetterDraftInStorage()
     if (draft) {
       coverLetterStore.current = { ...draft }
@@ -156,22 +167,33 @@ export function usePostPaymentDownload() {
   async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
     if (!isGuestPdfReturnPath(returnTo)) return false
 
+    const backup = loadPaymentDraftBackup()
+    if (backup?.guestSessionId) {
+      applyPaidGuestSession(backup.guestSessionId)
+    } else {
+      restorePaidGuestSession()
+    }
+
     await waitForEntitlements(paymentRef)
+
+    const guestSessionId = import.meta.client
+      ? localStorage.getItem('profiloz:guest-session')
+      : null
+    if (guestSessionId) {
+      initGuestDossier(guestSessionId, isLetterReturnPath(returnTo) ? 'letter' : 'cv')
+    }
 
     phase.value = 'downloading'
     message.value = isLetterReturnPath(returnTo)
       ? 'Génération de votre lettre…'
       : 'Génération de votre PDF…'
 
-    const snapshot = isLetterReturnPath(returnTo)
-      ? loadLetterForDownload()
-      : loadResumeForDownload()
-
-    await ensureSession()
-
     if (isLetterReturnPath(returnTo)) {
-      if (!snapshot?.content?.trim()) throw new Error('missing-letter')
-      const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+      const letterSnapshot = loadLetterForDownload()
+      await ensureSession()
+      if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
+      const { filename } = await pdfService.generateLetterAndDownload(letterSnapshot)
+      markGuestDossierDownload('letter')
       clearPaymentDraftBackup()
       clearPaymentRef()
       await navigateTo(
@@ -181,10 +203,12 @@ export function usePostPaymentDownload() {
       return true
     }
 
-    const resumeSnapshot = snapshot as ResumeSnapshot | null
+    const resumeSnapshot = loadResumeForDownload()
+    await ensureSession()
     if (!resumeSnapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
 
     const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
+    markGuestDossierDownload('cv')
     clearPaymentDraftBackup()
     clearPaymentRef()
     await navigateTo({ path: '/creer/succes', query: { file: filename } }, { replace: true })

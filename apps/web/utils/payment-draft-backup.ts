@@ -7,8 +7,20 @@ const BACKUP_KEY = 'profiloz:payment-draft-backup'
 const GUEST_KEY = 'profiloz:payment-guest-session'
 
 type PaymentDraftBackup =
-  | { kind: 'resume'; snapshot: ResumeSnapshot; guestSessionId: string | null; savedAt: string }
-  | { kind: 'letter'; draft: CoverLetterDraft; guestSessionId: string | null; savedAt: string }
+  | {
+      kind: 'resume'
+      snapshot: ResumeSnapshot
+      guestSessionId: string | null
+      returnTo?: string | null
+      savedAt: string
+    }
+  | {
+      kind: 'letter'
+      draft: CoverLetterDraft
+      guestSessionId: string | null
+      returnTo?: string | null
+      savedAt: string
+    }
 
 function writeSession(key: string, value: string) {
   if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, value)
@@ -91,6 +103,7 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
       kind: 'letter',
       draft,
       guestSessionId,
+      returnTo: returnTo ?? null,
       savedAt: new Date().toISOString(),
     }
     writeSession(BACKUP_KEY, JSON.stringify(backup))
@@ -104,6 +117,7 @@ export function savePaymentDraftBackup(returnTo?: string | null) {
     kind: 'resume',
     snapshot,
     guestSessionId,
+    returnTo: returnTo ?? null,
     savedAt: new Date().toISOString(),
   }
   writeSession(BACKUP_KEY, JSON.stringify(backup))
@@ -122,5 +136,4 @@ export function loadPaymentDraftBackup(): PaymentDraftBackup | null {
 
 export function clearPaymentDraftBackup() {
   removeSession(BACKUP_KEY)
-  removeSession(GUEST_KEY)
 }

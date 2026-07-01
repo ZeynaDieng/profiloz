@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSG } from '@profiloz/shared'
+
 definePageMeta({ layout: 'admin' })
 
 const adminService = useAdminService()
@@ -7,8 +9,8 @@ const settings = ref<Record<string, unknown> | null>(null)
 const health = ref<Record<string, unknown> | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const error = ref('')
 const message = ref('')
+const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
 
 const appName = ref('')
 const logoUrl = ref('')
@@ -26,13 +28,21 @@ async function load() {
     seoTitle.value = String((s.seo as { title?: string })?.title ?? '')
     seoDescription.value = String((s.seo as { description?: string })?.description ?? '')
   } catch {
-    error.value = 'Impossible de charger les paramètres.'
+    formError.value = 'Impossible de charger les paramètres.'
   } finally {
     loading.value = false
   }
 }
 
 async function save() {
+  clearAll()
+  if (!appName.value.trim()) {
+    setFieldError('appName', MSG.validation.required)
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+
   saving.value = true
   message.value = ''
   try {
@@ -42,7 +52,7 @@ async function save() {
     })
     message.value = 'Paramètres enregistrés.'
   } catch {
-    message.value = 'Échec de l’enregistrement.'
+    formError.value = 'Échec de l’enregistrement.'
   } finally {
     saving.value = false
   }
@@ -61,7 +71,7 @@ const pdfReady = computed(() => Boolean((health.value?.pdfRender as { ready?: bo
   <div>
     <AdminPageHeader title="Paramètres" subtitle="Identité, SEO et état des intégrations." />
 
-    <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
+    <UiMessageBanner v-if="formError && !fieldError('appName')" variant="error" :message="formError" class="mb-4" />
     <UiMessageBanner v-if="message" variant="success" :message="message" class="mb-4" />
 
     <div v-if="loading" class="space-y-3">
@@ -75,28 +85,29 @@ const pdfReady = computed(() => Boolean((health.value?.pdfRender as { ready?: bo
         <UiCard padding="lg">
           <h3 class="font-bold text-on-surface mb-3">Identité</h3>
           <div class="space-y-3">
-            <label class="block text-sm">
-              Nom de l’application
-              <input v-model="appName" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2">
-            </label>
-            <label class="block text-sm">
-              URL du logo
-              <input v-model="logoUrl" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2">
-            </label>
+            <UiFormField label="Nom de l’application" required :error="fieldError('appName')">
+              <input
+                v-model="appName"
+                type="text"
+                class="form-input w-full"
+                @input="clearField('appName')"
+              >
+            </UiFormField>
+            <UiFormField label="URL du logo">
+              <input v-model="logoUrl" type="text" class="form-input w-full">
+            </UiFormField>
           </div>
         </UiCard>
 
         <UiCard padding="lg">
           <h3 class="font-bold text-on-surface mb-3">SEO</h3>
           <div class="space-y-3">
-            <label class="block text-sm">
-              Titre
-              <input v-model="seoTitle" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2">
-            </label>
-            <label class="block text-sm">
-              Description
-              <textarea v-model="seoDescription" rows="3" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-3 py-2" />
-            </label>
+            <UiFormField label="Titre">
+              <input v-model="seoTitle" type="text" class="form-input w-full">
+            </UiFormField>
+            <UiFormField label="Description">
+              <textarea v-model="seoDescription" rows="3" class="form-input w-full resize-y" />
+            </UiFormField>
           </div>
         </UiCard>
 

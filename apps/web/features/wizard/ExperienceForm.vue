@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import type { Experience } from '@profiloz/shared'
+import type { ExperienceFieldKey } from '~/utils/experience'
 
 const model = defineModel<Experience[]>({ required: true })
+
+const props = defineProps<{
+  fieldErrors?: Record<string, string>
+}>()
+
+function fieldError(index: number, field: ExperienceFieldKey) {
+  return props.fieldErrors?.[`exp-${index}-${field}`] ?? ''
+}
+
+function hasItemErrors(index: number) {
+  return Object.keys(props.fieldErrors ?? {}).some((key) => key.startsWith(`exp-${index}-`))
+}
 
 function addItem() {
   model.value.push({
@@ -28,19 +41,20 @@ function removeItem(index: number) {
       v-for="(item, index) in model"
       :key="index"
       class="p-stack-md rounded-xl border border-outline-variant bg-surface-container-lowest space-y-4"
+      :class="{ 'border-error/40': hasItemErrors(index) }"
     >
       <div class="flex justify-between items-center">
         <span class="font-label-sm font-bold text-on-surface">Expérience {{ index + 1 }}</span>
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
-      <UiFormField label="Entreprise" required>
+      <UiFormField label="Entreprise" required :error="fieldError(index, 'company')">
         <input v-model="item.company" type="text" class="form-input w-full" />
       </UiFormField>
-      <UiFormField label="Poste" required>
+      <UiFormField label="Poste" required :error="fieldError(index, 'position')">
         <input v-model="item.position" type="text" class="form-input w-full" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Ville" required>
+        <UiFormField label="Ville" required :error="fieldError(index, 'location')">
           <input v-model="item.location" type="text" class="form-input w-full" placeholder="Ex. Dakar" />
         </UiFormField>
         <UiFormField label="Pays">
@@ -48,10 +62,10 @@ function removeItem(index: number) {
         </UiFormField>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Début" required>
+        <UiFormField label="Début" required :error="fieldError(index, 'startDate')">
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2021" />
         </UiFormField>
-        <UiFormField label="Fin" :required="!item.isCurrent">
+        <UiFormField label="Fin" :required="!item.isCurrent" :error="fieldError(index, 'endDate')">
           <input
             v-model="item.endDate"
             type="text"

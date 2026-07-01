@@ -11,7 +11,7 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
-const error = ref('')
+const { fieldError, formError, clearAll, setFromZod, scrollToFirstError } = useFormValidation()
 
 const redirectTo = computed(() => {
   const target = route.query.redirect
@@ -24,13 +24,14 @@ const signupLink = computed(() => ({
 }))
 
 async function onSubmit() {
-  error.value = ''
+  clearAll()
   const validation = loginSchema.safeParse({
     email: email.value,
     password: password.value,
   })
   if (!validation.success) {
-    error.value = validation.error.errors[0]?.message ?? 'Données invalides'
+    setFromZod(validation.error, MSG.validation.invalidData)
+    scrollToFirstError()
     return
   }
 
@@ -39,7 +40,7 @@ async function onSubmit() {
     await authStore.login(validation.data.email, validation.data.password)
     await navigateTo(redirectTo.value)
   } catch (err) {
-    error.value = parseApiAuthError(err, MSG.auth.loginError)
+    formError.value = parseApiAuthError(err, MSG.auth.loginError)
   } finally {
     loading.value = false
   }
@@ -60,30 +61,32 @@ onMounted(() => {
       <p class="text-on-surface-variant text-sm sm:text-base">Retrouvez vos CV et reprenez où vous en étiez.</p>
     </div>
     <form class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
-      <UiFormField label="E-mail">
+      <Transition name="form-field__error">
+        <UiMessageBanner
+          v-if="formError && !fieldError('email') && !fieldError('password')"
+          variant="error"
+          :message="formError"
+        />
+      </Transition>
+      <UiFormField label="E-mail" :error="fieldError('email')">
         <input
           v-model="email"
           type="email"
-          required
           autocomplete="email"
           inputmode="email"
           class="form-input form-input--white w-full"
           placeholder="vous@exemple.com"
         >
       </UiFormField>
-      <UiFormField label="Mot de passe">
+      <UiFormField label="Mot de passe" :error="fieldError('password')">
         <input
           v-model="password"
           type="password"
-          required
           autocomplete="current-password"
           class="form-input form-input--white w-full"
           placeholder="Votre mot de passe"
         >
       </UiFormField>
-      <Transition name="form-field__error">
-        <UiMessageBanner v-if="error" variant="error" :message="error" />
-      </Transition>
       <UiButton type="submit" block :loading="loading" class="mt-1">
         Se connecter
       </UiButton>

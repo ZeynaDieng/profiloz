@@ -7,6 +7,7 @@ import {
   resolvePaymentReturnTo,
 } from '~/utils/payment-return'
 import { consumePaymentGuestSession, peekPaymentGuestSession } from '~/utils/payment-draft-backup'
+import { restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
@@ -70,9 +71,11 @@ onMounted(async () => {
     applyGuestSessionId(gsFromQuery)
   } else if (gsFromBackup) {
     applyGuestSessionId(consumePaymentGuestSession() ?? gsFromBackup)
-  } else if (hasPaymentContext) {
-    // Ne pas réaligner sur un autre brouillon pendant un retour paiement.
   } else {
+    restorePaidGuestSession()
+  }
+
+  if (!gsFromQuery && !gsFromBackup && !hasPaymentContext) {
     alignGuestSessionFromStoredDrafts()
   }
 

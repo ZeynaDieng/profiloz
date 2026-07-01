@@ -189,6 +189,11 @@ export const MSG = {
     successCrossSellCtaLetter: 'Créer ma lettre incluse',
     successCrossSellCtaCv: 'Créer mon CV',
     successCrossSellDashboard: 'Voir mon tableau de bord',
+    successDossierCompleteTitle: 'Votre dossier est complet',
+    successDossierCompleteBody:
+      'Vous avez téléchargé votre CV et votre lettre de motivation. Aucun autre document n’est inclus dans ce paiement.',
+    successDossierCompleteLead:
+      'Votre dossier est complet. Conservez vos fichiers PDF ou créez un compte gratuit pour les retrouver plus tard.',
     dashboardPrompt: "Que souhaitez-vous faire aujourd'hui ?",
     recentFolders: 'Vos dossiers récents',
   },

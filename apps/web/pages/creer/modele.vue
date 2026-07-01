@@ -6,10 +6,10 @@ import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/regist
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
 useGuestSession()
-const { error: toastError } = useAppToast()
 const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
+const formError = ref('')
 
 onMounted(() => {
   if (!resumeStore.current?.personalInfo.fullName) {
@@ -47,8 +47,12 @@ function selectTemplate(slug: TemplateSlug) {
 }
 
 function onContinue() {
+  formError.value = ''
   if (!selectedSlug.value) {
-    toastError(MSG.wizard.chooseTemplate)
+    formError.value = MSG.wizard.chooseTemplate
+    nextTick(() => {
+      document.querySelector('[data-form-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
     return
   }
   resumeStore.setTemplate(selectedSlug.value)
@@ -77,6 +81,14 @@ useWizardStep({ onContinue })
         variant="success"
         :message="MSG.guide.modelSelected"
       />
+      <Transition name="form-field__error">
+        <UiMessageBanner
+          v-if="formError"
+          variant="error"
+          :message="formError"
+          data-form-error
+        />
+      </Transition>
     </header>
 
     <div class="flex gap-2 mb-stack-lg overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">

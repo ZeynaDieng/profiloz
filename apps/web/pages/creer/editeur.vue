@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
-import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
 
 definePageMeta({ layout: false })
 
@@ -14,6 +14,7 @@ const pdfService = usePdfService()
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
 const { isDesktop } = useBreakpoints()
+const editorValidation = useResumeEditorValidation()
 
 const loading = ref(true)
 const pageError = ref('')
@@ -73,7 +74,7 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
 
 onMounted(async () => {
   authStore.loadFromStorage()
-  alignGuestSessionFromStoredDrafts()
+  await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})
 
   const resumeId = route.query.id as string | undefined
@@ -159,6 +160,11 @@ async function saveResume(silent = false) {
 
 async function downloadPdf() {
   pdfError.value = ''
+  if (editorValidation && !editorValidation.validateAll()) {
+    pdfError.value = MSG.validation.invalidData
+    editorValidation.scrollToFirstError()
+    return
+  }
   pdfLoading.value = true
   pdfLoadingStep.value = 0
   const stepTimer = window.setInterval(() => {
@@ -204,6 +210,11 @@ async function downloadPdf() {
     }
 
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())
+    const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
+    if (guestId) {
+      if (!loadGuestDossierState()) initGuestDossier(guestId, 'cv')
+      markGuestDossierDownload('cv')
+    }
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch (err) {
     const problem = err as { status?: number }

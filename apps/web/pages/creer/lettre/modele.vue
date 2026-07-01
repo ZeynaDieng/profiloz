@@ -9,10 +9,10 @@ import {
 definePageMeta({ layout: 'wizard' })
 
 useGuestSession()
-const { error: toastError } = useAppToast()
 const coverLetterStore = useCoverLetterStore()
 const resumeStore = useResumeStore()
 const route = useRoute()
+const formError = ref('')
 
 onMounted(() => {
   resumeStore.rehydrateFromStorage()
@@ -48,8 +48,12 @@ function selectTemplate(slug: CoverLetterTemplateSlug) {
 }
 
 function onContinue() {
+  formError.value = ''
   if (!selectedSlug.value) {
-    toastError(MSG.wizard.chooseTemplate)
+    formError.value = MSG.wizard.chooseTemplate
+    nextTick(() => {
+      document.querySelector('[data-form-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
     return
   }
   coverLetterStore.setTemplate(selectedSlug.value)
@@ -81,6 +85,14 @@ function onContinue() {
         variant="success"
         :message="MSG.guide.letterModelSelected"
       />
+      <Transition name="form-field__error">
+        <UiMessageBanner
+          v-if="formError"
+          variant="error"
+          :message="formError"
+          data-form-error
+        />
+      </Transition>
     </header>
 
     <div class="flex gap-2 mb-stack-lg overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">

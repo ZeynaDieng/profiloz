@@ -4,8 +4,8 @@ import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
-import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload } from '~/utils/guest-dossier-state'
 
 definePageMeta({ layout: false })
 
@@ -24,6 +24,7 @@ const pdfLoading = ref(false)
 const pdfLoadingStep = ref(0)
 const pdfError = ref('')
 const previewOpen = ref(false)
+const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
 
 const templateId = ref<CoverLetterTemplateSlug>('CLASSIQUE')
 const senderName = ref('')
@@ -120,7 +121,7 @@ const pdfLoadingMessage = computed(() => {
 
 onMounted(async () => {
   authStore.loadFromStorage()
-  alignGuestSessionFromStoredDrafts()
+  await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})
 
   coverLetterStore.rehydrateFromStorage()
@@ -163,6 +164,24 @@ onMounted(async () => {
 
 async function downloadPdf() {
   pdfError.value = ''
+  clearAll()
+  const validation = validateCoverLetterFields({
+    senderName: senderName.value,
+    senderEmail: senderEmail.value,
+    companyName: companyName.value,
+    position: position.value,
+    content: content.value,
+  })
+  for (const [key, message] of Object.entries(validation.fieldErrors)) {
+    setFieldError(key, message)
+  }
+  formError.value = validation.formError
+  if (validation.formError) {
+    pdfError.value = validation.formError
+    scrollToFirstError()
+    return
+  }
+
   pdfLoading.value = true
   pdfLoadingStep.value = 0
   const stepTimer = window.setInterval(() => {
@@ -199,6 +218,11 @@ async function downloadPdf() {
     if (!snapshot) throw new Error('missing snapshot')
 
     const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+    const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
+    if (guestId) {
+      if (!loadGuestDossierState()) initGuestDossier(guestId, 'letter')
+      markGuestDossierDownload('letter')
+    }
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
     const problem = err as { status?: number }
@@ -240,6 +264,14 @@ async function downloadPdf() {
     <main class="flex-1 page-container pb-28 xl:pb-6">
       <div class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter mt-4">
         <UiCard variant="glass" padding="lg">
+          <Transition name="form-field__error">
+            <UiMessageBanner
+              v-if="formError"
+              variant="error"
+              :message="formError"
+              class="mb-4"
+            />
+          </Transition>
           <FeatureCoverLetterForm
             v-model:template-id="templateId"
             v-model:sender-name="senderName"
@@ -252,6 +284,7 @@ async function downloadPdf() {
             v-model:recruiter-name="recruiterName"
             v-model:content="content"
             v-model:closing-text="closingText"
+            :field-errors="fieldErrors"
           />
           <UiMessageBanner v-if="pdfError" variant="error" :message="pdfError" class="mt-4" />
           <div class="hidden md:flex justify-end mt-stack-lg">

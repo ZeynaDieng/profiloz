@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  MSG,
   ORG_ROLE_LABELS,
   ORGANIZATION_TYPE_LABELS,
   canManageMembers,
@@ -19,8 +20,8 @@ const { confirm } = useConfirm()
 const loading = ref(true)
 const saving = ref(false)
 const inviting = ref(false)
-const error = ref('')
 const success = ref('')
+const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
 
 const organization = ref<OrganizationDto | null>(null)
 const myRole = ref<OrgRole | null>(null)
@@ -56,14 +57,14 @@ onMounted(async () => {
       await navigateTo({ path: '/tarifs', query: { reason: 'business', returnTo: '/tableau-de-bord/organisation' } })
       return
     }
-    error.value = 'Impossible de charger votre espace organisation.'
+    formError.value = 'Impossible de charger votre espace organisation.'
     loading.value = false
   }
 })
 
 async function loadOrganization() {
   loading.value = true
-  error.value = ''
+  clearAll()
   try {
     const result = await organizationService.getMyOrganization()
     organization.value = result.organization
@@ -71,7 +72,7 @@ async function loadOrganization() {
     editName.value = result.organization.name
     editType.value = result.organization.type
   } catch {
-    error.value = 'Impossible de charger votre espace organisation.'
+    formError.value = 'Impossible de charger votre espace organisation.'
   } finally {
     loading.value = false
   }
@@ -79,8 +80,15 @@ async function loadOrganization() {
 
 async function saveOrganization() {
   if (!organization.value || !canEdit.value) return
+  clearAll()
+  if (!editName.value.trim()) {
+    setFieldError('name', MSG.validation.required)
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+
   saving.value = true
-  error.value = ''
   success.value = ''
   try {
     const result = await organizationService.updateOrganization({
@@ -91,7 +99,7 @@ async function saveOrganization() {
     success.value = 'Organisation mise à jour.'
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Enregistrement impossible pour le moment.'
+    formError.value = problem.detail ?? 'Enregistrement impossible pour le moment.'
   } finally {
     saving.value = false
   }
@@ -99,8 +107,21 @@ async function saveOrganization() {
 
 async function submitInvite() {
   if (!organization.value || !canManage.value) return
+  clearAll()
+  if (!inviteEmail.value.trim()) {
+    setFieldError('inviteEmail', MSG.validation.requiredAlt)
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail.value.trim())) {
+    setFieldError('inviteEmail', MSG.validation.email)
+    formError.value = MSG.validation.invalidData
+    scrollToFirstError()
+    return
+  }
+
   inviting.value = true
-  error.value = ''
   success.value = ''
   try {
     const result = await organizationService.inviteMember(organization.value.id, {
@@ -116,7 +137,7 @@ async function submitInvite() {
     success.value = `${result.member.name} a rejoint votre organisation.`
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Invitation impossible pour le moment.'
+    formError.value = problem.detail ?? 'Invitation impossible pour le moment.'
   } finally {
     inviting.value = false
   }
@@ -124,7 +145,7 @@ async function submitInvite() {
 
 async function changeMemberRole(userId: string, role: OrgRole) {
   if (!organization.value || !canManage.value) return
-  error.value = ''
+  clearAll()
   success.value = ''
   try {
     const result = await organizationService.updateMemberRole(organization.value.id, userId, role)
@@ -137,7 +158,7 @@ async function changeMemberRole(userId: string, role: OrgRole) {
     success.value = 'Rôle mis à jour.'
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Modification impossible.'
+    formError.value = problem.detail ?? 'Modification impossible.'
   }
 }
 
@@ -150,7 +171,7 @@ async function removeMember(userId: string, name: string) {
   })
   if (!ok) return
 
-  error.value = ''
+  clearAll()
   success.value = ''
   try {
     await organizationService.removeMember(organization.value.id, userId)
@@ -161,7 +182,7 @@ async function removeMember(userId: string, name: string) {
     success.value = 'Membre retiré.'
   } catch (err) {
     const problem = err as { detail?: string }
-    error.value = problem.detail ?? 'Suppression impossible.'
+    formError.value = problem.detail ?? 'Suppression impossible.'
   }
 }
 </script>
@@ -175,7 +196,7 @@ async function removeMember(userId: string, name: string) {
       </p>
     </header>
 
-    <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-4" />
+    <UiMessageBanner v-if="formError && !fieldError('name') && !fieldError('inviteEmail')" variant="error" :message="formError" class="mb-4" />
     <UiMessageBanner v-if="success" variant="success" :message="success" class="mb-4" />
 
     <div v-if="loading" class="space-y-4">
@@ -202,13 +223,13 @@ async function removeMember(userId: string, name: string) {
         </div>
 
         <form class="space-y-4" @submit.prevent="saveOrganization">
-          <UiFormField label="Nom de l’organisation">
+          <UiFormField label="Nom de l’organisation" required :error="fieldError('name')">
             <input
               v-model="editName"
               type="text"
-              class="w-full rounded-xl border border-outline-variant/40 bg-surface px-4 py-3 text-on-surface"
+              class="form-input w-full"
               :disabled="!canEdit || saving"
-              required
+              @input="clearField('name')"
             >
           </UiFormField>
           <label class="block text-sm font-medium text-on-surface">
@@ -244,13 +265,13 @@ async function removeMember(userId: string, name: string) {
           class="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 mb-stack-md"
           @submit.prevent="submitInvite"
         >
-          <UiFormField label="E-mail du collaborateur">
+          <UiFormField label="E-mail du collaborateur" required :error="fieldError('inviteEmail')">
             <input
               v-model="inviteEmail"
               type="email"
               placeholder="collaborateur@entreprise.com"
-              class="w-full rounded-xl border border-outline-variant/40 bg-surface px-4 py-3 text-on-surface"
-              required
+              class="form-input w-full"
+              @input="clearField('inviteEmail')"
             >
           </UiFormField>
           <label class="block text-sm font-medium text-on-surface">

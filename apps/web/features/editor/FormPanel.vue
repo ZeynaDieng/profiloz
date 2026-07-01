@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { Certification, Education, Experience, Interest, Skill } from '@profiloz/shared'
+import { MSG } from '@profiloz/shared'
 
 const resumeStore = useResumeStore()
+const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, fieldError } = useFormValidation()
 
 const openSection = ref('personal')
+const sectionErrors = reactive<Record<string, string>>({})
 
 const personalForm = reactive({
   fullName: '',
@@ -106,6 +109,46 @@ const sections = [
 function toggleSection(id: string) {
   openSection.value = openSection.value === id ? '' : id
 }
+
+function applyValidationResult(
+  personal: ReturnType<typeof validatePersonalInfoFields>,
+  parcours: ReturnType<typeof validateParcoursFields>,
+) {
+  clearAll()
+  for (const key of Object.keys(sectionErrors)) {
+    delete sectionErrors[key]
+  }
+
+  for (const [key, message] of Object.entries(personal.fieldErrors)) {
+    setFieldError(key, message)
+  }
+  for (const [key, message] of Object.entries(parcours.fieldErrors)) {
+    setFieldError(key, message)
+  }
+
+  if (personal.formError) sectionErrors.personal = personal.formError
+  if (parcours.formError) sectionErrors.parcours = parcours.formError
+
+  formError.value = personal.formError || parcours.formError || ''
+}
+
+function validateAll(): boolean {
+  const personal = validatePersonalInfoFields(personalForm)
+  const parcours = validateParcoursFields(educations.value, experiences.value)
+  applyValidationResult(personal, parcours)
+
+  const firstSection = firstResumeEditorSectionWithErrors(fieldErrors)
+  if (firstSection) {
+    openSection.value = firstSection
+  }
+
+  return !formError.value
+}
+
+provideResumeEditorValidation({
+  validateAll,
+  scrollToFirstError,
+})
 </script>
 
 <template>
@@ -116,6 +159,14 @@ function toggleSection(id: string) {
         <span class="lg:hidden">Les changements s’affichent dans l’aperçu.</span>
         <span class="hidden lg:inline">Les changements s'affichent instantanément à droite.</span>
       </p>
+      <Transition name="form-field__error">
+        <UiMessageBanner
+          v-if="formError"
+          variant="error"
+          :message="formError"
+          class="mt-3"
+        />
+      </Transition>
     </div>
 
     <div class="flex-1 overflow-y-auto">
@@ -123,10 +174,17 @@ function toggleSection(id: string) {
         <button
           type="button"
           class="w-full flex items-center gap-3 px-4 py-3 min-h-11 text-left hover:bg-surface-container-low transition-colors"
+          :class="{ 'bg-error/5': sectionErrors[section.id] }"
           @click="toggleSection(section.id)"
         >
           <UiPzIcon :name="section.icon" class="text-secondary text-[20px]" />
           <span class="font-semibold text-on-surface flex-1">{{ section.label }}</span>
+          <UiPzIcon
+            v-if="sectionErrors[section.id]"
+            name="error"
+            class="text-error text-[18px] shrink-0"
+            aria-hidden="true"
+          />
           <UiPzIcon
             :name="openSection === section.id ? 'expand_less' : 'expand_more'"
             class="text-on-surface-variant"
@@ -134,14 +192,30 @@ function toggleSection(id: string) {
         </button>
 
         <div v-show="openSection === section.id" class="px-4 pb-4 space-y-4">
+          <UiMessageBanner
+            v-if="sectionErrors[section.id]"
+            variant="error"
+            :message="sectionErrors[section.id]"
+          />
+
           <template v-if="section.id === 'personal'">
             <FeatureWizardPhotoUpload v-model="personalForm.photoUrl" />
             <div class="grid grid-cols-1 gap-3">
-              <UiFormField label="Nom complet" required>
-                <input v-model="personalForm.fullName" type="text" class="form-input w-full" />
+              <UiFormField label="Nom complet" required :error="fieldError('fullName')">
+                <input
+                  v-model="personalForm.fullName"
+                  type="text"
+                  class="form-input w-full"
+                  @input="clearField('fullName')"
+                >
               </UiFormField>
-              <UiFormField label="E-mail" required>
-                <input v-model="personalForm.email" type="email" class="form-input w-full" />
+              <UiFormField label="E-mail" required :error="fieldError('email')">
+                <input
+                  v-model="personalForm.email"
+                  type="email"
+                  class="form-input w-full"
+                  @input="clearField('email')"
+                >
               </UiFormField>
               <UiFormField label="Téléphone">
                 <input v-model="personalForm.phone" type="tel" class="form-input w-full" />
@@ -172,11 +246,11 @@ function toggleSection(id: string) {
           <template v-else-if="section.id === 'parcours'">
             <div class="space-y-stack-md">
               <p class="text-sm font-bold text-on-surface">Formation</p>
-              <FeatureWizardEducationForm v-model="educations" />
+              <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
             </div>
             <div class="space-y-stack-md pt-4 border-t border-outline-variant/30">
               <p class="text-sm font-bold text-on-surface">Expérience</p>
-              <FeatureWizardExperienceForm v-model="experiences" />
+              <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
             </div>
           </template>
 
