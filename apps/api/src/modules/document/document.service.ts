@@ -108,8 +108,10 @@ export class DocumentService {
         parsed = {
           personalInfo: {},
           _extraction: {
-            confidence: { overall: 0, personalInfo: {}, experiences: [], educations: [], skills: 0, languages: 0 },
+            confidence: { overall: 0, personalInfo: {}, experiences: [], educations: [], skills: [], languages: [] },
             review: [],
+            detectedSections: [],
+            engine: 'heuristic',
             warnings: [],
             errors: [],
             partialImport: true,

@@ -23,7 +23,7 @@ import { logAdminAction } from './admin-audit.service'
 import { getPlatformSetting, listPlatformSettings, upsertPlatformSetting } from './platform-settings.repository'
 import { listAdminPlans, savePlanOverride } from '@/modules/plan/plan-catalog.service'
 import { sendEmailTemplate } from '@/lib/email/mail.service'
-import { deliverUserNotifications } from '@/modules/notification/notification.service'
+import { deliverUserNotifications, resolveNotificationRecipients } from '@/modules/notification/notification.service'
 import { runOcrDebug } from '@/modules/ocr/debug'
 import {
   bucketByDay,

@@ -1,4 +1,5 @@
 import type { DocumentType } from '@profiloz/shared'
+import { PSM } from 'tesseract.js'
 import { parseDocumentText } from './ocr.parser'
 import { runResumePipeline } from './pipeline'
 import { repairSpacedOutText, scoreExtractedPdfText, measureSpacedOutScore } from './text-repair'
@@ -108,7 +109,7 @@ async function ocrImageBuffers(
 
     try {
       await worker.setParameters({
-        tessedit_pageseg_mode: '1',
+        tessedit_pageseg_mode: PSM.AUTO_OSD,
       })
     } catch {
       /* paramètres optionnels selon version tesseract.js */
