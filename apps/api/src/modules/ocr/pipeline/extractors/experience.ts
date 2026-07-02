@@ -3,12 +3,18 @@ import {
   cleanLine,
   isBulletLine,
   isDateOnlyLine,
+  isExperienceDateLabel,
+  isValidExperienceEntry,
+  isValidExperienceRoleTitle,
+  isValidExperienceCompany,
   looksLikeExperienceTitle,
   looksLikeLocation,
   parseDateRange,
+  parseExperienceContent,
   parseExperienceLine,
   stripBullet,
 } from '../../ocr.parser'
+import { classifyHeading } from '../sections'
 
 function isSubstantial(entry: Experience): boolean {
   return Boolean(entry.position?.trim() && (entry.company?.trim() || entry.startDate || entry.endDate))
@@ -63,6 +69,21 @@ function splitLocationCountry(value: string): { location?: string; country?: str
 const ORG_HINT_RE =
   /\b(minist[èe]re|groupe?|group|soci[ée]t[ée]|sa|sarl|sas|sasu|entreprise|cabinet|agence|clinique|h[ôo]pital|h[ôo]tel|centre|[ée]cole|universit[ée]|institut|fondation|association|holding|consulting|technologies?|telecom|ltd|inc|corp|company|services?|pharmacie|banque|assurance)\b/i
 
+const STANDALONE_EMPLOYER_RE =
+  /^(?:ind[ée]pendant|freelance|auto[\s-]?entrepreneur|particulier|consultant ind[ée]pendant)$/i
+
+/** Employeur sur une colonne séparée (export multi-colonnes Adobe/Canva). */
+function looksLikeSplitColumnEmployer(line: string): boolean {
+  const c = line.trim()
+  if (!c || classifyHeading(c)) return false
+  if (/^(?:etudes|exp[ée]riences?|formations?|comp[ée]tences?|langues?)\b/i.test(c)) return false
+  if (STANDALONE_EMPLOYER_RE.test(c)) return true
+  if (ORG_HINT_RE.test(c)) return true
+  if (/:/.test(c)) return false
+  if (/^[A-ZÀ-Ÿ0-9][A-ZÀ-Ÿ0-9\s,'().-]{2,50}$/.test(c) && c.split(/\s+/).length <= 6) return true
+  return false
+}
+
 /**
  * Une ligne ressemble-t-elle à un nom d'employeur (et non à une mission/phrase) ?
  * Vrai si elle contient un mot-clé d'organisation, ou si elle est courte et sans
@@ -71,6 +92,7 @@ const ORG_HINT_RE =
 function looksLikeCompany(line: string): boolean {
   let c = line.trim()
   if (c.length < 2) return false
+  if (STANDALONE_EMPLOYER_RE.test(c)) return true
   if (ORG_HINT_RE.test(c)) return true
   // On ignore un suffixe « , Ville » court pour le comptage (« Employeur, Ville »
   // est légitime, géré par splitCompanyCity) — sans laisser passer une énumération.
@@ -96,6 +118,94 @@ function splitCompanyCity(value: string): { company: string; location?: string }
   return { company: value }
 }
 
+/** « Employeur – Ville » sous un poste (CV classique à une colonne). */
+function splitEmployerLocationLine(line: string): { company: string; location?: string } | null {
+  const match = line.match(/^(.+?)\s*[—–]\s*(.+)$/)
+  if (!match) return null
+  const left = cleanLine(match[1]!)
+  const right = cleanLine(match[2]!)
+  if (isValidExperienceRoleTitle(left) || isExperienceDateLabel(right) || isExperienceDateLabel(left)) {
+    return null
+  }
+  if (!looksLikeCompany(left)) return null
+  return { company: left, location: right }
+}
+
+/**
+ * CV multi-colonnes : N lignes « date + poste » puis N lignes « employeur » sur
+ * des colonnes séparées (export Adobe / Canva). On les zippe par index.
+ */
+export function extractSplitColumnExperiences(lines: string[]): Experience[] {
+  const seen = new Set<string>()
+  const ordered: Array<{ line: string; index: number }> = []
+  lines.forEach((rawLine, index) => {
+    const line = cleanLine(rawLine)
+    if (!line || seen.has(line)) return
+    seen.add(line)
+    ordered.push({ line, index })
+  })
+
+  const dateEntries: Array<{ exp: Experience; index: number }> = []
+  const companyLines: Array<{ line: string; index: number }> = []
+
+  for (const { line, index } of ordered) {
+    const dr = parseDateRange(line)
+    const rest = cleanLine(dr.rest)
+    if ((dr.startDate || dr.endDate || dr.isCurrent) && rest && rest !== line && !looksLikeLocation(rest)) {
+      if (/\b(?:bfem|baccalaur|licence|master|dipl[ôo]me|bts|dut|doctorat)\b/i.test(rest)) continue
+      const parsed = parseExperienceContent(rest, {
+        startDate: dr.startDate,
+        endDate: dr.endDate,
+        isCurrent: dr.isCurrent,
+      })
+      dateEntries.push({
+        index,
+        exp:
+          parsed ?? {
+            position: rest,
+            company: '',
+            startDate: dr.startDate,
+            endDate: dr.endDate,
+            isCurrent: dr.isCurrent,
+          },
+      })
+      continue
+    }
+
+    if (looksLikeSplitColumnEmployer(line) && !dr.startDate && !dr.endDate) {
+      companyLines.push({ line, index })
+    }
+  }
+
+  if (dateEntries.length < 2) return []
+
+  const lastDateIdx = dateEntries[dateEntries.length - 1]!.index
+  const employersAfterDates = companyLines.filter((row) => row.index > lastDateIdx)
+  if (employersAfterDates.length !== dateEntries.length) return []
+
+  return dateEntries.map(({ exp }, index) => {
+    const { company, location } = splitCompanyCity(employersAfterDates[index]!.line)
+    return {
+      ...exp,
+      company: company || exp.company,
+      location: exp.location || location,
+    }
+  })
+}
+
+/** Filtre les entrées manifestement fausses (fragment de titre de section). */
+function isBogusExperience(exp: Experience): boolean {
+  const company = (exp.company ?? '').trim()
+  const position = (exp.position ?? '').trim()
+  if (!isValidExperienceEntry(exp)) return true
+  if (!company) return !position
+  if (/^(?:etudes|exp[ée]riences?|formations?|comp[ée]tences?|langues?)\s*(?:et|$)/i.test(company)) return true
+  if (company.length <= 12 && /^(?:etudes|exp[ée]riences?|formations?)\b/i.test(company) && !position) {
+    return true
+  }
+  return false
+}
+
 /**
  * Extracteur d'expériences (sur un bloc isolé). Chaque expérience est une entrée
  * indépendante : un nouvel élément démarre dès qu'on rencontre une frontière
@@ -119,9 +229,41 @@ export function extractExperiences(lines: string[]): Experience[] {
     // Frontière forte : ligne combinée « rôle — entreprise [dates] ».
     const parsed = parseExperienceLine(line)
     if (parsed) {
-      flush()
-      current = parsed
+      if (isValidExperienceEntry(parsed)) {
+        flush()
+        current = parsed
+      } else if (current) {
+        appendDescription(current, line)
+      }
       continue
+    }
+
+    // « Poste — Entreprise, Ville » (tiret long/court uniquement — pas le « - » des dates).
+    const dashParts = line.match(/^(.+?)\s*[—–]\s*(.+)$/)
+    if (dashParts) {
+      const left = cleanLine(dashParts[1]!)
+      const right = cleanLine(dashParts[2]!)
+      const { company, location } = splitCompanyCity(right)
+      if (
+        isValidExperienceRoleTitle(left) &&
+        isValidExperienceCompany(company) &&
+        !parseDateRange(line).startDate &&
+        !isExperienceDateLabel(right)
+      ) {
+        flush()
+        current = { position: left, company, location }
+        continue
+      }
+      const employerLine = splitEmployerLocationLine(line)
+      if (current?.position && !current.company && employerLine) {
+        current.company = employerLine.company
+        if (employerLine.location && !current.location) current.location = employerLine.location
+        continue
+      }
+      if (current) {
+        appendDescription(current, line)
+        continue
+      }
     }
 
     // Format « date d'abord » : « Mars 2024 à Avril 2024  Aide Soignante »
@@ -130,7 +272,12 @@ export function extractExperiences(lines: string[]): Experience[] {
     const rest = cleanLine(dr.rest)
     if ((dr.startDate || dr.endDate || dr.isCurrent) && rest && rest !== line && !looksLikeLocation(rest)) {
       flush()
-      current = {
+      const parsedRest = parseExperienceContent(rest, {
+        startDate: dr.startDate,
+        endDate: dr.endDate,
+        isCurrent: dr.isCurrent,
+      })
+      current = parsedRest ?? {
         position: rest,
         company: '',
         startDate: dr.startDate,
@@ -234,5 +381,5 @@ export function extractExperiences(lines: string[]): Experience[] {
   }
 
   flush()
-  return entries.slice(0, 15)
+  return entries.filter((e) => !isBogusExperience(e)).slice(0, 15)
 }

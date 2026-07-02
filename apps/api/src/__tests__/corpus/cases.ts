@@ -7,36 +7,12 @@
  * sont synthétiques (aucune donnée personnelle réelle).
  */
 
-export interface CorpusExpectations {
-  fullName?: string | RegExp
-  jobTitle?: RegExp
-  email?: string
-  minExperiences?: number
-  maxExperiences?: number
-  minEducations?: number
-  minSkills?: number
-  minLanguages?: number
-  /** Chaque motif doit correspondre au poste d'au moins une expérience. */
-  experiencePositions?: RegExp[]
-}
+import { generateCorpusCases } from './generator'
+import type { CorpusCase } from './types'
 
-export interface CorpusCase {
-  name: string
-  /** Description de la mise en page d'origine. */
-  format: string
-  rawText: string
-  expect: CorpusExpectations
-  /**
-   * Cas SYNTHÉTIQUE maîtrisé (défaut true) : doit respecter les invariants durs
-   * (aucune info perdue, aucun drapeau). Les cas RÉELS anonymisés difficiles
-   * (mises en page complexes encore imparfaites) sont marqués `strict: false` :
-   * ils n'imposent pas les invariants, mais alimentent les métriques par champ
-   * (`pnpm ocr:metrics`) pour suivre les progrès au fil des améliorations.
-   */
-  strict?: boolean
-}
+export type { CorpusCase, CorpusExpectations } from './types'
 
-export const corpusCases: CorpusCase[] = [
+const manualCorpusCases: CorpusCase[] = [
   {
     name: 'classique-1-colonne',
     format: 'CV classique sur une colonne, dates « 2019 - 2022 »',
@@ -428,3 +404,9 @@ ETUDES ET FORMATIONS
     },
   },
 ]
+
+/** 10 cas manuels + 90 cas générés = corpus de 100 CV de référence. */
+export const corpusCases: CorpusCase[] = [...manualCorpusCases, ...generateCorpusCases()]
+
+/** Sous-ensemble annoté pour la validation terrain (cv-samples/). */
+export { manualCorpusCases }

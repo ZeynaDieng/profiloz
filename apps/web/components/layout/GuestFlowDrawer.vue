@@ -25,7 +25,7 @@ watch(
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-[120] md:hidden">
+    <div v-if="open" class="fixed inset-0 z-[120] lg:hidden">
       <button
         type="button"
         class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"

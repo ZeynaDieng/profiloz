@@ -190,6 +190,29 @@ export function useAdminService() {
     return get<Record<string, unknown>>('/admin/ocr')
   }
 
+  async function debugOcr(file: File) {
+    const { upload } = useApiClient()
+    const form = new FormData()
+    form.append('file', file)
+    return upload<Record<string, unknown>>('/admin/ocr/debug', form)
+  }
+
+  async function getImportFeedbackInsights() {
+    return get<{
+      total: number
+      recentSampleSize: number
+      byCategory: Array<{ category: string; count: number; paths: string[] }>
+      byMimeType: Array<{ mimeType: string; count: number }>
+      recent: Array<{
+        id: string
+        at: string
+        fileName?: string
+        mimeType?: string
+        correctionCount: number
+      }>
+    }>('/admin/import-feedback')
+  }
+
   async function listTemplates() {
     return get<{ cv: Record<string, unknown>[]; letters: Record<string, unknown>[] }>('/admin/templates')
   }
@@ -437,6 +460,8 @@ export function useAdminService() {
     listPayments,
     getAnalytics,
     getOcrStats,
+    debugOcr,
+    getImportFeedbackInsights,
     listTemplates,
     updateTemplate,
     listPlans,

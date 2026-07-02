@@ -1,21 +1,24 @@
 import type { ExtractionMeta, ExtractionSectionKind, ResumeSnapshot } from '@profiloz/shared'
-import { normalizeLines, parseResumeText } from '../ocr.parser'
-import { splitBlocks } from './blocks'
+import { normalizeLines, parseDateRange, parseResumeText } from '../ocr.parser'
+import { buildSalvagePool, splitBlocks } from './blocks'
 import { buildConfidence } from './confidence'
 import { augmentContact } from './extractors/contact'
 import { extractEducations } from './extractors/education'
-import { extractExperiences } from './extractors/experience'
+import { extractExperiences, extractSplitColumnExperiences } from './extractors/experience'
 import { extractLanguages } from './extractors/languages'
 import { extractSkills } from './extractors/skills'
+import { smartMerge } from './merge'
 import { type LlmEnhancer, noopLlmEnhancer } from './llm'
-import { computeReviewItems } from './review'
-import { classifyHeading } from './sections'
+import { classifyHeading, guessSectionForContent } from './sections'
+import { runConservativeImport, shouldUseConservativeParsing } from './conservative'
 
 export type ResumeExtraction = Partial<ResumeSnapshot> & { _extraction: ExtractionMeta }
 
 export interface ResumePipelineOptions {
   /** Enhancer IA optionnel (désactivé par défaut). */
   llm?: LlmEnhancer
+  /** Confiance OCR (0→1) — active le mode conservateur si trop basse. */
+  ocrConfidence?: number
 }
 
 function detectSections(lines: string[]): ExtractionSectionKind[] {
@@ -27,6 +30,59 @@ function detectSections(lines: string[]): ExtractionSectionKind[] {
   return [...found]
 }
 
+function substantiveLines(lines: string[]): string[] {
+  return lines.filter((line) => !classifyHeading(line) && line.trim())
+}
+
+function experienceBlockLooksContaminated(blockLines: string[]): boolean {
+  if (blockLines.length < 2) return false
+  let educationLike = 0
+  for (const line of blockLines) {
+    if (guessSectionForContent(line) === 'education') educationLike++
+  }
+  return educationLike / blockLines.length >= 0.25
+}
+
+function fallbackLooksContaminated(experiences: ReturnType<typeof extractExperiences>): boolean {
+  return experiences.some((exp) =>
+    /installation de r[ée]seaux|d[ée]tection et r[ée]paration|fran[çc]ais|anglais|wolof/i.test(
+      `${exp.position ?? ''} ${exp.company ?? ''} ${exp.description ?? ''}`,
+    ),
+  )
+}
+
+function resolveExperiences(
+  blockLines: string[],
+  salvagePool: string[],
+  fallback: ReturnType<typeof extractExperiences>,
+): ReturnType<typeof extractExperiences> {
+  const splitColumn = extractSplitColumnExperiences(salvagePool)
+  if (splitColumn.length >= 2) return splitColumn
+
+  const block = blockLines.length ? extractExperiences(blockLines) : []
+  if (block.length && !experienceBlockLooksContaminated(blockLines)) return block
+
+  if (fallback.length && !fallbackLooksContaminated(fallback)) return fallback
+  if (splitColumn.length) return splitColumn
+  return block
+}
+
+function resolveEducations(
+  blockLines: string[],
+  salvagePool: string[],
+  fallback: ReturnType<typeof extractEducations>,
+): ReturnType<typeof extractEducations> {
+  const block = blockLines.length ? extractEducations(blockLines) : []
+  if (block.length) return block
+
+  const salvageEducations = extractEducations(
+    salvagePool.filter((line) => guessSectionForContent(line) === 'education'),
+  )
+  if (salvageEducations.length) return salvageEducations
+
+  return fallback
+}
+
 /**
  * Pipeline d'extraction CV en étapes indépendantes :
  *
@@ -34,8 +90,7 @@ function detectSections(lines: string[]): ExtractionSectionKind[] {
  *   2. Détection des sections       → `classifyHeading` / parser
  *   3. Extraction par section       → `parseResumeText` (heuristiques)
  *   4. Vérification / confiance      → `buildConfidence`
- *   5. Capture « à vérifier »        → `computeReviewItems` (jamais perdre d'info)
- *   6. Amélioration IA (optionnelle) → `LlmEnhancer`
+ *   5. Amélioration IA (optionnelle) → `LlmEnhancer`
  *
  * Chaque étape est remplaçable indépendamment (préparation intégration LLM).
  */
@@ -44,64 +99,87 @@ export async function runResumePipeline(
   options: ResumePipelineOptions = {},
 ): Promise<ResumeExtraction> {
   const llm = options.llm ?? noopLlmEnhancer
+  const ocrConfidence = options.ocrConfidence
+
+  if (shouldUseConservativeParsing(ocrConfidence ?? 1, rawText)) {
+    return runConservativeImport(rawText, ocrConfidence ?? 0)
+  }
 
   // 1. Nettoyage
   const lines = normalizeLines(rawText)
 
   // 2. Détection des sections (découpage en blocs)
-  const { blocks } = splitBlocks(lines)
+  const { headerLines, orphanLines, blocks } = splitBlocks(lines)
   const detectedSections = detectSections(lines)
+  const salvagePool = buildSalvagePool(headerLines, orphanLines)
 
   // 3. Extraction : base heuristique, puis extracteurs dédiés par section.
   const data = parseResumeText(rawText)
 
-  // Expériences : un bloc de section isolé fait autorité. Il est scopé par les
-  // titres de section, donc il ne « bave » pas sur les autres sections —
-  // contrairement à la base heuristique qui sur-segmente sur tout le document.
-  // On ne retombe sur la base que si aucun bloc « expérience » n'a été détecté.
   const experienceBlock = blocks.find((block) => block.kind === 'experience')
-  if (experienceBlock) {
-    const experiences = extractExperiences(experienceBlock.lines)
-    if (experiences.length) data.experiences = experiences
-  }
+  const experienceBlockLines = experienceBlock ? substantiveLines(experienceBlock.lines) : []
+  const fallbackExperiences = (data.experiences ?? []) as ReturnType<typeof extractExperiences>
 
-  // Formations : même principe — le bloc isolé fait autorité.
+  const experiences = resolveExperiences(experienceBlockLines, salvagePool, fallbackExperiences)
+  if (experiences.length) data.experiences = experiences
+
   const educationBlock = blocks.find((block) => block.kind === 'education')
-  if (educationBlock) {
-    const educations = extractEducations(educationBlock.lines)
-    if (educations.length) data.educations = educations
-  }
+  const educationBlockLines = educationBlock ? substantiveLines(educationBlock.lines) : []
+  const fallbackEducations = (data.educations ?? []) as ReturnType<typeof extractEducations>
+  const educations = resolveEducations(educationBlockLines, salvagePool, fallbackEducations)
+  if (educations.length) data.educations = educations
 
-  // Compétences : recalcul propre depuis le(s) bloc(s) dédié(s) (Hard/Soft),
-  // ce qui évite qu'une compétence dérive vers une autre section.
   const skillBlocks = blocks.filter((block) => block.kind === 'skills')
   if (skillBlocks.length) {
-    const skills = extractSkills(skillBlocks)
+    const cleanedBlocks = skillBlocks.map((block) => ({
+      ...block,
+      lines: block.lines.filter((line) => {
+        const c = line.trim()
+        if (!c) return false
+        if (parseDateRange(c).startDate || parseDateRange(c).endDate) return false
+        if (guessSectionForContent(c) === 'experience' || guessSectionForContent(c) === 'education') return false
+        if (/^[A-ZÀ-Ÿ0-9][A-ZÀ-Ÿ0-9\s,'().-]{2,}$/.test(c) && !/[a-zà-ÿ]/.test(c.replace(/[^a-zA-ZÀ-ÿ]/g, ''))) return false
+        return true
+      }),
+    }))
+    const skillsContext = cleanedBlocks.flatMap((block) => block.lines).join('\n')
+    const skills = extractSkills(cleanedBlocks, skillsContext)
     if (skills.length) data.skills = skills
   }
 
-  // Langues : dictionnaire + détection de niveau.
   const languageBlock = blocks.find((block) => block.kind === 'languages')
   if (languageBlock) {
     const languages = extractLanguages(languageBlock.lines)
     if (languages.length) data.languages = languages
   }
 
-  // Coordonnées : enrichissement (LinkedIn, GitHub, site/portfolio).
+  const profileBlock = blocks.find((block) => block.kind === 'profile')
+  if (profileBlock && !data.summary?.trim()) {
+    const summaryText = substantiveLines(profileBlock.lines).join(' ').replace(/\s+/g, ' ').trim()
+    if (summaryText.length >= 20 && summaryText.length <= 800) {
+      data.summary = summaryText
+    }
+  }
+
   data.personalInfo = augmentContact(data.personalInfo ?? {}, rawText)
 
-  // 4. Confiance
-  const confidence = buildConfidence(data)
+  const merged = smartMerge(data, rawText, {
+    skipDictionarySkills: (ocrConfidence ?? 1) < 0.6,
+  })
 
-  // 5. À vérifier
-  const review = computeReviewItems(lines, data)
+  const confidence = buildConfidence(merged)
 
-  let meta: ExtractionMeta = { confidence, review, detectedSections, engine: 'heuristic' }
+  let meta: ExtractionMeta = {
+    confidence,
+    review: [],
+    detectedSections,
+    engine: 'heuristic',
+    ocrConfidence,
+  }
 
-  // 6. Amélioration IA optionnelle (tolérante aux pannes)
   if (llm !== noopLlmEnhancer) {
     try {
-      const enhanced = await llm.enhance({ rawText, lines, data, meta })
+      const enhanced = await llm.enhance({ rawText, lines, data: merged, meta })
       return {
         ...enhanced.data,
         _extraction: { ...enhanced.meta, engine: 'heuristic+llm' },
@@ -111,7 +189,7 @@ export async function runResumePipeline(
     }
   }
 
-  return { ...data, _extraction: meta }
+  return { ...merged, _extraction: meta }
 }
 
 export { type LlmEnhancer, noopLlmEnhancer } from './llm'

@@ -2,12 +2,23 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 
 const props = defineProps<{ resume: ResumeSnapshot }>()
-const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills } = useResumeSections(() => props.resume)
+const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, showPhotoBlock, initials, accent } =
+  useResumeSections(() => props.resume)
 </script>
 
 <template>
   <TemplatesTemplateShell :resume="resume" template-name="Minimaliste">
     <header class="mb-10">
+      <div v-if="showPhotoBlock" class="mb-5">
+        <ResumePhotoAvatar
+          :photo-url="p.photoUrl"
+          :initials="initials"
+          :accent="accent"
+          shape="circle"
+          size-class="w-16 h-16"
+          fallback-class="text-white text-sm font-light"
+        />
+      </div>
       <h1 class="text-4xl font-light tracking-tight">{{ p.fullName || 'Votre nom' }}</h1>
       <p class="text-sm text-on-surface-variant mt-2">{{ p.jobTitle }}</p>
       <p class="text-xs text-on-surface-variant/60 mt-4">{{ contactItems.join(' / ') }}</p>

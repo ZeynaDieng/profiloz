@@ -1,11 +1,17 @@
 import type { DocumentType } from '@profiloz/shared'
 import { parseDocumentText } from './ocr.parser'
 import { runResumePipeline } from './pipeline'
-import { repairSpacedOutText, scoreExtractedPdfText } from './text-repair'
+import { repairSpacedOutText, scoreExtractedPdfText, measureSpacedOutScore } from './text-repair'
+import { preprocessImageForOcr } from './image-preprocess'
+import type { OcrExtractDetails } from './ocr.types'
 
 const OCR_TIMEOUT_MS = 90_000
 export const MIN_NATIVE_PDF_TEXT = 80
+/** Score minimal du texte PDF natif pour éviter l'OCR (sinon scan mal lu). */
+export const MIN_NATIVE_PDF_SCORE = 0.75
+const MIN_OCR_WORDS_FOR_COLUMNS = 6
 const MAX_OCR_PDF_PAGES = 5
+const PDF_OCR_RENDER_SCALE = 3
 
 async function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -22,7 +28,11 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, message: string):
 }
 
 export function shouldFallbackToPdfOcr(nativeText: string): boolean {
-  return nativeText.trim().length < MIN_NATIVE_PDF_TEXT
+  const trimmed = nativeText.trim()
+  if (trimmed.length < MIN_NATIVE_PDF_TEXT) return true
+  if (scoreExtractedPdfText(trimmed) < MIN_NATIVE_PDF_SCORE) return true
+  if (measureSpacedOutScore(trimmed) > 0.35) return true
+  return false
 }
 
 async function extractDocxText(buffer: Buffer): Promise<string> {
@@ -68,54 +78,70 @@ function mapOcrWords(blocks: unknown): { items: MappedItem[]; tol: number } {
 async function recognizeImage(
   worker: Awaited<ReturnType<typeof import('tesseract.js').createWorker>>,
   buffer: Buffer,
-): Promise<{ text: string; confidence: number }> {
+): Promise<{ text: string; confidence: number; multiColumn: boolean }> {
+  const preprocessed = await preprocessImageForOcr(buffer)
   const result = await withTimeout(
-    worker.recognize(buffer, {}, { blocks: true, text: true }),
+    worker.recognize(preprocessed, {}, { blocks: true, text: true }),
     OCR_TIMEOUT_MS,
     'OCR timeout',
   )
   const confidence = (result.data.confidence ?? 50) / 100
   const { items, tol } = mapOcrWords((result.data as any).blocks)
 
-  // Reconstruction par colonnes si les bbox sont disponibles ; sinon, on retombe
-  // sur le texte brut (déjà fourni par Tesseract).
-  if (items.length >= 12) {
-    const { lines } = reconstructFromMappedItems(items, tol)
-    const text = lines.join('\n').trim()
-    if (text) return { text, confidence }
+  if (items.length >= MIN_OCR_WORDS_FOR_COLUMNS) {
+    const { lines, multiColumn } = reconstructFromMappedItems(items, tol)
+    const text = repairSpacedOutText(lines.join('\n').trim())
+    if (text) return { text, confidence, multiColumn }
   }
-  return { text: (result.data.text ?? '').trim(), confidence }
+  const flat = repairSpacedOutText((result.data.text ?? '').trim())
+  return { text: flat, confidence, multiColumn: false }
 }
 
-async function ocrImageBuffers(buffers: Buffer[]): Promise<{ rawText: string; confidence: number }> {
-  if (!buffers.length) return { rawText: '', confidence: 0 }
+async function ocrImageBuffers(
+  buffers: Buffer[],
+): Promise<{ rawText: string; confidence: number; multiColumn: boolean }> {
+  if (!buffers.length) return { rawText: '', confidence: 0, multiColumn: false }
 
   try {
     const { createWorker } = await import('tesseract.js')
-    const worker = await withTimeout(createWorker('fra'), OCR_TIMEOUT_MS, 'OCR timeout')
+    const worker = await withTimeout(createWorker('fra+eng'), OCR_TIMEOUT_MS, 'OCR timeout')
+
+    try {
+      await worker.setParameters({
+        tessedit_pageseg_mode: '1',
+      })
+    } catch {
+      /* paramètres optionnels selon version tesseract.js */
+    }
+
     const parts: string[] = []
     let totalConfidence = 0
+    let sawMultiColumn = false
 
     try {
       for (const buffer of buffers) {
-        const { text, confidence } = await recognizeImage(worker, buffer)
+        const { text, confidence, multiColumn } = await recognizeImage(worker, buffer)
         if (text) parts.push(text)
         totalConfidence += confidence
+        if (multiColumn) sawMultiColumn = true
       }
     } finally {
       await worker.terminate()
     }
 
     return {
-      rawText: parts.join('\n\n').trim(),
+      rawText: repairSpacedOutText(parts.join('\n\n').trim()),
       confidence: buffers.length ? totalConfidence / buffers.length : 0,
+      multiColumn: sawMultiColumn,
     }
   } catch {
-    return { rawText: '', confidence: 0 }
+    return { rawText: '', confidence: 0, multiColumn: false }
   }
 }
 
-async function ocrImageBuffer(buffer: Buffer): Promise<{ rawText: string; confidence: number }> {
+async function ocrImageBuffer(
+  buffer: Buffer,
+): Promise<{ rawText: string; confidence: number; multiColumn: boolean }> {
   return ocrImageBuffers([buffer])
 }
 
@@ -181,18 +207,17 @@ function dedupeOverprintedItems(items: MappedItem[]): MappedItem[] {
 }
 
 /**
- * Détecte une mise en page deux colonnes via la plus large gouttière verticale
- * sans texte au centre de la page. Renvoie l'abscisse de coupe, ou null si la
- * page est mono-colonne.
+ * Détecte une ou plusieurs gouttières verticales (1, 2 ou 3 colonnes).
+ * Renvoie les abscisses de coupe triées, ou [] si mono-colonne.
  */
-function detectColumnSplitX(items: MappedItem[]): number | null {
-  if (items.length < 12) return null
+function detectColumnBoundaries(items: MappedItem[]): number[] {
+  if (items.length < 12) return []
   const minLeft = Math.min(...items.map((i) => i.x))
   const maxRight = Math.max(...items.map((i) => i.x + i.width))
   const pageWidth = maxRight - minLeft
-  if (pageWidth <= 0) return null
+  if (pageWidth <= 0) return []
 
-  const BINS = 60
+  const BINS = 80
   const binWidth = pageWidth / BINS
   const covered = new Array<number>(BINS).fill(0)
   for (const item of items) {
@@ -201,32 +226,43 @@ function detectColumnSplitX(items: MappedItem[]): number | null {
     for (let b = start; b <= end; b++) covered[b] = (covered[b] ?? 0) + 1
   }
 
-  const lo = Math.floor(BINS * 0.25)
-  const hi = Math.ceil(BINS * 0.75)
-  let bestStart = -1
-  let bestLen = 0
+  const lo = Math.floor(BINS * 0.12)
+  const hi = Math.ceil(BINS * 0.88)
+  const gutters: Array<{ start: number; len: number }> = []
   let curStart = -1
   let curLen = 0
   for (let b = lo; b <= hi; b++) {
     if (covered[b] === 0) {
       if (curLen === 0) curStart = b
       curLen++
-      if (curLen > bestLen) {
-        bestLen = curLen
-        bestStart = curStart
-      }
     } else {
+      if (curLen >= 2) gutters.push({ start: curStart, len: curLen })
       curLen = 0
     }
   }
+  if (curLen >= 2) gutters.push({ start: curStart, len: curLen })
 
-  if (bestLen < 2) return null // gouttière trop fine → mono-colonne
+  const splits = gutters
+    .map((g) => minLeft + (g.start + g.len / 2) * binWidth)
+    .filter((splitX) => {
+      const leftCount = items.filter((i) => i.x + i.width / 2 < splitX).length
+      const rightCount = items.length - leftCount
+      return leftCount >= items.length * 0.08 && rightCount >= items.length * 0.08
+    })
+    .sort((a, b) => a - b)
 
-  const splitX = minLeft + (bestStart + bestLen / 2) * binWidth
-  const leftCount = items.filter((i) => i.x + i.width / 2 < splitX).length
-  const rightCount = items.length - leftCount
-  if (leftCount < items.length * 0.15 || rightCount < items.length * 0.15) return null
-  return splitX
+  // Fusionne les gouttières trop proches (< 8 % de la largeur).
+  const merged: number[] = []
+  for (const split of splits) {
+    if (!merged.length || split - merged[merged.length - 1]! > pageWidth * 0.08) merged.push(split)
+  }
+  return merged.slice(0, 3)
+}
+
+/** @deprecated Utiliser detectColumnBoundaries — conservé pour compatibilité tests internes. */
+function detectColumnSplitX(items: MappedItem[]): number | null {
+  const boundaries = detectColumnBoundaries(items)
+  return boundaries[0] ?? null
 }
 
 // `tol` = tolérance verticale pour regrouper les fragments d'une même ligne.
@@ -291,16 +327,39 @@ function reconstructFromMappedItems(
   const mapped = dedupeOverprintedItems(items)
   if (!mapped.length) return { lines: [], multiColumn: false }
 
-  const splitX = detectColumnSplitX(mapped)
-  if (splitX === null) return { lines: groupItemsTopDown(mapped, tol), multiColumn: false }
+  const boundaries = detectColumnBoundaries(mapped)
+  if (!boundaries.length) return { lines: groupItemsTopDown(mapped, tol), multiColumn: false }
 
-  const left = mapped.filter((i) => i.x + i.width / 2 < splitX)
-  const right = mapped.filter((i) => i.x + i.width / 2 >= splitX)
-  const leftChars = left.reduce((sum, i) => sum + i.str.length, 0)
-  const rightChars = right.reduce((sum, i) => sum + i.str.length, 0)
-  const [first, second] = leftChars >= rightChars ? [left, right] : [right, left]
+  const minLeft = Math.min(...mapped.map((i) => i.x))
+  const maxRight = Math.max(...mapped.map((i) => i.x + i.width))
+  const cuts = [minLeft, ...boundaries, maxRight]
+
+  const columns: MappedItem[][] = []
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const lo = cuts[i]!
+    const hi = cuts[i + 1]!
+    const col = mapped.filter((item) => {
+      const center = item.x + item.width / 2
+      return center >= lo && (i === cuts.length - 2 ? center <= hi : center < hi)
+    })
+    if (col.length) columns.push(col)
+  }
+
+  if (columns.length <= 1) return { lines: groupItemsTopDown(mapped, tol), multiColumn: false }
+
+  // 2 colonnes : barre latérale d'abord (colonne la plus dense).
+  // 3+ colonnes : lecture gauche → droite.
+  const ordered =
+    columns.length === 2
+      ? [...columns].sort(
+          (a, b) =>
+            b.reduce((sum, item) => sum + item.str.length, 0) -
+            a.reduce((sum, item) => sum + item.str.length, 0),
+        )
+      : columns
+
   return {
-    lines: [...groupItemsTopDown(first, tol), ...groupItemsTopDown(second, tol)],
+    lines: ordered.flatMap((col) => groupItemsTopDown(col, tol)),
     multiColumn: true,
   }
 }
@@ -370,7 +429,7 @@ async function renderPdfPagesToImages(buffer: Buffer): Promise<Buffer[]> {
   const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true }).promise
   const pageCount = Math.min(doc.numPages, MAX_OCR_PDF_PAGES)
   const images: Buffer[] = []
-  const scale = 2
+  const scale = PDF_OCR_RENDER_SCALE
 
   for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
     const page = await doc.getPage(pageNumber)
@@ -389,7 +448,9 @@ async function renderPdfPagesToImages(buffer: Buffer): Promise<Buffer[]> {
   return images
 }
 
-async function ocrScannedPdf(buffer: Buffer): Promise<{ rawText: string; confidence: number }> {
+async function ocrScannedPdf(
+  buffer: Buffer,
+): Promise<{ rawText: string; confidence: number; multiColumn: boolean }> {
   try {
     const images = await withTimeout(
       renderPdfPagesToImages(buffer),
@@ -398,56 +459,157 @@ async function ocrScannedPdf(buffer: Buffer): Promise<{ rawText: string; confide
     )
     return ocrImageBuffers(images)
   } catch {
-    return { rawText: '', confidence: 0 }
+    return { rawText: '', confidence: 0, multiColumn: false }
+  }
+}
+
+function emptyDetails(partial: Partial<OcrExtractDetails> = {}): OcrExtractDetails {
+  return {
+    rawText: '',
+    confidence: 0,
+    method: 'unsupported',
+    multiColumn: false,
+    columnCount: 1,
+    warnings: [],
+    errors: [],
+    ...partial,
   }
 }
 
 export class OcrService {
   async extractText(buffer: Buffer, mimeType: string): Promise<{ rawText: string; confidence: number }> {
-    if (mimeType === 'application/pdf') {
-      try {
-        const nativeText = await extractPdfNativeText(buffer)
+    const detailed = await this.extractTextDetailed(buffer, mimeType)
+    return { rawText: detailed.rawText, confidence: detailed.confidence }
+  }
 
-        if (!shouldFallbackToPdfOcr(nativeText)) {
-          return { rawText: nativeText, confidence: 0.85 }
+  /** Extraction avec métadonnées (debug, validation terrain). */
+  async extractTextDetailed(buffer: Buffer, mimeType: string): Promise<OcrExtractDetails> {
+    if (mimeType === 'application/pdf') {
+      const warnings: string[] = []
+      const errors: string[] = []
+      try {
+        let multiColumn = false
+        let pageCount: number | undefined
+        try {
+          const layout = await extractPdfTextWithLayout(buffer)
+          multiColumn = layout.multiColumn
+        } catch {
+          warnings.push('Impossible d’analyser la mise en page PDF (layout).')
         }
 
+        try {
+          const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+          await configurePdfJs(pdfjs)
+          const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true }).promise
+          pageCount = doc.numPages
+        } catch {
+          /* optionnel */
+        }
+
+        const nativeText = await extractPdfNativeText(buffer)
+        if (!shouldFallbackToPdfOcr(nativeText)) {
+          const nativeScore = scoreExtractedPdfText(nativeText)
+          return emptyDetails({
+            rawText: nativeText,
+            confidence: Math.min(0.92, 0.65 + nativeScore * 0.15),
+            method: multiColumn ? 'pdf-layout' : 'pdf-native',
+            multiColumn,
+            columnCount: multiColumn ? 2 : 1,
+            pageCount,
+            warnings,
+          })
+        }
+
+        warnings.push('Texte natif insuffisant — bascule OCR Tesseract sur le PDF.')
         const ocrResult = await ocrScannedPdf(buffer)
         if (ocrResult.rawText.trim()) {
-          return ocrResult
+          return emptyDetails({
+            rawText: ocrResult.rawText,
+            confidence: ocrResult.confidence,
+            method: 'pdf-ocr',
+            multiColumn: ocrResult.multiColumn || multiColumn,
+            columnCount: ocrResult.multiColumn || multiColumn ? 2 : 1,
+            pageCount,
+            warnings,
+          })
         }
 
         if (nativeText) {
-          return { rawText: nativeText, confidence: 0.35 }
+          warnings.push('OCR PDF vide — repli sur le texte natif partiel.')
+          return emptyDetails({
+            rawText: nativeText,
+            confidence: 0.35,
+            method: 'pdf-native',
+            multiColumn,
+            columnCount: multiColumn ? 2 : 1,
+            pageCount,
+            warnings,
+          })
         }
 
-        return { rawText: '', confidence: 0.1 }
-      } catch {
+        errors.push('PDF illisible : aucun texte natif ni OCR.')
+        return emptyDetails({ method: 'pdf-ocr', pageCount, warnings, errors })
+      } catch (error) {
         const ocrResult = await ocrScannedPdf(buffer)
         if (ocrResult.rawText.trim()) {
-          return ocrResult
+          return emptyDetails({
+            rawText: ocrResult.rawText,
+            confidence: ocrResult.confidence,
+            method: 'pdf-ocr',
+            multiColumn: ocrResult.multiColumn,
+            columnCount: ocrResult.multiColumn ? 2 : 1,
+            warnings: ['Erreur extraction native — OCR de secours utilisé.'],
+          })
         }
-        throw new Error('PDF illisible')
+        return emptyDetails({
+          errors: [error instanceof Error ? error.message : 'PDF illisible'],
+        })
       }
     }
 
     if (mimeType.startsWith('image/')) {
-      return ocrImageBuffer(buffer)
+      const result = await ocrImageBuffer(buffer)
+      const warnings: string[] = []
+      if (!result.rawText.trim()) warnings.push('Aucun texte détecté sur l’image.')
+      if (result.confidence < 0.5) {
+        warnings.push(
+          'Qualité de scan faible — le préremplissage sera limité. Utilisez un PDF exporté en texte ou une photo plus nette, bien éclairée et cadrée.',
+        )
+      }
+      return emptyDetails({
+        rawText: result.rawText,
+        confidence: result.confidence,
+        method: 'tesseract',
+        multiColumn: result.multiColumn,
+        columnCount: result.multiColumn ? 2 : 1,
+        warnings,
+      })
     }
 
     if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       const rawText = await extractDocxText(buffer)
-      return { rawText, confidence: rawText.length > 40 ? 0.8 : 0.2 }
+      return emptyDetails({
+        rawText,
+        confidence: rawText.length > 40 ? 0.8 : 0.2,
+        method: 'docx',
+        warnings: rawText.length <= 40 ? ['Texte DOCX très court.'] : [],
+      })
     }
 
-    return { rawText: '', confidence: 0 }
+    if (mimeType === 'text/plain') {
+      return emptyDetails({
+        rawText: buffer.toString('utf8'),
+        confidence: 1,
+        method: 'text',
+      })
+    }
+
+    return emptyDetails({ errors: [`Format non supporté : ${mimeType}`] })
   }
 
-  async parseStructured(rawText: string, documentType: DocumentType = 'CV') {
-    // Le CV passe par le pipeline modulaire (sections + confiance + à vérifier).
-    // Les autres types (diplôme, lettre…) gardent leur extracteur dédié.
+  async parseStructured(rawText: string, documentType: DocumentType = 'CV', ocrConfidence?: number) {
     if (documentType === 'CV') {
-      return runResumePipeline(rawText)
+      return runResumePipeline(rawText, { ocrConfidence })
     }
     return parseDocumentText(rawText, documentType)
   }

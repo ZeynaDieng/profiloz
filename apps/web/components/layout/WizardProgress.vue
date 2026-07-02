@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FLOW_STEPS } from '~/composables/useWizardNavigation'
+import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 
 const route = useRoute()
 
@@ -19,6 +20,9 @@ const progressPercent = computed(() => {
   if (currentIndex.value < 0) return 0
   return Math.round(((currentIndex.value + 1) / FLOW_STEPS.length) * 100)
 })
+
+const changeTemplateHref = computed(() => changeTemplateHrefFromRoute(route))
+const showChangeTemplate = computed(() => isFlowStep.value && route.path !== '/creer/modele')
 </script>
 
 <template>
@@ -36,6 +40,14 @@ const progressPercent = computed(() => {
           :style="{ width: `${progressPercent}%` }"
         />
       </div>
+      <NuxtLink
+        v-if="showChangeTemplate"
+        :to="changeTemplateHref"
+        class="inline-flex items-center gap-1 text-xs font-semibold text-secondary hover:underline min-h-11"
+      >
+        <UiPzIcon name="dashboard_customize" class="text-[16px]" />
+        Changer de modèle
+      </NuxtLink>
     </div>
   </nav>
 </template>

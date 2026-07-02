@@ -56,6 +56,14 @@ export interface ExtractionMeta {
   detectedSections: ExtractionSectionKind[]
   /** Moteur ayant produit le résultat (préparation intégration LLM). */
   engine: 'heuristic' | 'heuristic+llm'
+  /** Avertissements non bloquants (OCR partiel, colonnes ambiguës…). */
+  warnings?: string[]
+  /** Erreurs rencontrées mais contournées (import tolérant). */
+  errors?: string[]
+  /** Import partiel : l'utilisateur doit compléter manuellement. */
+  partialImport?: boolean
+  /** Confiance OCR brute (0→1) — scans et photos. */
+  ocrConfidence?: number
 }
 
 /** Seuil en dessous duquel l'interface doit demander confirmation. */

@@ -35,4 +35,5 @@ export const TEMPLATE_SLUGS = [
   'PREMIUM',
   'CADRE',
   'EXECUTIF',
+  'EPURE',
 ] as const

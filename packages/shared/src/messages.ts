@@ -27,10 +27,11 @@ export const MSG = {
     size: 'Le fichier dépasse la taille maximale autorisée.',
     ocrLoading: "L'analyse de votre CV est en cours...",
     ocrSteps: [
-      'Analyse de votre document…',
-      'Détection des expériences…',
-      'Extraction des formations…',
-      'Préparation de votre brouillon…',
+      'Import du document…',
+      'Analyse du contenu…',
+      'Identification des sections…',
+      'Reconstruction du CV…',
+      'Vérification finale…',
     ] as const,
     ocrError:
       "Nous n'avons pas réussi à analyser ce document. Essayez avec un CV plus lisible.",
@@ -222,6 +223,9 @@ export const MSG = {
     size: 'La photo dépasse la taille maximale autorisée.',
     uploadError: "La photo n'a pas pu être importée.",
     base64Rejected: 'Veuillez importer votre photo via le bouton prévu à cet effet.',
+    showOnCv: 'Afficher une photo sur le CV',
+    hiddenOnCv: 'Le cadre photo est masqué sur votre modèle.',
+    addPhoto: 'Ajouter une photo',
   },
 
   actions: {

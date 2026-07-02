@@ -5,6 +5,7 @@ import { sanitizeJsonForDb, sanitizeTextForDb } from '@/lib/text-sanitize'
 import { storageProvider } from '@/lib/storage'
 import type { RequestContext } from '@/lib/request-context'
 import { ocrService } from '@/modules/ocr/ocr.service'
+import { runResumePipeline } from '@/modules/ocr/pipeline'
 import { documentRepository } from './document.repository'
 import { randomUUID } from 'crypto'
 import path from 'path'
@@ -77,24 +78,58 @@ export class DocumentService {
       const buffer = await storageProvider.read(doc.storageKey)
       let rawText = ''
       let confidence = 0
+      const warnings: string[] = []
+      const errors: string[] = []
 
       try {
-        const extracted = await ocrService.extractText(buffer, doc.mimeType)
+        const extracted = await ocrService.extractTextDetailed(buffer, doc.mimeType)
         rawText = extracted.rawText
         confidence = extracted.confidence
-      } catch {
-        throw new AppError(
-          422,
-          'Unprocessable Entity',
-          'Impossible de lire ce fichier. Vérifiez qu’il n’est pas protégé ou corrompu.',
-        )
+        warnings.push(...extracted.warnings)
+        errors.push(...extracted.errors)
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : 'Erreur de lecture du fichier')
       }
 
       if (!rawText.trim()) {
-        throw new AppError(422, 'Unprocessable Entity', emptyTextMessage(doc.mimeType, doc.type))
+        warnings.push(emptyTextMessage(doc.mimeType, doc.type))
+        warnings.push('Import partiel : complétez votre profil manuellement à l’étape de relecture.')
       }
 
-      const parsedData = sanitizeJsonForDb(await ocrService.parseStructured(rawText, doc.type))
+      let parsed: Awaited<ReturnType<typeof runResumePipeline>>
+      try {
+        parsed = (
+          doc.type === 'CV'
+            ? await runResumePipeline(rawText, { ocrConfidence: confidence })
+            : await ocrService.parseStructured(rawText, doc.type, confidence)
+        ) as Awaited<ReturnType<typeof runResumePipeline>>
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : 'Erreur lors de l’analyse structurelle')
+        parsed = {
+          personalInfo: {},
+          _extraction: {
+            confidence: { overall: 0, personalInfo: {}, experiences: [], educations: [], skills: 0, languages: 0 },
+            review: [],
+            warnings: [],
+            errors: [],
+            partialImport: true,
+          },
+        } as Awaited<ReturnType<typeof runResumePipeline>>
+      }
+
+      const extraction = parsed._extraction
+        ? {
+            ...parsed._extraction,
+            warnings: [...(parsed._extraction.warnings ?? []), ...warnings],
+            errors: errors.length ? errors : parsed._extraction.errors,
+            partialImport: !rawText.trim() || warnings.length > 0 || errors.length > 0,
+          }
+        : undefined
+
+      const parsedData = sanitizeJsonForDb(
+        extraction ? { ...parsed, _extraction: extraction } : parsed,
+      )
+
       const ocrResult = await documentRepository.saveOcrResult(documentId, {
         rawText: sanitizeTextForDb(rawText),
         parsedData,

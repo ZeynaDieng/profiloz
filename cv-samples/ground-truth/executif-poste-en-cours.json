@@ -1,0 +1,55 @@
+{
+  "id": "executif-poste-en-cours",
+  "file": "files/executif-poste-en-cours.txt",
+  "tags": {
+    "tool": "word",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "classic"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV exécutif : intitulés longs, poste « … - Présent »",
+  "identity": {
+    "fullName": "Isabelle Moreau",
+    "jobTitle": "Directrice Générale Adjointe"
+  },
+  "contact": {
+    "email": "isabelle.moreau@example.com",
+    "phone": "06 22 33 44 55",
+    "location": "Paris"
+  },
+  "experiences": [
+    {
+      "position": "Directrice Générale Adjointe",
+      "company": "Groupe Industriel France",
+      "isCurrent": true
+    },
+    {
+      "position": "Directrice des Opérations",
+      "company": "Manufacture Nationale"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "MBA",
+      "institution": "HEC Paris"
+    },
+    {
+      "degree": "Diplôme d'ingénieur",
+      "institution": "École Centrale"
+    }
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Allemand"
+    }
+  ]
+}

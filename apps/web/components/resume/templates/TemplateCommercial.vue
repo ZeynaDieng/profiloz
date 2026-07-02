@@ -11,16 +11,9 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
-
-const initials = computed(() =>
-  (p.value?.fullName || "")
-    .split(" ")
-    .map((w: string) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase(),
-);
 </script>
 
 <template>
@@ -41,12 +34,15 @@ const initials = computed(() =>
       <div class="relative flex items-start justify-between gap-6">
         <div class="flex items-start gap-4">
           <!-- Avatar initiales -->
-          <div
-            class="w-14 h-14 rounded-lg flex items-center justify-center text-white text-lg font-black shrink-0"
-            :style="{ backgroundColor: accent }"
-          >
-            {{ initials }}
-          </div>
+          <ResumePhotoAvatar
+            v-if="showPhotoBlock"
+            :photo-url="p.photoUrl"
+            :initials="initials"
+            :accent="accent"
+            shape="rounded"
+            size-class="w-14 h-14"
+            fallback-class="text-white text-lg font-black"
+          />
 
           <div>
             <h1

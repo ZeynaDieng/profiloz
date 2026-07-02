@@ -1,0 +1,43 @@
+{
+  "id": "reel-2-colonnes-nom-en-pied",
+  "file": "files/reel-2-colonnes-nom-en-pied.txt",
+  "tags": {
+    "tool": "unknown",
+    "columns": 2,
+    "language": "fr",
+    "source": "pdf-text",
+    "style": "modern"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV réel anonymisé : 2 colonnes, section EXPÉRIENCE en tête, nom/poste relégués en pied de page (cas P2 layout)",
+  "identity": {
+    "fullName": "Fatou Sarr",
+    "jobTitle": "Comptable"
+  },
+  "contact": {
+    "email": "fatou.sarr@example.com",
+    "phone": "77 000 00 00",
+    "location": "Dakar"
+  },
+  "experiences": [
+    {
+      "position": "Chargée des relations externes",
+      "company": "Rajab Business"
+    },
+    {
+      "position": "Assistante de Direction",
+      "company": "Immo-Négoce"
+    },
+    {
+      "position": "Conseillère clientèle",
+      "company": "PCCI Dakar"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "2ème année de Formation",
+      "institution": "ENSUP AFRIQUE"
+    }
+  ]
+}

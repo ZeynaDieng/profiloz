@@ -13,6 +13,7 @@ export const TEMPLATE_REGISTRY: TemplateDefinition[] = [
   { slug: 'PREMIUM', name: 'Premium', category: 'Exclusive', previewUrl: '/templates/premium.svg', supportedSections: ['summary', 'experience', 'education', 'skills'] },
   { slug: 'CADRE', name: 'Cadre', category: 'Corporate', previewUrl: '/templates/cadre.svg', supportedSections: ['experience', 'education', 'skills', 'languages', 'interests'] },
   { slug: 'EXECUTIF', name: 'Exécutif', category: 'Sales', previewUrl: '/templates/executif.svg', supportedSections: ['summary', 'experience', 'education', 'skills', 'languages', 'interests'] },
+  { slug: 'EPURE', name: 'Épuré', category: 'Clean', previewUrl: '/templates/epure.svg', supportedSections: ['summary', 'experience', 'education', 'skills', 'contact'] },
 ]
 
 export const TEMPLATE_FILTERS = [

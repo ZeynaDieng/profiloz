@@ -38,5 +38,17 @@ export function useDocumentService() {
     await del(`/documents/${id}`)
   }
 
-  return { uploadDocument, processDocument, getOcrResult, listDocuments, remove }
+  async function submitImportFeedback(payload: {
+    documentId?: string
+    fileName?: string
+    mimeType?: string
+    templateSlug?: string
+    overallConfidence?: number
+    originalParsed: Partial<ResumeSnapshot>
+    correctedData: Partial<ResumeSnapshot>
+  }) {
+    return post<{ id: string; recorded: boolean }>('/documents/import-feedback', payload)
+  }
+
+  return { uploadDocument, processDocument, getOcrResult, listDocuments, remove, submitImportFeedback }
 }

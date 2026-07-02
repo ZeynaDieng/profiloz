@@ -1,0 +1,20 @@
+Nom : Thomas Lefèvre
+Poste : Responsable commercial
+Email : thomas.lefevre@example.com
+Téléphone : +33 6 45 67 89 01
+Adresse : Marseille, France
+
+Expérience professionnelle
+Responsable commercial — GrandeEntreprise SA, Marseille
+Septembre 2017 - Décembre 2022
+- Développement du portefeuille clients régional
+
+Commercial terrain — PME Distribution, Nice
+2013 - 2017
+
+Formation
+BTS Négociation et Relation Client — Lycée Saint-Charles
+2011 - 2013
+
+Compétences
+Négociation, Prospection, CRM, Management

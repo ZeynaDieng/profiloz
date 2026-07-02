@@ -1,0 +1,71 @@
+{
+  "id": "reel-dev-moderne-1-colonne",
+  "file": "files/reel-dev-moderne-1-colonne.txt",
+  "tags": {
+    "tool": "canva",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "modern"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV réel anonymisé : moderne 1 colonne, « Nom - Poste », dates entre parenthèses, compétences préfixées",
+  "identity": {
+    "fullName": "Awa Sow",
+    "jobTitle": "Développeuse Full-stack"
+  },
+  "contact": {
+    "email": "awa.sow@example.com",
+    "phone": "+221 77 000 00 00",
+    "location": "Dakar"
+  },
+  "experiences": [
+    {
+      "position": "Développeuse Full-stack",
+      "company": "Intech Group"
+    },
+    {
+      "position": "Développeuse Full-stack",
+      "company": "Orion"
+    },
+    {
+      "position": "Développeuse Web Freelance",
+      "company": ""
+    }
+  ],
+  "educations": [
+    {
+      "degree": "Master en Génie Logiciel",
+      "institution": "IPD"
+    },
+    {
+      "degree": "Licence en Informatique",
+      "institution": "ENsup Afrique"
+    }
+  ],
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "Laravel",
+    "Nuxt.js",
+    "NestJS",
+    "MySQL"
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Wolof"
+    }
+  ],
+  "interests": [
+    "Codage créatif",
+    "hackathons",
+    "méditation"
+  ]
+}

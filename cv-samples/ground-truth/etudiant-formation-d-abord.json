@@ -1,0 +1,50 @@
+{
+  "id": "etudiant-formation-d-abord",
+  "file": "files/etudiant-formation-d-abord.txt",
+  "tags": {
+    "tool": "word",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "classic"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV étudiant : formation mise en avant, peu d’expérience",
+  "identity": {
+    "fullName": "Lucas Martin",
+    "jobTitle": "Étudiant en informatique"
+  },
+  "contact": {
+    "email": "lucas.martin@etu.example.com",
+    "phone": "07 88 99 00 11"
+  },
+  "experiences": [
+    {
+      "position": "Stage développeur web",
+      "company": "StartupX"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "Licence Informatique",
+      "institution": "Université de Bordeaux"
+    },
+    {
+      "degree": "Baccalauréat Scientifique",
+      "institution": "Lycée Montaigne"
+    }
+  ],
+  "skills": [
+    "JavaScript",
+    "Vue.js",
+    "Python",
+    "Git",
+    "SQL"
+  ],
+  "interests": [
+    "Football",
+    "Jeux vidéo",
+    "Photographie"
+  ]
+}

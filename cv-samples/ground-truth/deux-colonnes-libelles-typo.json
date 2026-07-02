@@ -1,0 +1,55 @@
+{
+  "id": "deux-colonnes-libelles-typo",
+  "file": "files/deux-colonnes-libelles-typo.txt",
+  "tags": {
+    "tool": "unknown",
+    "columns": 2,
+    "language": "fr",
+    "source": "pdf-scanned",
+    "style": "classic"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "PDF/OCR 2 colonnes reconstruit : en-têtes au singulier/avec fautes + « Nom : / Prénom : »",
+  "identity": {
+    "fullName": "Aminata DIALLO"
+  },
+  "contact": {
+    "email": "aminata.diallo@example.com",
+    "phone": "+221 77 123 45 67",
+    "location": "Dakar"
+  },
+  "experiences": [
+    {
+      "position": "Pharmacienne",
+      "company": "Clinique Centrale"
+    },
+    {
+      "position": "Préparatrice en pharmacie",
+      "company": "Pharmacie du Plateau"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "Baccalauréat scientifique",
+      "institution": "Lycée Moderne"
+    }
+  ],
+  "skills": [
+    "Rigueur",
+    "Travail en équipe",
+    "Communication"
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    }
+  ],
+  "interests": [
+    "Lecture",
+    "Sport"
+  ]
+}

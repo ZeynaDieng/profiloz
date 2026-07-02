@@ -13,9 +13,17 @@ describe('repairSpacedOutText', () => {
     expect(repaired).toContain('Madame, Monsieur,')
   })
 
-  it('ne modifie pas un texte déjà normal', () => {
+  it('ne modifie pas le fond d’un texte déjà normal', () => {
     const normal = 'Kiné Baba DIENG\nDakar\ndiengdkine@gmail.com\n\nMadame, Monsieur,'
-    expect(repairSpacedOutText(normal)).toBe(normal)
+    const repaired = repairSpacedOutText(normal)
+    expect(repaired).toContain('Kiné Baba DIENG')
+    expect(repaired).toContain('diengdkine@gmail.com')
+    expect(repaired).toContain('Madame, Monsieur,')
+  })
+
+  it('sépare un mois collé au titre de poste', () => {
+    const glued = 'Chargé des opérations comptables et de trésorerieJanvier 2025 – Présent'
+    expect(repairSpacedOutText(glued)).toContain('trésorerie Janvier 2025')
   })
 })
 

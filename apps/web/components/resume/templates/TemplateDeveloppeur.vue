@@ -10,19 +10,12 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
 
 const hasCertifications = computed(
   () => !!snapshot.value?.certifications?.length,
-);
-
-const initials = computed(() =>
-  (p.value?.fullName || "")
-    .split(" ")
-    .map((w: string) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase(),
 );
 </script>
 
@@ -57,15 +50,16 @@ const initials = computed(() =>
           </p>
         </div>
 
-        <div
-          class="w-14 h-14 rounded font-mono font-bold text-lg flex items-center justify-center shrink-0 border"
-          :style="{
-            borderColor: `${accent}60`,
-            color: accent,
-            background: `${accent}15`,
-          }"
-        >
-          {{ initials }}
+        <div v-if="showPhotoBlock" class="border shrink-0" :style="{ borderColor: `${accent}60` }">
+          <ResumePhotoAvatar
+            :photo-url="p.photoUrl"
+            :initials="initials"
+            :accent="accent"
+            shape="square"
+            size-class="w-14 h-14"
+            fallback-class="font-mono font-bold text-lg"
+            :fallback-style="{ color: accent, background: `${accent}15` }"
+          />
         </div>
       </div>
 

@@ -2,6 +2,7 @@
 import { isBase64PhotoUrl, MSG } from '@profiloz/shared'
 
 const model = defineModel<string | undefined>()
+const showOnCv = defineModel<boolean>('showOnCv', { default: true })
 
 const avatarService = useAvatarService()
 const previewUrl = ref<string | null>(null)
@@ -22,7 +23,8 @@ async function processFile(file: File) {
     return
   }
 
-  // Afficher l'aperçu local immédiatement
+  showOnCv.value = true
+
   const localPreview = URL.createObjectURL(file)
   previewUrl.value = localPreview
 
@@ -36,7 +38,6 @@ async function processFile(file: File) {
     const result = await avatarService.uploadAvatar(jpegBlob)
     model.value = result.storageKey
     syncPreview(result.storageKey)
-    // Libérer l'URL locale après upload réussi
     URL.revokeObjectURL(localPreview)
 
     if (previousKey?.startsWith('avatars/') && previousKey !== result.storageKey) {
@@ -44,8 +45,8 @@ async function processFile(file: File) {
     }
   } catch {
     uploadError.value = MSG.photo.uploadError
-    // En cas d'erreur, revenir à l'aperçu local
-    previewUrl.value = localPreview
+    URL.revokeObjectURL(localPreview)
+    previewUrl.value = model.value ? avatarService.resolvePhoto(model.value) ?? null : null
   } finally {
     uploading.value = false
   }
@@ -73,6 +74,10 @@ async function removePhoto() {
   }
 }
 
+function hidePhotoOnCv() {
+  showOnCv.value = false
+}
+
 watch(
   model,
   (value) => {
@@ -84,7 +89,40 @@ watch(
 
 <template>
   <UiFormField label="Photo de profil (facultatif)">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <p class="text-sm text-on-surface-variant">{{ MSG.photo.showOnCv }}</p>
+      <button
+        type="button"
+        role="switch"
+        class="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors"
+        :class="showOnCv ? 'bg-secondary' : 'bg-outline-variant'"
+        :aria-checked="showOnCv"
+        @click="showOnCv = !showOnCv"
+      >
+        <span
+          class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+          :class="showOnCv ? 'translate-x-6' : 'translate-x-1'"
+        />
+      </button>
+    </div>
+
     <div
+      v-if="!showOnCv"
+      class="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-5 text-center space-y-3"
+    >
+      <UiPzIcon name="hide_image" class="text-3xl text-on-surface-variant/50" />
+      <p class="text-sm text-on-surface-variant">{{ MSG.photo.hiddenOnCv }}</p>
+      <button
+        type="button"
+        class="text-sm text-secondary font-bold hover:underline"
+        @click="showOnCv = true"
+      >
+        {{ MSG.photo.addPhoto }}
+      </button>
+    </div>
+
+    <div
+      v-else
       class="relative border-2 border-dashed rounded-xl p-4 transition-colors"
       :class="isDragging ? 'border-secondary bg-secondary/5' : 'border-outline-variant'"
       @dragover.prevent="isDragging = true"
@@ -121,16 +159,19 @@ watch(
               Carrée
             </button>
           </div>
-          <div class="flex gap-3">
+          <div class="flex flex-wrap gap-3">
             <button type="button" class="text-sm text-secondary font-semibold" @click="fileInput?.click()">
               Changer
             </button>
             <button type="button" class="text-sm text-error" @click="removePhoto">Supprimer</button>
+            <button type="button" class="text-sm text-on-surface-variant" @click="hidePhotoOnCv">
+              Masquer sur le CV
+            </button>
           </div>
         </div>
       </div>
 
-      <div v-else class="text-center py-4">
+      <div v-else class="text-center py-4 space-y-3">
         <UiPzIcon name="add_a_photo" class="text-3xl text-on-surface-variant/40 mb-2" />
         <p class="text-sm text-on-surface-variant mb-2">Glissez une photo ou</p>
         <button
@@ -140,7 +181,14 @@ watch(
         >
           parcourir vos fichiers
         </button>
-        <p class="text-xs text-on-surface-variant/60 mt-2">JPG, PNG · max 2 Mo</p>
+        <p class="text-xs text-on-surface-variant/60">JPG, PNG · max 2 Mo</p>
+        <button
+          type="button"
+          class="block w-full text-xs text-on-surface-variant hover:text-secondary pt-1"
+          @click="hidePhotoOnCv"
+        >
+          Je ne veux pas de photo sur mon CV
+        </button>
       </div>
 
       <UiMessageBanner v-if="uploadError" variant="error" :message="uploadError" class="mt-2" />

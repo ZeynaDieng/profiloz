@@ -11,6 +11,8 @@ const {
   hasExperiences,
   hasEducations,
   hasSkills,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
 </script>
 
@@ -25,20 +27,16 @@ const {
         :style="{ backgroundColor: `${accent}12` }"
       >
         <!-- Photo + identité -->
-        <div class="text-center">
-          <div
-            v-if="p.photoUrl"
-            class="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-[3px]"
-            :style="{ borderColor: accent }"
-          >
-            <img :src="p.photoUrl" alt="" class="w-full h-full object-cover" />
-          </div>
-          <div
-            v-else
-            class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-xl font-bold text-white"
-            :style="{ backgroundColor: accent }"
-          >
-            {{ (p.fullName || "V")[0] }}
+        <div v-if="showPhotoBlock" class="text-center">
+          <div class="mx-auto mb-4 w-20 h-20 overflow-hidden border-[3px] rounded-full" :style="{ borderColor: accent }">
+            <ResumePhotoAvatar
+              :photo-url="p.photoUrl"
+              :initials="initials"
+              :accent="accent"
+              shape="circle"
+              size-class="w-full h-full"
+              fallback-class="text-xl font-bold text-white"
+            />
           </div>
 
           <h1

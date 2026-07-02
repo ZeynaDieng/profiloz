@@ -2,8 +2,8 @@ import type { CoverLetterImportData, DocumentType, ResumeSnapshot } from '@profi
 import { classifyHeading } from './pipeline/sections'
 import { repairSpacedOutText } from './text-repair'
 
-const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/i
-const PHONE_RE = /(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}/
+const EMAIL_RE = /[\p{L}\p{N}.+-]+@[\p{L}\p{N}-]+\.[\p{L}\p{N}.-]+/iu
+const PHONE_RE = /(?:\+?\d{1,4}[\s.-]?)?(?:\(?\d{1,4}\)?[\s.-]?)?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}(?:[\s.-]?\d{2,4})?/
 const URL_RE = /https?:\/\/[^\s]+/i
 const LINKEDIN_RE = /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/[^\s]+/i
 // Un mois FR (préfixe + suffixe optionnel) : « jan », « mars », « avril », « août »…
@@ -16,19 +16,35 @@ const DATE_RANGE_RE = new RegExp(
   `(?:de\\s+|d['\u2019]\\s*)?(${DATE_PART})\\s*(?:[-–—/]+|à|au|to|a)\\s*(${DATE_PART}|présent|present|aujourd['\u2019]hui|current|aujourd)`,
   'i',
 )
-const YEAR_RANGE_RE = /^(\d{4})\s*[-–—]\s*(\d{4}|présent|present)$/i
+const YEAR_RANGE_RE = /^(\d{4})\s*[-–—]\s*(\d{4}|présent|present|aujourd['\u2019]hui|current)$/i
+const SINCE_DATE_RE = /^(?:depuis|since|from|à partir de|a partir de)\s+(\d{4})\b/i
+const SLASH_DATE_RANGE_RE =
+  /^(\d{1,2}\/\d{4})\s*(?:[-–—/]|à|au|to|a)\s*(\d{1,2}\/\d{4}|présent|present|aujourd['\u2019]hui|current|aujourd)\b/i
+const SLASH_DATE_SINGLE_RE = /^(\d{1,2}\/\d{4})\b/
+const CURRENT_ONLY_RE = /^(?:présent|present|aujourd['\u2019]hui|current|aujourd|nos jours|à ce jour|a ce jour)\b/i
 // Une ligne qui COMMENCE par une plage de dates (nouvelle entrée datée).
 const DATE_RANGE_START_RE = new RegExp(
   `^(?:de\\s+|d['\u2019]\\s*)?${DATE_PART}\\s*(?:[-–—/]+|à|au|to|a)\\s*(?:${DATE_PART}|présent|present|aujourd['\u2019]hui|current|aujourd)`,
   'i',
 )
+/** « Septembre – Décembre 2023 » en fin de ligne (mois sans année au début). */
+const TRAILING_MONTH_RANGE_RE = new RegExp(
+  `(?:${MONTH_TOKEN})\\s*[–—-]\\s*(?:${MONTH_TOKEN})\\s+\\d{4}$`,
+  'i',
+)
+
+const MONTH_DATE_LABEL_RE =
+  /^(?:janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)\b/i
+
+const EXPERIENCE_DESCRIPTION_START_RE =
+  /^(?:réalisation|realisation|participation|gestion|assurer|assistance|suivi|mise|préparation|preparation|structur|optimis|élaboration|elaboration|contribution|organisation|administration|traitement|analyse|contrôle|controle|accompagnement|développement|developpement|encadrement|formation|disposition|veiller|effectuer|préparer|preparer|assister|participer|garantir|piloter|superviser)\b/i
 
 const SKIP_NAME_RE =
   /^(curriculum vitae|cv|résumé|resume|profil|profile|coordonnées|contact|informations personnelles)$/i
 
 /** Mots qui trahissent un intitulé de poste plutôt qu'un nom de personne. */
 const JOB_TITLE_HINT_RE =
-  /\b(charg[ée]+e?|responsable|assistant[e]?|directeur|directrice|consultant[e]?|d[ée]veloppeu(?:r|se)|ing[ée]nieur[e]?|manager|manageuse|stagiaire|g[ée]rant[e]?|technicien[ne]?|comptable|commercial[e]?|vendeu(?:r|se)|conseiller[e]?|coordinateur|coordinatrice|secr[ée]taire|analyste|architecte|designer|chef[fe]?|superviseur|administrateu(?:r|rice)|agent[e]?|op[ée]rateur|formateur|formatrice|enseignant[e]?|professeur[e]?|soignant[e]?|aide-?soignant[e]?|infirmi(?:er|ère)|m[ée]decin|pharmacien[ne]?|sage-femme|kin[ée]sith[ée]rapeute|plombier|[ée]lectricien[ne]?|m[ée]canicien[ne]?|ma[çc]on|cuisinier[e]?|p[âa]tissier[e]?|serveu(?:r|se)|caissi(?:er|ère)|chauffeur|livreur|magasinier[e]?|[ée]ducateu(?:r|rice)|animateu(?:r|rice)|infographiste|graphiste|juriste|avocat[e]?|notaire|m[ée]diateur|chargée?|attach[ée]|directeur|auditeu(?:r|rice)|contr[oô]leu(?:r|se)|acheteu(?:r|se)|logisticien[ne]?|community manager|webmaster)\b/i
+  /\b(charg[ée]+e?|responsable|assistant[e]?|directeur|directrice|consultant[e]?|d[ée]veloppeu(?:r|se)|ing[ée]nieur[e]?|manager|manageuse|stagiaire|g[ée]rant[e]?|technicien[ne]?|comptable|commercial[e]?|vendeu(?:r|se)|conseiller[e]?|coordinateur|coordinatrice|secr[ée]taire|analyste|architecte|designer|chef[fe]?|superviseur|administrateu(?:r|rice)|agent[e]?|op[ée]rateur|formateur|formatrice|enseignant[e]?|professeur[e]?|soignant[e]?|aide-?soignant[e]?|infirmi(?:er|ère)|m[ée]decin|pharmacien(?:ne)?|pr[ée]paratrice|[ée]tudiant[e]?|sage-femme|kin[ée]sith[ée]rapeute|plombier|[ée]lectricien[ne]?|m[ée]canicien[ne]?|ma[çc]on|cuisinier[e]?|p[âa]tissier[e]?|serveu(?:r|se)|caissi(?:er|ère)|chauffeur|livreur|magasinier[e]?|[ée]ducateu(?:r|rice)|animateu(?:r|rice)|infographiste|graphiste|juriste|avocat[e]?|notaire|m[ée]diateur|product owner|product manager|project manager|trésorier[e]?|trésorière|attach[ée]|auditeu(?:r|rice)|contr[oô]leu(?:r|se)|acheteu(?:r|se)|logisticien[ne]?|community manager|webmaster)\b/i
 
 const LABELED_LINE_RE =
   /^(?:prénom|prenom|nom|adresse|tel|tél|téléphone|telephone|email|e-mail|courriel|mail|poste|profession|métier|metier|fonction|linkedin|ville|localisation)\b/i
@@ -71,7 +87,7 @@ const SECTION_PATTERNS: Array<{ section: Section; pattern: RegExp }> = [
   {
     section: 'experience',
     pattern:
-      /^(?:(?:\/\/\s*)?(?:stages?\s*(?:&|et)\s*)?(?:résultats?\s*(?:&|et)\s*)?)?(?:expériences?(?:\s+(?:professionnelles?|internationales?))?|experiences?(?:\s+(?:professionnelles?|internationales?))?|expérience(?:\s+internationale)?|experience|parcours exécutif|parcours professionnel|employment|work history|professional experience)\s*:?\s*$/i,
+      /^(?:(?:\/\/\s*)?(?:stages?\s*(?:&|et)\s*)?(?:résultats?\s*(?:&|et)\s*)?)?(?:expériences?(?:\s+(?:professionnelles?|internationales?))?|experiences?(?:\s+(?:professionnelles?|internationales?))?|expérience(?:\s+internationale)?|experience|historique(?:\s+professionnel)?|parcours(?:\s+(?:exécutif|professionnel))?|employment|work history|professional experience)\s*:?\s*$/i,
   },
   {
     section: 'education',
@@ -530,6 +546,8 @@ export function detectSection(line: string): Section | null {
   if (/^stages?\s+experiences?$/.test(loose)) return 'experience'
   if (/^experiences?( professionnelles?)?$/.test(loose)) return 'experience'
   if (/^experience$/.test(loose)) return 'experience'
+  if (/^historique( professionnel)?$/.test(loose)) return 'experience'
+  if (/^parcours( professionnel| executif)?$/.test(loose)) return 'experience'
   if (/^formations?$/.test(loose)) return 'education'
   if (/^competences?( techniques?)?$/.test(loose)) return 'skills'
   if (/^expertises?$/.test(loose)) return 'skills'
@@ -613,16 +631,88 @@ export function looksLikeLocation(line: string): boolean {
 
   if (
     /^[A-ZÀ-Ÿ][\wàâäéèêëïîôùûüç'’-]+(?:\s*[—–]\s*[A-ZÀ-Ÿ][\wàâäéèêëïîôùûüç'’-]+)+$/.test(cleaned) &&
-    cleaned.length <= 45
+    cleaned.length <= 55
   ) {
     return true
   }
 
-  if (cleaned.length <= 35 && /\b(?:dakar|rufisque|diamniadio|ouakam|paris|abidjan|thies|thiès)\b/i.test(cleaned)) {
+  // « Quartier, Ville - Région » (fréquent sur les CV africains).
+  if (/^[^,]{2,40},\s*[A-Za-zÀ-ÿ'’ -]{2,35}(?:\s*[-–—]\s*[A-Za-zÀ-ÿ'’ -]{2,25})?$/.test(cleaned)) {
+    return true
+  }
+
+  if (cleaned.length <= 55 && /\b(?:dakar|rufisque|diamniadio|ouakam|paris|abidjan|thies|thiès)\b/i.test(cleaned)) {
     return true
   }
 
   return false
+}
+
+/** Date ou période (ex. « Janvier 2025 », « 2024 - Présent ») — jamais un intitulé de poste. */
+export function isExperienceDateLabel(text: string): boolean {
+  const c = cleanLine(text).replace(/\.$/, '')
+  if (!c) return true
+  if (isDateOnlyLine(c)) return true
+  if (MONTH_DATE_LABEL_RE.test(c) && /\d{4}/.test(c)) return true
+  if (/^(?:présent|present|actuel(?:le)?|en cours|à ce jour|a ce jour)$/i.test(c)) return true
+  if (/^\d{4}\s*[-–—]\s*(?:\d{4}|présent|present|actuel)/i.test(c)) return true
+  if (/^(?:de\s+|d['\u2019]\s*)?(?:jan|fév|fev|mar|avr|mai|jun|jui|aoû|aou|sep|oct|nov|déc|dec)/i.test(c) && /\d{4}/.test(c)) {
+    return true
+  }
+  return false
+}
+
+/** Retire une plage de dates en fin de ligne « Poste Janvier 2025 – Présent ». */
+function stripTrailingDateFromTitle(text: string): string {
+  const cleaned = cleanLine(text).replace(/\.$/, '')
+  if (!cleaned) return cleaned
+  const dr = parseDateRange(cleaned)
+  if ((dr.startDate || dr.endDate || dr.isCurrent) && dr.rest && dr.rest !== cleaned) {
+    return cleanLine(dr.rest)
+  }
+  const trailingMonth = cleaned.match(new RegExp(`^(.+?)\\s+(${MONTH_TOKEN})$`, 'i'))
+  if (trailingMonth?.[1] && JOB_TITLE_HINT_RE.test(trailingMonth[1]!)) {
+    return cleanLine(trailingMonth[1]!)
+  }
+  return cleaned
+}
+
+/** Partie gauche d'une ligne « poste — entreprise » : doit ressembler à un vrai intitulé. */
+export function isValidExperienceRoleTitle(title: string): boolean {
+  const c = stripTrailingDateFromTitle(title).replace(/\.$/, '')
+  if (c.length < 3 || c.length > 90) return false
+  if (isExperienceDateLabel(c)) return false
+  if (looksLikeLocation(c)) return false
+  if (detectSection(c) || classifyHeading(c)) return false
+  if (PERSONAL_INFO_LABEL_RE.test(c)) return false
+  if (/^[a-zàâäéèêëïîôùûüç]/.test(c) && !/^(?:stagiaire|assistant|assistante|charg[ée]|comptable)/i.test(c)) {
+    return false
+  }
+  if (c.split(/\s+/).length === 1 && !JOB_TITLE_HINT_RE.test(c)) return false
+  if (EXPERIENCE_DESCRIPTION_START_RE.test(c)) return false
+  if (/^étudiant\b/i.test(c)) return true
+  return looksLikeExperienceTitle(c) || JOB_TITLE_HINT_RE.test(c)
+}
+
+/** Partie droite « poste — entreprise » : rejette les missions OCR collées après un tiret. */
+export function isValidExperienceCompany(company: string): boolean {
+  const c = cleanLine(company)
+  if (c.length < 2 || c.length > 80) return false
+  if (isExperienceDateLabel(c)) return false
+  if (EXPERIENCE_DESCRIPTION_START_RE.test(c)) return false
+  if (/^(?:des |de la |du |d['\u2019]|les |pour |afin |dans |avec |l['\u2019]|la |le )/i.test(c)) return false
+  if (c.split(/\s+/).length > 6 && !ORG_NAME_RE.test(c)) return false
+  if (/[.;]$/.test(c) && !ORG_NAME_RE.test(c)) return false
+  return true
+}
+
+export function isValidExperienceEntry(exp: ResumeSnapshot['experiences'][number]): boolean {
+  const position = exp.position?.trim() ?? ''
+  const company = exp.company?.trim() ?? ''
+  if (!position && !company) return false
+  if (position && !isValidExperienceRoleTitle(position)) return false
+  if (company && !isValidExperienceCompany(company)) return false
+  return true
 }
 
 export function looksLikeExperienceTitle(line: string): boolean {
@@ -633,11 +723,17 @@ export function looksLikeExperienceTitle(line: string): boolean {
   if (isContactLine(cleaned) || isTemplateFooter(cleaned)) return false
   if (PERSONAL_INFO_LABEL_RE.test(cleaned)) return false
   if (EDUCATION_KEYWORDS_RE.test(cleaned) && !EXPERIENCE_KEYWORDS_RE.test(cleaned)) return false
+  if (EXPERIENCE_DESCRIPTION_START_RE.test(cleaned)) return false
+  if (/\.$/.test(cleaned) && !ORG_NAME_RE.test(cleaned)) return false
   // Une description / énumération (virgule + plusieurs mots) ou une phrase longue
   // (> 7 mots) est une mission, pas un intitulé de poste.
   const titleWordCount = cleaned.split(/\s+/).length
   if (titleWordCount > 7) return false
   if (/,/.test(cleaned) && titleWordCount > 4) return false
+
+  if (/\b(?:product owner|product manager|project manager|chef(?:fe)? de projet)\b/i.test(cleaned)) {
+    return true
+  }
 
   if (
     /^(?:stage|stagiaire|consultant|consultante|chargé|chargée|assistant|assistante|conseill|gérant|gérante|communicat|directeur|directrice|commercial|technicien|responsable|chef|developpeur|développeur|comptable|manager|ingénieur|ingenieur)/i.test(
@@ -735,43 +831,98 @@ function fixDateOrder(startDate?: string, endDate?: string): { startDate?: strin
 
 export function parseDateRange(line: string): { startDate?: string; endDate?: string; isCurrent?: boolean; rest: string } {
   const cleaned = cleanLine(line)
-  const yearPeriod = cleaned.match(/^(\d{4})\s*\D{1,5}\s*(\d{4}|présent|present|aujourd['']hui|current)$/i)
+
+  const sinceMatch = cleaned.match(SINCE_DATE_RE)
+  if (sinceMatch) {
+    const rest = cleaned.replace(sinceMatch[0], '').replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g, '').trim()
+    return { startDate: sinceMatch[1], isCurrent: true, rest }
+  }
+
+  const yearToPresent = cleaned.match(
+    /^(\d{4})\s+(?:à|a)\s+(?:nos jours|ce jour|present|présent|aujourd['\u2019]hui|current)\s*[:：]?\s*(.*)$/i,
+  )
+  if (yearToPresent) {
+    return { startDate: yearToPresent[1], isCurrent: true, rest: yearToPresent[2]?.trim() ?? '' }
+  }
+
+  const slashRange = cleaned.match(SLASH_DATE_RANGE_RE)
+  if (slashRange) {
+    const endRaw = slashRange[2]?.toLowerCase() ?? ''
+    const isCurrent = /présent|present|current|aujourd|nos jours/.test(endRaw)
+    const fixed = fixDateOrder(slashRange[1], isCurrent ? undefined : slashRange[2])
+    const rest = cleaned.replace(slashRange[0], '').replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g, '').trim()
+    return { startDate: fixed.startDate, endDate: fixed.endDate, isCurrent, rest }
+  }
+
+  const slashSingle = cleaned.match(SLASH_DATE_SINGLE_RE)
+  if (slashSingle) {
+    const rest = cleaned.replace(slashSingle[0], '').replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g, '').trim()
+    return { startDate: slashSingle[1], rest }
+  }
+
+  const yearPeriod = cleaned.match(/^(\d{4})\s*\D{1,5}\s*(\d{4}|présent|present|aujourd['\u2019]hui|current|nos jours)$/i)
   if (yearPeriod) {
     const endRaw = yearPeriod[2]?.toLowerCase() ?? ''
-    const isCurrent = /présent|present|current|aujourd/.test(endRaw)
+    const isCurrent = /présent|present|current|aujourd|nos jours/.test(endRaw)
     const fixed = fixDateOrder(yearPeriod[1], isCurrent ? undefined : yearPeriod[2])
     return { startDate: fixed.startDate, endDate: fixed.endDate, isCurrent, rest: '' }
   }
 
   const match = cleaned.match(DATE_RANGE_RE) ?? cleaned.match(YEAR_RANGE_RE)
-  if (!match) return { rest: line }
+  if (!match) {
+    const trailingMonthRange = cleaned.match(TRAILING_MONTH_RANGE_RE)
+    if (trailingMonthRange) {
+      const rangeText = trailingMonthRange[0]
+      const rest = cleaned.slice(0, cleaned.length - rangeText.length).replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g, '').trim()
+      const parts = rangeText.match(
+        new RegExp(`^(${MONTH_TOKEN})\\s*[–—-]\\s*((${MONTH_TOKEN})\\s+(\\d{4}))$`, 'i'),
+      )
+      if (parts) {
+        const year = parts[4]!
+        return {
+          startDate: `${parts[1]!.trim()} ${year}`,
+          endDate: parts[2]!.trim(),
+          rest,
+        }
+      }
+    }
+
+    if (CURRENT_ONLY_RE.test(cleaned)) {
+      return { isCurrent: true, rest: cleaned.replace(CURRENT_ONLY_RE, '').trim() }
+    }
+    return { rest: line }
+  }
 
   const startDate = match[1]
   const endRaw = match[2]?.toLowerCase() ?? ''
-  const isCurrent = /présent|present|current|aujourd/.test(endRaw)
+  const isCurrent = /présent|present|current|aujourd|nos jours/.test(endRaw)
   const endDate = isCurrent ? undefined : match[2]
   const fixed = fixDateOrder(startDate, endDate)
   const rest = line.replace(match[0], '').replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g, '').trim()
   return { startDate: fixed.startDate, endDate: fixed.endDate, isCurrent, rest }
 }
 
-export function parseExperienceLine(line: string): ResumeSnapshot['experiences'][number] | null {
-  if (detectSection(line)) return null
-  // Ligne de date seule (« 2021-2024 » mais aussi « Janvier 2021 - Présent ») :
-  // ce n'est pas une expérience. Garde indispensable depuis que le tiret simple
-  // est un séparateur rôle/entreprise, sinon « Janvier 2021 - Présent » serait lu
-  // comme poste=« Janvier 2021 », entreprise=« Présent ».
-  if (isDateOnlyLine(line)) return null
+function splitCompanyCity(value: string): { company: string; location?: string } {
+  const parts = value.split(/\s*,\s*/).map((p) => p.trim()).filter(Boolean)
+  if (parts.length >= 2) {
+    const last = parts[parts.length - 1]!
+    if (last.length <= 30) {
+      return { company: parts.slice(0, -1).join(', '), location: last }
+    }
+  }
+  return { company: value }
+}
 
-  const { startDate, endDate, isCurrent, rest } = parseDateRange(line)
-  let content = cleanLine(rest || line).replace(/^:\s*/, '')
+/** Parse le contenu d'une ligne d'expérience (hors plage de dates en tête). */
+export function parseExperienceContent(
+  content: string,
+  dates: { startDate?: string; endDate?: string; isCurrent?: boolean } = {},
+): ResumeSnapshot['experiences'][number] | null {
+  let { startDate, endDate, isCurrent } = dates
+  const cleaned = cleanLine(content).replace(/^:\s*/, '')
+  if (!cleaned || looksLikeLocation(cleaned)) return null
 
-  if (!rest && looksLikeLocation(line)) return null
-  if (rest && looksLikeLocation(content)) return null
-
-  const chezMatch = content.match(
-    /^(.+?)\s+(?:chez|at|@|à l['']|à la |à)\s+(.+?)(?:\s*[—–-]\s*)?$/i,
-  )
+  const chezMatch = cleaned.match(/^(.+?)\s+(?:chez|at|@|à l['']|à la |à)\s+(.+?)(?:\s*[—–-]\s*)?$/i)
   if (chezMatch) {
     let company = chezMatch[2]!.trim()
     let description: string | undefined
@@ -780,10 +931,11 @@ export function parseExperienceLine(line: string): ResumeSnapshot['experiences']
       description = company.slice(companySplit[1]!.length).trim()
       company = companySplit[1]!.trim()
     }
-
+    const split = splitCompanyCity(company)
     return {
       position: chezMatch[1]!.trim(),
-      company,
+      company: split.company,
+      location: split.location,
       description,
       startDate,
       endDate,
@@ -791,28 +943,57 @@ export function parseExperienceLine(line: string): ResumeSnapshot['experiences']
     }
   }
 
-  // Séparateur rôle/entreprise : tiret long OU tiret simple ENTOURÉ d'espaces
-  // (« Développeuse Full-stack - Intech Group »). Les espaces sont requis pour ne
-  // pas couper un mot composé (« Full-stack », « sous-traitant »).
-  const roleCompanyMatch = content.match(/^(.+?)\s+[—–-]\s+(.+?)(?:\s+\d{4}\s*[-–—].*)?$/i)
-  if (roleCompanyMatch && !looksLikeLocation(content)) {
+  const roleCompanyMatch = cleaned.match(/^(.+?)\s+[—–-]\s+(.+?)(?:\s+\d{4}\s*[-–—].*)?$/i)
+  if (roleCompanyMatch && !looksLikeLocation(cleaned)) {
     const position = roleCompanyMatch[1]!.trim()
-    const company = roleCompanyMatch[2]!
-      .replace(/\s*\d{4}\s*[-–—]\s*(\d{4}|présent|present).*$/i, '')
-      .trim()
-    if (position.length >= 3 && company.length >= 2) {
-      return { position, company, startDate, endDate, isCurrent }
+    const split = splitCompanyCity(
+      roleCompanyMatch[2]!.replace(/\s*\d{4}\s*[-–—]\s*(\d{4}|présent|present).*$/i, '').trim(),
+    )
+    if (isValidExperienceRoleTitle(position) && isValidExperienceCompany(split.company)) {
+      return {
+        position,
+        company: split.company,
+        location: split.location,
+        startDate,
+        endDate,
+        isCurrent,
+      }
     }
   }
 
-  const pipeParts = content.split(/\s*[|•]\s*/).map((part) => part.trim()).filter(Boolean)
+  const pipeParts = cleaned.split(/\s*[|•]\s*/).map((part) => part.trim()).filter(Boolean)
   if (pipeParts.length >= 2) {
-    const [first, second, third] = pipeParts
+    const [first, second, thirdRaw] = pipeParts
     if (first && second) {
-      return { position: first, company: second, startDate: third ?? startDate, endDate, isCurrent }
+      if (thirdRaw && /(?:\d{4}|depuis|présent|present)/i.test(thirdRaw)) {
+        const td = parseDateRange(thirdRaw)
+        startDate = td.startDate ?? startDate
+        endDate = td.endDate ?? endDate
+        isCurrent = td.isCurrent ?? isCurrent
+      }
+      const split = splitCompanyCity(second)
+      return { position: first, company: split.company, location: split.location, startDate, endDate, isCurrent }
     }
   }
 
+  return null
+}
+
+export function parseExperienceLine(line: string): ResumeSnapshot['experiences'][number] | null {
+  if (detectSection(line)) return null
+  if (isDateOnlyLine(line)) return null
+
+  const { startDate, endDate, isCurrent, rest } = parseDateRange(line)
+  const content = cleanLine(rest || line).replace(/^:\s*/, '')
+
+  if (!rest && looksLikeLocation(line)) return null
+  if (rest && looksLikeLocation(content)) return null
+
+  const parsed = parseExperienceContent(content, { startDate, endDate, isCurrent })
+  if (parsed) return parsed
+  if ((startDate || endDate || isCurrent) && rest && looksLikeExperienceTitle(content)) {
+    return { position: content, company: '', startDate, endDate, isCurrent }
+  }
   return null
 }
 
@@ -1017,7 +1198,10 @@ function detectFullName(lines: string[]): string | undefined {
       }
 
       const words = line.split(/\s+/)
-      if (words.length >= 2 && words.length <= 6) return line
+      if (words.length >= 2 && words.length <= 6) {
+        if (JOB_TITLE_HINT_RE.test(line)) continue
+        return line
+      }
       // Nom éclaté : « Dieynaba » suivi de « CAMARA ».
       if (words.length === 1 && isNameToken(line)) {
         const next = head[i + 1]
@@ -1045,6 +1229,9 @@ function isPlausibleJobTitle(line: string, fullName?: string): boolean {
     return false
   }
   if (/^\d/.test(c) || DATE_RANGE_START_RE.test(c)) return false
+  if (isExperienceDateLabel(c)) return false
+  if (/\b(microsoft|excel|word|powerpoint|office|google|photoshop|canva|windows|macos)\b/i.test(c)) return false
+  if (/[—–-]/.test(c) && c.split(/\s+/).length >= 3) return false
   if (looksLikeLocation(c)) return false
   if (c.split(/\s+/).length > 7) return false
   if (fullName && c === fullName) return false

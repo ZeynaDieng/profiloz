@@ -4,7 +4,6 @@ import type {
   Experience,
   ExtractionConfidence,
   ExtractionMeta,
-  ExtractionReviewItem,
   Language,
   LanguageLevel,
   ResumeSnapshot,
@@ -43,15 +42,22 @@ const form = reactive({
 })
 
 const confidence = computed<ExtractionConfidence | undefined>(() => props.data._extraction?.confidence)
-const review = ref<ExtractionReviewItem[]>(clone(props.data._extraction?.review ?? []))
 
 const overall = computed(() => Math.round((confidence.value?.overall ?? 0) * 100))
+const ocrConfidence = computed(() => props.data._extraction?.ocrConfidence)
+const ocrConfidencePct = computed(() =>
+  typeof ocrConfidence.value === 'number' ? Math.round(ocrConfidence.value * 100) : null,
+)
+const lowOcrScan = computed(() => typeof ocrConfidence.value === 'number' && ocrConfidence.value < 0.5)
 
 function pct(score?: number): number | null {
   return typeof score === 'number' ? Math.round(score * 100) : null
 }
 function isLow(score?: number): boolean {
   return typeof score === 'number' && score < EXTRACTION_LOW_CONFIDENCE
+}
+function sectionLow(scores?: number[]): boolean {
+  return Array.isArray(scores) && scores.some((s) => isLow(s))
 }
 
 // --- Expériences ---
@@ -119,16 +125,18 @@ function removeInterest(index: number) {
   form.interests.splice(index, 1)
 }
 
-// --- Informations à vérifier ---
-type ReviewTarget = '' | 'skills' | 'interests' | 'certifications' | 'summary' | 'ignore'
-
-function applyReview(item: ExtractionReviewItem, target: ReviewTarget) {
-  if (!target) return
-  if (target === 'skills') addSkill(item.text)
-  else if (target === 'interests') addInterest(item.text)
-  else if (target === 'certifications') form.certifications.push({ name: item.text })
-  else if (target === 'summary') form.summary = [form.summary, item.text].filter(Boolean).join('\n')
-  review.value = review.value.filter((r) => r.id !== item.id)
+// --- Certifications ---
+const newCertification = ref('')
+function addCertification(name?: string) {
+  const value = (name ?? newCertification.value).trim()
+  if (!value) return
+  if (!form.certifications.some((c) => c.name.toLowerCase() === value.toLowerCase())) {
+    form.certifications.push({ name: value })
+  }
+  if (!name) newCertification.value = ''
+}
+function removeCertification(index: number) {
+  form.certifications.splice(index, 1)
 }
 
 function buildResult(): ImportData {
@@ -146,15 +154,32 @@ function buildResult(): ImportData {
 
 const inputClass =
   'w-full px-3 py-2 rounded-lg bg-surface-container-low border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-secondary'
+
+function fieldClass(score?: number): string {
+  return isLow(score)
+    ? `${inputClass} border-amber-500/70 bg-amber-500/5 ring-1 ring-amber-500/20`
+    : inputClass
+}
+
+const extractionMeta = computed(() => props.data._extraction)
+const partialImport = computed(() => extractionMeta.value?.partialImport === true)
+const extractionWarnings = computed(() => extractionMeta.value?.warnings ?? [])
+const extractionErrors = computed(() => extractionMeta.value?.errors ?? [])
+const partialImportMessage = computed(() => {
+  const parts = ['Import partiel — vérifiez attentivement chaque section avant de continuer.']
+  for (const w of extractionWarnings.value) parts.push(w)
+  for (const e of extractionErrors.value) parts.push(e)
+  return parts.join(' ')
+})
 </script>
 
 <template>
   <div class="space-y-stack-md">
-    <!-- <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
       <div>
         <h3 class="text-xl font-bold text-on-surface">Vérifiez les informations extraites</h3>
         <p class="text-sm text-on-surface-variant">
-          Corrigez, complétez ou déplacez chaque élément avant de générer votre dossier.
+          Corrigez ou complétez les champs ci-dessous avant de générer votre dossier.
         </p>
       </div>
       <span
@@ -164,38 +189,23 @@ const inputClass =
         <UiPzIcon name="verified" class="text-[16px]" />
         Confiance globale {{ overall }}%
       </span>
-    </div> -->
+    </div>
 
-    <!-- À vérifier -->
-    <!-- <div
-      v-if="review.length"
-      class="rounded-xl border border-amber-500/40 bg-amber-500/5 p-stack-md space-y-3"
-    >
-      <div class="flex items-center gap-2">
-        <UiPzIcon name="report" class="text-amber-600 text-[18px]" />
-        <h4 class="font-bold text-on-surface">Informations à vérifier ({{ review.length }})</h4>
-      </div>
-      <p class="text-xs text-on-surface-variant">
-        Ces éléments n'ont pas pu être classés avec certitude. Déplacez-les vers la bonne section ou ignorez-les.
-      </p>
-      <div v-for="item in review" :key="item.id" class="flex items-center gap-2 flex-wrap bg-surface rounded-lg p-2">
-        <span class="text-sm text-on-surface flex-1 min-w-[40%]">{{ item.text }}</span>
-        <select
-          class="text-xs px-2 py-1 rounded-md border border-outline-variant bg-surface-container-low"
-          @change="applyReview(item, ($event.target as HTMLSelectElement).value as ReviewTarget)"
-        >
-          <option value="">Déplacer vers…</option>
-          <option value="skills">Compétences</option>
-          <option value="interests">Centres d'intérêt</option>
-          <option value="certifications">Certifications</option>
-          <option value="summary">Profil</option>
-          <option value="ignore">Ignorer</option>
-        </select>
-      </div>
-    </div> -->
+    <UiMessageBanner
+      v-if="lowOcrScan"
+      variant="warning"
+      :message="`Qualité de scan faible (${ocrConfidencePct} %). Le préremplissage automatique est limité — vérifiez chaque section ou importez un PDF texte / DOCX pour un meilleur résultat.`"
+      class="rounded-xl"
+    />
 
-    <!-- Informations personnelles -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
+    <UiMessageBanner
+      v-if="partialImport || extractionWarnings.length || extractionErrors.length"
+      variant="warning"
+      :message="partialImportMessage"
+      class="rounded-xl"
+    />
+
+    <div class="glass-card p-stack-md rounded-xl space-y-3">
       <span class="text-xs text-outline uppercase tracking-wider">Informations personnelles</span>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <label class="space-y-1">
@@ -203,46 +213,62 @@ const inputClass =
             Nom complet
             <em v-if="isLow(confidence?.personalInfo?.fullName)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
           </span>
-          <input v-model="form.personalInfo.fullName" :class="inputClass" placeholder="Prénom Nom" />
+          <input v-model="form.personalInfo.fullName" :class="fieldClass(confidence?.personalInfo?.fullName)" placeholder="Prénom Nom" />
         </label>
         <label class="space-y-1">
-          <span class="text-xs text-on-surface-variant">Poste / Titre</span>
-          <input v-model="form.personalInfo.jobTitle" :class="inputClass" placeholder="Ex. Développeur" />
+          <span class="text-xs text-on-surface-variant flex items-center gap-2">
+            Poste / Titre
+            <em v-if="isLow(confidence?.personalInfo?.jobTitle)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
+          </span>
+          <input v-model="form.personalInfo.jobTitle" :class="fieldClass(confidence?.personalInfo?.jobTitle)" placeholder="Ex. Développeur" />
         </label>
         <label class="space-y-1">
           <span class="text-xs text-on-surface-variant flex items-center gap-2">
             Email
             <em v-if="isLow(confidence?.personalInfo?.email)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
           </span>
-          <input v-model="form.personalInfo.email" :class="inputClass" placeholder="email@exemple.com" />
+          <input v-model="form.personalInfo.email" :class="fieldClass(confidence?.personalInfo?.email)" placeholder="email@exemple.com" />
         </label>
         <label class="space-y-1">
-          <span class="text-xs text-on-surface-variant">Téléphone</span>
-          <input v-model="form.personalInfo.phone" :class="inputClass" placeholder="+221 ..." />
+          <span class="text-xs text-on-surface-variant flex items-center gap-2">
+            Téléphone
+            <em v-if="isLow(confidence?.personalInfo?.phone)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
+          </span>
+          <input v-model="form.personalInfo.phone" :class="fieldClass(confidence?.personalInfo?.phone)" placeholder="+221 ..." />
         </label>
         <label class="space-y-1">
-          <span class="text-xs text-on-surface-variant">Ville / Localisation</span>
-          <input v-model="form.personalInfo.location" :class="inputClass" placeholder="Ville, Pays" />
+          <span class="text-xs text-on-surface-variant flex items-center gap-2">
+            Ville / Localisation
+            <em v-if="isLow(confidence?.personalInfo?.location)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
+          </span>
+          <input v-model="form.personalInfo.location" :class="fieldClass(confidence?.personalInfo?.location)" placeholder="Ville, Pays" />
         </label>
         <label class="space-y-1">
-          <span class="text-xs text-on-surface-variant">LinkedIn</span>
-          <input v-model="form.personalInfo.linkedinUrl" :class="inputClass" placeholder="linkedin.com/in/..." />
+          <span class="text-xs text-on-surface-variant flex items-center gap-2">
+            LinkedIn
+            <em v-if="isLow(confidence?.personalInfo?.linkedinUrl)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
+          </span>
+          <input v-model="form.personalInfo.linkedinUrl" :class="fieldClass(confidence?.personalInfo?.linkedinUrl)" placeholder="linkedin.com/in/..." />
         </label>
         <label class="space-y-1 md:col-span-2">
-          <span class="text-xs text-on-surface-variant">Site / Portfolio</span>
-          <input v-model="form.personalInfo.websiteUrl" :class="inputClass" placeholder="https://..." />
+          <span class="text-xs text-on-surface-variant flex items-center gap-2">
+            Site / Portfolio
+            <em v-if="isLow(confidence?.personalInfo?.websiteUrl)" class="not-italic text-[10px] text-amber-600 font-bold">à confirmer</em>
+          </span>
+          <input v-model="form.personalInfo.websiteUrl" :class="fieldClass(confidence?.personalInfo?.websiteUrl)" placeholder="https://..." />
         </label>
       </div>
-    </div> -->
+    </div>
 
-    <!-- Profil -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-2">
-      <span class="text-xs text-outline uppercase tracking-wider">Profil</span>
-      <textarea v-model="form.summary" rows="3" :class="inputClass" placeholder="Quelques lignes de présentation…" />
-    </div> -->
+    <div class="glass-card p-stack-md rounded-xl space-y-2">
+      <span class="text-xs text-outline uppercase tracking-wider flex items-center gap-2">
+        Profil
+        <em v-if="isLow(confidence?.summary)" class="not-italic text-[10px] text-amber-600 font-bold normal-case">à confirmer</em>
+      </span>
+      <textarea v-model="form.summary" rows="3" :class="fieldClass(confidence?.summary)" placeholder="Quelques lignes de présentation…" />
+    </div>
 
-    <!-- Expériences -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
+    <div class="glass-card p-stack-md rounded-xl space-y-3">
       <div class="flex items-center justify-between">
         <span class="text-xs text-outline uppercase tracking-wider">Expériences ({{ form.experiences.length }})</span>
         <button type="button" class="text-xs font-bold text-secondary flex items-center gap-1" @click="addExperience">
@@ -252,7 +278,8 @@ const inputClass =
       <div
         v-for="(exp, i) in form.experiences"
         :key="i"
-        class="border border-outline-variant rounded-lg p-3 space-y-2 relative"
+        class="border rounded-lg p-3 space-y-2 relative"
+        :class="isLow(confidence?.experiences?.[i]) ? 'border-amber-500/50 bg-amber-500/5' : 'border-outline-variant'"
       >
         <div class="flex items-center justify-between gap-2">
           <span
@@ -287,19 +314,11 @@ const inputClass =
           </div>
         </div>
         <textarea v-model="exp.description" rows="2" :class="inputClass" placeholder="Description / missions" />
-        <input
-          type="text"
-          :class="inputClass"
-          placeholder="Compétences utilisées (séparées par des virgules)"
-          :value="(exp.skillsUsed ?? []).join(', ')"
-          @input="exp.skillsUsed = ($event.target as HTMLInputElement).value.split(',').map((s) => s.trim()).filter(Boolean)"
-        />
       </div>
       <p v-if="!form.experiences.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noExperience }}</p>
-    </div> -->
+    </div>
 
-    <!-- Formations -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
+    <div class="glass-card p-stack-md rounded-xl space-y-3">
       <div class="flex items-center justify-between">
         <span class="text-xs text-outline uppercase tracking-wider">Formations ({{ form.educations.length }})</span>
         <button type="button" class="text-xs font-bold text-secondary flex items-center gap-1" @click="addEducation">
@@ -309,7 +328,8 @@ const inputClass =
       <div
         v-for="(edu, i) in form.educations"
         :key="i"
-        class="border border-outline-variant rounded-lg p-3 space-y-2"
+        class="border rounded-lg p-3 space-y-2"
+        :class="isLow(confidence?.educations?.[i]) ? 'border-amber-500/50 bg-amber-500/5' : 'border-outline-variant'"
       >
         <div class="flex items-center justify-between">
           <span
@@ -335,11 +355,16 @@ const inputClass =
         </div>
       </div>
       <p v-if="!form.educations.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noEducation }}</p>
-    </div> -->
+    </div>
 
-    <!-- Compétences -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
-      <span class="text-xs text-outline uppercase tracking-wider">Compétences ({{ form.skills.length }})</span>
+    <div
+      class="glass-card p-stack-md rounded-xl space-y-3"
+      :class="sectionLow(confidence?.skills) ? 'ring-1 ring-amber-500/30' : ''"
+    >
+      <span class="text-xs text-outline uppercase tracking-wider flex items-center gap-2">
+        Compétences ({{ form.skills.length }})
+        <em v-if="sectionLow(confidence?.skills)" class="not-italic text-[10px] text-amber-600 font-bold normal-case">à confirmer</em>
+      </span>
       <div class="flex flex-wrap gap-2">
         <span
           v-for="(skill, i) in form.skills"
@@ -361,12 +386,17 @@ const inputClass =
           Ajouter
         </button>
       </div>
-    </div> -->
+    </div>
 
-    <!-- Langues -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
+    <div
+      class="glass-card p-stack-md rounded-xl space-y-3"
+      :class="sectionLow(confidence?.languages) ? 'ring-1 ring-amber-500/30' : ''"
+    >
       <div class="flex items-center justify-between">
-        <span class="text-xs text-outline uppercase tracking-wider">Langues ({{ form.languages.length }})</span>
+        <span class="text-xs text-outline uppercase tracking-wider flex items-center gap-2">
+          Langues ({{ form.languages.length }})
+          <em v-if="sectionLow(confidence?.languages)" class="not-italic text-[10px] text-amber-600 font-bold normal-case">à confirmer</em>
+        </span>
         <button type="button" class="text-xs font-bold text-secondary flex items-center gap-1" @click="addLanguage">
           <UiPzIcon name="add" class="text-[14px]" /> Ajouter
         </button>
@@ -380,10 +410,34 @@ const inputClass =
         <button type="button" class="text-xs text-error hover:underline" @click="removeLanguage(i)">Suppr.</button>
       </div>
       <p v-if="!form.languages.length" class="text-sm text-on-surface-variant">{{ MSG.empty.noLanguage }}</p>
-    </div> -->
+    </div>
 
-    <!-- Centres d'intérêt -->
-    <!-- <div class="glass-card p-stack-md rounded-xl space-y-3">
+    <div class="glass-card p-stack-md rounded-xl space-y-3">
+      <span class="text-xs text-outline uppercase tracking-wider">Certifications ({{ form.certifications.length }})</span>
+      <div class="flex flex-wrap gap-2">
+        <span
+          v-for="(cert, i) in form.certifications"
+          :key="i"
+          class="text-xs bg-surface-container-high px-2 py-1 rounded-md text-on-surface-variant flex items-center gap-1"
+        >
+          {{ cert.name }}
+          <button type="button" class="text-error" @click="removeCertification(i)"><UiPzIcon name="close" class="text-[12px]" /></button>
+        </span>
+      </div>
+      <div class="flex gap-2">
+        <input
+          v-model="newCertification"
+          :class="inputClass"
+          placeholder="Ajouter une certification"
+          @keydown.enter.prevent="addCertification()"
+        />
+        <button type="button" class="px-3 py-2 bg-secondary text-white rounded-lg text-sm font-bold" @click="addCertification()">
+          Ajouter
+        </button>
+      </div>
+    </div>
+
+    <div class="glass-card p-stack-md rounded-xl space-y-3">
       <span class="text-xs text-outline uppercase tracking-wider">Centres d'intérêt ({{ form.interests.length }})</span>
       <div class="flex flex-wrap gap-2">
         <span
@@ -406,7 +460,7 @@ const inputClass =
           Ajouter
         </button>
       </div>
-    </div> -->
+    </div>
 
     <div class="flex flex-col sm:flex-row sm:justify-end gap-3 border-t border-outline-variant pt-stack-md sticky bottom-0 bg-background/95 backdrop-blur-sm pb-[max(1rem,env(safe-area-inset-bottom))] -mx-margin-mobile px-margin-mobile md:static md:bg-transparent md:backdrop-blur-none md:pb-0 md:mx-0 md:px-0">
       <UiButton variant="ghost" block class="sm:w-auto" @click="emit('cancel')">

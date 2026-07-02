@@ -16,6 +16,7 @@
     "db:studio": "pnpm --filter @profiloz/api db:studio",
     "test:e2e": "playwright test",
     "test:e2e:pdf": "playwright test e2e/guest-pdf.spec.ts",
+    "ocr:validate-production": "pnpm --filter @profiloz/api ocr:validate-production",
     "docker:prod": "docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.production.example up --build",
     "docker:smoke-pdf": "bash docker/scripts/smoke-pdf.sh"
   },

@@ -1,0 +1,28 @@
+Awa Sow - Développeuse Full-stack
+ Ouakam, Dakar (Sénégal) |  +221 77 000 00 00 | awa.sow@example.com
+Profil Professionnel
+Développeuse full-stack avec plus de 4 ans d'expérience spécialisée dans le développement
+d'applications modernes, performantes et sécurisées.
+Expérience
+Développeuse Full-stack - Intech Group (Oct 2021 - Aujourd'hui)
+ Développement complet de plusieurs applications Technologies : Laravel, Angular, Vue.js, Nuxt.js, MySQL, NestJS
+ Intégration d'APIs REST sécurisées et optimisation des performances
+Développeuse Full-stack - Orion (Oct 2024 - Aujourd'hui)
+ Développement de modules frontend et interfaces d'administration
+Développeuse Web Freelance (Sep 2024 - Aujourd'hui)
+ Création de sites vitrines, e-commerce et back-office pour TPE/PME
+Support Technique Multi-entreprises (2019-2024)
+ Support utilisateurs, résolution de bugs et maintenance applicative
+Formation
+  Master en Génie Logiciel - IPD, Dakar (2024-2025, en cours)
+  Licence en Informatique (Mention Bien) - ENsup Afrique (2019-2022)
+Compétences Techniques
+ Langages : JavaScript, TypeScript, PHP, HTML5, CSS3, SQL, VB.NET
+ Frameworks : Nuxt.js, AngularJS, Laravel, NestJS, Ionic
+ UI/Design : Tailwind CSS, Bootstrap, Responsive Design, Filament
+ Base de données : MySQL, PostgreSQL
+ Outils : Git/GitHub, REST API, Agile/Scrum, Tests unitaires
+Langues
+ Français : Bien | Anglais : Technique | Wolof : Très bien | Pullar : Les bases
+Centres d'intérêt
+Codage créatif, hackathons, méditation, veille technologique

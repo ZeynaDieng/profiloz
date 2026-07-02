@@ -6,7 +6,7 @@ import type {
   ResumeSnapshot,
 } from '@profiloz/shared'
 
-const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.-]+$/i
+const EMAIL_RE = /^[\p{L}\p{N}.+-]+@[\p{L}\p{N}-]+\.[\p{L}\p{N}.-]+$/iu
 const PHONE_RE = /^\+?[\d\s().-]{8,24}$/
 
 function clamp(value: number): number {

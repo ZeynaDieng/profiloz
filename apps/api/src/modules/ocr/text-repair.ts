@@ -43,7 +43,10 @@ function repairSpacedOutLine(line: string): string {
 function polishRepairedText(text: string): string {
   let polished = text
 
-  polished = polished.replace(/([a-z])([A-Z][A-Za-zÀ-ÿ'-]{1,})/g, '$1 $2')
+  polished = polished.replace(
+    /([a-zàâäéèêëïîôùûüç]{2,})(janvier|f[eé]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[eé]cembre)(\s+\d{4})?\b/gi,
+    '$1 $2$3',
+  )
 
   const email = polished.match(/[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9.-]+/i)?.[0]
   if (email) {
@@ -73,7 +76,7 @@ function polishRepairedText(text: string): string {
 }
 
 export function repairSpacedOutText(text: string): string {
-  if (measureSpacedOutScore(text) < 0.25) return text
+  if (measureSpacedOutScore(text) < 0.25) return polishRepairedText(text)
 
   const repaired = text
     .split('\n')
@@ -82,6 +85,8 @@ export function repairSpacedOutText(text: string): string {
 
   return polishRepairedText(repaired)
 }
+
+export { measureSpacedOutScore }
 
 export function scoreExtractedPdfText(text: string): number {
   const trimmed = text.trim()

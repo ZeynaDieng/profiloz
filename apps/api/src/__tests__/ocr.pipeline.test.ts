@@ -324,3 +324,80 @@ Wolof
     expect(edus.some((e) => /Zac Mbao/i.test(e.degree ?? ''))).toBe(false)
   })
 })
+
+describe('runResumePipeline — layout 2 colonnes EXPÉRIENCE | FORMATION', () => {
+  const cv = `
+KINÉ BABA DIENG
+COMPTABLE
+diengdkine@gmail.com
+77-585-30-32
+Ouakam – Dakar
+
+EXPÉRIENCE                      FORMATION
+Chargée des relations externes  Formation accélérée
+Rajab Business                  British
+Ouakam – Dakar                  Langue Allemande et Anglaise
+2023 – 2024                     2021 – 2022
+Assistante de Direction        2ème année de Formation
+Immo-Négoce                     ENSUP AFRIQUE
+Ouakam – Dakar                  Banque Finance et Assurance
+2022 – 2023                     2020 – 2021
+Conseillère clientèle           Baccalauréat L2
+PCCI Dakar                      Lycée Mixte Maurice Delafosse
+2021 – 2022                     2018 – 2019
+  `.trim()
+
+  it('sépare expériences et formations (pas de mélange)', async () => {
+    const result = await runResumePipeline(cv)
+    const exps = result.experiences ?? []
+    const edus = result.educations ?? []
+    const skills = (result.skills ?? []).map((s) => s.name.toLowerCase())
+
+    expect(exps.some((exp) => /rajab/i.test(exp.company ?? ''))).toBe(true)
+    expect(exps.some((exp) => /immo/i.test(exp.company ?? ''))).toBe(true)
+    expect(edus.some((edu) => /formation accélérée|formation acceleree/i.test(edu.degree ?? ''))).toBe(true)
+    expect(edus.some((edu) => /ensup/i.test(`${edu.institution ?? ''} ${edu.degree ?? ''}`))).toBe(true)
+
+    expect(exps.some((exp) => /baccalauréat|formation accélérée|ensup/i.test(exp.position ?? ''))).toBe(false)
+    expect(exps.some((exp) => /baccalauréat|ensup/i.test(exp.company ?? ''))).toBe(false)
+    expect(skills.some((name) => /rajab|ensup|baccalauréat|formation accélérée/i.test(name))).toBe(false)
+  })
+})
+
+describe('runResumePipeline — layout Adobe 4 colonnes (en-têtes en fin)', () => {
+  const cv = `
+Plombier expérimenté avec plus de 10 ans d'expérience sur des
+chantiers variés (bâtiments, industries et hôtellerie).
+Modou Fall
+Plombier
+modou.fall@example.com
+(+221) 70 000 00 00
+Diorga Montagne, Rufisque - Dakar
+COMPÉTENCES
+LANGUES
+Installation de réseaux de plomberie
+Détection et réparation de fuites
+Français : lu, parlé et écrit
+Anglais : lu, parlé et écrit
+Wolof : parlé
+2025 à nos jours : Plombier Sous-Traitant
+2024 - 2025 : Plombier
+2020 - 2021 : Plombier
+INDÉPENDANT
+ENTREPRISE ESPAGNOLE KALIA, DAKAR
+BATILUX, DAKAR
+2012 - 2013 : BFEM
+EXPÉRIENCES PROFESSIONNELLES
+ETUDES ET FORMATIONS
+  `.trim()
+
+  it('ne mélange pas expériences dans compétences', async () => {
+    const result = await runResumePipeline(cv)
+    const skills = (result.skills ?? []).map((s) => s.name.toLowerCase())
+    const exps = result.experiences ?? []
+
+    expect(exps.length).toBeGreaterThanOrEqual(3)
+    expect(skills.some((name) => /plombier sous-traitant|ind[ée]pendant|kalia|batilux/i.test(name))).toBe(false)
+    expect(skills.some((name) => /installation de réseaux|fuites/i.test(name))).toBe(true)
+  })
+})

@@ -11,16 +11,9 @@ const {
   hasSkills,
   hasInterests,
   hasEducations,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
-
-const initials = computed(() =>
-  (p.value?.fullName || "")
-    .split(" ")
-    .map((w: string) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase(),
-);
 </script>
 
 <template>
@@ -134,24 +127,17 @@ const initials = computed(() =>
       <!-- Sidebar droite -->
       <aside class="space-y-6 pt-1">
         <!-- Avatar -->
-        <div class="flex justify-center">
-          <div
-            v-if="p.photoUrl"
-            class="w-20 h-20 rounded-2xl overflow-hidden border-[3px]"
-            :style="{ borderColor: accent }"
-          >
-            <img :src="p.photoUrl" alt="" class="w-full h-full object-cover" />
-          </div>
-          <div
-            v-else
-            class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-xl font-black border-[3px]"
-            :style="{
-              backgroundColor: `${accent}20`,
-              borderColor: accent,
-              color: accent,
-            }"
-          >
-            {{ initials }}
+        <div v-if="showPhotoBlock" class="flex justify-center">
+          <div class="border-[3px] rounded-2xl overflow-hidden" :style="{ borderColor: accent }">
+            <ResumePhotoAvatar
+              :photo-url="p.photoUrl"
+              :initials="initials"
+              :accent="accent"
+              shape="rounded"
+              size-class="w-20 h-20"
+              fallback-class="text-white text-xl font-black"
+              :fallback-style="{ backgroundColor: `${accent}20`, color: accent }"
+            />
           </div>
         </div>
 

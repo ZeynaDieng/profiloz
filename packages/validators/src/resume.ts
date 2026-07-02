@@ -86,6 +86,7 @@ export const updateResumeSchema = z.object({
   templateConfig: z
     .object({
       accentColor: z.string().optional(),
+      showPhoto: z.boolean().optional(),
       margins: z.number().optional(),
       lineHeight: z.number().optional(),
       typography: z.string().optional(),
@@ -118,6 +119,7 @@ export const saveResumeSnapshotSchema = z.object({
   templateConfig: z
     .object({
       accentColor: z.string().optional(),
+      showPhoto: z.boolean().optional(),
       margins: z.number().optional(),
       lineHeight: z.number().optional(),
       typography: z.string().optional(),

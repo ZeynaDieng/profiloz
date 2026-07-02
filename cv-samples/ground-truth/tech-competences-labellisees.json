@@ -1,0 +1,57 @@
+{
+  "id": "tech-competences-labellisees",
+  "file": "files/tech-competences-labellisees.txt",
+  "tags": {
+    "tool": "word",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "modern"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV développeur : « Compétences : … » et stack technique",
+  "identity": {
+    "fullName": "Sarah Benali",
+    "jobTitle": "Développeuse Full-Stack"
+  },
+  "contact": {
+    "email": "sarah.benali@example.com",
+    "linkedinUrl": "linkedin.com/in/sarahbenali"
+  },
+  "experiences": [
+    {
+      "position": "Développeuse Full-Stack",
+      "company": "TechCorp"
+    },
+    {
+      "position": "Développeuse Front-End",
+      "company": "DigitalAgency"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "Master Génie Logiciel",
+      "institution": "INSA Lyon"
+    }
+  ],
+  "skills": [
+    "React",
+    "Node.js",
+    "TypeScript",
+    "Docker",
+    "AWS",
+    "PostgreSQL"
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Arabe"
+    }
+  ]
+}

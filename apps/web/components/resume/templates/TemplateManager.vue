@@ -10,6 +10,8 @@ const {
   hasSummary,
   hasExperiences,
   hasEducations,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
 </script>
 
@@ -17,18 +19,17 @@ const {
   <TemplatesTemplateShell :resume="resume" template-name="Manager">
     <!-- En-tête centré prestige -->
     <header class="text-center mb-9 pb-7 relative">
-      <!-- Monogramme -->
-      <div
-        class="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center text-white text-[15pt] font-serif font-bold border-2"
-        :style="{ backgroundColor: accent, borderColor: `${accent}60` }"
-      >
-        {{
-          (p.fullName || "V")
-            .split(" ")
-            .map((w: string) => w[0])
-            .slice(0, 2)
-            .join("")
-        }}
+      <div v-if="showPhotoBlock" class="flex justify-center mb-5">
+        <div class="border-2 rounded-full" :style="{ borderColor: `${accent}60` }">
+          <ResumePhotoAvatar
+            :photo-url="p.photoUrl"
+            :initials="initials"
+            :accent="accent"
+            shape="circle"
+            size-class="w-14 h-14"
+            fallback-class="text-white text-[15pt] font-serif font-bold"
+          />
+        </div>
       </div>
 
       <h1

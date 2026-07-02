@@ -31,7 +31,7 @@ onMounted(() => {
         <button
           v-if="showMenu"
           type="button"
-          class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container transition-colors"
           aria-label="Menu"
           @click="openMenu($event.currentTarget as HTMLElement)"
         >

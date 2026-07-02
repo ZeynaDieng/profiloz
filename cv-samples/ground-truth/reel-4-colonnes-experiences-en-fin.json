@@ -1,0 +1,52 @@
+{
+  "id": "reel-4-colonnes-experiences-en-fin",
+  "file": "files/reel-4-colonnes-experiences-en-fin.txt",
+  "tags": {
+    "tool": "adobe",
+    "columns": 4,
+    "language": "fr",
+    "source": "pdf-text",
+    "style": "modern"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV réel anonymisé : 4 colonnes, résumé en tête, postes/employeurs séparés, en-têtes de section en fin (cas P2 layout)",
+  "identity": {
+    "fullName": "Modou Fall",
+    "jobTitle": "Plombier"
+  },
+  "contact": {
+    "email": "modou.fall@example.com",
+    "phone": "(+221) 70 000 00 00",
+    "location": "Rufisque"
+  },
+  "experiences": [
+    {
+      "position": "Plombier Sous-Traitant",
+      "company": "INDÉPENDANT"
+    },
+    {
+      "position": "Plombier",
+      "company": "ENTREPRISE ESPAGNOLE KALIA"
+    },
+    {
+      "position": "Plombier",
+      "company": "BATILUX"
+    }
+  ],
+  "skills": [
+    "Installation de réseaux de plomberie",
+    "Détection et réparation de fuites"
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Wolof"
+    }
+  ]
+}

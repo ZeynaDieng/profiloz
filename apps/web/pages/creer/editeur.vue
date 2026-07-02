@@ -3,6 +3,7 @@ import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 
 definePageMeta({ layout: false })
 
@@ -13,7 +14,7 @@ const resumeService = useResumeService()
 const pdfService = usePdfService()
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
-const { isDesktop } = useBreakpoints()
+const { isDesktop, isMobileOrTablet } = useBreakpoints()
 const { openMenu } = useMarketingMenuState()
 const editorValidation = useResumeEditorValidation()
 
@@ -33,6 +34,8 @@ const templateName = computed(() => {
   if (!slug) return 'Modèle'
   return getTemplateBySlug(slug)?.name ?? 'Modèle'
 })
+
+const changeTemplateHref = computed(() => changeTemplateHrefFromRoute(route))
 
 const previewResume = computed(() => {
   if (!resumeStore.current) return null
@@ -251,22 +254,40 @@ async function downloadPdf() {
 
   <div v-else-if="resume && previewResume" class="h-screen flex flex-col overflow-hidden bg-background">
     <!-- Header compact mobile-first -->
-    <header class="flex justify-between items-center px-margin-mobile md:px-gutter py-2.5 bg-surface border-b border-outline-variant shrink-0 gap-2">
-      <div class="flex items-center gap-2 min-w-0 flex-1">
+    <header class="grid grid-cols-[minmax(0,1fr)_auto] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
+      <div class="flex items-center gap-2 min-w-0">
         <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
-        <span class="text-on-surface-variant text-sm truncate hidden min-[360px]:inline">{{ resume.title }}</span>
+        <span class="text-on-surface-variant text-sm truncate hidden lg:inline">{{ resume.title }}</span>
       </div>
 
-      <p v-if="autoSaveLabel" class="text-xs text-secondary hidden lg:block truncate max-w-[280px]">
-        {{ autoSaveLabel }}
-      </p>
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button
+          type="button"
+          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container"
+          aria-label="Menu"
+          @click="openMenu($event.currentTarget as HTMLElement)"
+        >
+          <UiPzIcon name="menu" class="text-[22px]" />
+        </button>
 
-      <div class="flex items-center gap-1 shrink-0">
-        <LayoutAuthStatus icon-only class="lg:hidden" />
+        <LayoutAuthStatus icon-only show-guest-badge="false" class="lg:hidden" />
+
+        <button
+          type="button"
+          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          aria-label="Options du CV"
+          @click="actionsOpen = true"
+        >
+          <UiPzIcon name="tune" class="text-[22px]" />
+        </button>
+
         <LayoutAuthStatus compact class="hidden lg:flex" />
 
-        <!-- Desktop actions -->
-        <NuxtLink to="/creer/modele" class="hidden xl:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center">
+        <NuxtLink
+          :to="changeTemplateHref"
+          class="hidden xl:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center gap-1"
+        >
+          <UiPzIcon name="dashboard_customize" class="text-[18px]" />
           {{ templateName }}
         </NuxtLink>
         <div class="hidden lg:flex gap-1">
@@ -282,29 +303,10 @@ async function downloadPdf() {
           />
         </div>
 
-        <!-- Mobile : menu options -->
-        <button
-          type="button"
-          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
-          aria-label="Menu"
-          @click="openMenu($event.currentTarget as HTMLElement)"
-        >
-          <UiPzIcon name="menu" />
-        </button>
-        <button
-          type="button"
-          class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
-          aria-label="Plus d'actions"
-          @click="actionsOpen = true"
-        >
-          <UiPzIcon name="tune" />
-        </button>
-
-        <!-- Desktop PDF -->
         <UiButton
           variant="secondary"
           size="sm"
-          class="hidden md:inline-flex"
+          class="hidden xl:inline-flex"
           icon="download"
           :loading="pdfLoading"
           @click="downloadPdf"
@@ -313,6 +315,10 @@ async function downloadPdf() {
         </UiButton>
       </div>
     </header>
+
+    <p v-if="autoSaveLabel" class="hidden lg:block text-xs text-secondary text-right px-gutter -mt-1 pb-1 truncate">
+      {{ autoSaveLabel }}
+    </p>
 
     <!-- Status bar mobile -->
     <div
@@ -326,7 +332,7 @@ async function downloadPdf() {
     </div>
 
     <!-- Contenu : formulaire seul sur mobile, split sur desktop -->
-    <main class="flex-1 flex overflow-hidden pb-[4.5rem] md:pb-0">
+    <main class="flex-1 flex overflow-hidden pb-[4.5rem] xl:pb-0">
       <div class="w-full xl:w-[42%] shrink-0 border-r border-outline-variant overflow-hidden">
         <FeatureEditorFormPanel />
       </div>
@@ -336,8 +342,8 @@ async function downloadPdf() {
       </div>
     </main>
 
-    <!-- Mobile : barre d'actions sticky -->
-    <UiStickyActionBar class="md:hidden">
+    <!-- Mobile & tablette : barre d'actions sticky -->
+    <UiStickyActionBar v-if="isMobileOrTablet">
       <div class="flex gap-2">
         <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
           Aperçu
@@ -358,42 +364,56 @@ async function downloadPdf() {
       </template>
     </UiFullScreenSheet>
 
-    <!-- Mobile : drawer actions -->
-    <UDrawer
-      v-model:open="actionsOpen"
-      direction="bottom"
-      :ui="{ content: 'rounded-t-2xl px-margin-mobile pb-[max(1rem,env(safe-area-inset-bottom))]' }"
-    >
-      <template #content>
-        <div class="py-4 space-y-1">
-          <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-2 mb-2">Options</p>
-          <NuxtLink
-            to="/creer/modele"
-            class="flex items-center min-h-11 px-3 rounded-xl text-sm text-on-surface hover:bg-surface-container"
-            @click="actionsOpen = false"
-          >
-            <UiPzIcon name="dashboard_customize" class="mr-3" />
-            Modèle · {{ templateName }}
-          </NuxtLink>
-          <div class="px-3 py-3 border-t border-outline-variant/30 mt-2">
-            <p class="text-xs text-on-surface-variant mb-3">Couleur d'accent</p>
-            <div class="flex gap-3">
-              <button
-                v-for="color in accentColors"
-                :key="color"
-                type="button"
-                class="w-10 h-10 rounded-full ring-2 ring-offset-2"
-                :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
-                :style="{ backgroundColor: color }"
-                @click="accentColor = color"
-              />
-            </div>
+    <!-- Mobile : options plein écran -->
+    <UiFullScreenSheet v-model:open="actionsOpen" title="Options">
+      <div class="px-margin-mobile py-4 space-y-1 bg-surface min-h-full">
+        <NuxtLink
+          :to="changeTemplateHref"
+          class="flex items-center min-h-11 px-3 rounded-xl text-sm text-on-surface hover:bg-surface-container"
+          @click="actionsOpen = false"
+        >
+          <UiPzIcon name="dashboard_customize" class="mr-3 text-secondary" />
+          Modèle · {{ templateName }}
+        </NuxtLink>
+
+        <div class="px-3 py-4 border-t border-outline-variant/30 mt-2">
+          <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-3">Couleur d'accent</p>
+          <div class="flex flex-wrap gap-3">
+            <button
+              v-for="color in accentColors"
+              :key="color"
+              type="button"
+              class="w-11 h-11 rounded-full ring-2 ring-offset-2"
+              :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
+              :style="{ backgroundColor: color }"
+              :aria-label="`Couleur ${color}`"
+              @click="accentColor = color"
+            />
           </div>
         </div>
-      </template>
-    </UDrawer>
 
-    <LayoutAppMarketingDrawer />
+        <div
+          v-if="!authStore.isAuthenticated"
+          class="px-3 py-4 border-t border-outline-variant/30"
+        >
+          <NuxtLink
+            :to="{ path: '/connexion', query: { redirect: route.fullPath } }"
+            class="flex items-center min-h-11 px-3 rounded-xl text-sm text-secondary font-semibold hover:bg-surface-container"
+            @click="actionsOpen = false"
+          >
+            <UiPzIcon name="login" class="mr-3" />
+            Se connecter pour sauvegarder
+          </NuxtLink>
+        </div>
+      </div>
+      <template #footer>
+        <UiButton variant="outline" block @click="actionsOpen = false">
+          Fermer
+        </UiButton>
+      </template>
+    </UiFullScreenSheet>
+
+    <LayoutGuestFlowDrawer />
 
     <UiMessageBanner
       v-if="pdfError"

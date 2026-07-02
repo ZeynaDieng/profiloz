@@ -14,6 +14,7 @@ const {
   hasSkills,
   hasInterests,
   hasLanguages,
+  showPhotoBlock,
 } = useResumeSections(() => props.resume)
 
 // Palette premium
@@ -87,7 +88,7 @@ const contactRows = computed(() =>
   <TemplatesTemplateShell :resume="resume" template-name="Exécutif">
     <div class="executif-page">
       <aside class="executif-sidebar" :style="{ backgroundColor: sidebarBg }">
-        <div class="executif-photo-wrap">
+        <div v-if="showPhotoBlock" class="executif-photo-wrap">
           <div class="executif-photo-frame">
             <img v-if="p.photoUrl" :src="p.photoUrl" alt="" class="executif-photo" />
             <div v-else class="executif-photo executif-photo-placeholder">

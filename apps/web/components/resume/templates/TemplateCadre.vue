@@ -13,6 +13,7 @@ const {
   hasSkills,
   hasInterests,
   hasLanguages,
+  showPhotoBlock,
 } = useResumeSections(() => props.resume)
 
 // Palette premium
@@ -61,9 +62,9 @@ const contactRows = computed(() =>
 
 <template>
   <TemplatesTemplateShell :resume="resume" template-name="Cadre">
-    <div class="cadre-page">
+    <div class="cadre-page" :class="{ 'cadre-page--no-photo': !showPhotoBlock }">
       <!-- Ligne du haut : photo (gauche) + bandeau Header (droite) -->
-      <div class="cadre-top-photo" :style="{ backgroundColor: sidebarBg }">
+      <div v-if="showPhotoBlock" class="cadre-top-photo" :style="{ backgroundColor: sidebarBg }">
         <div class="cadre-photo-frame">
           <img
             v-if="p.photoUrl"
@@ -232,6 +233,10 @@ const contactRows = computed(() =>
   min-height: 297mm;
   margin: -20mm;
   background: #fff;
+}
+
+.cadre-page--no-photo .cadre-top-header {
+  grid-column: 1 / -1;
 }
 
 /* Photo premium */

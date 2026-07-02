@@ -1,0 +1,540 @@
+{
+  "version": 1,
+  "description": "Corpus terrain Profilo'Z — cas manuels + vos CV anonymisés",
+  "entries": [
+    {
+      "id": "classique-1-colonne",
+      "file": "files/classique-1-colonne.txt",
+      "tags": {
+        "tool": "word",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "classic"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV classique sur une colonne, dates « 2019 - 2022 »",
+      "identity": {
+        "fullName": "Camille Durand",
+        "jobTitle": "Cheffe de projet digital"
+      },
+      "contact": {
+        "email": "camille.durand@example.com",
+        "phone": "06 12 34 56 78",
+        "location": "Lyon"
+      },
+      "experiences": [
+        {
+          "position": "Cheffe de projet digital",
+          "company": "Agence Pixel",
+          "startDate": "2019",
+          "endDate": "2022"
+        },
+        {
+          "position": "Chef de projet junior",
+          "company": "WebStudio",
+          "startDate": "2016",
+          "endDate": "2019"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Master Marketing Digital",
+          "institution": "Université Lyon 2"
+        }
+      ],
+      "skills": [
+        "Gestion de projet",
+        "Agile",
+        "Scrum",
+        "SEO",
+        "Google Analytics"
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Espagnol"
+        }
+      ]
+    },
+    {
+      "id": "deux-colonnes-date-d-abord",
+      "file": "files/deux-colonnes-date-d-abord.txt",
+      "tags": {
+        "tool": "unknown",
+        "columns": 2,
+        "language": "fr",
+        "source": "pdf-text",
+        "style": "modern"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "PDF 2 colonnes reconstruit, nom éclaté, format « date d’abord »",
+      "identity": {
+        "fullName": "Dieynaba CAMARA",
+        "jobTitle": "Aide-Soignante"
+      },
+      "experiences": [
+        {
+          "position": "Aide Soignante",
+          "company": "Poste de Santé de Baegny"
+        },
+        {
+          "position": "Aide Soignante",
+          "company": "Clinique Kissy Santé"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "En Santé",
+          "institution": "Centre Polyvalent de formation"
+        }
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Wolof"
+        }
+      ]
+    },
+    {
+      "id": "etudiant-formation-d-abord",
+      "file": "files/etudiant-formation-d-abord.txt",
+      "tags": {
+        "tool": "word",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "classic"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV étudiant : formation mise en avant, peu d’expérience",
+      "identity": {
+        "fullName": "Lucas Martin",
+        "jobTitle": "Étudiant en informatique"
+      },
+      "contact": {
+        "email": "lucas.martin@etu.example.com",
+        "phone": "07 88 99 00 11"
+      },
+      "experiences": [
+        {
+          "position": "Stage développeur web",
+          "company": "StartupX"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Licence Informatique",
+          "institution": "Université de Bordeaux"
+        },
+        {
+          "degree": "Baccalauréat Scientifique",
+          "institution": "Lycée Montaigne"
+        }
+      ],
+      "skills": [
+        "JavaScript",
+        "Vue.js",
+        "Python",
+        "Git",
+        "SQL"
+      ],
+      "interests": [
+        "Football",
+        "Jeux vidéo",
+        "Photographie"
+      ]
+    },
+    {
+      "id": "tech-competences-labellisees",
+      "file": "files/tech-competences-labellisees.txt",
+      "tags": {
+        "tool": "word",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "modern"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV développeur : « Compétences : … » et stack technique",
+      "identity": {
+        "fullName": "Sarah Benali",
+        "jobTitle": "Développeuse Full-Stack"
+      },
+      "contact": {
+        "email": "sarah.benali@example.com",
+        "linkedinUrl": "linkedin.com/in/sarahbenali"
+      },
+      "experiences": [
+        {
+          "position": "Développeuse Full-Stack",
+          "company": "TechCorp"
+        },
+        {
+          "position": "Développeuse Front-End",
+          "company": "DigitalAgency"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Master Génie Logiciel",
+          "institution": "INSA Lyon"
+        }
+      ],
+      "skills": [
+        "React",
+        "Node.js",
+        "TypeScript",
+        "Docker",
+        "AWS",
+        "PostgreSQL"
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Arabe"
+        }
+      ]
+    },
+    {
+      "id": "labels-europeen",
+      "file": "files/labels-europeen.txt",
+      "tags": {
+        "tool": "europass",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "classic"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "Format à libellés « Nom : / Email : / Téléphone : »",
+      "identity": {
+        "fullName": "Thomas Lefèvre",
+        "jobTitle": "Responsable commercial"
+      },
+      "contact": {
+        "email": "thomas.lefevre@example.com",
+        "phone": "+33 6 45 67 89 01",
+        "location": "Marseille"
+      },
+      "experiences": [
+        {
+          "position": "Responsable commercial",
+          "company": "GrandeEntreprise SA"
+        },
+        {
+          "position": "Commercial terrain",
+          "company": "PME Distribution"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "BTS Négociation et Relation Client",
+          "institution": "Lycée Saint-Charles"
+        }
+      ],
+      "skills": [
+        "Négociation",
+        "Prospection",
+        "CRM",
+        "Management"
+      ]
+    },
+    {
+      "id": "deux-colonnes-libelles-typo",
+      "file": "files/deux-colonnes-libelles-typo.txt",
+      "tags": {
+        "tool": "unknown",
+        "columns": 2,
+        "language": "fr",
+        "source": "pdf-scanned",
+        "style": "classic"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "PDF/OCR 2 colonnes reconstruit : en-têtes au singulier/avec fautes + « Nom : / Prénom : »",
+      "identity": {
+        "fullName": "Aminata DIALLO"
+      },
+      "contact": {
+        "email": "aminata.diallo@example.com",
+        "phone": "+221 77 123 45 67",
+        "location": "Dakar"
+      },
+      "experiences": [
+        {
+          "position": "Pharmacienne",
+          "company": "Clinique Centrale"
+        },
+        {
+          "position": "Préparatrice en pharmacie",
+          "company": "Pharmacie du Plateau"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Baccalauréat scientifique",
+          "institution": "Lycée Moderne"
+        }
+      ],
+      "skills": [
+        "Rigueur",
+        "Travail en équipe",
+        "Communication"
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        }
+      ],
+      "interests": [
+        "Lecture",
+        "Sport"
+      ]
+    },
+    {
+      "id": "executif-poste-en-cours",
+      "file": "files/executif-poste-en-cours.txt",
+      "tags": {
+        "tool": "word",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "classic"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV exécutif : intitulés longs, poste « … - Présent »",
+      "identity": {
+        "fullName": "Isabelle Moreau",
+        "jobTitle": "Directrice Générale Adjointe"
+      },
+      "contact": {
+        "email": "isabelle.moreau@example.com",
+        "phone": "06 22 33 44 55",
+        "location": "Paris"
+      },
+      "experiences": [
+        {
+          "position": "Directrice Générale Adjointe",
+          "company": "Groupe Industriel France",
+          "isCurrent": true
+        },
+        {
+          "position": "Directrice des Opérations",
+          "company": "Manufacture Nationale"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "MBA",
+          "institution": "HEC Paris"
+        },
+        {
+          "degree": "Diplôme d'ingénieur",
+          "institution": "École Centrale"
+        }
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Allemand"
+        }
+      ]
+    },
+    {
+      "id": "reel-dev-moderne-1-colonne",
+      "file": "files/reel-dev-moderne-1-colonne.txt",
+      "tags": {
+        "tool": "canva",
+        "columns": 1,
+        "language": "fr",
+        "source": "txt",
+        "style": "modern"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV réel anonymisé : moderne 1 colonne, « Nom - Poste », dates entre parenthèses, compétences préfixées",
+      "identity": {
+        "fullName": "Awa Sow",
+        "jobTitle": "Développeuse Full-stack"
+      },
+      "contact": {
+        "email": "awa.sow@example.com",
+        "phone": "+221 77 000 00 00",
+        "location": "Dakar"
+      },
+      "experiences": [
+        {
+          "position": "Développeuse Full-stack",
+          "company": "Intech Group"
+        },
+        {
+          "position": "Développeuse Full-stack",
+          "company": "Orion"
+        },
+        {
+          "position": "Développeuse Web Freelance",
+          "company": ""
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Master en Génie Logiciel",
+          "institution": "IPD"
+        },
+        {
+          "degree": "Licence en Informatique",
+          "institution": "ENsup Afrique"
+        }
+      ],
+      "skills": [
+        "JavaScript",
+        "TypeScript",
+        "Laravel",
+        "Nuxt.js",
+        "NestJS",
+        "MySQL"
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Wolof"
+        }
+      ],
+      "interests": [
+        "Codage créatif",
+        "hackathons",
+        "méditation"
+      ]
+    },
+    {
+      "id": "reel-2-colonnes-nom-en-pied",
+      "file": "files/reel-2-colonnes-nom-en-pied.txt",
+      "tags": {
+        "tool": "unknown",
+        "columns": 2,
+        "language": "fr",
+        "source": "pdf-text",
+        "style": "modern"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV réel anonymisé : 2 colonnes, section EXPÉRIENCE en tête, nom/poste relégués en pied de page (cas P2 layout)",
+      "identity": {
+        "fullName": "Fatou Sarr",
+        "jobTitle": "Comptable"
+      },
+      "contact": {
+        "email": "fatou.sarr@example.com",
+        "phone": "77 000 00 00",
+        "location": "Dakar"
+      },
+      "experiences": [
+        {
+          "position": "Chargée des relations externes",
+          "company": "Rajab Business"
+        },
+        {
+          "position": "Assistante de Direction",
+          "company": "Immo-Négoce"
+        },
+        {
+          "position": "Conseillère clientèle",
+          "company": "PCCI Dakar"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "2ème année de Formation",
+          "institution": "ENSUP AFRIQUE"
+        }
+      ]
+    },
+    {
+      "id": "reel-4-colonnes-experiences-en-fin",
+      "file": "files/reel-4-colonnes-experiences-en-fin.txt",
+      "tags": {
+        "tool": "adobe",
+        "columns": 4,
+        "language": "fr",
+        "source": "pdf-text",
+        "style": "modern"
+      },
+      "annotatedAt": "2026-07-02",
+      "annotatedBy": "corpus-manuel",
+      "notes": "CV réel anonymisé : 4 colonnes, résumé en tête, postes/employeurs séparés, en-têtes de section en fin (cas P2 layout)",
+      "identity": {
+        "fullName": "Modou Fall",
+        "jobTitle": "Plombier"
+      },
+      "contact": {
+        "email": "modou.fall@example.com",
+        "phone": "(+221) 70 000 00 00",
+        "location": "Rufisque"
+      },
+      "experiences": [
+        {
+          "position": "Plombier Sous-Traitant",
+          "company": "INDÉPENDANT"
+        },
+        {
+          "position": "Plombier",
+          "company": "ENTREPRISE ESPAGNOLE KALIA"
+        },
+        {
+          "position": "Plombier",
+          "company": "BATILUX"
+        }
+      ],
+      "skills": [
+        "Installation de réseaux de plomberie",
+        "Détection et réparation de fuites"
+      ],
+      "languages": [
+        {
+          "name": "Français"
+        },
+        {
+          "name": "Anglais"
+        },
+        {
+          "name": "Wolof"
+        }
+      ]
+    }
+  ]
+}

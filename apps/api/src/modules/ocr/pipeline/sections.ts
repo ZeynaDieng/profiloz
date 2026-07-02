@@ -36,6 +36,7 @@ const SECTION_SYNONYMS: Array<{ kind: ExtractionSectionKind; patterns: RegExp[] 
     patterns: [
       /^experiences?( professionnelles?| internationales?)?$/,
       /^experience( professionnelle| internationale)?$/,
+      /^historique( professionnel)?$/,
       /^parcours( professionnel| executif)?$/,
       /^stages?( et experiences?| experiences?)?$/,
       /^resultats?( et experiences?| experiences?)?$/,
@@ -147,7 +148,7 @@ const CONTENT_HINTS: Array<{ kind: ExtractionSectionKind; pattern: RegExp }> = [
 // ils restent gérés par les motifs exacts, jamais par le repli flou.
 const HEADING_STEMS: Array<{ kind: ExtractionSectionKind; stems: string[] }> = [
   { kind: 'profile', stems: ['profil', 'presentation', 'objectif'] },
-  { kind: 'experience', stems: ['experience', 'experiences', 'parcours', 'emploi', 'emplois', 'carriere'] },
+  { kind: 'experience', stems: ['experience', 'experiences', 'parcours', 'emploi', 'emplois', 'carriere', 'historique'] },
   { kind: 'education', stems: ['formation', 'formations', 'etude', 'etudes', 'scolarite', 'cursus'] },
   { kind: 'skills', stems: ['competence', 'competences', 'expertise', 'expertises', 'aptitude', 'aptitudes'] },
   { kind: 'languages', stems: ['langue', 'langues', 'language', 'languages', 'idiome', 'idiomes'] },

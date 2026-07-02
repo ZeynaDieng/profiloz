@@ -15,6 +15,7 @@ const TEMPLATE_SEED = [
   { slug: TemplateSlug.PREMIUM, name: 'Premium', category: 'Exclusive', sortOrder: 10, previewUrl: '/templates/previews/premium.webp' },
   { slug: TemplateSlug.CADRE, name: 'Cadre', category: 'Corporate', sortOrder: 11, previewUrl: '/templates/previews/cadre.webp' },
   { slug: TemplateSlug.EXECUTIF, name: 'Exécutif', category: 'Sales', sortOrder: 12, previewUrl: '/templates/previews/executif.webp' },
+  { slug: TemplateSlug.EPURE, name: 'Épuré', category: 'Clean', sortOrder: 13, previewUrl: '/templates/previews/epure.webp' },
 ]
 
 async function main() {

@@ -1,0 +1,61 @@
+{
+  "id": "classique-1-colonne",
+  "file": "files/classique-1-colonne.txt",
+  "tags": {
+    "tool": "word",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "classic"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "CV classique sur une colonne, dates « 2019 - 2022 »",
+  "identity": {
+    "fullName": "Camille Durand",
+    "jobTitle": "Cheffe de projet digital"
+  },
+  "contact": {
+    "email": "camille.durand@example.com",
+    "phone": "06 12 34 56 78",
+    "location": "Lyon"
+  },
+  "experiences": [
+    {
+      "position": "Cheffe de projet digital",
+      "company": "Agence Pixel",
+      "startDate": "2019",
+      "endDate": "2022"
+    },
+    {
+      "position": "Chef de projet junior",
+      "company": "WebStudio",
+      "startDate": "2016",
+      "endDate": "2019"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "Master Marketing Digital",
+      "institution": "Université Lyon 2"
+    }
+  ],
+  "skills": [
+    "Gestion de projet",
+    "Agile",
+    "Scrum",
+    "SEO",
+    "Google Analytics"
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Espagnol"
+    }
+  ]
+}

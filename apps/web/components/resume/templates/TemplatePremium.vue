@@ -11,12 +11,24 @@ const {
   hasExperiences,
   hasEducations,
   hasSkills,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
 </script>
 
 <template>
   <TemplatesTemplateShell :resume="resume" template-name="Premium">
     <header class="mb-9 text-center">
+      <div v-if="showPhotoBlock" class="flex justify-center mb-5">
+        <ResumePhotoAvatar
+          :photo-url="p.photoUrl"
+          :initials="initials"
+          :accent="accent"
+          shape="circle"
+          size-class="w-16 h-16"
+          fallback-class="text-white font-light text-lg"
+        />
+      </div>
       <div class="h-px w-full bg-[#d4d4d4] mb-6" />
 
       <p

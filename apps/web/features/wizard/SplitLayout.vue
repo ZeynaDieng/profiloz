@@ -21,7 +21,7 @@ const { isDesktop } = useBreakpoints()
         <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-2">
           Aperçu en direct
         </p>
-        <div class="bg-[#F1F5F9] rounded-xl overflow-hidden border border-outline-variant/20 h-[420px]">
+        <div class="bg-[#F1F5F9] rounded-xl overflow-hidden border border-outline-variant/20 h-[min(70vh,520px)]">
           <FeatureTemplatesA4PreviewFit :resume="resume" />
         </div>
       </div>

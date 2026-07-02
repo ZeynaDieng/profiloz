@@ -51,10 +51,6 @@ const LANGUAGE_DICT: Record<string, string> = {
   hindi: 'Hindi',
 }
 
-/** Mots-clés de niveau → niveau canonique (du plus fort au plus faible). */
-// Ordre = priorité (du plus fort au plus faible). « très bien » doit être testé
-// AVANT « bien » : on place donc « tres bien » dans PROFESSIONAL et « bien » seul
-// dans CONVERSATIONAL.
 const LEVEL_RULES: Array<{ level: LanguageLevel; pattern: RegExp }> = [
   { level: 'NATIVE', pattern: /\b(maternell?e|natif|native|bilingue|langue maternelle|mother tongue)\b/i },
   {
@@ -80,24 +76,53 @@ function detectLevel(text: string): LanguageLevel | undefined {
   return undefined
 }
 
-/** Cherche une langue connue dans un fragment ; renvoie son libellé canonique. */
 function detectLanguageName(fragment: string): string | undefined {
   const normalized = normalize(fragment).replace(/[^a-z\s]/g, ' ')
   const words = normalized.split(/\s+/).filter(Boolean)
   for (const word of words) {
     if (LANGUAGE_DICT[word]) return LANGUAGE_DICT[word]
   }
-  // Variantes accolées (ex. "anglais(courant)" déjà géré par split mots).
   for (const alias of Object.keys(LANGUAGE_DICT)) {
     if (normalized.includes(alias)) return LANGUAGE_DICT[alias]
   }
   return undefined
 }
 
+/** Découpe une ligne en fragments de langues (virgules, tirets longs entre langues…). */
+function splitLanguageFragments(line: string): string[] {
+  const trimmed = line.trim()
+  if (!trimmed) return []
+
+  const emDashParts = trimmed.split(/\s+[—–-]\s+/).map((p) => p.trim()).filter(Boolean)
+  if (emDashParts.length > 1 && emDashParts.every((p) => detectLanguageName(p.split(/[(\[]/)[0]!.trim()))) {
+    return emDashParts
+  }
+
+  return trimmed.split(/[,;/|•·]/).map((f) => f.trim()).filter(Boolean)
+}
+
+function parseLanguageFragment(fragment: string): Language | null {
+  const paren = fragment.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+  if (paren) {
+    const name = detectLanguageName(paren[1]!)
+    if (name) return { name, level: detectLevel(paren[2]!) ?? detectLevel(fragment) }
+  }
+
+  const labeled = fragment.match(/^(.+?)\s*[:：]\s*(.+)$/)
+  if (labeled) {
+    const name = detectLanguageName(labeled[1]!)
+    if (name) return { name, level: detectLevel(labeled[2]!) ?? detectLevel(fragment) }
+  }
+
+  const name = detectLanguageName(fragment)
+  if (name) return { name, level: detectLevel(fragment) }
+  return null
+}
+
 /**
  * Extracteur de langues : reconnaît les langues via dictionnaire et détecte le
- * niveau associé. Gère les listes (« Français, Anglais, Wolof ») comme les
- * lignes individuelles (« Anglais — Courant », « Wolof (maternelle) »).
+ * niveau associé. Gère les listes (« Français, Anglais, Wolof »), les niveaux
+ * CEFR (« Français (C2) — Anglais (B2) ») et les lignes étiquetées.
  */
 export function extractLanguages(lines: string[]): Language[] {
   const result: Language[] = []
@@ -117,21 +142,9 @@ export function extractLanguages(lines: string[]): Language[] {
     const line = rawLine.replace(/^[-•●▪*✓]\s*/, '').trim()
     if (!line) continue
 
-    // Fragments séparés par virgule / barre / point médian.
-    const fragments = line.split(/[,;/|•·]/).map((f) => f.trim()).filter(Boolean)
-
-    for (const fragment of fragments) {
-      // Forme « Langue : Niveau » ou « Langue - Niveau ».
-      const labeled = fragment.match(/^(.+?)\s*[:：\-–—(]\s*(.+?)\)?$/)
-      if (labeled) {
-        const name = detectLanguageName(labeled[1]!)
-        if (name) {
-          push(name, detectLevel(labeled[2]!) ?? detectLevel(fragment))
-          continue
-        }
-      }
-      const name = detectLanguageName(fragment)
-      if (name) push(name, detectLevel(fragment))
+    for (const fragment of splitLanguageFragments(line)) {
+      const parsed = parseLanguageFragment(fragment)
+      if (parsed) push(parsed.name, parsed.level)
     }
   }
 

@@ -86,6 +86,8 @@ export interface Language {
 
 export interface TemplateConfig {
   accentColor?: string
+  /** Afficher le cadre photo / avatar sur le CV (false = masquer même sans fichier). */
+  showPhoto?: boolean
   margins?: number
   lineHeight?: number
   typography?: string

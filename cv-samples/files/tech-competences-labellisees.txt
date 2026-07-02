@@ -1,0 +1,24 @@
+Sarah Benali
+Développeuse Full-Stack
+sarah.benali@example.com
+linkedin.com/in/sarahbenali
+
+Expériences
+Développeuse Full-Stack — TechCorp, Paris
+Janvier 2021 - Présent
+- Conception d'API REST en Node.js
+Compétences : React, Node.js, TypeScript, PostgreSQL
+
+Développeuse Front-End — DigitalAgency, Remote
+2018 - 2021
+- Intégration de maquettes Figma
+
+Formation
+Master Génie Logiciel — INSA Lyon
+2016 - 2018
+
+Compétences
+React, Node.js, TypeScript, Docker, AWS, PostgreSQL
+
+Langues
+Français, Anglais, Arabe

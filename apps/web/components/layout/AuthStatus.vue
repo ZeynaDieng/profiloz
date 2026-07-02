@@ -132,7 +132,7 @@ async function onLogout() {
 
     <template v-else>
       <span
-        v-if="showGuestBadge"
+        v-if="showGuestBadge && !iconOnly"
         class="inline-flex items-center gap-1.5 text-[11px] font-medium text-on-surface-variant bg-surface-container px-2.5 py-1.5 rounded-full"
         title="Mode invité — connectez-vous pour sauvegarder votre CV en ligne"
       >
@@ -142,9 +142,12 @@ async function onLogout() {
       <NuxtLink
         v-if="showLoginLink"
         :to="{ path: '/connexion', query: { redirect: $route.fullPath } }"
-        class="font-label-sm font-semibold text-on-surface-variant hover:text-secondary transition-colors min-h-11 inline-flex items-center px-2 sm:px-3"
+        class="font-label-sm font-semibold text-on-surface-variant hover:text-secondary transition-colors inline-flex items-center"
+        :class="iconOnly ? 'min-h-11 min-w-11 justify-center rounded-xl hover:bg-surface-container' : 'min-h-11 px-2 sm:px-3'"
+        :aria-label="iconOnly ? 'Se connecter' : undefined"
       >
-        Se connecter
+        <UiPzIcon v-if="iconOnly" name="login" class="text-[22px]" />
+        <span v-else>Se connecter</span>
       </NuxtLink>
     </template>
   </div>

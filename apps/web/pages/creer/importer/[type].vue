@@ -16,8 +16,21 @@ const route = useRoute()
 const kind = computed(() => (route.path.includes('cv') ? 'cv' : 'cv'))
 
 const meta = computed(() => titles[kind.value]!)
-const { state, progress, extractedData, errorMessage, processFile, reset } = useImportFlow(meta.value.type)
+const {
+  state,
+  progress,
+  stage,
+  fileName,
+  documentId,
+  mimeType,
+  extractedData,
+  machineParsed,
+  errorMessage,
+  processFile,
+  reset,
+} = useImportFlow(meta.value.type)
 const resumeStore = useResumeStore()
+const documentService = useDocumentService()
 
 definePageMeta({ layout: 'wizard' })
 
@@ -30,8 +43,24 @@ onMounted(() => {
 })
 
 function onConfirm(data: Partial<ResumeSnapshot>) {
+  const template =
+    typeof route.query.template === 'string' ? route.query.template.toUpperCase() : resumeStore.current?.templateSlug
+
+  void documentService
+    .submitImportFeedback({
+      documentId: documentId.value || undefined,
+      fileName: fileName.value || undefined,
+      mimeType: mimeType.value || undefined,
+      templateSlug: template || undefined,
+      overallConfidence: machineParsed.value._extraction?.confidence?.overall,
+      originalParsed: machineParsed.value,
+      correctedData: data,
+    })
+    .catch(() => {
+      /* Ne jamais bloquer le parcours utilisateur */
+    })
+
   resumeStore.mergeImportedData(data, { documentType: meta.value.type })
-  const template = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
   if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
     resumeStore.setTemplate(template as TemplateSlug)
     navigateTo(`/creer/modele?select=${template}&flow=import`)
@@ -43,6 +72,17 @@ function onConfirm(data: Partial<ResumeSnapshot>) {
 function onReset() {
   reset()
 }
+
+const continuing = ref(false)
+
+watch(
+  () => state.value,
+  (next) => {
+    if (next !== 'preview' || continuing.value) return
+    continuing.value = true
+    onConfirm(extractedData.value)
+  },
+)
 </script>
 
 <template>
@@ -58,18 +98,11 @@ function onReset() {
       @select="processFile"
     />
 
-    <FeatureImportExtractionProgress v-else-if="state === 'processing'" :progress="progress" />
+    <FeatureImportExtractionProgress v-else-if="state === 'processing' || state === 'preview'" :progress="progress" :stage="stage" />
 
     <div v-else-if="state === 'error'" class="max-w-md mx-auto py-stack-xl space-y-4">
       <UiMessageBanner variant="error" :message="errorMessage" />
       <UiButton variant="secondary" block @click="onReset">{{ MSG.confirm.retry }}</UiButton>
     </div>
-
-    <FeatureImportReview
-      v-else
-      :data="extractedData"
-      @confirm="onConfirm"
-      @cancel="onReset"
-    />
   </div>
 </template>

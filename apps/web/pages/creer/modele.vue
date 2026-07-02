@@ -2,6 +2,7 @@
 import type { TemplateSlug } from '@profiloz/shared'
 import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
+import { resolveTemplatePickerReturn } from '~/utils/template-navigation'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
@@ -10,6 +11,8 @@ const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
 const formError = ref('')
+
+const returnPath = computed(() => resolveTemplatePickerReturn(route))
 
 onMounted(() => {
   if (!resumeStore.current?.personalInfo.fullName) {
@@ -56,6 +59,11 @@ function onContinue() {
     return
   }
   resumeStore.setTemplate(selectedSlug.value)
+  const back = returnPath.value
+  if (back) {
+    navigateTo(back)
+    return
+  }
   if (route.query.flow === 'import') {
     navigateTo('/creer/editeur')
     return
@@ -63,12 +71,23 @@ function onContinue() {
   goNext()
 }
 
-useWizardStep({ onContinue })
+useWizardStep(computed(() => ({
+  onContinue,
+  nextLabel: returnPath.value ? 'Appliquer ce modèle' : 'Continuer',
+})))
 </script>
 
 <template>
   <div class="page-container max-w-container-max mx-auto pb-4">
     <header class="mb-stack-lg space-y-3">
+      <NuxtLink
+        v-if="returnPath"
+        :to="returnPath"
+        class="inline-flex items-center gap-1 text-sm text-secondary font-semibold hover:underline"
+      >
+        <UiPzIcon name="arrow_back" class="text-[18px]" />
+        Retour
+      </NuxtLink>
       <p class="text-sm font-medium text-secondary">{{ MSG.guide.modelStep }}</p>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Choisissez votre modèle</h1>

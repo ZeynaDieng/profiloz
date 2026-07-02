@@ -9,7 +9,7 @@ import type {
   TemplateSlug,
 } from '@profiloz/shared'
 import { defineStore } from 'pinia'
-import { isBase64PhotoUrl } from '@profiloz/shared'
+import { isBase64PhotoUrl, templatePhotoDefault } from '@profiloz/shared'
 import { calculateCompleteness } from '~/utils/completeness'
 import { stripLegacyBase64Photo } from '~/utils/photoUrl'
 import { clearLegacyResumeDraft, createScopedResumeDraftStorage } from '~/utils/resume-draft-storage'
@@ -178,6 +178,10 @@ export const useResumeStore = defineStore('resume', {
       this.initDraft()
       if (this.current) {
         this.current.templateSlug = slug
+        this.current.templateConfig = {
+          ...this.current.templateConfig,
+          showPhoto: templatePhotoDefault(slug),
+        }
         touch(this.current)
         this.isDirty = true
       }
@@ -198,7 +202,15 @@ export const useResumeStore = defineStore('resume', {
       const replace = options?.replace ?? documentType === 'CV'
 
       if (replace) {
+        const preservedTemplate = this.current?.templateSlug
+        const preservedConfig = this.current?.templateConfig
         this.startNewDraft()
+        if (preservedTemplate && this.current) {
+          this.current.templateSlug = preservedTemplate
+          if (preservedConfig) {
+            this.current.templateConfig = { ...preservedConfig }
+          }
+        }
       } else {
         this.initDraft()
       }

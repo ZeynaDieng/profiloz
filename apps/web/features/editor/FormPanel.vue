@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Certification, Education, Experience, Interest, Skill } from '@profiloz/shared'
-import { MSG } from '@profiloz/shared'
+import { MSG, resolveShowPhoto } from '@profiloz/shared'
 
 const resumeStore = useResumeStore()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, fieldError } = useFormValidation()
@@ -15,7 +15,7 @@ const personalForm = reactive({
   jobTitle: '',
   location: '',
   linkedinUrl: '',
-  photoUrl: '' as string | undefined,
+  photoUrl: undefined as string | undefined,
 })
 
 const summary = ref('')
@@ -26,6 +26,11 @@ const certifications = ref<Certification[]>([])
 const interests = ref<Interest[]>([])
 
 const isHydratingFromStore = ref(false)
+
+const showPhotoOnCv = computed({
+  get: () => resolveShowPhoto(resumeStore.current),
+  set: (value: boolean) => resumeStore.setTemplateConfig({ showPhoto: value }),
+})
 
 function loadFromStore() {
   const r = resumeStore.current
@@ -72,6 +77,12 @@ watch(personalForm, () => {
   if (isHydratingFromStore.value) return
   resumeStore.updatePersonalInfo({ ...personalForm })
 }, { deep: true })
+
+function onPhotoUrlUpdate(value: string | undefined) {
+  personalForm.photoUrl = value
+  if (isHydratingFromStore.value) return
+  resumeStore.updatePersonalInfo({ photoUrl: value })
+}
 watch(summary, (v) => {
   if (isHydratingFromStore.value) return
   resumeStore.setSummary(v)
@@ -156,8 +167,8 @@ provideResumeEditorValidation({
     <div class="px-4 py-3 border-b border-outline-variant shrink-0">
       <h2 class="font-bold text-on-surface">Modifier le contenu</h2>
       <p class="text-xs text-on-surface-variant mt-0.5">
-        <span class="lg:hidden">Les changements s’affichent dans l’aperçu.</span>
-        <span class="hidden lg:inline">Les changements s'affichent instantanément à droite.</span>
+        <span class="xl:hidden">Les changements s’affichent dans l’aperçu.</span>
+        <span class="hidden xl:inline">Les changements s'affichent instantanément à droite.</span>
       </p>
       <Transition name="form-field__error">
         <UiMessageBanner
@@ -199,7 +210,11 @@ provideResumeEditorValidation({
           />
 
           <template v-if="section.id === 'personal'">
-            <FeatureWizardPhotoUpload v-model="personalForm.photoUrl" />
+            <FeatureWizardPhotoUpload
+              :model-value="personalForm.photoUrl"
+              v-model:show-on-cv="showPhotoOnCv"
+              @update:model-value="onPhotoUrlUpdate"
+            />
             <div class="grid grid-cols-1 gap-3">
               <UiFormField label="Nom complet" required :error="fieldError('fullName')">
                 <input

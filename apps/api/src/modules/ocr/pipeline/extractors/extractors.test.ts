@@ -27,10 +27,11 @@ describe('extractLanguages', () => {
     expect(langs.map((l) => l.name)).toEqual(['Français', 'Anglais', 'Espagnol', 'Arabe'])
   })
 
-  it('déduplique sans perdre le niveau', () => {
-    const langs = extractLanguages(['Anglais', 'Anglais courant'])
-    expect(langs).toHaveLength(1)
+  it('parse les niveaux CEFR sur une ligne Europass', () => {
+    const langs = extractLanguages(['Français (C2) — Anglais (B2)'])
+    expect(langs.map((l) => l.name)).toEqual(['Français', 'Anglais'])
     expect(langs[0]!.level).toBe('PROFESSIONAL')
+    expect(langs[1]!.level).toBe('CONVERSATIONAL')
   })
 })
 
@@ -70,6 +71,30 @@ describe('extractSkills', () => {
     ])
     expect(skills.find((s) => s.name === 'Python')?.category).toBe('Hard skills')
     expect(skills.find((s) => s.name === 'Communication')?.category).toBe('Soft skills')
+  })
+
+  it('consolide les listes à deux-points sans éclater en fragments', () => {
+    const skills = extractSkills([
+      {
+        kind: 'skills',
+        headerText: 'Compétences clés',
+        lines: [
+          'Trésorerie & Finance',
+          'Gestion de trésorerie : suivi des flux, prévisions, contrôle des soldes bancaires',
+          'Outils Informatiques',
+          'SAGE 100 Comptabilité',
+          'Microsoft Excel',
+          'Microsoft Word & PowerPoint',
+        ],
+      },
+    ])
+    const names = skills.map((s) => s.name)
+    expect(names).toContain('Gestion de trésorerie')
+    expect(names).toContain('SAGE 100 Comptabilité')
+    expect(names).toContain('Microsoft Excel')
+    expect(names).not.toContain('suivi des flux')
+    expect(names).not.toContain('Trésorerie & Finance')
+    expect(names).not.toContain('Outils Informatiques')
   })
 })
 

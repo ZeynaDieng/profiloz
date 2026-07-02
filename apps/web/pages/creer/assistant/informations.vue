@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TemplateSlug } from '@profiloz/shared'
-import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
+import { MSG, TEMPLATE_SLUGS, resolveShowPhoto } from '@profiloz/shared'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
@@ -45,7 +45,17 @@ const form = reactive({
   photoUrl: resumeStore.current?.personalInfo.photoUrl as string | undefined,
 })
 
+const showPhotoOnCv = computed({
+  get: () => resolveShowPhoto(resumeStore.current),
+  set: (value: boolean) => resumeStore.setTemplateConfig({ showPhoto: value }),
+})
+
 watch(form, () => resumeStore.updatePersonalInfo({ ...form }), { deep: true })
+
+function onPhotoUrlUpdate(value: string | undefined) {
+  form.photoUrl = value
+  resumeStore.updatePersonalInfo({ photoUrl: value })
+}
 
 function validateStep(): boolean {
   clearAll()
@@ -91,7 +101,11 @@ useWizardStep({ onContinue })
 
       <form class="grid grid-cols-1 md:grid-cols-2 gap-gutter w-full" novalidate @submit.prevent="onContinue">
         <div class="md:col-span-2">
-          <FeatureWizardPhotoUpload v-model="form.photoUrl" />
+          <FeatureWizardPhotoUpload
+            :model-value="form.photoUrl"
+            v-model:show-on-cv="showPhotoOnCv"
+            @update:model-value="onPhotoUrlUpdate"
+          />
         </div>
         <div class="space-y-stack-lg">
           <UiFormField label="Nom complet" required :error="fieldError('fullName')">

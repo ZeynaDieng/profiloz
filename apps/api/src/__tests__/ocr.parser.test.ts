@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   cleanLine,
   collapseRepeatedString,
+  parseDateRange,
   parseDocumentText,
   parseExperienceLine,
   parseResumeText,
@@ -30,6 +31,37 @@ describe('collapseRepeatedString', () => {
     expect(collapseRepeatedString('Assister les patients')).toBe('Assister les patients')
     expect(collapseRepeatedString('Sport Sport')).toBe('Sport Sport')
     expect(collapseRepeatedString('Dakar')).toBe('Dakar')
+  })
+})
+
+describe('parseDateRange', () => {
+  it('reconnaît « Depuis 2022 » comme poste en cours', () => {
+    const result = parseDateRange('Depuis 2022 Développeur — TechHub')
+    expect(result.startDate).toBe('2022')
+    expect(result.isCurrent).toBe(true)
+    expect(result.rest).toContain('Développeur')
+  })
+
+  it('reconnaît les dates au format MM/YYYY', () => {
+    const result = parseDateRange('01/2020 - 06/2023 Chef de projet')
+    expect(result.startDate).toBe('01/2020')
+    expect(result.endDate).toBe('06/2023')
+    expect(result.isCurrent).toBe(false)
+  })
+
+  it('reconnaît « Présent » et « Aujourd\'hui »', () => {
+    expect(parseDateRange('2020 - Présent').isCurrent).toBe(true)
+    expect(parseDateRange('2024 - Aujourd\'hui').isCurrent).toBe(true)
+  })
+
+  it('reconnaît « Historique » comme section expérience via detectSection indirect', () => {
+    const raw = `
+Jean Dupont
+Historique
+2020 - 2023 Développeur — Acme
+`.trim()
+    const result = parseResumeText(raw)
+    expect(result.experiences?.length).toBeGreaterThanOrEqual(1)
   })
 })
 

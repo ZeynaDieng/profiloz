@@ -45,6 +45,7 @@ enum TemplateSlug {
   PREMIUM
   CADRE
   EXECUTIF
+  EPURE
 }
 
 enum SkillLevel {
@@ -390,6 +391,26 @@ model OcrResult {
   processedAt DateTime @default(now())
 
   @@map("ocr_results")
+}
+
+/// Corrections utilisateur après import OCR — alimente l'amélioration continue du moteur.
+model ImportFeedback {
+  id                String   @id @default(cuid())
+  documentId        String?
+  userId            String?
+  guestSessionId    String?
+  fileName          String?
+  mimeType          String?
+  templateSlug      String?
+  originalParsed    Json
+  correctedData     Json
+  fieldDiffs        Json
+  overallConfidence Float?
+  createdAt         DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([documentId])
+  @@map("import_feedback")
 }
 
 model PdfJob {

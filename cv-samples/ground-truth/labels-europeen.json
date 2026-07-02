@@ -1,0 +1,45 @@
+{
+  "id": "labels-europeen",
+  "file": "files/labels-europeen.txt",
+  "tags": {
+    "tool": "europass",
+    "columns": 1,
+    "language": "fr",
+    "source": "txt",
+    "style": "classic"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "Format à libellés « Nom : / Email : / Téléphone : »",
+  "identity": {
+    "fullName": "Thomas Lefèvre",
+    "jobTitle": "Responsable commercial"
+  },
+  "contact": {
+    "email": "thomas.lefevre@example.com",
+    "phone": "+33 6 45 67 89 01",
+    "location": "Marseille"
+  },
+  "experiences": [
+    {
+      "position": "Responsable commercial",
+      "company": "GrandeEntreprise SA"
+    },
+    {
+      "position": "Commercial terrain",
+      "company": "PME Distribution"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "BTS Négociation et Relation Client",
+      "institution": "Lycée Saint-Charles"
+    }
+  ],
+  "skills": [
+    "Négociation",
+    "Prospection",
+    "CRM",
+    "Management"
+  ]
+}

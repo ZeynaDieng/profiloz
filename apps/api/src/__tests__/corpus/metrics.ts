@@ -1,5 +1,5 @@
 import type { ResumeExtraction } from '../../modules/ocr/pipeline'
-import type { CorpusCase } from './cases'
+import type { CorpusCase } from './types'
 
 /**
  * Métriques par champ : compare une extraction à la vérité-terrain d'un cas de

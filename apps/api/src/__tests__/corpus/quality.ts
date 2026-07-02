@@ -43,10 +43,12 @@ function collectFragments(data: Partial<ResumeSnapshot>): string[] {
   if (p) fragments.push(p.fullName, p.email, p.phone, p.location, p.jobTitle, p.linkedinUrl, p.websiteUrl)
   fragments.push(data.summary)
   for (const exp of data.experiences ?? []) {
-    fragments.push(exp.position, exp.company, exp.location, exp.country, exp.description)
+    fragments.push(exp.position, exp.company, exp.location, exp.country, exp.description, exp.startDate, exp.endDate)
     for (const s of exp.skillsUsed ?? []) fragments.push(s)
   }
-  for (const edu of data.educations ?? []) fragments.push(edu.degree, edu.institution, edu.field, edu.location, edu.description)
+  for (const edu of data.educations ?? []) {
+    fragments.push(edu.degree, edu.institution, edu.field, edu.location, edu.description, edu.startDate, edu.endDate)
+  }
   for (const skill of data.skills ?? []) fragments.push(skill.name)
   for (const lang of data.languages ?? []) fragments.push(lang.name)
   for (const cert of data.certifications ?? []) fragments.push(cert.name, cert.issuer)
@@ -61,15 +63,22 @@ function collectFragments(data: Partial<ResumeSnapshot>): string[] {
 function isRepresented(line: string, fragments: string[]): boolean {
   const n = normalize(line)
   if (n.length < 3) return true
-  return fragments.some(
-    (f) => f === n || (f.length >= 6 && (f.includes(n) || n.includes(f))),
-  )
+  if (fragments.some((f) => f === n || (f.length >= 6 && (f.includes(n) || n.includes(f))))) {
+    return true
+  }
+
+  const years = line.match(/\b(?:19|20)\d{2}\b/g)
+  if (years?.length) {
+    const yearFrags = new Set(fragments.filter((f) => /^(?:19|20)\d{2}$/.test(f)))
+    if (years.every((y) => yearFrags.has(normalize(y)))) return true
+  }
+
+  return false
 }
 
-/** Lignes utiles ni extraites, ni placées en « à vérifier » : information réellement perdue. */
+/** Lignes utiles ni extraites dans le snapshot : information réellement perdue. */
 export function findOrphanLines(lines: string[], extraction: ResumeExtraction): string[] {
   const fragments = collectFragments(extraction)
-  const reviewTexts = new Set((extraction._extraction.review ?? []).map((r) => normalize(r.text)))
   const orphans: string[] = []
   const seen = new Set<string>()
   for (const raw of lines) {
@@ -80,7 +89,7 @@ export function findOrphanLines(lines: string[], extraction: ResumeExtraction): 
     const key = normalize(line)
     if (!key || seen.has(key)) continue
     seen.add(key)
-    if (isRepresented(line, fragments) || reviewTexts.has(key)) continue
+    if (isRepresented(line, fragments)) continue
     orphans.push(line)
   }
   return orphans

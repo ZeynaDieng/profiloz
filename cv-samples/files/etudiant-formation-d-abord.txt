@@ -1,0 +1,20 @@
+Lucas Martin
+Étudiant en informatique
+lucas.martin@etu.example.com | 07 88 99 00 11
+
+Formation
+Licence Informatique — Université de Bordeaux
+2021 - 2024
+Baccalauréat Scientifique — Lycée Montaigne
+2021
+
+Expérience
+Stage développeur web — StartupX, Bordeaux
+Juin 2023 - Août 2023
+- Développement d'une application interne en Vue.js
+
+Compétences
+JavaScript, Vue.js, Python, Git, SQL
+
+Centres d'intérêt
+Football, Jeux vidéo, Photographie

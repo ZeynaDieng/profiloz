@@ -10,6 +10,8 @@ const {
   hasEducations,
   hasSkills,
   hasExperiences,
+  showPhotoBlock,
+  initials,
 } = useResumeSections(() => props.resume);
 </script>
 
@@ -21,18 +23,30 @@ const {
       :style="{ background: accent }"
     >
       <div class="flex items-end justify-between gap-6">
-        <div>
-          <h1
-            class="text-[22pt] font-bold text-white leading-none tracking-tight"
-          >
-            {{ p.fullName || "Votre nom" }}
-          </h1>
-          <p
-            class="text-[11pt] mt-2 font-medium"
-            :style="{ color: 'rgba(255,255,255,0.75)' }"
-          >
-            {{ p.jobTitle || "Étudiant(e)" }}
-          </p>
+        <div class="flex items-end gap-4 min-w-0">
+          <ResumePhotoAvatar
+            v-if="showPhotoBlock"
+            :photo-url="p.photoUrl"
+            :initials="initials"
+            accent="#ffffff"
+            shape="circle"
+            size-class="w-16 h-16"
+            fallback-class="text-[#0f172a] font-bold text-lg"
+            :fallback-style="{ backgroundColor: 'rgba(255,255,255,0.92)' }"
+          />
+          <div class="min-w-0">
+            <h1
+              class="text-[22pt] font-bold text-white leading-none tracking-tight"
+            >
+              {{ p.fullName || "Votre nom" }}
+            </h1>
+            <p
+              class="text-[11pt] mt-2 font-medium"
+              :style="{ color: 'rgba(255,255,255,0.75)' }"
+            >
+              {{ p.jobTitle || "Étudiant(e)" }}
+            </p>
+          </div>
         </div>
 
         <!-- Contact en ligne dans le bandeau -->

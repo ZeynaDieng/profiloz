@@ -12,6 +12,7 @@ import TemplateCadre from '~/components/resume/templates/TemplateCadre.vue'
 import TemplateExecutif from '~/components/resume/templates/TemplateExecutif.vue'
 import TemplatePremium from '~/components/resume/templates/TemplatePremium.vue'
 import TemplateProfessionnel from '~/components/resume/templates/TemplateProfessionnel.vue'
+import TemplateSidebar from '~/components/resume/templates/TemplateSidebar.vue'
 
 const TEMPLATE_COMPONENTS: Record<TemplateSlug, Component> = {
   ETUDIANT: TemplateEtudiant,
@@ -26,6 +27,7 @@ const TEMPLATE_COMPONENTS: Record<TemplateSlug, Component> = {
   PREMIUM: TemplatePremium,
   CADRE: TemplateCadre,
   EXECUTIF: TemplateExecutif,
+  EPURE: TemplateSidebar,
 }
 
 export function resolveTemplateComponent(slug: TemplateSlug): Component {

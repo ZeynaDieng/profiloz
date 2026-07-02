@@ -1,0 +1,45 @@
+{
+  "id": "deux-colonnes-date-d-abord",
+  "file": "files/deux-colonnes-date-d-abord.txt",
+  "tags": {
+    "tool": "unknown",
+    "columns": 2,
+    "language": "fr",
+    "source": "pdf-text",
+    "style": "modern"
+  },
+  "annotatedAt": "2026-07-02",
+  "annotatedBy": "corpus-manuel",
+  "notes": "PDF 2 colonnes reconstruit, nom éclaté, format « date d’abord »",
+  "identity": {
+    "fullName": "Dieynaba CAMARA",
+    "jobTitle": "Aide-Soignante"
+  },
+  "experiences": [
+    {
+      "position": "Aide Soignante",
+      "company": "Poste de Santé de Baegny"
+    },
+    {
+      "position": "Aide Soignante",
+      "company": "Clinique Kissy Santé"
+    }
+  ],
+  "educations": [
+    {
+      "degree": "En Santé",
+      "institution": "Centre Polyvalent de formation"
+    }
+  ],
+  "languages": [
+    {
+      "name": "Français"
+    },
+    {
+      "name": "Anglais"
+    },
+    {
+      "name": "Wolof"
+    }
+  ]
+}
