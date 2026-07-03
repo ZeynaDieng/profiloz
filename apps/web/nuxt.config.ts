@@ -19,6 +19,8 @@ export default defineNuxtConfig({
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       /** Hero A/B : "transform" (défaut) ou "start" */
       heroVariant: process.env.NUXT_PUBLIC_HERO_VARIANT || 'transform',
+      /** Vidéo démo hero (autoplay). Fichier dans public/demo/ ou URL CMS hero.demoVideoUrl */
+      heroDemoVideoUrl: process.env.NUXT_PUBLIC_HERO_DEMO_VIDEO_URL || '/demo/profiloz-hero.mp4',
     },
   },
   pinia: {

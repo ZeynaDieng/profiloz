@@ -2,6 +2,10 @@ import type { ResumeSnapshot } from '@profiloz/shared'
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { createRandomId } from '~/utils/random-id'
+import {
+  defaultLetterAccentColor,
+  resolveCvAccentColor,
+} from '~/utils/template-accent-colors'
 
 /** Persona démo Profilo'Z — alignée sur le hero (Aminata Diallo, marketing, Dakar). */
 export const AMINATA_PERSONA = {
@@ -154,6 +158,7 @@ export function createAminataCoverLetterDraft() {
     recruiterName: letter.recruiterName ?? '',
     content: letter.content,
     closingText: letter.closingText ?? DEFAULT_CLOSING_TEXT,
+    accentColor: defaultLetterAccentColor(letter.templateSlug),
     lastModified: new Date().toISOString(),
   }
 }
@@ -163,6 +168,13 @@ export function coverLetterDraftFromResume(resume: ResumeSnapshot | null | undef
   const base = createAminataCoverLetterDraft()
   const personal = resume?.personalInfo
   if (!personal?.fullName?.trim()) return base
+
+  if (resume?.templateSlug) {
+    base.accentColor = resolveCvAccentColor(
+      resume.templateSlug,
+      resume.templateConfig?.accentColor,
+    )
+  }
 
   base.senderName = personal.fullName
   base.senderEmail = personal.email ?? base.senderEmail

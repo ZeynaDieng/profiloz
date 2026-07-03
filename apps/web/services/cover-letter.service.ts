@@ -77,7 +77,7 @@ export function useCoverLetterService() {
     await pdfService.downloadWithAuth(downloadUrl, filename)
   }
 
-  function toSnapshot(letter: Partial<CoverLetter> & { content: string }): CoverLetterSnapshot {
+  function toSnapshot(letter: Partial<CoverLetter> & { content: string; accentColor?: string | null }): CoverLetterSnapshot {
     return {
       templateSlug: normalizeCoverLetterTemplateSlug(letter.templateId),
       title: letter.title ?? undefined,
@@ -91,6 +91,7 @@ export function useCoverLetterService() {
       recruiterName: letter.recruiterName ?? undefined,
       content: letter.content,
       closingText: letter.closingText ?? undefined,
+      accentColor: letter.accentColor ?? undefined,
     }
   }
 

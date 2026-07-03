@@ -6,6 +6,7 @@ import { createScopedCoverLetterDraftStorage } from '~/utils/cover-letter-draft-
 import { coverLetterDraftFromResume } from '~/features/demo/aminata-persona'
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { createRandomId } from '~/utils/random-id'
+import { defaultLetterAccentColor } from '~/utils/template-accent-colors'
 
 export interface CoverLetterDraft {
   id: string
@@ -20,6 +21,7 @@ export interface CoverLetterDraft {
   recruiterName: string
   content: string
   closingText: string
+  accentColor: string
   lastModified: string
 }
 
@@ -37,6 +39,7 @@ function createEmptyDraft(): CoverLetterDraft {
     recruiterName: '',
     content: DEFAULT_LETTER_CONTENT,
     closingText: DEFAULT_CLOSING_TEXT,
+    accentColor: defaultLetterAccentColor('CLASSIQUE'),
     lastModified: new Date().toISOString(),
   }
 }
@@ -85,7 +88,12 @@ export const useCoverLetterStore = defineStore('coverLetter', {
           current: CoverLetterDraft | null
           isDirty: boolean
         }>
-        if (persisted.current !== undefined) this.current = persisted.current
+        if (persisted.current !== undefined) {
+          this.current = persisted.current
+          if (this.current && !this.current.accentColor) {
+            this.current.accentColor = defaultLetterAccentColor(this.current.templateSlug)
+          }
+        }
         if (persisted.isDirty !== undefined) this.isDirty = persisted.isDirty
       } catch {
         // ignore invalid persisted draft
@@ -98,6 +106,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
       this.initDraft()
       if (this.current) {
         this.current.templateSlug = slug
+        this.current.accentColor = defaultLetterAccentColor(slug)
         touch(this.current)
         this.isDirty = true
       }
@@ -124,6 +133,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
       if (data.content) this.current.content = data.content
       if (data.closingText) this.current.closingText = data.closingText
       if (data.templateSlug) this.current.templateSlug = data.templateSlug
+      if (data.accentColor) this.current.accentColor = data.accentColor
       touch(this.current)
       this.isDirty = true
     },
@@ -141,6 +151,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
         recruiterName: this.current.recruiterName || undefined,
         content: this.current.content,
         closingText: this.current.closingText || undefined,
+        accentColor: this.current.accentColor || undefined,
       }
     },
   },

@@ -1,10 +1,13 @@
 import type { MaybeRefOrGetter } from 'vue'
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { resolveShowPhoto } from '@profiloz/shared'
+import { resolveCvAccentColor } from '~/utils/template-accent-colors'
 
 export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
   const snapshot = computed(() => toValue(resume))
-  const accent = computed(() => snapshot.value.templateConfig.accentColor ?? '#0051d5')
+  const accent = computed(() =>
+    resolveCvAccentColor(snapshot.value.templateSlug, snapshot.value.templateConfig.accentColor),
+  )
   const config = useRuntimeConfig()
 
   const apiBaseUrl = computed(() => {

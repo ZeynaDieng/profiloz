@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
+import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
@@ -26,7 +27,10 @@ const pdfLoadingStep = ref(0)
 const pdfError = ref('')
 const previewOpen = ref(false)
 const actionsOpen = ref(false)
-const accentColors = ['#0051d5', '#0F172A', '#10B981', '#F43F5E'] as const
+
+const accentColors = computed(() =>
+  getCvAccentPalette(resumeStore.current?.templateSlug ?? 'PROFESSIONNEL'),
+)
 
 const resume = computed(() => resumeStore.current)
 const templateName = computed(() => {
@@ -104,7 +108,10 @@ onMounted(async () => {
     }
   }
 
-  accentColor.value = resumeStore.current?.templateConfig.accentColor ?? '#0051d5'
+  accentColor.value = resolveCvAccentColor(
+    resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
+    resumeStore.current?.templateConfig.accentColor,
+  )
   loading.value = false
 
   if (route.query.download === '1') {
@@ -118,6 +125,15 @@ onMounted(async () => {
 watch(accentColor, (color) => {
   resumeStore.setTemplateConfig({ accentColor: color })
 })
+
+watch(
+  () => resumeStore.current?.templateSlug,
+  (slug) => {
+    if (!slug) return
+    accentColor.value = resumeStore.current?.templateConfig.accentColor
+      ?? resolveCvAccentColor(slug)
+  },
+)
 
 function currentSnapshot() {
   return {

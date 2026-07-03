@@ -212,7 +212,7 @@ async function onDownloadLetter(id: string) {
             />
             <button
               type="button"
-              class="min-h-11 px-4 py-2 bg-primary text-on-primary rounded-lg font-bold disabled:opacity-60"
+              class="btn-secondary min-h-11 px-4 py-2 rounded-lg disabled:opacity-60"
               :disabled="renameSaving || !renameValue.trim()"
               @click="onRename"
             >

@@ -31,6 +31,16 @@
   --color-inverse-on-surface: #eaf1ff;
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
+  --color-accent-green: #059669;
+  --color-accent-purple: #7c3aed;
+  --color-accent-orange: #ea580c;
+  --color-accent-teal: #009485;
+  --color-tertiary: #4fdbc8;
+
+  --shadow-elevated-sm: 0 2px 8px rgba(11, 28, 48, 0.04), 0 8px 24px rgba(11, 28, 48, 0.06);
+  --shadow-elevated-md: 0 4px 12px rgba(11, 28, 48, 0.05), 0 16px 40px rgba(11, 28, 48, 0.08);
+  --shadow-elevated-lg: 0 8px 24px rgba(11, 28, 48, 0.06), 0 32px 64px rgba(11, 28, 48, 0.1);
+  --shadow-elevated-hover: 0 12px 32px rgba(11, 28, 48, 0.08), 0 24px 48px rgba(11, 28, 48, 0.1);
 
   --spacing-gutter: 24px;
   --spacing-stack-sm: 8px;

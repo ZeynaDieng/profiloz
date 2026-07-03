@@ -1,5 +1,6 @@
-import type { ResumeSnapshot } from '@profiloz/shared'
+import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
 import { AMINATA_DEMO_RESUME, createAminataDemoResume } from '~/features/demo/aminata-persona'
+import { cvTemplateAccentColors } from '~/utils/template-accent-colors'
 
 export const DEMO_RESUME: ResumeSnapshot = AMINATA_DEMO_RESUME
 
@@ -8,7 +9,8 @@ export function buildPreviewSnapshot(
   accentColor?: string,
   userSnapshot?: ResumeSnapshot | null,
 ): ResumeSnapshot {
-  const base = createAminataDemoResume(slug, accentColor ?? '#0051d5')
+  const defaultAccent = cvTemplateAccentColors(slug).accent
+  const base = createAminataDemoResume(slug, accentColor ?? defaultAccent)
   if (slug === 'CADRE') {
     base.templateConfig = { ...base.templateConfig, accentColor: accentColor ?? '#1a3050' }
   } else if (slug === 'EXECUTIF') {

@@ -35,7 +35,7 @@ function navClass(item: (typeof primaryNavItems)[number]) {
 
     <NuxtLink
       to="/creer"
-      class="w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center -translate-y-3 shadow-lg absolute left-1/2 -translate-x-1/2 min-h-12 min-w-12 transition-transform active:scale-95"
+      class="w-12 h-12 bg-secondary text-on-secondary rounded-full flex items-center justify-center -translate-y-3 shadow-lg absolute left-1/2 -translate-x-1/2 min-h-12 min-w-12 transition-transform active:scale-95"
       aria-label="Nouveau dossier"
     >
       <UiPzIcon name="add" />

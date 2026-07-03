@@ -234,6 +234,7 @@ export interface CoverLetterPdfInput {
   recruiterName?: string | null
   content: string
   closingText?: string | null
+  accentColor?: string | null
 }
 
 /** @deprecated Utiliser generateCoverLetterPdf avec la page /imprimer/lettre */

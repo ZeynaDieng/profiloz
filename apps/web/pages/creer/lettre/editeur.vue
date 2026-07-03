@@ -3,6 +3,7 @@ import { MSG } from '@profiloz/shared'
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
+import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
@@ -29,6 +30,7 @@ const previewOpen = ref(false)
 const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
 
 const templateId = ref<CoverLetterTemplateSlug>('CLASSIQUE')
+const accentColor = ref('#0051d5')
 const senderName = ref('')
 const senderEmail = ref('')
 const senderPhone = ref('')
@@ -40,9 +42,12 @@ const recruiterName = ref('')
 const content = ref('')
 const closingText = ref(DEFAULT_CLOSING_TEXT)
 
+const accentColors = computed(() => getLetterAccentPalette(templateId.value))
+
 const previewLetter = computed(() =>
   coverLetterService.toSnapshot({
     templateId: templateId.value,
+    accentColor: accentColor.value,
     senderName: senderName.value,
     senderEmail: senderEmail.value,
     senderPhone: senderPhone.value,
@@ -59,6 +64,7 @@ const previewLetter = computed(() =>
 function syncStoreFromRefs() {
   coverLetterStore.patchFields({
     templateSlug: templateId.value,
+    accentColor: accentColor.value,
     senderName: senderName.value,
     senderEmail: senderEmail.value,
     senderPhone: senderPhone.value,
@@ -76,6 +82,7 @@ function loadRefsFromStore() {
   const draft = coverLetterStore.current
   if (!draft) return
   templateId.value = draft.templateSlug
+  accentColor.value = resolveLetterAccentColor(draft.templateSlug, draft.accentColor)
   senderName.value = draft.senderName
   senderEmail.value = draft.senderEmail
   senderPhone.value = draft.senderPhone
@@ -91,6 +98,7 @@ function loadRefsFromStore() {
 watch(
   [
     templateId,
+    accentColor,
     senderName,
     senderEmail,
     senderPhone,
@@ -114,6 +122,11 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
   onSave: async () => {
     coverLetterStore.markDraftSynced()
   },
+})
+
+watch(templateId, (slug, previous) => {
+  if (loading.value || !previous || slug === previous) return
+  accentColor.value = resolveLetterAccentColor(slug)
 })
 
 const pdfLoadingMessage = computed(() => {
@@ -289,6 +302,21 @@ async function downloadPdf() {
               class="mb-4"
             />
           </Transition>
+          <div class="mb-5">
+            <p class="text-sm font-semibold text-on-surface mb-2">Couleur d’accent</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="color in accentColors"
+                :key="color"
+                type="button"
+                class="w-9 h-9 rounded-full ring-2 ring-offset-2 transition-transform hover:scale-105"
+                :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
+                :style="{ backgroundColor: color }"
+                :aria-label="`Couleur ${color}`"
+                @click="accentColor = color"
+              />
+            </div>
+          </div>
           <FeatureCoverLetterForm
             v-model:template-id="templateId"
             v-model:sender-name="senderName"

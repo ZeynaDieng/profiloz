@@ -15,6 +15,12 @@ function normalizeCoverLetterTemplateSlug(value?: string): (typeof COVER_LETTER_
   return 'CLASSIQUE'
 }
 
+function parseAccentColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return /^#[0-9A-Fa-f]{6}$/.test(trimmed) ? trimmed : null
+}
+
 function toPdfInput(snapshot: Record<string, unknown>): CoverLetterPdfInput {
   const content = typeof snapshot.content === 'string' ? snapshot.content.trim() : ''
   if (!content) {
@@ -39,6 +45,7 @@ function toPdfInput(snapshot: Record<string, unknown>): CoverLetterPdfInput {
     recruiterName: typeof snapshot.recruiterName === 'string' ? snapshot.recruiterName : null,
     content,
     closingText: typeof snapshot.closingText === 'string' ? snapshot.closingText : null,
+    accentColor: parseAccentColor(snapshot.accentColor),
   }
 }
 

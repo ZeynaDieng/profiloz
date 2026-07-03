@@ -1,46 +1,93 @@
 <script setup lang="ts">
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
+
+const config = useRuntimeConfig()
+const { load, section } = useLandingContent()
 
 const steps = [
-  { id: 'import', label: 'Import PDF', icon: 'upload_file' },
-  { id: 'ocr', label: 'Import & scan', icon: 'document_scanner' },
+  { id: 'import', label: 'Import', icon: 'upload_file' },
   { id: 'fill', label: 'Remplissage', icon: 'auto_fix_high' },
   { id: 'edit', label: 'Édition', icon: 'edit_note' },
   { id: 'template', label: 'Modèle', icon: 'palette' },
+  { id: 'dossier', label: 'Dossier', icon: 'folder_open' },
   { id: 'pdf', label: 'PDF', icon: 'picture_as_pdf' },
 ] as const
 
-type StepId = (typeof steps)[number]['id']
-
 const activeIndex = ref(0)
 const activeStep = computed(() => steps[activeIndex.value]!.id)
+
 const demoResume = buildPreviewSnapshot('PROFESSIONNEL')
+const demoLetter = buildCoverLetterDemoSnapshot('CLASSIQUE')
+
+const hero = computed(() => section<{ demoVideoUrl?: string }>('hero'))
+const videoSrc = computed(
+  () => hero.value.demoVideoUrl || (config.public.heroDemoVideoUrl as string) || '/demo/profiloz-hero.mp4',
+)
+
+const showVideo = ref(false)
+const videoRef = ref<HTMLVideoElement | null>(null)
 
 let timer: ReturnType<typeof setInterval> | null = null
 
-function goTo(index: number) {
-  activeIndex.value = index
+function stopAutoplay() {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
 }
 
-onMounted(() => {
+function startAutoplay() {
+  stopAutoplay()
   if (!import.meta.client) return
+  if (showVideo.value) return
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   timer = setInterval(() => {
     activeIndex.value = (activeIndex.value + 1) % steps.length
-  }, 3200)
+  }, 3400)
+}
+
+function goTo(index: number) {
+  activeIndex.value = index
+  if (!showVideo.value) startAutoplay()
+}
+
+async function tryPlayVideo() {
+  const el = videoRef.value
+  if (!el) return
+  try {
+    await el.play()
+    showVideo.value = true
+    stopAutoplay()
+  } catch {
+    showVideo.value = false
+    startAutoplay()
+  }
+}
+
+function onVideoError() {
+  showVideo.value = false
+  startAutoplay()
+}
+
+onMounted(() => {
+  void load()
+  if (!import.meta.client) return
+  nextTick(() => {
+    if (videoRef.value) void tryPlayVideo()
+    else startAutoplay()
+  })
 })
 
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
+onUnmounted(() => stopAutoplay())
 </script>
 
 <template>
   <div class="hero-demo premium-shadow rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/90 backdrop-blur-sm overflow-hidden">
     <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-outline-variant/20 bg-surface-container-low/80">
       <p class="text-[11px] font-semibold text-on-surface truncate">Profilo'Z en action</p>
-      <div class="flex gap-1 shrink-0">
+      <div v-if="!showVideo" class="flex gap-1 shrink-0">
         <button
           v-for="(step, i) in steps"
           :key="step.id"
@@ -54,30 +101,38 @@ onUnmounted(() => {
     </div>
 
     <div class="relative aspect-[4/3] sm:aspect-[16/11] bg-gradient-to-br from-surface-container-low to-background overflow-hidden">
-      <Transition name="demo-fade" mode="out-in">
-        <!-- Import -->
+      <!-- Vidéo démo (autoplay muet) — repli sur la démo animée si fichier absent -->
+      <video
+        v-show="showVideo"
+        ref="videoRef"
+        class="absolute inset-0 h-full w-full object-cover"
+        :src="videoSrc"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        aria-label="Démonstration Profilo'Z"
+        @canplay="tryPlayVideo"
+        @error="onVideoError"
+      />
+
+      <Transition v-if="!showVideo" name="demo-fade" mode="out-in">
         <div v-if="activeStep === 'import'" key="import" class="absolute inset-0 p-4 flex flex-col items-center justify-center gap-3">
           <div class="w-full max-w-[220px] rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 p-4 text-center demo-pulse">
-            <UiPzIcon name="description" class="text-secondary text-3xl mb-2" />
+            <UiPzIcon name="document_scanner" class="text-secondary text-3xl mb-2" />
             <p class="text-xs font-semibold text-on-surface">CV_Aminata.pdf</p>
-            <p class="text-[10px] text-on-surface-variant mt-1">Déposez votre fichier</p>
+            <p class="text-[10px] text-on-surface-variant mt-1">Import PDF, Word ou photo</p>
           </div>
         </div>
 
-        <!-- Import & scan -->
-        <div v-else-if="activeStep === 'ocr'" key="ocr" class="absolute inset-0 p-4 flex flex-col justify-center gap-3">
-          <p class="text-xs font-semibold text-on-surface text-center">Analyse en cours…</p>
-          <div class="mx-auto w-full max-w-[240px] h-2 rounded-full bg-surface-container overflow-hidden">
-            <div class="h-full bg-secondary rounded-full demo-progress" />
-          </div>
-          <div class="mx-auto w-full max-w-[240px] space-y-1.5">
-            <div v-for="n in 4" :key="n" class="h-2 rounded demo-shimmer-line" :style="{ width: `${100 - n * 12}%` }" />
-          </div>
-        </div>
-
-        <!-- Auto-fill -->
         <div v-else-if="activeStep === 'fill'" key="fill" class="absolute inset-0 p-3 sm:p-4 space-y-2">
-          <div v-for="(field, i) in ['Nom complet', 'Poste visé', 'Expérience', 'Formation']" :key="field" class="space-y-1">
+          <p class="text-xs font-semibold text-on-surface">Remplissage automatique…</p>
+          <div
+            v-for="(field, i) in ['Nom complet', 'Poste visé', 'Expérience', 'Formation']"
+            :key="field"
+            class="space-y-1"
+          >
             <p class="text-[10px] text-on-surface-variant">{{ field }}</p>
             <div
               class="h-7 rounded-lg border border-outline-variant/30 bg-white px-2 flex items-center text-[10px] text-on-surface demo-field-fill"
@@ -91,7 +146,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Edit -->
         <div v-else-if="activeStep === 'edit'" key="edit" class="absolute inset-0 grid grid-cols-2 gap-px bg-outline-variant/20">
           <div class="bg-white p-2 space-y-1.5 overflow-hidden">
             <div class="h-2 w-2/3 rounded bg-surface-container demo-shimmer-line" />
@@ -99,30 +153,41 @@ onUnmounted(() => {
             <div class="h-6 rounded border border-outline-variant/30 bg-surface-container-lowest" />
             <div class="h-6 rounded border border-secondary/30 bg-secondary/5" />
           </div>
-          <div class="bg-[#eef2ff] p-1 overflow-hidden">
+          <div class="preview-canvas-bg overflow-hidden">
             <FeatureTemplatesA4PreviewFit :resume="demoResume" />
           </div>
         </div>
 
-        <!-- Template -->
         <div v-else-if="activeStep === 'template'" key="template" class="absolute inset-0 p-3 grid grid-cols-3 gap-2">
           <div
-            v-for="n in 3"
-            :key="n"
+            v-for="(slug, n) in (['ETUDIANT', 'PROFESSIONNEL', 'MODERNE'] as const)"
+            :key="slug"
             class="rounded-lg border bg-white overflow-hidden aspect-[3/4]"
-            :class="n === 2 ? 'border-secondary ring-2 ring-secondary/30 demo-template-pick' : 'border-outline-variant/30 opacity-70'"
+            :class="n === 1 ? 'border-secondary ring-2 ring-secondary/30 demo-template-pick' : 'border-outline-variant/30 opacity-80'"
           >
-            <div class="h-full bg-gradient-to-b from-surface-container-high to-white p-1">
-              <div class="h-1 w-2/3 rounded bg-outline-variant/30 mb-1" />
-              <div class="h-1 w-full rounded bg-outline-variant/20 mb-0.5" />
-              <div class="h-1 w-4/5 rounded bg-outline-variant/20" />
+            <FeatureTemplatesA4PreviewFit :resume="buildPreviewSnapshot(slug)" />
+          </div>
+        </div>
+
+        <div v-else-if="activeStep === 'dossier'" key="dossier" class="absolute inset-0 grid grid-cols-2 gap-px bg-outline-variant/10">
+          <div class="preview-canvas-bg relative overflow-hidden">
+            <FeatureTemplatesA4PreviewFit :resume="demoResume" />
+            <div class="absolute bottom-2 left-2 right-2 rounded-lg bg-white/92 border border-outline-variant/20 px-2 py-1 flex items-center gap-1.5">
+              <UiPzIcon name="description" class="text-secondary text-sm" />
+              <span class="text-[9px] font-medium text-on-surface truncate">CV · Aminata Diallo</span>
+            </div>
+          </div>
+          <div class="preview-canvas-bg relative overflow-hidden border-l border-outline-variant/10">
+            <FeatureCoverLetterTemplatesA4PreviewFit :letter="demoLetter" />
+            <div class="absolute bottom-2 left-2 right-2 rounded-lg bg-white/92 border border-outline-variant/20 px-2 py-1 flex items-center gap-1.5">
+              <UiPzIcon name="mail" class="text-secondary text-sm" />
+              <span class="text-[9px] font-medium text-on-surface truncate">Lettre · Aminata Diallo</span>
             </div>
           </div>
         </div>
 
-        <!-- PDF -->
         <div v-else key="pdf" class="absolute inset-0 p-4 flex flex-col items-center justify-center gap-3">
-          <div class="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center text-error demo-pulse">
+          <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary demo-pulse">
             <UiPzIcon name="picture_as_pdf" class="text-4xl" />
           </div>
           <p class="text-sm font-bold text-on-surface">CV_Aminata.pdf</p>
@@ -134,16 +199,21 @@ onUnmounted(() => {
       </Transition>
     </div>
 
-    <div class="flex gap-1 overflow-x-auto px-2 py-2 border-t border-outline-variant/15 bg-surface/80 scrollbar-none">
-      <span
+    <div
+      v-if="!showVideo"
+      class="flex gap-1 overflow-x-auto px-2 py-2 border-t border-outline-variant/15 bg-surface/80 scrollbar-none"
+    >
+      <button
         v-for="(step, i) in steps"
         :key="step.id"
+        type="button"
         class="inline-flex items-center gap-1 shrink-0 px-2 py-1 rounded-full text-[10px] font-medium transition-colors"
-        :class="i === activeIndex ? 'bg-secondary/10 text-secondary' : 'text-on-surface-variant'"
+        :class="i === activeIndex ? 'bg-secondary/10 text-secondary' : 'text-on-surface-variant hover:bg-surface-container-low'"
+        @click="goTo(i)"
       >
         <UiPzIcon :name="step.icon" class="text-[13px]" />
         {{ step.label }}
-      </span>
+      </button>
     </div>
   </div>
 </template>
@@ -164,15 +234,8 @@ onUnmounted(() => {
   transform: scale(1.01);
 }
 
-.demo-progress {
-  width: 0;
-  animation: demo-progress 2.8s ease-in-out infinite;
-}
-
-@keyframes demo-progress {
-  0% { width: 8%; }
-  70% { width: 92%; }
-  100% { width: 100%; }
+.demo-field-fill {
+  animation: demo-field-in 0.5s ease both;
 }
 
 .demo-shimmer-line {
@@ -184,10 +247,6 @@ onUnmounted(() => {
 @keyframes demo-shimmer {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
-}
-
-.demo-field-fill {
-  animation: demo-field-in 0.5s ease both;
 }
 
 @keyframes demo-field-in {
@@ -210,7 +269,7 @@ onUnmounted(() => {
 
 @keyframes demo-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.04); opacity: 0.92; }
+  50% { transform: scale(1.04); opacity: 0.94; }
 }
 
 @media (max-width: 767px) {
@@ -218,17 +277,11 @@ onUnmounted(() => {
   .demo-template-pick {
     animation: none;
   }
-
-  .demo-progress {
-    animation-duration: 2s;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .demo-fade-enter-active,
   .demo-fade-leave-active,
-  .demo-progress,
-  .demo-shimmer-line,
   .demo-field-fill,
   .demo-template-pick,
   .demo-pulse {

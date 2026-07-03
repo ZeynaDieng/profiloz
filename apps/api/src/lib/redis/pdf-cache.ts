@@ -70,6 +70,7 @@ export class PdfCacheService {
         content: snapshot.content,
         companyName: snapshot.companyName,
         position: snapshot.position,
+        accentColor: snapshot.accentColor,
       }),
       // Pour les dossiers : inclure CV + lettres
       ...(kind === 'dossier' && {
@@ -81,6 +82,7 @@ export class PdfCacheService {
         letters: snapshot.letters?.map((l: any) => ({
           templateSlug: l.templateSlug,
           content: l.content,
+          accentColor: l.accentColor,
         })),
       }),
     })

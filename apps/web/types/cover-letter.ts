@@ -28,6 +28,7 @@ export interface CoverLetterSnapshot {
   recruiterName?: string
   content: string
   closingText?: string
+  accentColor?: string
 }
 
 export const DEFAULT_CLOSING_TEXT =
@@ -69,6 +70,7 @@ export function toCoverLetterSnapshot(data: {
   recruiterName?: string | null
   content: string
   closingText?: string | null
+  accentColor?: string | null
 }): CoverLetterSnapshot {
   return {
     templateSlug: normalizeCoverLetterTemplateSlug(data.templateId),
@@ -83,5 +85,6 @@ export function toCoverLetterSnapshot(data: {
     recruiterName: data.recruiterName ?? undefined,
     content: data.content,
     closingText: data.closingText ?? undefined,
+    accentColor: data.accentColor ?? undefined,
   }
 }

@@ -50,6 +50,7 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
     recruiterName: raw.value.recruiterName as string | undefined,
     content: String(raw.value.content ?? ''),
     closingText: raw.value.closingText as string | undefined,
+    accentColor: raw.value.accentColor as string | undefined,
   })
 })
 

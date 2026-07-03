@@ -30,12 +30,12 @@ const { target, revealed } = useScrollReveal(0.25)
 
     <div class="max-w-container-max mx-auto">
       <div
-        class="relative rounded-2xl sm:rounded-3xl border border-outline-variant/25 bg-surface-container-lowest shadow-[0_16px_48px_rgba(49,107,243,0.06)] overflow-hidden"
+        class="relative rounded-2xl sm:rounded-3xl border border-outline-variant/25 bg-surface-container-lowest premium-shadow overflow-hidden"
       >
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
-          <div class="p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-center lg:text-left">
+          <div class="cta-copy p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-center lg:text-left">
             <h2 class="text-xl sm:text-3xl lg:text-4xl font-bold text-on-surface leading-tight tracking-tight">
-              Votre prochaine opportunité commence ici
+              Votre prochaine <span class="text-secondary">opportunité</span> commence ici
             </h2>
             <p class="mt-3 sm:mt-4 text-on-surface-variant text-sm sm:text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
               Le moyen le plus rapide de créer un CV qui donne envie d'être lu.
@@ -44,7 +44,7 @@ const { target, revealed } = useScrollReveal(0.25)
             <div class="mt-5 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-2 sm:gap-3">
               <NuxtLink
                 to="/creer"
-                class="btn-secondary cta-primary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base shadow-xl"
+                class="btn-secondary cta-primary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base premium-shadow-sm"
               >
                 Créer ma candidature
                 <UiPzIcon name="arrow_forward" class="text-[20px]" />
@@ -57,9 +57,39 @@ const { target, revealed } = useScrollReveal(0.25)
                 Voir les modèles
               </NuxtLink>
             </div>
+
+            <p class="mt-4 text-xs sm:text-sm text-on-surface-variant">
+              Gratuit pour commencer · PDF en quelques minutes
+            </p>
+
+            <!-- Comparatif compact mobile / tablette -->
+            <div class="cta-compare-compact lg:hidden mt-8 text-left">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">
+                Profilo'Z vs méthodes traditionnelles
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="cta-compare-before rounded-xl border border-outline-variant/35 bg-surface-container-low p-3">
+                  <p class="text-xs font-bold text-on-surface-variant mb-2">Avant</p>
+                  <ul class="space-y-1.5">
+                    <li v-for="item in traditional" :key="item" class="flex items-start gap-1.5 text-[11px] text-on-surface-variant leading-snug">
+                      <span class="text-on-surface-variant/50 shrink-0" aria-hidden="true">✕</span>
+                      <span>{{ item }}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div class="cta-compare-after rounded-xl border-2 border-secondary/35 bg-secondary/8 p-3">
+                  <p class="text-xs font-bold text-secondary mb-2">Avec Profilo'Z</p>
+                  <ul class="space-y-1.5">
+                    <li v-for="item in profiloz" :key="item" class="flex items-start gap-1.5 text-[11px] text-on-surface leading-snug">
+                      <span class="text-secondary shrink-0 font-bold" aria-hidden="true">✓</span>
+                      <span>{{ item }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Comparaison : desktop / tablette paysage uniquement -->
           <div
             class="hidden lg:block p-8 sm:p-10 lg:p-12 bg-surface-container-low/80 border-t lg:border-t-0 lg:border-l border-outline-variant/20"
           >
@@ -68,22 +98,22 @@ const { target, revealed } = useScrollReveal(0.25)
             </p>
 
             <div class="grid grid-cols-2 gap-4 sm:gap-5">
-              <div class="rounded-2xl border border-error/20 bg-error/5 p-5">
-                <p class="flex items-center gap-2 text-sm font-bold text-on-surface mb-4">
-                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-error/15 text-error text-base">✕</span>
+              <div class="cta-compare-before rounded-2xl border border-outline-variant/35 bg-surface-container-low p-5">
+                <p class="flex items-center gap-2 text-sm font-bold text-on-surface-variant mb-4">
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant text-sm">✕</span>
                   Avant
                 </p>
                 <ul class="space-y-2">
                   <li v-for="item in traditional" :key="item" class="flex items-start gap-2 text-sm text-on-surface-variant">
-                    <span class="text-error shrink-0 font-bold" aria-hidden="true">✕</span>
+                    <span class="text-on-surface-variant/45 shrink-0" aria-hidden="true">✕</span>
                     <span>{{ item }}</span>
                   </li>
                 </ul>
               </div>
 
-              <div class="rounded-2xl border-2 border-secondary/30 bg-secondary/5 p-5 shadow-sm">
+              <div class="cta-compare-after rounded-2xl border-2 border-secondary/40 bg-secondary/10 p-5 premium-shadow-sm">
                 <p class="flex items-center gap-2 text-sm font-bold text-on-surface mb-4">
-                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-secondary/15 text-secondary text-base">✓</span>
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-on-secondary text-sm">✓</span>
                   Avec Profilo'Z
                 </p>
                 <ul class="space-y-2">
@@ -102,6 +132,19 @@ const { target, revealed } = useScrollReveal(0.25)
 </template>
 
 <style scoped>
+.cta-copy {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-secondary) 6%, white) 0%,
+    white 55%,
+    color-mix(in srgb, var(--color-surface-container-low) 80%, white) 100%
+  );
+}
+
+.cta-compare-after {
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-secondary) 12%, transparent);
+}
+
 .cta-primary:hover {
   transform: translateY(-2px);
 }

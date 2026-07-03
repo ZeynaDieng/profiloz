@@ -13,7 +13,7 @@ const { target, display } = useAnimatedCounter(props.end, {
 
 <template>
   <li ref="target" class="text-center">
-    <p class="text-xl sm:text-2xl md:text-3xl font-bold text-on-surface tabular-nums">
+    <p class="text-xl sm:text-2xl md:text-3xl font-bold text-secondary tabular-nums">
       {{ display }}
     </p>
     <p class="text-[11px] sm:text-xs text-on-surface-variant mt-0.5 uppercase tracking-wide font-medium">

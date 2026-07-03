@@ -24,7 +24,7 @@ useResizeObserver(containerRef, () => nextTick(updateScale))
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full h-full relative overflow-hidden bg-[#F1F5F9]">
+  <div ref="containerRef" class="w-full h-full relative overflow-hidden preview-canvas-bg">
     <div
       class="absolute top-0 left-1/2 pointer-events-none a4-preview-fit"
       :style="{

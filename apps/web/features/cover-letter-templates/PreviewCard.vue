@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
+import { letterPreviewWrapperStyle } from '~/utils/template-accent-colors'
 
 const props = defineProps<{
   slug: CoverLetterTemplateSlug
@@ -11,6 +12,7 @@ const props = defineProps<{
 defineEmits<{ select: [slug: CoverLetterTemplateSlug] }>()
 
 const previewLetter = computed(() => buildCoverLetterDemoSnapshot(props.slug))
+const previewStyle = computed(() => letterPreviewWrapperStyle(props.slug))
 </script>
 
 <template>
@@ -24,7 +26,7 @@ const previewLetter = computed(() => buildCoverLetterDemoSnapshot(props.slug))
     "
     @click="$emit('select', slug)"
   >
-    <div class="aspect-[3/4] overflow-hidden">
+    <div class="aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewStyle">
       <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
     </div>
     <div class="p-4 flex justify-between items-center bg-surface-container-lowest">

@@ -61,7 +61,7 @@ const { target, revealed } = useScrollReveal()
         <div class="order-1 lg:order-2">
           <FeaturesLandingProductScreenFrame label="Dossier Profilo'Z — Aminata Diallo" class="premium-shadow">
             <div class="grid grid-cols-2 gap-px bg-outline-variant/15 min-h-[280px]">
-              <div class="bg-[#eef2ff] relative overflow-hidden">
+              <div class="preview-canvas-bg relative overflow-hidden">
                 <div class="absolute inset-0">
                   <FeatureTemplatesA4PreviewFit :resume="demoResume" />
                 </div>
@@ -70,7 +70,7 @@ const { target, revealed } = useScrollReveal()
                   <span class="text-[10px] font-medium text-on-surface">CV · Aminata Diallo</span>
                 </div>
               </div>
-              <div class="bg-[#eef2ff] relative overflow-hidden border-l border-outline-variant/10">
+              <div class="preview-canvas-bg relative overflow-hidden border-l border-outline-variant/10">
                 <div class="absolute inset-0">
                   <FeatureCoverLetterTemplatesA4PreviewFit :letter="demoLetter" />
                 </div>

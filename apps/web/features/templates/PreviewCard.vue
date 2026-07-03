@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { cvTemplateAccentColors } from '~/utils/template-accent-colors'
 
 const props = defineProps<{
   slug: TemplateSlug
@@ -13,10 +14,14 @@ defineEmits<{ select: [slug: TemplateSlug] }>()
 const previewResume = computed(() =>
   buildPreviewSnapshot(
     props.slug,
-    props.userSnapshot?.templateConfig.accentColor,
+    cvTemplateAccentColors(props.slug).accent,
     props.userSnapshot,
   ),
 )
+
+const previewCanvasStyle = computed(() => ({
+  '--preview-canvas': cvTemplateAccentColors(props.slug).canvas,
+}))
 </script>
 
 <template>
@@ -30,7 +35,7 @@ const previewResume = computed(() =>
     "
     @click="$emit('select', slug)"
   >
-    <div class="aspect-[3/4] overflow-hidden">
+    <div class="aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewCanvasStyle">
       <FeatureTemplatesA4PreviewFit :resume="previewResume" />
     </div>
     <div class="p-4 flex justify-between items-center bg-surface-container-lowest">

@@ -59,7 +59,7 @@ function onDrop(e: DragEvent) {
         <h2 class="font-bold text-on-surface text-xl">Glissez votre fichier ici</h2>
         <p class="text-on-surface-variant">PDF, DOCX, JPG ou PNG — max {{ maxSizeMb ?? 10 }} Mo</p>
       </div>
-      <span class="px-6 py-2 bg-primary text-white rounded-lg font-label-sm">Sélectionner un fichier</span>
+      <span class="px-6 py-2 bg-secondary text-on-secondary rounded-lg font-label-sm font-bold">Sélectionner un fichier</span>
       <UiMessageBanner v-if="error" variant="error" :message="error" class="mt-4" />
     </div>
   </div>

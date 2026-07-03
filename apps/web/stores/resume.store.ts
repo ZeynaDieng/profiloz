@@ -15,13 +15,17 @@ import { stripLegacyBase64Photo } from '~/utils/photoUrl'
 import { clearLegacyResumeDraft, createScopedResumeDraftStorage } from '~/utils/resume-draft-storage'
 import { createAminataDemoResume } from '~/features/demo/aminata-persona'
 import { createRandomId } from '~/utils/random-id'
+import { cvTemplateAccentColors, defaultCvTemplateConfig } from '~/utils/template-accent-colors'
 
 function createEmptyResume(): ResumeSnapshot {
   return {
     id: createRandomId(),
     title: 'Mon CV',
     templateSlug: 'PROFESSIONNEL',
-    templateConfig: {},
+    templateConfig: {
+      ...defaultCvTemplateConfig('PROFESSIONNEL'),
+      showPhoto: templatePhotoDefault('PROFESSIONNEL'),
+    },
     personalInfo: {},
     experiences: [],
     educations: [],
@@ -79,7 +83,7 @@ export const useResumeStore = defineStore('resume', {
     },
     loadDemoPersona() {
       const slug = this.current?.templateSlug ?? 'PROFESSIONNEL'
-      const accent = this.current?.templateConfig?.accentColor ?? '#0051d5'
+      const accent = cvTemplateAccentColors(slug).accent
       this.loadSnapshot(createAminataDemoResume(slug, accent))
     },
     ensureDemoPersonaIfEmpty() {
@@ -180,6 +184,7 @@ export const useResumeStore = defineStore('resume', {
         this.current.templateSlug = slug
         this.current.templateConfig = {
           ...this.current.templateConfig,
+          accentColor: cvTemplateAccentColors(slug).accent,
           showPhoto: templatePhotoDefault(slug),
         }
         touch(this.current)

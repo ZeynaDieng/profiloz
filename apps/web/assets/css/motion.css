@@ -12,8 +12,9 @@
   --pz-duration-reveal: 700ms;
   --pz-duration-hero: 700ms;
   --pz-translate-reveal: 20px;
-  --pz-shadow-card: 0 4px 12px rgba(15, 23, 42, 0.06);
-  --pz-shadow-card-hover: 0 12px 32px rgba(15, 23, 42, 0.1);
+  --pz-shadow-card: 0 4px 12px rgba(11, 28, 48, 0.05);
+  --pz-shadow-card-hover: 0 12px 32px rgba(11, 28, 48, 0.1);
+  --pz-shadow-float: 0 8px 24px rgba(11, 28, 48, 0.06), 0 24px 48px rgba(11, 28, 48, 0.08);
 }
 
 @media (max-width: 767px) {
@@ -351,7 +352,7 @@ a.btn-ghost:active {
 }
 
 .pz-template-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   box-shadow: var(--pz-shadow-card-hover);
 }
 
@@ -361,6 +362,39 @@ a.btn-ghost:active {
 
 .pz-template-card:hover .pz-template-preview {
   transform: scale(1.02);
+}
+
+/* ── Preview modal (aperçu modèle) ── */
+
+.preview-modal-enter-active,
+.preview-modal-leave-active {
+  transition: opacity var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.preview-modal-enter-from,
+.preview-modal-leave-to {
+  opacity: 0;
+}
+
+.preview-modal__sheet {
+  transition: transform var(--pz-duration-reveal) var(--pz-ease-out);
+}
+
+.preview-modal-enter-from .preview-modal__sheet,
+.preview-modal-leave-to .preview-modal__sheet {
+  transform: scale(0.97) translateY(8px);
+}
+
+.preview-modal__document {
+  transition:
+    transform var(--pz-duration-reveal) var(--pz-ease-out),
+    opacity var(--pz-duration-normal) var(--pz-ease-out);
+}
+
+.preview-modal-enter-from .preview-modal__document,
+.preview-modal-leave-to .preview-modal__document {
+  transform: scale(0.98);
+  opacity: 0;
 }
 
 /* ── FAQ accordion ── */
