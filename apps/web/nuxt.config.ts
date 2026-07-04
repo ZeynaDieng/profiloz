@@ -23,6 +23,8 @@ export default defineNuxtConfig({
       heroDemoVideoUrl: process.env.NUXT_PUBLIC_HERO_DEMO_VIDEO_URL || '/demo/profiloz-hero.mp4',
       /** Image bannière hero (PNG/WebP dans public/ ou URL absolue) */
       heroBannerUrl: process.env.NUXT_PUBLIC_HERO_BANNER_URL || '/landing/hero-banner.png',
+      /** Bannière hero mobile (ratio vertical recommandé). Fallback : heroBannerUrl */
+      heroBannerMobileUrl: process.env.NUXT_PUBLIC_HERO_BANNER_MOBILE_URL || '',
     },
   },
   pinia: {

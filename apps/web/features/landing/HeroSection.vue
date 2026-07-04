@@ -23,8 +23,15 @@ const heroBannerSrc = computed(
   () => (config.public.heroBannerUrl as string)?.trim() || '/landing/hero-banner.png',
 )
 
+const heroBannerMobileSrc = computed(() => {
+  const mobile = (config.public.heroBannerMobileUrl as string)?.trim()
+  if (mobile) return mobile
+  return heroBannerSrc.value
+})
+
 const heroBannerStyle = computed(() => ({
   '--hero-banner-image': `url('${heroBannerSrc.value}')`,
+  '--hero-banner-image-mobile': `url('${heroBannerMobileSrc.value}')`,
 }))
 
 const heroLines = computed(() => {
@@ -78,7 +85,7 @@ function onHeroTitleComplete() {
     <div
       class="hero-banner__inner max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
     >
-      <div class="hero-banner__copy text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full">
+      <div class="hero-banner__copy flex flex-col text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full">
         <h1 class="hero-banner__title landing-display">
           <span class="hero-banner__title-line text-on-surface">{{ heroLines[0] }}</span>
           <span v-if="heroLine2" class="hero-banner__title-line hero-banner__title-line--typewriter text-secondary">
@@ -93,7 +100,7 @@ function onHeroTitleComplete() {
         </h1>
 
         <p
-          class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance"
+          class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
           :class="heroCopyVisible && 'is-visible'"
         >
           {{
@@ -103,21 +110,7 @@ function onHeroTitleComplete() {
         </p>
 
         <div
-          class="hero-copy-reveal mt-5 md:mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
-          :class="heroCopyVisible && 'is-visible'"
-        >
-          <span
-            v-for="pill in heroPills"
-            :key="pill"
-            class="landing-pill hero-banner__pill"
-          >
-            <span class="landing-pill__dot" aria-hidden="true" />
-            {{ pill }}
-          </span>
-        </div>
-
-        <div
-          class="hero-copy-reveal mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
+          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 lg:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
           :class="heroCopyVisible && 'is-visible'"
           style="transition-delay: 80ms"
         >
@@ -133,6 +126,20 @@ function onHeroTitleComplete() {
           >
             {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>
+        </div>
+
+        <div
+          class="hero-copy-reveal hero-banner__badges order-4 lg:order-3 mt-5 md:mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
+          :class="heroCopyVisible && 'is-visible'"
+        >
+          <span
+            v-for="pill in heroPills"
+            :key="pill"
+            class="landing-pill hero-banner__pill"
+          >
+            <span class="landing-pill__dot" aria-hidden="true" />
+            {{ pill }}
+          </span>
         </div>
       </div>
     </div>
@@ -157,22 +164,8 @@ function onHeroTitleComplete() {
   background-color: #ffffff;
   background-image: var(--hero-banner-image);
   background-repeat: no-repeat;
-  /* Pleine largeur : plus de bandes grises sur les côtés */
   background-size: 100% auto;
   background-position: top center;
-}
-
-@media (max-width: 1023px) {
-  .hero-banner {
-    min-height: auto;
-    padding-top: 2.5rem;
-    padding-bottom: clamp(9rem, 42vw, 13rem);
-  }
-
-  .hero-banner__bg {
-    background-size: 100% auto;
-    background-position: top center;
-  }
 }
 
 .hero-banner__scrim {
@@ -188,9 +181,44 @@ function onHeroTitleComplete() {
   );
 }
 
+@media (max-width: 1023px) {
+  .hero-banner {
+    min-height: clamp(32rem, 88svh, 40rem);
+    padding: 2.5rem 0;
+  }
+
+  .hero-banner__bg {
+    inset: 0;
+    background-image: var(--hero-banner-image-mobile, var(--hero-banner-image));
+    background-size: cover;
+    background-position: center 35%;
+  }
+
+  /* Voile blanc léger : couleurs desktop + image plus visible */
+  .hero-banner__scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.62) 28%,
+      rgba(255, 255, 255, 0.28) 48%,
+      rgba(255, 255, 255, 0.06) 68%,
+      transparent 88%
+    );
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .hero-banner__inner {
+    padding: 0;
+  }
+
+  .hero-banner__title.landing-display {
+    font-size: 1.375rem;
+  }
+}
+
 @media (min-width: 1024px) {
   .hero-banner__scrim {
-    /* L’image inclut déjà une zone claire à gauche : fondu très léger seulement */
     background: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.28) 0%,
@@ -220,7 +248,8 @@ function onHeroTitleComplete() {
 }
 
 .hero-banner__title-line--typewriter {
-  min-height: 1.15em;
+  min-height: 1.2em;
+  margin-top: 0.125rem;
 }
 
 .hero-banner__pill {
