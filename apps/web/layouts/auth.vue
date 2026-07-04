@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-background">
+  <div class="min-h-dvh flex flex-col bg-background">
     <header class="w-full flex justify-between items-center gap-3 px-margin-mobile md:px-margin-tablet xl:px-margin-desktop py-3 shrink-0">
       <UiAppLogo size="sm" class="shrink-0 [&_img]:h-9 md:[&_img]:h-12" />
       <LayoutAuthStatus icon-only class="sm:hidden" />

@@ -4,12 +4,16 @@
 
 html {
   scroll-padding-top: 4.5rem;
+  background-color: var(--color-background);
+  overscroll-behavior-y: none;
 }
 
 body {
   font-family: var(--font-body-md);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4 {
