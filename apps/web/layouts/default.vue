@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="layout-shell flex min-h-dvh flex-col">
     <LayoutAppHeader variant="marketing" />
     <LayoutAppMarketingDrawer />
-    <main class="overflow-x-clip max-w-full">
+    <main class="flex-1 overflow-x-clip max-w-full w-full">
       <slot />
     </main>
     <LayoutAppFooter variant="full" />

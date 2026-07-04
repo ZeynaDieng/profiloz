@@ -183,7 +183,7 @@ function onHeroTitleComplete() {
 
 @media (max-width: 1023px) {
   .hero-banner {
-    min-height: clamp(32rem, 88svh, 40rem);
+    min-height: auto;
     padding: 2.5rem 0;
   }
 

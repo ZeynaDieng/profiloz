@@ -17,6 +17,13 @@ body {
   overscroll-behavior-x: none;
 }
 
+@media (max-width: 1023px) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
 h1, h2, h3, h4 {
   font-family: var(--font-headline-md);
 }

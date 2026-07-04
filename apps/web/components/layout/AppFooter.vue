@@ -21,7 +21,7 @@ const legalLinks = [
 <template>
   <footer
     v-if="variant === 'full'"
-    class="w-full py-stack-lg px-margin-mobile md:px-margin-tablet xl:px-margin-desktop bg-surface-container-highest border-t border-outline-variant/30"
+    class="w-full py-stack-lg px-margin-mobile md:px-margin-tablet xl:px-margin-desktop bg-surface-container-highest border-t border-outline-variant/30 safe-bottom shrink-0"
   >
     <div class="max-w-container-max mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
       <div class="space-y-4 sm:col-span-2 lg:col-span-1">
