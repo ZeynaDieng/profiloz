@@ -12,12 +12,12 @@ const { target, display } = useAnimatedCounter(props.end, {
 </script>
 
 <template>
-  <li ref="target" class="text-center">
+  <div ref="target" class="text-center">
     <p class="text-xl sm:text-2xl md:text-3xl font-bold text-secondary tabular-nums">
       {{ display }}
     </p>
     <p class="text-[11px] sm:text-xs text-on-surface-variant mt-0.5 uppercase tracking-wide font-medium">
       {{ label }}
     </p>
-  </li>
+  </div>
 </template>

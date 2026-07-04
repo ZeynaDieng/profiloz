@@ -484,6 +484,74 @@ a.btn-ghost:active {
   100% { background-position: -100% 0; }
 }
 
+@keyframes pz-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes typewriter-char-in {
+  from {
+    opacity: 0.25;
+    filter: blur(0.6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.typewriter-char {
+  animation: typewriter-char-in 0.42s var(--pz-ease-out) both;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.85em;
+  margin-left: 1px;
+  background: currentColor;
+  vertical-align: baseline;
+  transform: translateY(0.06em);
+  opacity: 0.85;
+  animation: pz-cursor-blink 1.15s var(--pz-ease-in-out) infinite;
+}
+
+.hero-copy-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 500ms var(--pz-ease-out),
+    transform 500ms var(--pz-ease-out);
+}
+
+.hero-copy-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typewriter-cursor {
+    display: none;
+    animation: none;
+  }
+
+  .typewriter-char {
+    animation: none;
+    filter: none;
+  }
+
+  .hero-copy-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ── Reduced motion ── */
 
 @media (prefers-reduced-motion: reduce) {

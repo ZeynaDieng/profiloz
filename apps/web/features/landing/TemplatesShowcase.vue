@@ -86,10 +86,21 @@ const { target, revealed } = useScrollReveal(0.25)
     class="landing-section max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden scroll-reveal"
     :class="revealed && 'is-revealed'"
   >
-    <div class="landing-section-header text-center">
-      <h2 class="text-xl sm:text-2xl font-bold text-on-surface">Modèles pour votre candidature</h2>
-      <p class="text-sm text-on-surface-variant max-w-2xl mx-auto hidden sm:block">
-        Des modèles de CV et de lettres conçus pour impressionner les recruteurs.
+    <div class="landing-section-header landing-section-header--left">
+      <p class="landing-eyebrow">Modèles testés</p>
+      <UiTypewriterText
+        tag="h2"
+        class="landing-title"
+        :active="revealed"
+        :segments="[
+          { text: 'Des modèles pour ' },
+          { text: 'votre candidature', class: 'text-secondary block sm:inline' },
+        ]"
+        loop
+        loop-mode="tail"
+      />
+      <p class="landing-lead !max-w-xl hidden sm:block">
+        CV et lettres conçus pour impressionner les recruteurs. Parcourez, comparez, personnalisez.
       </p>
     </div>
 
@@ -211,7 +222,7 @@ const { target, revealed } = useScrollReveal(0.25)
               </div>
 
               <div class="px-1 w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px]">
-                <h4 class="font-bold text-on-surface text-base">{{ template.name }}</h4>
+                <h4 class="landing-subtitle">{{ template.name }}</h4>
                 <p class="text-label-xs text-on-surface-variant mt-0.5 flex items-center gap-1.5">
                   <span
                     class="inline-block w-1.5 h-1.5 rounded-full shrink-0"
@@ -271,7 +282,7 @@ const { target, revealed } = useScrollReveal(0.25)
               </div>
 
               <div class="px-1 w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px]">
-                <h4 class="font-bold text-on-surface text-base group-hover:text-secondary transition-colors">
+                <h4 class="landing-subtitle group-hover:text-secondary transition-colors">
                   {{ template.name }}
                 </h4>
                 <p class="text-label-xs text-on-surface-variant mt-0.5 flex items-center gap-1.5">

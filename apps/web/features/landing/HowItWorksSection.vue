@@ -56,44 +56,53 @@ const { target, revealed } = useScrollReveal(0.12)
       class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden"
       :class="revealed ? 'scroll-reveal is-revealed' : 'scroll-reveal'"
     >
-      <div class="landing-section-header text-center">
-        <h2 class="text-xl sm:text-2xl font-bold text-on-surface">Comment ça marche</h2>
-        <p class="text-on-surface-variant text-sm sm:text-base">
-          Quatre étapes <span class="text-secondary font-semibold">simples</span>, sans prise de tête.
+      <div class="landing-section-header landing-section-header--left">
+        <p class="landing-eyebrow">Parcours guidé</p>
+        <UiTypewriterText
+          tag="h2"
+          class="landing-title"
+          :active="revealed"
+          :segments="[{ text: 'Comment ça marche' }]"
+          loop
+          loop-mode="full"
+        />
+        <p class="landing-lead !max-w-xl">
+          Quatre étapes <span class="text-secondary font-semibold">simples</span>, une progression claire du début au PDF.
         </p>
       </div>
 
-      <div class="how-steps-shell">
-        <div class="how-steps-track hidden xl:block" aria-hidden="true">
-          <span v-for="n in 3" :key="n" class="how-steps-track__segment" />
-        </div>
+      <ol class="how-timeline max-w-3xl mx-auto list-none p-0 m-0">
+        <li
+          v-for="(step, index) in steps"
+          :key="step.number"
+          class="how-timeline__item"
+          :style="{
+            '--step-accent': step.accent,
+            '--step-canvas': step.canvas,
+            '--step-i': index,
+          }"
+        >
+          <div class="how-timeline__rail" aria-hidden="true">
+            <span class="how-step-badge">{{ step.number }}</span>
+            <span v-if="index < steps.length - 1" class="how-timeline__line" />
+          </div>
 
-        <ol class="how-steps-list mobile-scroll-x xl:grid xl:grid-cols-4 xl:gap-6">
-          <li
-            v-for="(step, index) in steps"
-            :key="step.number"
-            class="how-step-card mobile-scroll-card list-none"
-            :style="{
-              '--step-accent': step.accent,
-              '--step-canvas': step.canvas,
-              '--step-i': index,
-            }"
-          >
+          <div class="how-timeline__body how-step-card">
             <div class="how-step-head">
-              <span class="how-step-badge" aria-hidden="true">{{ step.number }}</span>
               <span class="how-step-icon-chip" aria-hidden="true">
                 <UiPzIcon :name="step.icon" class="text-[20px]" />
               </span>
+              <div class="min-w-0">
+                <h3 class="landing-subtitle leading-snug how-step-title">
+                  {{ step.title }}
+                </h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed mt-1">
+                  {{ step.description }}
+                </p>
+              </div>
             </div>
 
-            <h3 class="font-bold text-on-surface text-sm sm:text-base leading-snug how-step-title">
-              {{ step.title }}
-            </h3>
-            <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-              {{ step.description }}
-            </p>
-
-            <FeaturesLandingProductScreenFrame :label="step.title" compact class="how-step-screen mt-auto">
+            <FeaturesLandingProductScreenFrame :label="step.title" compact class="how-step-screen mt-4">
               <!-- Import -->
               <div
                 v-if="step.screen === 'import'"
@@ -172,9 +181,9 @@ const { target, revealed } = useScrollReveal(0.12)
                 </p>
               </div>
             </FeaturesLandingProductScreenFrame>
-          </li>
-        </ol>
-      </div>
+          </div>
+        </li>
+      </ol>
     </div>
   </section>
 </template>
@@ -184,6 +193,47 @@ const { target, revealed } = useScrollReveal(0.12)
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--color-secondary) 8%, transparent), transparent 70%),
     linear-gradient(180deg, var(--color-surface-container-low) 0%, var(--color-background) 100%);
+}
+
+.how-timeline__item {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 1rem 1.25rem;
+  padding-bottom: 2rem;
+}
+
+.how-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.how-timeline__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.2rem;
+}
+
+.how-timeline__line {
+  flex: 1;
+  width: 2px;
+  min-height: 2.5rem;
+  margin-top: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    var(--step-accent) 0%,
+    color-mix(in srgb, var(--step-accent) 30%, var(--color-outline-variant)) 100%
+  );
+}
+
+.how-timeline__body {
+  min-width: 0;
+}
+
+.how-step-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
 }
 
 .how-steps-shell {
@@ -258,12 +308,6 @@ const { target, revealed } = useScrollReveal(0.12)
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.35s ease,
     border-color 0.35s ease;
-}
-
-.how-step-head {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
 }
 
 .how-step-icon-chip {

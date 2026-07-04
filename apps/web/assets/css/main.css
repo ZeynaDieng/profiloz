@@ -235,11 +235,134 @@ h1, h2, h3, h4 {
 
 /* Landing : sections plus courtes sur mobile */
 .landing-section {
-  @apply py-8 md:py-16 lg:py-24;
+  @apply py-10 md:py-20 lg:py-28;
 }
 
 .landing-section-header {
-  @apply mb-5 md:mb-10 space-y-1.5 md:space-y-3;
+  @apply mb-8 md:mb-12 space-y-2 md:space-y-3;
+}
+
+.landing-section-header--left {
+  @apply text-left mx-0 max-w-2xl;
+}
+
+.landing-eyebrow {
+  @apply text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] text-secondary;
+}
+
+/* Échelle typographique landing — hero > section > carte */
+.landing-display {
+  font-family: var(--font-display-lg);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--color-on-surface);
+}
+
+@media (min-width: 640px) {
+  .landing-display {
+    font-size: 1.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-display {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-display {
+    font-size: 2.125rem;
+  }
+}
+
+.landing-title {
+  font-family: var(--font-headline-md);
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-on-surface);
+}
+
+@media (min-width: 640px) {
+  .landing-title {
+    font-size: 1.4375rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-title {
+    font-size: 1.5625rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-title {
+    font-size: 1.6875rem;
+  }
+}
+
+.landing-subtitle {
+  font-family: var(--font-headline-md);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-on-surface);
+}
+
+@media (min-width: 768px) {
+  .landing-subtitle {
+    font-size: 1.125rem;
+  }
+}
+
+.landing-card-title {
+  font-family: var(--font-headline-md);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-on-surface);
+}
+
+@media (min-width: 640px) {
+  .landing-card-title {
+    font-size: 1rem;
+  }
+}
+
+.landing-lead {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-on-surface-variant);
+  max-width: 42rem;
+}
+
+@media (min-width: 640px) {
+  .landing-lead {
+    font-size: 0.9375rem;
+  }
+}
+
+.landing-pill {
+  @apply inline-flex items-center gap-2 rounded-full border border-outline-variant/30 bg-white/80 px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-surface shadow-sm backdrop-blur-sm;
+}
+
+.landing-pill__dot {
+  @apply h-1.5 w-1.5 shrink-0 rounded-full bg-secondary;
+}
+
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner__inner {
+  position: relative;
+  z-index: 1;
 }
 
 .mobile-scroll-card {

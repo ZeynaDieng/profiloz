@@ -16,87 +16,228 @@ const hero = computed(() => section<{
   ctaPrimaryLink?: string
   ctaSecondary?: string
   ctaSecondaryLink?: string
-  trustLine?: string
   journeySteps?: string[]
 }>('hero'))
 
-const journeySteps = computed(() => hero.value.journeySteps ?? ['CV ou lettre', 'Choisir un modèle', 'Exporter en PDF'])
+const heroBannerSrc = computed(
+  () => (config.public.heroBannerUrl as string)?.trim() || '/landing/hero-banner.png',
+)
+
+const heroBannerStyle = computed(() => ({
+  '--hero-banner-image': `url('${heroBannerSrc.value}')`,
+}))
+
+const heroLines = computed(() => {
+  if (heroVariant.value === 'transform') {
+    const custom = hero.value.titleTransform?.trim()
+    if (custom) {
+      const dot = custom.indexOf('.')
+      if (dot > 0 && dot < custom.length - 2) {
+        return [custom.slice(0, dot + 1).trim(), custom.slice(dot + 1).trim()]
+      }
+      return [custom, '']
+    }
+    return ['Créez un CV et une lettre', 'en quelques minutes.']
+  }
+
+  const custom = hero.value.titleStart?.trim()
+  if (custom) {
+    const dot = custom.indexOf('.')
+    if (dot > 0 && dot < custom.length - 2) {
+      return [custom.slice(0, dot + 1).trim(), custom.slice(dot + 1).trim()]
+    }
+    return [custom, '']
+  }
+  return ['Tout ce qu\'il faut', 'pour réussir votre candidature.']
+})
+
+const heroPills = ['PDF en quelques minutes', 'Compatible ATS', 'CV + lettre réunis'] as const
+
+const heroLine2 = computed(() => heroLines.value[1] ?? '')
+
+const heroCopyVisible = ref(false)
+
+watch(
+  heroLine2,
+  (line) => {
+    if (!line) heroCopyVisible.value = true
+  },
+  { immediate: true },
+)
+
+function onHeroTitleComplete() {
+  heroCopyVisible.value = true
+}
 </script>
 
 <template>
-  <section
-    class="hero-section max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop pt-6 md:pt-8 pb-10 md:pb-14"
-  >
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 xl:gap-12 items-center">
-      <div class="space-y-3.5 sm:space-y-4 order-1">
-        <h1
-          class="hero-enter text-[1.45rem] sm:text-[1.875rem] lg:text-[2.15rem] font-bold text-on-surface leading-[1.22] tracking-tight"
-          style="animation-delay: 0ms"
-        >
-          <template v-if="heroVariant === 'transform'">
-            {{ hero.titleTransform || 'Créez votre CV et votre lettre de motivation en quelques minutes.' }}
-          </template>
-          <template v-else>
-            {{ hero.titleStart || "Tout ce qu'il faut pour réussir votre candidature." }}
-          </template>
+  <section class="hero-banner" :style="heroBannerStyle">
+    <div class="hero-banner__bg" aria-hidden="true" />
+    <div class="hero-banner__scrim" aria-hidden="true" />
+
+    <div
+      class="hero-banner__inner max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
+    >
+      <div class="hero-banner__copy text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0">
+        <h1 class="hero-banner__title landing-display">
+          <span class="hero-banner__title-line text-on-surface">{{ heroLines[0] }}</span>
+          <span v-if="heroLine2" class="hero-banner__title-line text-secondary">
+            <UiTypewriterText
+              tag="span"
+              :segments="[{ text: heroLine2 }]"
+              loop
+              loop-mode="full"
+              @complete="onHeroTitleComplete"
+            />
+          </span>
         </h1>
 
         <p
-          class="hero-enter text-[0.9375rem] sm:text-base text-on-surface-variant max-w-lg leading-relaxed"
-          style="animation-delay: 80ms"
+          class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance"
+          :class="heroCopyVisible && 'is-visible'"
         >
-          {{ hero.subtitle || "Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF. L'ensemble de votre dossier de candidature, au même endroit." }}
+          {{
+            hero.subtitle
+              || "Profilo'Z réunit modèles professionnels, éditeur guidé et export PDF. Votre dossier complet, au même endroit."
+          }}
         </p>
 
         <div
-          class="hero-enter flex flex-col sm:flex-row sm:items-center gap-2.5"
-          style="animation-delay: 120ms"
+          class="hero-copy-reveal mt-5 md:mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
+          :class="heroCopyVisible && 'is-visible'"
+        >
+          <span
+            v-for="pill in heroPills"
+            :key="pill"
+            class="landing-pill hero-banner__pill"
+          >
+            <span class="landing-pill__dot" aria-hidden="true" />
+            {{ pill }}
+          </span>
+        </div>
+
+        <div
+          class="hero-copy-reveal mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
+          :class="heroCopyVisible && 'is-visible'"
+          style="transition-delay: 80ms"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
-            class="btn-primary w-full sm:w-auto whitespace-nowrap text-sm sm:text-base premium-shadow-sm"
+            class="btn-primary hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
-            <UiPzIcon name="arrow_forward" class="text-[17px]" />
           </NuxtLink>
           <NuxtLink
             :to="hero.ctaSecondaryLink || '/creer/lettre'"
-            class="btn-outline w-full sm:w-auto whitespace-nowrap text-sm"
+            class="btn-outline hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl bg-white/90"
           >
-            <UiPzIcon name="mail" class="text-[17px] opacity-70" />
             {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>
         </div>
-
-        <p
-          class="hero-enter text-sm text-on-surface-variant/80"
-          style="animation-delay: 200ms"
-        >
-          {{ hero.trustLine || 'CV et lettre sans inscription · PDF immédiat · Compatible ATS' }}
-        </p>
-
-        <p
-          class="hero-enter flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-on-surface-variant/75"
-          style="animation-delay: 260ms"
-        >
-          <template v-for="(step, i) in journeySteps" :key="step">
-            <span v-if="i > 0" class="text-secondary/70 font-bold select-none" aria-hidden="true">→</span>
-            <span>{{ step }}</span>
-          </template>
-        </p>
-      </div>
-
-      <div
-        class="hero-enter order-2 w-full max-w-[560px] lg:max-w-none mx-auto lg:mx-0"
-        style="animation-delay: 160ms"
-      >
-        <FeaturesLandingHeroProductDemo />
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: clamp(22rem, 66.6vw, 42.625rem);
+  padding: clamp(2.5rem, 5vw, 3.75rem) 0;
+}
+
+.hero-banner__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #ffffff;
+  background-image: var(--hero-banner-image);
+  background-repeat: no-repeat;
+  /* Pleine largeur : plus de bandes grises sur les côtés */
+  background-size: 100% auto;
+  background-position: top center;
+}
+
+@media (max-width: 1023px) {
+  .hero-banner {
+    min-height: clamp(24rem, 130vw, 38rem);
+    padding-top: 2.5rem;
+    padding-bottom: clamp(10rem, 48vw, 16rem);
+  }
+}
+
+.hero-banner__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.18) 28%,
+    transparent 52%
+  );
+}
+
+@media (min-width: 1024px) {
+  .hero-banner__scrim {
+    /* L’image inclut déjà une zone claire à gauche : fondu très léger seulement */
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.08) 18%,
+      transparent 38%
+    );
+  }
+}
+
+.hero-banner__inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.hero-banner__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-wrap: balance;
+}
+
+.hero-banner__title-line {
+  display: block;
+  line-height: 1.14;
+}
+
+.hero-banner__pill {
+  font-size: 0.6875rem;
+  padding: 0.375rem 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .hero-banner__pill {
+    font-size: 0.75rem;
+  }
+}
+
+.hero-banner__btn {
+  font-size: 0.875rem;
+}
+
+.hero-banner__steps {
+  font-size: 0.6875rem;
+}
+
+@media (min-width: 640px) {
+  .hero-banner__steps {
+    font-size: 0.75rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter {
     opacity: 1;

@@ -34,10 +34,20 @@ const { target, revealed } = useScrollReveal(0.25)
       >
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
           <div class="cta-copy p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-center lg:text-left">
-            <h2 class="text-xl sm:text-3xl lg:text-4xl font-bold text-on-surface leading-tight tracking-tight">
-              Votre prochaine <span class="text-secondary">opportunité</span> commence ici
-            </h2>
-            <p class="mt-3 sm:mt-4 text-on-surface-variant text-sm sm:text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
+            <p class="landing-eyebrow mb-2">Prêt à candidater ?</p>
+            <UiTypewriterText
+              tag="h2"
+              class="landing-title text-balance"
+              :active="revealed"
+              :segments="[
+                { text: 'Votre prochaine ' },
+                { text: 'opportunité', class: 'text-secondary' },
+                { text: ' commence ici' },
+              ]"
+              loop
+              loop-mode="accent"
+            />
+            <p class="landing-lead mx-auto lg:mx-0 mt-3 sm:mt-4 text-balance">
               Le moyen le plus rapide de créer un CV qui donne envie d'être lu.
             </p>
 
@@ -62,7 +72,6 @@ const { target, revealed } = useScrollReveal(0.25)
               Gratuit pour commencer · PDF en quelques minutes
             </p>
 
-            <!-- Comparatif compact mobile / tablette -->
             <div class="cta-compare-compact lg:hidden mt-8 text-left">
               <p class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">
                 Profilo'Z vs méthodes traditionnelles

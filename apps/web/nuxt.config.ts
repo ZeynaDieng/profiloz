@@ -21,6 +21,8 @@ export default defineNuxtConfig({
       heroVariant: process.env.NUXT_PUBLIC_HERO_VARIANT || 'transform',
       /** Vidéo démo hero (autoplay). Fichier dans public/demo/ ou URL CMS hero.demoVideoUrl */
       heroDemoVideoUrl: process.env.NUXT_PUBLIC_HERO_DEMO_VIDEO_URL || '/demo/profiloz-hero.mp4',
+      /** Image bannière hero (PNG/WebP dans public/ ou URL absolue) */
+      heroBannerUrl: process.env.NUXT_PUBLIC_HERO_BANNER_URL || '/landing/hero-banner.png',
     },
   },
   pinia: {

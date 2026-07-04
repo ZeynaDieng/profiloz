@@ -67,7 +67,7 @@ onUnmounted(() => {
           <div class="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-outline-variant/20 shrink-0">
             <div>
               <p class="text-xs font-semibold text-secondary uppercase tracking-wide">Aperçu</p>
-              <h3 class="text-base sm:text-lg font-bold text-on-surface">{{ title }}</h3>
+              <h3 class="landing-subtitle">{{ title }}</h3>
             </div>
             <button
               type="button"
