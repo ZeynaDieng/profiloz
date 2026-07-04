@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="landing-page overflow-x-clip max-w-full">
     <FeaturesLandingHeroSection />
     <FeaturesLandingTemplatesShowcase />
     <FeaturesLandingTestimonialsStrip />

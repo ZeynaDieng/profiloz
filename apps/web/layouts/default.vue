@@ -2,7 +2,7 @@
   <div>
     <LayoutAppHeader variant="marketing" />
     <LayoutAppMarketingDrawer />
-    <main>
+    <main class="overflow-x-clip max-w-full">
       <slot />
     </main>
     <LayoutAppFooter variant="full" />

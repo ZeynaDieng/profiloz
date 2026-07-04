@@ -622,6 +622,50 @@ function cloneWithProxy(obj, overrides) {
 }
 const cachedEventHandler = defineCachedEventHandler;
 
+const defineAppConfig = (config) => config;
+
+const appConfig0 = defineAppConfig({
+  ui: {
+    modal: {
+      variants: {
+        transition: {
+          true: {
+            overlay: "data-[state=open]:animate-[pz-fade-in_200ms_ease-out] data-[state=closed]:animate-[pz-fade-out_200ms_ease-in]",
+            content: "data-[state=open]:animate-[pz-modal-in_200ms_ease-out] data-[state=closed]:animate-[pz-modal-out_200ms_ease-in]"
+          }
+        }
+      }
+    },
+    drawer: {
+      slots: {
+        overlay: "fixed inset-0 z-[100] bg-black/35",
+        content: "fixed z-[101]"
+      },
+      compoundVariants: [
+        {
+          direction: "left",
+          class: {
+            content: "data-[state=open]:animate-[pz-drawer-in-left_200ms_ease-out] data-[state=closed]:animate-[pz-drawer-out-left_200ms_ease-in]"
+          }
+        }
+      ]
+    },
+    slideover: {
+      slots: {
+        overlay: "fixed inset-0 bg-black/35"
+      },
+      variants: {
+        transition: {
+          true: {
+            overlay: "data-[state=open]:animate-[pz-fade-in_200ms_ease-out] data-[state=closed]:animate-[pz-fade-out_200ms_ease-in]",
+            content: "data-[state=open]:animate-[pz-modal-in_200ms_ease-out] data-[state=closed]:animate-[pz-modal-out_200ms_ease-in]"
+          }
+        }
+      }
+    }
+  }
+});
+
 const inlineAppConfig = {
   "nuxt": {},
   "ui": {
@@ -854,9 +898,7 @@ const inlineAppConfig = {
   }
 };
 
-
-
-const appConfig = defuFn(inlineAppConfig);
+const appConfig = defuFn(appConfig0, inlineAppConfig);
 
 function getEnv(key, opts) {
   const envKey = snakeCase(key).toUpperCase();
@@ -909,6 +951,10 @@ const _inlineRuntimeConfig = {
       "/__nuxt_error": {
         "cache": false
       },
+      "/imprimer/**": {
+        "ssr": true,
+        "noScripts": true
+      },
       "/_fonts/**": {
         "headers": {
           "cache-control": "public, max-age=31536000, immutable"
@@ -932,7 +978,9 @@ const _inlineRuntimeConfig = {
   "public": {
     "apiBaseUrl": "http://127.0.0.1:3001/api/v1",
     "appUrl": "http://127.0.0.1:3000",
-    "heroVariant": "transform"
+    "heroVariant": "transform",
+    "heroDemoVideoUrl": "/demo/profiloz-hero.mp4",
+    "heroBannerUrl": "/landing/hero-banner.png"
   },
   "apiInternalBaseUrl": "",
   "icon": {
@@ -2350,7 +2398,7 @@ const _jdp3d8ZZmNWPiuDtOApgrZ5l0vBqfdST8ykn9IbpB4 = (function(nitro) {
 
 const rootDir = "/Users/mac/ProfiloZ/apps/web";
 
-const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"},{"name":"description","content":"Créez votre CV et votre lettre de motivation en quelques minutes. Importez vos documents, choisissez un modèle, exportez en PDF."},{"property":"og:image","content":"/logo.png"},{"property":"og:title","content":"Profilo'Z | Créateur de CV professionnel"}],"link":[{"rel":"icon","type":"image/png","sizes":"32x32","href":"/favicon-32.png"},{"rel":"icon","type":"image/png","sizes":"512x512","href":"/favicon.png"},{"rel":"apple-touch-icon","sizes":"180x180","href":"/apple-touch-icon.png"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"}],"style":[],"script":[],"noscript":[],"title":"Profilo'Z | Créateur de CV professionnel"};
+const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"},{"name":"description","content":"Le moyen le plus rapide de créer un CV qui donne envie d'être lu. Importez vos documents, choisissez un modèle, exportez en PDF."},{"property":"og:image","content":"/logo.png"},{"property":"og:title","content":"Profilo'Z | Créateur de CV professionnel"}],"link":[{"rel":"icon","type":"image/png","sizes":"32x32","href":"/favicon-32.png"},{"rel":"icon","type":"image/png","sizes":"512x512","href":"/favicon.png"},{"rel":"apple-touch-icon","sizes":"180x180","href":"/apple-touch-icon.png"},{"rel":"preconnect","href":"https://fonts.googleapis.com"},{"rel":"preconnect","href":"https://fonts.gstatic.com","crossorigin":""},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap"},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"}],"style":[],"script":[],"noscript":[],"title":"Profilo'Z | Créateur de CV professionnel"};
 
 const appRootTag = "div";
 
@@ -2468,22 +2516,7 @@ _J5IzSpy3NF_3DziDbvyOjgvKFcFZl2M0kInQsJkfM,
 _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw
 ];
 
-const assets = {
-  "/index.mjs": {
-    "type": "text/javascript; charset=utf-8",
-    "etag": "\"1d89f-jFWOlKVdq8krLDg0JKJjHfg8Jvs\"",
-    "mtime": "2026-06-28T14:31:03.939Z",
-    "size": 120991,
-    "path": "index.mjs"
-  },
-  "/index.mjs.map": {
-    "type": "application/json",
-    "etag": "\"703fe-Ew4QLZVHVgwqvTJXopb7J0m8HS0\"",
-    "mtime": "2026-06-28T14:31:03.940Z",
-    "size": 459774,
-    "path": "index.mjs.map"
-  }
-};
+const assets = {};
 
 function readAsset (id) {
   const serverDir = dirname$1(fileURLToPath(globalThis._importMeta_.url));

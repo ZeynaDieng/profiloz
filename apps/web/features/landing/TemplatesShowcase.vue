@@ -388,6 +388,9 @@ const { target, revealed } = useScrollReveal(0.25)
 
 .template-showcase-viewport {
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  contain: inline-size layout paint;
 }
 
 .template-showcase-track {

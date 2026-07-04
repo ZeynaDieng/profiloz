@@ -19,21 +19,40 @@ interface _GlobalComponents {
   CoverLetterTemplateCreatif: typeof import("../../components/cover-letter/templates/TemplateCreatif.vue")['default']
   CoverLetterTemplateModerne: typeof import("../../components/cover-letter/templates/TemplateModerne.vue")['default']
   CoverLetterTemplateProfessionnel: typeof import("../../components/cover-letter/templates/TemplateProfessionnel.vue")['default']
+  LayoutAppDrawer: typeof import("../../components/layout/AppDrawer.vue")['default']
   LayoutAppFooter: typeof import("../../components/layout/AppFooter.vue")['default']
   LayoutAppHeader: typeof import("../../components/layout/AppHeader.vue")['default']
+  LayoutAppMarketingDrawer: typeof import("../../components/layout/AppMarketingDrawer.vue")['default']
   LayoutAppMobileNav: typeof import("../../components/layout/AppMobileNav.vue")['default']
   LayoutAppSidebar: typeof import("../../components/layout/AppSidebar.vue")['default']
   LayoutAuthStatus: typeof import("../../components/layout/AuthStatus.vue")['default']
+  LayoutGuestFlowDrawer: typeof import("../../components/layout/GuestFlowDrawer.vue")['default']
+  LayoutGuestFlowHeader: typeof import("../../components/layout/GuestFlowHeader.vue")['default']
+  LayoutNotificationBell: typeof import("../../components/layout/NotificationBell.vue")['default']
   LayoutWizardProgress: typeof import("../../components/layout/WizardProgress.vue")['default']
   UiAppLogo: typeof import("../../components/ui/AppLogo.vue")['default']
+  UiButton: typeof import("../../components/ui/Button.vue")['default']
+  UiCard: typeof import("../../components/ui/Card.vue")['default']
+  UiConfirmDialog: typeof import("../../components/ui/ConfirmDialog.vue")['default']
   UiFormField: typeof import("../../components/ui/FormField.vue")['default']
+  UiFullScreenSheet: typeof import("../../components/ui/FullScreenSheet.vue")['default']
+  UiLegalArticle: typeof import("../../components/ui/LegalArticle.vue")['default']
+  UiMessageBanner: typeof import("../../components/ui/MessageBanner.vue")['default']
+  UiOptimizedImage: typeof import("../../components/ui/OptimizedImage.vue")['default']
   UiPzIcon: typeof import("../../components/ui/PzIcon.vue")['default']
+  UiScrollReveal: typeof import("../../components/ui/ScrollReveal.vue")['default']
+  UiSkeleton: typeof import("../../components/ui/Skeleton.vue")['default']
+  UiStickyActionBar: typeof import("../../components/ui/StickyActionBar.vue")['default']
+  UiTypewriterText: typeof import("../../components/ui/TypewriterText.vue")['default']
+  DashboardAssistantActionCard: typeof import("../../components/dashboard/AssistantActionCard.vue")['default']
   DashboardCoverLetterCard: typeof import("../../components/dashboard/CoverLetterCard.vue")['default']
+  DashboardDocumentCard: typeof import("../../components/dashboard/DocumentCard.vue")['default']
   DashboardProfileStrengthWidget: typeof import("../../components/dashboard/ProfileStrengthWidget.vue")['default']
   DashboardResumeCard: typeof import("../../components/dashboard/ResumeCard.vue")['default']
   WizardFooter: typeof import("../../components/wizard/WizardFooter.vue")['default']
   EducationEntry: typeof import("../../components/resume/EducationEntry.vue")['default']
   ExperienceEntry: typeof import("../../components/resume/ExperienceEntry.vue")['default']
+  ResumePhotoAvatar: typeof import("../../components/resume/ResumePhotoAvatar.vue")['default']
   ResumePreviewA4: typeof import("../../components/resume/ResumePreviewA4.vue")['default']
   TemplatesTemplateCadre: typeof import("../../components/resume/templates/TemplateCadre.vue")['default']
   TemplatesTemplateCommercial: typeof import("../../components/resume/templates/TemplateCommercial.vue")['default']
@@ -55,11 +74,17 @@ interface _GlobalComponents {
   FeaturesLandingCtaSection: typeof import("../../features/landing/CtaSection.vue")['default']
   FeaturesLandingFaqSection: typeof import("../../features/landing/FaqSection.vue")['default']
   FeaturesLandingFeaturesBento: typeof import("../../features/landing/FeaturesBento.vue")['default']
+  FeaturesLandingHeroProductDemo: typeof import("../../features/landing/HeroProductDemo.vue")['default']
   FeaturesLandingHeroSection: typeof import("../../features/landing/HeroSection.vue")['default']
   FeaturesLandingHeroTransformVisual: typeof import("../../features/landing/HeroTransformVisual.vue")['default']
   FeaturesLandingHowItWorksSection: typeof import("../../features/landing/HowItWorksSection.vue")['default']
+  FeaturesLandingProductScreenFrame: typeof import("../../features/landing/ProductScreenFrame.vue")['default']
   FeaturesLandingReassuranceSection: typeof import("../../features/landing/ReassuranceSection.vue")['default']
+  FeaturesLandingStatItem: typeof import("../../features/landing/StatItem.vue")['default']
+  FeaturesLandingTemplatePreviewModal: typeof import("../../features/landing/TemplatePreviewModal.vue")['default']
+  FeaturesLandingTemplateShowcaseRail: typeof import("../../features/landing/TemplateShowcaseRail.vue")['default']
   FeaturesLandingTemplatesShowcase: typeof import("../../features/landing/TemplatesShowcase.vue")['default']
+  FeaturesLandingTestimonialsStrip: typeof import("../../features/landing/TestimonialsStrip.vue")['default']
   FeatureImportCoverLetterExtractedPreview: typeof import("../../features/import/CoverLetterExtractedPreview.vue")['default']
   FeatureImportExtractedPreview: typeof import("../../features/import/ExtractedPreview.vue")['default']
   FeatureImportExtractionProgress: typeof import("../../features/import/ExtractionProgress.vue")['default']
@@ -85,6 +110,14 @@ interface _GlobalComponents {
   FeatureCoverLetterTemplatesRegistry: typeof import("../../features/cover-letter-templates/registry")['default']
   FeatureCoverLetterTemplatesResolveTemplate: typeof import("../../features/cover-letter-templates/resolveTemplate")['default']
   FeatureCoverLetterForm: typeof import("../../features/cover-letter/LetterForm.vue")['default']
+  AdminActivityFeed: typeof import("../../features/admin/ActivityFeed.vue")['default']
+  AdminDataTable: typeof import("../../features/admin/DataTable.vue")['default']
+  AdminGlobalSearch: typeof import("../../features/admin/GlobalSearch.vue")['default']
+  AdminLineChart: typeof import("../../features/admin/LineChart.vue")['default']
+  AdminPageHeader: typeof import("../../features/admin/PageHeader.vue")['default']
+  AdminPagination: typeof import("../../features/admin/Pagination.vue")['default']
+  AdminStatCard: typeof import("../../features/admin/StatCard.vue")['default']
+  AdminStatusBadge: typeof import("../../features/admin/StatusBadge.vue")['default']
   UAccordion: typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/Accordion.vue")['default']
   UAlert: typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/Alert.vue")['default']
   UApp: typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/App.vue")['default']
@@ -174,21 +207,40 @@ interface _GlobalComponents {
   LazyCoverLetterTemplateCreatif: LazyComponent<typeof import("../../components/cover-letter/templates/TemplateCreatif.vue")['default']>
   LazyCoverLetterTemplateModerne: LazyComponent<typeof import("../../components/cover-letter/templates/TemplateModerne.vue")['default']>
   LazyCoverLetterTemplateProfessionnel: LazyComponent<typeof import("../../components/cover-letter/templates/TemplateProfessionnel.vue")['default']>
+  LazyLayoutAppDrawer: LazyComponent<typeof import("../../components/layout/AppDrawer.vue")['default']>
   LazyLayoutAppFooter: LazyComponent<typeof import("../../components/layout/AppFooter.vue")['default']>
   LazyLayoutAppHeader: LazyComponent<typeof import("../../components/layout/AppHeader.vue")['default']>
+  LazyLayoutAppMarketingDrawer: LazyComponent<typeof import("../../components/layout/AppMarketingDrawer.vue")['default']>
   LazyLayoutAppMobileNav: LazyComponent<typeof import("../../components/layout/AppMobileNav.vue")['default']>
   LazyLayoutAppSidebar: LazyComponent<typeof import("../../components/layout/AppSidebar.vue")['default']>
   LazyLayoutAuthStatus: LazyComponent<typeof import("../../components/layout/AuthStatus.vue")['default']>
+  LazyLayoutGuestFlowDrawer: LazyComponent<typeof import("../../components/layout/GuestFlowDrawer.vue")['default']>
+  LazyLayoutGuestFlowHeader: LazyComponent<typeof import("../../components/layout/GuestFlowHeader.vue")['default']>
+  LazyLayoutNotificationBell: LazyComponent<typeof import("../../components/layout/NotificationBell.vue")['default']>
   LazyLayoutWizardProgress: LazyComponent<typeof import("../../components/layout/WizardProgress.vue")['default']>
   LazyUiAppLogo: LazyComponent<typeof import("../../components/ui/AppLogo.vue")['default']>
+  LazyUiButton: LazyComponent<typeof import("../../components/ui/Button.vue")['default']>
+  LazyUiCard: LazyComponent<typeof import("../../components/ui/Card.vue")['default']>
+  LazyUiConfirmDialog: LazyComponent<typeof import("../../components/ui/ConfirmDialog.vue")['default']>
   LazyUiFormField: LazyComponent<typeof import("../../components/ui/FormField.vue")['default']>
+  LazyUiFullScreenSheet: LazyComponent<typeof import("../../components/ui/FullScreenSheet.vue")['default']>
+  LazyUiLegalArticle: LazyComponent<typeof import("../../components/ui/LegalArticle.vue")['default']>
+  LazyUiMessageBanner: LazyComponent<typeof import("../../components/ui/MessageBanner.vue")['default']>
+  LazyUiOptimizedImage: LazyComponent<typeof import("../../components/ui/OptimizedImage.vue")['default']>
   LazyUiPzIcon: LazyComponent<typeof import("../../components/ui/PzIcon.vue")['default']>
+  LazyUiScrollReveal: LazyComponent<typeof import("../../components/ui/ScrollReveal.vue")['default']>
+  LazyUiSkeleton: LazyComponent<typeof import("../../components/ui/Skeleton.vue")['default']>
+  LazyUiStickyActionBar: LazyComponent<typeof import("../../components/ui/StickyActionBar.vue")['default']>
+  LazyUiTypewriterText: LazyComponent<typeof import("../../components/ui/TypewriterText.vue")['default']>
+  LazyDashboardAssistantActionCard: LazyComponent<typeof import("../../components/dashboard/AssistantActionCard.vue")['default']>
   LazyDashboardCoverLetterCard: LazyComponent<typeof import("../../components/dashboard/CoverLetterCard.vue")['default']>
+  LazyDashboardDocumentCard: LazyComponent<typeof import("../../components/dashboard/DocumentCard.vue")['default']>
   LazyDashboardProfileStrengthWidget: LazyComponent<typeof import("../../components/dashboard/ProfileStrengthWidget.vue")['default']>
   LazyDashboardResumeCard: LazyComponent<typeof import("../../components/dashboard/ResumeCard.vue")['default']>
   LazyWizardFooter: LazyComponent<typeof import("../../components/wizard/WizardFooter.vue")['default']>
   LazyEducationEntry: LazyComponent<typeof import("../../components/resume/EducationEntry.vue")['default']>
   LazyExperienceEntry: LazyComponent<typeof import("../../components/resume/ExperienceEntry.vue")['default']>
+  LazyResumePhotoAvatar: LazyComponent<typeof import("../../components/resume/ResumePhotoAvatar.vue")['default']>
   LazyResumePreviewA4: LazyComponent<typeof import("../../components/resume/ResumePreviewA4.vue")['default']>
   LazyTemplatesTemplateCadre: LazyComponent<typeof import("../../components/resume/templates/TemplateCadre.vue")['default']>
   LazyTemplatesTemplateCommercial: LazyComponent<typeof import("../../components/resume/templates/TemplateCommercial.vue")['default']>
@@ -210,11 +262,17 @@ interface _GlobalComponents {
   LazyFeaturesLandingCtaSection: LazyComponent<typeof import("../../features/landing/CtaSection.vue")['default']>
   LazyFeaturesLandingFaqSection: LazyComponent<typeof import("../../features/landing/FaqSection.vue")['default']>
   LazyFeaturesLandingFeaturesBento: LazyComponent<typeof import("../../features/landing/FeaturesBento.vue")['default']>
+  LazyFeaturesLandingHeroProductDemo: LazyComponent<typeof import("../../features/landing/HeroProductDemo.vue")['default']>
   LazyFeaturesLandingHeroSection: LazyComponent<typeof import("../../features/landing/HeroSection.vue")['default']>
   LazyFeaturesLandingHeroTransformVisual: LazyComponent<typeof import("../../features/landing/HeroTransformVisual.vue")['default']>
   LazyFeaturesLandingHowItWorksSection: LazyComponent<typeof import("../../features/landing/HowItWorksSection.vue")['default']>
+  LazyFeaturesLandingProductScreenFrame: LazyComponent<typeof import("../../features/landing/ProductScreenFrame.vue")['default']>
   LazyFeaturesLandingReassuranceSection: LazyComponent<typeof import("../../features/landing/ReassuranceSection.vue")['default']>
+  LazyFeaturesLandingStatItem: LazyComponent<typeof import("../../features/landing/StatItem.vue")['default']>
+  LazyFeaturesLandingTemplatePreviewModal: LazyComponent<typeof import("../../features/landing/TemplatePreviewModal.vue")['default']>
+  LazyFeaturesLandingTemplateShowcaseRail: LazyComponent<typeof import("../../features/landing/TemplateShowcaseRail.vue")['default']>
   LazyFeaturesLandingTemplatesShowcase: LazyComponent<typeof import("../../features/landing/TemplatesShowcase.vue")['default']>
+  LazyFeaturesLandingTestimonialsStrip: LazyComponent<typeof import("../../features/landing/TestimonialsStrip.vue")['default']>
   LazyFeatureImportCoverLetterExtractedPreview: LazyComponent<typeof import("../../features/import/CoverLetterExtractedPreview.vue")['default']>
   LazyFeatureImportExtractedPreview: LazyComponent<typeof import("../../features/import/ExtractedPreview.vue")['default']>
   LazyFeatureImportExtractionProgress: LazyComponent<typeof import("../../features/import/ExtractionProgress.vue")['default']>
@@ -240,6 +298,14 @@ interface _GlobalComponents {
   LazyFeatureCoverLetterTemplatesRegistry: LazyComponent<typeof import("../../features/cover-letter-templates/registry")['default']>
   LazyFeatureCoverLetterTemplatesResolveTemplate: LazyComponent<typeof import("../../features/cover-letter-templates/resolveTemplate")['default']>
   LazyFeatureCoverLetterForm: LazyComponent<typeof import("../../features/cover-letter/LetterForm.vue")['default']>
+  LazyAdminActivityFeed: LazyComponent<typeof import("../../features/admin/ActivityFeed.vue")['default']>
+  LazyAdminDataTable: LazyComponent<typeof import("../../features/admin/DataTable.vue")['default']>
+  LazyAdminGlobalSearch: LazyComponent<typeof import("../../features/admin/GlobalSearch.vue")['default']>
+  LazyAdminLineChart: LazyComponent<typeof import("../../features/admin/LineChart.vue")['default']>
+  LazyAdminPageHeader: LazyComponent<typeof import("../../features/admin/PageHeader.vue")['default']>
+  LazyAdminPagination: LazyComponent<typeof import("../../features/admin/Pagination.vue")['default']>
+  LazyAdminStatCard: LazyComponent<typeof import("../../features/admin/StatCard.vue")['default']>
+  LazyAdminStatusBadge: LazyComponent<typeof import("../../features/admin/StatusBadge.vue")['default']>
   LazyUAccordion: LazyComponent<typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/Accordion.vue")['default']>
   LazyUAlert: LazyComponent<typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/Alert.vue")['default']>
   LazyUApp: LazyComponent<typeof import("../../../../node_modules/.pnpm/@nuxt+ui@3.3.7_@babel+parser@7.29.7_db0@0.3.4_embla-carousel@8.6.0_idb-keyval@6.2.5_ioredis@5_qafyupswdnhny4vs4hpge4rj2i/node_modules/@nuxt/ui/dist/runtime/components/App.vue")['default']>

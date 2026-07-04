@@ -4,12 +4,17 @@
 
 html {
   scroll-padding-top: 4.5rem;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
   font-family: var(--font-body-md);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  max-width: 100%;
+  overscroll-behavior-x: none;
 }
 
 h1, h2, h3, h4 {
@@ -182,6 +187,15 @@ h1, h2, h3, h4 {
 .layout-leave-to {
   opacity: 0;
   transform: translateY(var(--pz-translate-reveal, 20px));
+}
+
+@media (max-width: 767px) {
+  .page-enter-from,
+  .page-leave-to,
+  .layout-enter-from,
+  .layout-leave-to {
+    transform: none;
+  }
 }
 
 /* ── Contenu légal mobile-first ── */

@@ -509,6 +509,13 @@ a.btn-ghost:active {
   animation: typewriter-char-in 0.42s var(--pz-ease-out) both;
 }
 
+@media (max-width: 767px) {
+  .typewriter-char {
+    animation: none;
+    filter: none;
+  }
+}
+
 .typewriter-cursor {
   display: inline-block;
   width: 2px;

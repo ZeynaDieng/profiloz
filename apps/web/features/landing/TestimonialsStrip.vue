@@ -80,7 +80,7 @@ onUnmounted(() => {
 <template>
   <section
     ref="target"
-    class="testimonials-strip scroll-reveal"
+    class="testimonials-strip scroll-reveal overflow-x-clip max-w-full"
     :class="revealed && 'is-revealed'"
   >
     <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop">

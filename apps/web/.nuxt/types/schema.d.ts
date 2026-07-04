@@ -27,6 +27,10 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
    appUrl: string,
 
    heroVariant: string,
+
+   heroDemoVideoUrl: string,
+
+   heroBannerUrl: string,
   }
 declare module '@nuxt/schema' {
   interface ModuleDependencies {

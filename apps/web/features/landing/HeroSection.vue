@@ -78,10 +78,10 @@ function onHeroTitleComplete() {
     <div
       class="hero-banner__inner max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
     >
-      <div class="hero-banner__copy text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0">
+      <div class="hero-banner__copy text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full">
         <h1 class="hero-banner__title landing-display">
           <span class="hero-banner__title-line text-on-surface">{{ heroLines[0] }}</span>
-          <span v-if="heroLine2" class="hero-banner__title-line text-secondary">
+          <span v-if="heroLine2" class="hero-banner__title-line hero-banner__title-line--typewriter text-secondary">
             <UiTypewriterText
               tag="span"
               :segments="[{ text: heroLine2 }]"
@@ -164,9 +164,14 @@ function onHeroTitleComplete() {
 
 @media (max-width: 1023px) {
   .hero-banner {
-    min-height: clamp(24rem, 130vw, 38rem);
+    min-height: auto;
     padding-top: 2.5rem;
-    padding-bottom: clamp(10rem, 48vw, 16rem);
+    padding-bottom: clamp(9rem, 42vw, 13rem);
+  }
+
+  .hero-banner__bg {
+    background-size: 100% auto;
+    background-position: top center;
   }
 }
 
@@ -211,6 +216,11 @@ function onHeroTitleComplete() {
 .hero-banner__title-line {
   display: block;
   line-height: 1.14;
+  overflow-wrap: anywhere;
+}
+
+.hero-banner__title-line--typewriter {
+  min-height: 1.15em;
 }
 
 .hero-banner__pill {
