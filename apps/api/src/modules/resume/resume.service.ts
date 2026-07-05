@@ -2,6 +2,7 @@ import { sanitizePhotoReference, type ResumeSnapshot } from '@profiloz/shared'
 import { migrateResumeSchema, renameResumeSchema, saveResumeSnapshotSchema } from '@profiloz/validators'
 import { randomUUID } from 'crypto'
 import { AppError } from '@/lib/errors'
+import { prisma } from '@/lib/prisma'
 import { guestSessionRepository } from '@/modules/guest/guest.repository'
 import { organizationService } from '@/modules/organization/organization.service'
 import { calculateCompleteness, getMissingSections } from './completeness'
@@ -80,6 +81,10 @@ export class ResumeService {
       undefined,
       organizationId ?? undefined,
     )
+    await prisma.user.updateMany({
+      where: { id: userId, dossierUnlockedAt: { not: null } },
+      data: { dossierUnlockedAt: null },
+    })
     return resumeEntityToSnapshot(resume)
   }
 

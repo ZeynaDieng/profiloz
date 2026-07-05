@@ -71,10 +71,24 @@ const crossSellCta = computed(() => {
 })
 
 const hasPaidAccess = ref(false)
+const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
+
+async function refreshEntitlements() {
+  try {
+    await useGuestSession().ensureSession()
+    await syncGuestSessionForEditor()
+    entitlements.value = await paymentService.getEntitlements()
+    hasPaidAccess.value = hasDossierDownloadAccess(entitlements.value)
+  } catch {
+    entitlements.value = null
+    hasPaidAccess.value = false
+  }
+}
 
 async function triggerDownload() {
   await downloadKind(isLetter.value ? 'letter' : 'cv')
   dossierState.value = loadGuestDossierState()
+  await refreshEntitlements()
 }
 
 onMounted(async () => {
@@ -98,10 +112,7 @@ onMounted(async () => {
   }
 
   try {
-    await useGuestSession().ensureSession()
-    await syncGuestSessionForEditor()
-    const e = await paymentService.getEntitlements()
-    hasPaidAccess.value = hasDossierDownloadAccess(e)
+    await refreshEntitlements()
   } catch {
     hasPaidAccess.value = false
   }
@@ -132,6 +143,24 @@ onMounted(async () => {
           :message="downloadError"
           class="mb-4 text-left"
         />
+
+        <div
+          v-if="entitlements"
+          class="mb-4 rounded-xl border border-outline-variant/30 bg-surface-container-low px-4 py-3 text-sm text-on-surface"
+        >
+          <template v-if="entitlements.unlimitedActive">
+            <span v-if="entitlements.activePlanSlug === 'business'">Offre Business active</span>
+            <span v-else>Offre Illimité active</span>
+            <span class="text-on-surface-variant"> — dossiers illimités, retéléchargements inclus.</span>
+          </template>
+          <template v-else-if="entitlements.creditsBalance > 0">
+            Crédits restants : <strong>{{ entitlements.creditsBalance }}</strong>
+            <span class="text-on-surface-variant"> (1 crédit = 1 dossier CV + lettre)</span>
+          </template>
+          <template v-else-if="entitlements.canDownloadSnapshot">
+            Dossier en cours débloqué — retéléchargements inclus.
+          </template>
+        </div>
 
         <div class="mb-6 space-y-3">
           <UiButton

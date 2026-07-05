@@ -179,6 +179,15 @@ export function reconcileGuestDossierFlags(hasLetterContent: boolean): GuestDoss
   return state
 }
 
+export function resetGuestDossierCycleFlags(): GuestDossierState | null {
+  const state = readStorage()
+  if (!state?.paidAt) return state
+  state.cvDownloaded = false
+  state.letterDownloaded = false
+  writeStorage(state)
+  return state
+}
+
 export function clearGuestDossierState() {
   if (typeof localStorage === 'undefined') return
   localStorage.removeItem(STORAGE_KEY)

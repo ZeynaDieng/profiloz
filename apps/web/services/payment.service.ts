@@ -46,5 +46,10 @@ export function usePaymentService() {
     }>('/payments/confirm-return', { ref })
   }
 
-  return { listPlans, getEntitlements, checkout, confirmReturn }
+  /** Démarre un nouveau cycle dossier (pack multi-crédits) après un dossier complet. */
+  async function resetDossierCycle() {
+    return post<Entitlements>('/payments/reset-dossier-cycle')
+  }
+
+  return { listPlans, getEntitlements, checkout, confirmReturn, resetDossierCycle }
 }

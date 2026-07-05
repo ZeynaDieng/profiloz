@@ -65,8 +65,9 @@ const galleryLink = computed(() =>
   selectedTemplate.value ? cvTemplateGalleryLink(selectedTemplate.value) : '/creer/modele',
 )
 
-onMounted(() => {
+onMounted(async () => {
   resumeStore.rehydrateFromStorage()
+  await beginNewPaidDossierCycleIfNeeded().catch(() => {})
   if (selectedTemplate.value && !resumeStore.current?.personalInfo.fullName?.trim()) {
     resumeStore.initDraft()
     resumeStore.setTemplate(selectedTemplate.value)

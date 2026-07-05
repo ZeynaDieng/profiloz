@@ -447,6 +447,40 @@ export class PaymentService {
     return this.consumeSnapshotDownload(owner)
   }
 
+  /**
+   * Réinitialise le cycle dossier en cours (CV + lettre) pour consommer un nouveau crédit.
+   * À appeler au démarrage d'un nouveau dossier après un dossier complet (pack multi-crédits).
+   */
+  async resetDossierCycle(owner: EntitlementOwner) {
+    requireOwner(owner)
+
+    if (owner.userId) {
+      await prisma.user.updateMany({
+        where: { id: owner.userId, dossierUnlockedAt: { not: null } },
+        data: { dossierUnlockedAt: null },
+      })
+    }
+
+    if (owner.guestSessionDbId) {
+      const guest = await prisma.guestSession.findUnique({
+        where: { id: owner.guestSessionDbId },
+        select: { data: true },
+      })
+      const meta = readGuestSessionMeta(guest?.data)
+      if (meta.snapshotUnlockedAt) {
+        const baseData =
+          guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
+            ? (guest.data as Record<string, unknown>)
+            : {}
+        const { snapshotUnlockedAt: _removed, ...rest } = baseData
+        await prisma.guestSession.update({
+          where: { id: owner.guestSessionDbId },
+          data: { data: rest },
+        })
+      }
+    }
+  }
+
   /** Vérifie l'accès à une fonctionnalité incluse dans les offres. */
   async assertFeature(owner: EntitlementOwner, feature: keyof PlanFeatures) {
     requireOwner(owner)
@@ -637,16 +671,6 @@ export class PaymentService {
 
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) {
-      await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
-      return { unlocked: true, consumedCredit: false }
-    }
-
-    if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
-      await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
-      return { unlocked: true, consumedCredit: false }
-    }
-
-    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
       await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
       return { unlocked: true, consumedCredit: false }
     }
