@@ -78,7 +78,10 @@ export function usePdfService() {
     }
 
     const response = await fetch(url, { headers })
-    if (!response.ok) throw new Error('PDF download failed')
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw error
+    }
 
     const blob = await response.blob()
     const objectUrl = URL.createObjectURL(blob)
@@ -99,8 +102,8 @@ export function usePdfService() {
     return { ...result, filename }
   }
 
-  async function generateLetterFromSnapshot(snapshot: CoverLetterSnapshot) {
-    const started = await post<PdfJobResponse>('/pdf/generate-letter-from-snapshot', { snapshot })
+  async function generateLetterFromSnapshot(snapshot: CoverLetterSnapshot, resumeId?: string) {
+    const started = await post<PdfJobResponse>('/pdf/generate-letter-from-snapshot', { snapshot, resumeId })
     if (started.status === 'completed' && started.downloadUrl) {
       return started
     }
@@ -112,9 +115,9 @@ export function usePdfService() {
     }
   }
 
-  async function generateLetterAndDownload(snapshot: CoverLetterSnapshot) {
+  async function generateLetterAndDownload(snapshot: CoverLetterSnapshot, resumeId?: string) {
     const filename = buildCoverLetterPdfFilename(snapshot.senderName)
-    const result = await generateLetterFromSnapshot(snapshot)
+    const result = await generateLetterFromSnapshot(snapshot, resumeId)
     const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
     await downloadWithAuth(downloadUrl, filename)
     return { ...result, filename }

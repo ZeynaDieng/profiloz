@@ -32,7 +32,10 @@ export async function POST(request: Request, { params }: Params) {
     assertPdfRateLimit(request, ctx)
     const { id } = await params
 
-    await paymentService.unlockResume({ userId }, id)
+    await paymentService.unlockResume(
+      { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId },
+      id,
+    )
 
     const snapshot = sanitizeSnapshot(await resumeService.get(id, userId))
     const result = await pdfService.generateFromSnapshot(snapshot, undefined, { userId })

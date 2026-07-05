@@ -8,11 +8,14 @@ type Params = { params: Promise<{ id: string }> }
 export async function POST(request: Request, { params }: Params) {
   const origin = request.headers.get('origin')
   try {
-    const userId = await requireAuth(request)
+    await requireAuth(request)
     const ctx = await getRequestContext(request)
     assertPdfRateLimit(request, ctx)
     const { id } = await params
-    const result = await coverLetterService.generatePdf(id, userId)
+    const result = await coverLetterService.generatePdf(id, {
+      userId: ctx.userId,
+      guestSessionDbId: ctx.guestSessionDbId,
+    })
     const response = jsonResponse(result)
     return withCors(response, origin)
   } catch (error) {

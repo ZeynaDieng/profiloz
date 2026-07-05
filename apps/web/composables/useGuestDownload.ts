@@ -15,9 +15,10 @@ import { saveLastDownloadContext, type LastDownloadKind } from '~/utils/last-dow
 
 export function useGuestDownload() {
   const pdfService = usePdfService()
-  const paymentService = usePaymentService()
+  const coverLetterService = useCoverLetterService()
   const resumeStore = useResumeStore()
   const coverLetterStore = useCoverLetterStore()
+  const authStore = useAuthStore()
   const { ensureSession } = useGuestSession()
 
   const downloading = ref(false)
@@ -28,7 +29,8 @@ export function useGuestDownload() {
     restorePaidGuestSession()
     await ensureSession().catch(() => {})
     await syncGuestSessionForEditor()
-    const entitlements = await paymentService.getEntitlements()
+    const { fetchEntitlements } = usePaymentEntitlements()
+    const entitlements = await fetchEntitlements()
     if (!hasDossierDownloadAccess(entitlements)) {
       throw new Error('payment-required')
     }
@@ -80,10 +82,38 @@ export function useGuestDownload() {
     try {
       await preparePaidSession()
 
+      if (authStore.isAuthenticated && kind === 'cv') {
+        resumeStore.rehydrateFromStorage()
+        const resumeId = resumeStore.savedResumeId
+        const snapshot = loadResumeSnapshot()
+        if (resumeId && snapshot) {
+          const { filename } = await pdfService.downloadResumeCv(resumeId, snapshot)
+          lastFilename.value = filename
+          saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+          return filename
+        }
+      }
+
+      if (authStore.isAuthenticated && kind === 'letter') {
+        const letterId =
+          typeof useRoute().query.letterId === 'string' ? useRoute().query.letterId : null
+        if (letterId) {
+          const { filename } = await coverLetterService.downloadPdf(letterId)
+          markGuestDossierDownload('letter')
+          lastFilename.value = filename
+          saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+          return filename
+        }
+      }
+
       if (kind === 'letter') {
         const snapshot = loadLetterSnapshot()
         if (!snapshot?.content?.trim()) throw new Error('missing-letter')
-        const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+        resumeStore.rehydrateFromStorage()
+        const { filename } = await pdfService.generateLetterAndDownload(
+          snapshot,
+          resumeStore.savedResumeId ?? undefined,
+        )
         markGuestDossierDownload('letter')
         lastFilename.value = filename
         saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })

@@ -30,7 +30,10 @@ export async function POST(request: Request, { params }: Params) {
 
     // Paywall : débloque le dossier (consomme 1 crédit si nécessaire, sinon 402).
     // Un dossier déjà débloqué se télécharge sans reconsommer de crédit.
-    await paymentService.unlockResume({ userId }, id)
+    await paymentService.unlockResume(
+      { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId },
+      id,
+    )
 
     const snapshot = sanitizeSnapshot(await resumeService.get(id, userId))
     const letters = await coverLetterService.listPdfInputsByResume(id, userId)

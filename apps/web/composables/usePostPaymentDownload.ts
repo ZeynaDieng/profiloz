@@ -188,7 +188,11 @@ export function usePostPaymentDownload() {
       const letterSnapshot = loadLetterForDownload()
       await ensureSession()
       if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
-      const { filename } = await pdfService.generateLetterAndDownload(letterSnapshot)
+      resumeStore.rehydrateFromStorage()
+      const { filename } = await pdfService.generateLetterAndDownload(
+        letterSnapshot,
+        resumeStore.savedResumeId ?? undefined,
+      )
       markGuestDossierDownload('letter')
       saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
       clearPaymentDraftBackup()

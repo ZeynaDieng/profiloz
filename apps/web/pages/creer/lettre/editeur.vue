@@ -5,6 +5,7 @@ import { normalizeCoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
+import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
@@ -139,6 +140,7 @@ onMounted(async () => {
   await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})
 
+  resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
   coverLetterStore.initDraft()
 
@@ -177,6 +179,51 @@ onMounted(async () => {
   }
 })
 
+async function saveLetterToServer(): Promise<string | null> {
+  authStore.syncSession()
+  if (!authStore.isAuthenticated) return null
+
+  syncStoreFromRefs()
+  const draft = coverLetterStore.current
+  if (!draft) return null
+
+  const payload = {
+    title: buildCoverLetterTitle(draft.senderName),
+    senderName: draft.senderName || undefined,
+    senderEmail: draft.senderEmail || undefined,
+    senderPhone: draft.senderPhone || undefined,
+    senderLocation: draft.senderLocation || undefined,
+    companyName: draft.companyName || undefined,
+    companyAddress: draft.companyAddress || undefined,
+    position: draft.position || undefined,
+    recruiterName: draft.recruiterName || undefined,
+    content: draft.content,
+    closingText: draft.closingText || undefined,
+    templateId: draft.templateSlug,
+    resumeId:
+      typeof route.query.resumeId === 'string'
+        ? route.query.resumeId
+        : resumeStore.savedResumeId ?? undefined,
+  }
+
+  const existingId =
+    typeof route.query.letterId === 'string' && route.query.letterId
+      ? route.query.letterId
+      : null
+
+  if (existingId) {
+    await coverLetterService.update(existingId, payload)
+    return existingId
+  }
+
+  const created = await coverLetterService.create(payload)
+  await navigateTo(
+    { path: route.path, query: { ...route.query, letterId: created.id } },
+    { replace: true },
+  )
+  return created.id
+}
+
 async function downloadPdf() {
   pdfError.value = ''
   clearAll()
@@ -210,6 +257,22 @@ async function downloadPdf() {
     await syncGuestSessionForEditor()
     await ensureSession()
 
+    restorePaidGuestSession()
+    await syncGuestSessionForEditor()
+    await ensureSession()
+
+    if (authStore.isAuthenticated) {
+      const letterId = await saveLetterToServer()
+      if (!letterId) {
+        pdfError.value = MSG.letter.saveError
+        return
+      }
+      const { filename } = await coverLetterService.downloadPdf(letterId)
+      saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
+      await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
+      return
+    }
+
     try {
       const entitlements = await paymentService.getEntitlements()
       if (!hasDossierDownloadAccess(entitlements)) {
@@ -234,7 +297,8 @@ async function downloadPdf() {
     const snapshot = coverLetterStore.toSnapshot()
     if (!snapshot) throw new Error('missing snapshot')
 
-    const { filename } = await pdfService.generateLetterAndDownload(snapshot)
+    const linkedResumeId = resumeStore.savedResumeId ?? undefined
+    const { filename } = await pdfService.generateLetterAndDownload(snapshot, linkedResumeId)
     restorePaidGuestSession()
     const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
     if (guestId && !loadGuestDossierState()) initGuestDossier(guestId, 'letter')

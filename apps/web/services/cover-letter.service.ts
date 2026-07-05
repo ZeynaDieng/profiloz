@@ -75,6 +75,7 @@ export function useCoverLetterService() {
     const result = await post<{ downloadUrl: string }>(`/cover-letters/${id}/pdf`)
     const downloadUrl = `${result.downloadUrl}?filename=${encodeContentDispositionFilename(filename)}`
     await pdfService.downloadWithAuth(downloadUrl, filename)
+    return { filename }
   }
 
   function toSnapshot(letter: Partial<CoverLetter> & { content: string; accentColor?: string | null }): CoverLetterSnapshot {

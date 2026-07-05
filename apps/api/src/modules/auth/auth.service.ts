@@ -127,6 +127,15 @@ export class AuthService {
     await ensurePlatformOwnerRole(user.id, user.email)
     const refreshed = await authRepository.findById(user.id)
 
+    if (input.guestSessionId) {
+      try {
+        const guest = await guestSessionRepository.findBySessionId(input.guestSessionId)
+        if (guest) await paymentService.migrateGuestToUser(user.id, guest.id)
+      } catch (error) {
+        console.warn('Guest entitlements migration failed during login:', error)
+      }
+    }
+
     const accessToken = this.signAccessToken(user.id, user.email)
     const refreshToken = await this.createRefreshToken(user.id)
 

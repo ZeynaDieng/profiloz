@@ -78,7 +78,12 @@ export const useAuthStore = defineStore('auth', {
     },
     async login(email: string, password: string) {
       const { post } = useApiClient()
-      const result = await post<{ user: AuthUser; accessToken: string }>('/auth/login', { email, password })
+      const guestSessionId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
+      const result = await post<{ user: AuthUser; accessToken: string }>('/auth/login', {
+        email,
+        password,
+        guestSessionId: guestSessionId ?? undefined,
+      })
       this.setSession({ ...result.user, role: result.user.role ?? 'USER' }, result.accessToken)
       return result
     },

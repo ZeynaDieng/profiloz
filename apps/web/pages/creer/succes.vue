@@ -103,10 +103,10 @@ onMounted(async () => {
     const e = await paymentService.getEntitlements()
     hasPaidAccess.value = hasDossierDownloadAccess(e)
   } catch {
-    hasPaidAccess.value = authStore.isAuthenticated
+    hasPaidAccess.value = false
   }
 
-  if (hasPaidAccess.value && route.query.file) {
+  if (hasPaidAccess.value && route.query.file && !authStore.isAuthenticated) {
     await triggerDownload()
     dossierState.value = loadGuestDossierState()
   }

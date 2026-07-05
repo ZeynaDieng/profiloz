@@ -3,6 +3,7 @@ import { createCoverLetterSchema, updateCoverLetterSchema } from '@profiloz/vali
 import { AppError } from '@/lib/errors'
 import type { CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
+import type { EntitlementOwner } from '@/modules/payment/payment.service'
 import { paymentService } from '@/modules/payment/payment.service'
 import { coverLetterRepository } from './cover-letter.repository'
 
@@ -132,12 +133,18 @@ export class CoverLetterService {
     }))
   }
 
-  async generatePdf(id: string, userId: string) {
-    const letter = await coverLetterRepository.findById(id, userId)
+  async generatePdf(id: string, owner: EntitlementOwner) {
+    if (!owner.userId) {
+      throw new AppError(401, 'Unauthorized', 'Authentification requise')
+    }
+
+    const letter = await coverLetterRepository.findById(id, owner.userId)
     if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
 
     if (letter.resumeId) {
-      await paymentService.unlockResume({ userId }, letter.resumeId)
+      await paymentService.unlockResume(owner, letter.resumeId)
+    } else {
+      await paymentService.assertSnapshotDownload(owner)
     }
 
     const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf(
@@ -155,7 +162,7 @@ export class CoverLetterService {
         content: letter.content,
         closingText: letter.closingText,
       },
-      { userId },
+      { userId: owner.userId },
     )
 
     return {

@@ -22,6 +22,7 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().min(1, MSG.validation.requiredAlt).email(MSG.validation.email),
   password: z.string().min(1, MSG.validation.requiredAlt),
+  guestSessionId: z.preprocess(emptyToUndefined, z.string().uuid(MSG.validation.invalidData).optional()),
 })
 
 export const refreshTokenSchema = z.object({

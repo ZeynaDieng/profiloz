@@ -5,6 +5,7 @@ import {
   mergeSubscriptionPlanSlug,
   resolveEntitlements,
   type PlanFeatures,
+  type ResolvedEntitlements,
   type SubscriptionPlanSlug,
 } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
@@ -90,6 +91,31 @@ async function isUserSnapshotDossierUnlocked(userId: string): Promise<boolean> {
 
 function asSubscriptionPlanSlug(value: string | null | undefined): SubscriptionPlanSlug | null {
   return value && isSubscriptionPlanSlug(value) ? value : null
+}
+
+type EntitlementsWithSnapshot = ResolvedEntitlements & { canDownloadSnapshot: boolean }
+
+function mergeEntitlementResults(
+  primary: EntitlementsWithSnapshot,
+  secondary: EntitlementsWithSnapshot,
+): EntitlementsWithSnapshot {
+  const unlimitedUntil = [primary.unlimitedUntil, secondary.unlimitedUntil]
+    .filter((date): date is Date => Boolean(date))
+    .sort((a, b) => b.getTime() - a.getTime())[0] ?? null
+  let activePlanSlug = primary.activePlanSlug
+  if (secondary.activePlanSlug) {
+    activePlanSlug = mergeSubscriptionPlanSlug(activePlanSlug, secondary.activePlanSlug)
+  }
+  const merged = resolveEntitlements({
+    creditsBalance: primary.creditsBalance + secondary.creditsBalance,
+    unlimitedUntil,
+    subscriptionPlanSlug: isUnlimitedActive(unlimitedUntil) ? activePlanSlug : null,
+  })
+
+  return {
+    ...merged,
+    canDownloadSnapshot: primary.canDownloadSnapshot || secondary.canDownloadSnapshot,
+  }
 }
 
 export class PaymentService {
@@ -343,34 +369,45 @@ export class PaymentService {
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return { consumed: false }
 
-    if (owner.userId) {
-      if (await isUserSnapshotDossierUnlocked(owner.userId)) return { consumed: false }
+    if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
+      return { consumed: false }
+    }
+    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
+      return { consumed: false }
+    }
 
-      return prisma.$transaction(async (tx) => {
+    if (owner.userId) {
+      const userResult = await prisma.$transaction(async (tx) => {
         const user = await tx.user.findUnique({
           where: { id: owner.userId },
           select: { dossierUnlockedAt: true, creditsBalance: true },
         })
-        if (user?.dossierUnlockedAt) return { consumed: false }
+        if (user?.dossierUnlockedAt) return 'already' as const
 
         const decremented = await tx.user.updateMany({
           where: { id: owner.userId, creditsBalance: { gt: 0 } },
           data: { creditsBalance: { decrement: 1 }, dossierUnlockedAt: new Date() },
         })
-
-        if (decremented.count === 0) {
-          throw new AppError(
-            402,
-            'Payment Required',
-            'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
-          )
-        }
-        return { consumed: true }
+        return decremented.count > 0 ? ('consumed' as const) : ('failed' as const)
       })
+
+      if (userResult === 'already') return { consumed: false }
+      if (userResult === 'consumed') return { consumed: true }
+      if (!owner.guestSessionDbId) {
+        throw new AppError(
+          402,
+          'Payment Required',
+          'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+        )
+      }
     }
 
-    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
-      return { consumed: false }
+    if (!owner.guestSessionDbId) {
+      throw new AppError(
+        402,
+        'Payment Required',
+        'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+      )
     }
 
     return prisma.$transaction(async (tx) => {
@@ -517,36 +554,51 @@ export class PaymentService {
   /** État des droits du propriétaire (crédits + abonnement + fonctionnalités par pack). */
   async getEntitlements(owner: EntitlementOwner) {
     requireOwner(owner)
+
     if (owner.userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: owner.userId },
-        select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
-      })
-
-      let unlimitedUntil = user?.unlimitedUntil ?? null
-      let subscriptionPlanSlug = asSubscriptionPlanSlug(user?.subscriptionPlanSlug)
-      const membership = await organizationRepository.findMembershipByUserId(owner.userId)
-
-      if (membership?.organization && isUnlimitedActive(membership.organization.unlimitedUntil)) {
-        const orgUntil = membership.organization.unlimitedUntil!
-        if (!unlimitedUntil || orgUntil.getTime() > unlimitedUntil.getTime()) {
-          unlimitedUntil = orgUntil
-        }
-        const orgSlug =
-          asSubscriptionPlanSlug(membership.organization.subscriptionPlanSlug) ?? 'business'
-        subscriptionPlanSlug = mergeSubscriptionPlanSlug(subscriptionPlanSlug, orgSlug)
+      const userEntitlements = await this.getUserEntitlements(owner.userId)
+      if (!owner.guestSessionDbId) {
+        return userEntitlements
       }
-
-      const resolved = resolveEntitlements({
-        creditsBalance: user?.creditsBalance ?? 0,
-        unlimitedUntil,
-        subscriptionPlanSlug,
-      })
-      const canDownloadSnapshot = await isUserSnapshotDossierUnlocked(owner.userId)
-      return { ...resolved, canDownloadSnapshot }
+      const guestEntitlements = await this.getGuestEntitlements(owner.guestSessionDbId)
+      return mergeEntitlementResults(userEntitlements, guestEntitlements)
     }
+
+    return this.getGuestEntitlements(owner.guestSessionDbId!)
+  }
+
+  private async getUserEntitlements(userId: string): Promise<EntitlementsWithSnapshot> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
+    })
+
+    let unlimitedUntil = user?.unlimitedUntil ?? null
+    let subscriptionPlanSlug = asSubscriptionPlanSlug(user?.subscriptionPlanSlug)
+    const membership = await organizationRepository.findMembershipByUserId(userId)
+
+    if (membership?.organization && isUnlimitedActive(membership.organization.unlimitedUntil)) {
+      const orgUntil = membership.organization.unlimitedUntil!
+      if (!unlimitedUntil || orgUntil.getTime() > unlimitedUntil.getTime()) {
+        unlimitedUntil = orgUntil
+      }
+      const orgSlug =
+        asSubscriptionPlanSlug(membership.organization.subscriptionPlanSlug) ?? 'business'
+      subscriptionPlanSlug = mergeSubscriptionPlanSlug(subscriptionPlanSlug, orgSlug)
+    }
+
+    const resolved = resolveEntitlements({
+      creditsBalance: user?.creditsBalance ?? 0,
+      unlimitedUntil,
+      subscriptionPlanSlug,
+    })
+    const canDownloadSnapshot = await isUserSnapshotDossierUnlocked(userId)
+    return { ...resolved, canDownloadSnapshot }
+  }
+
+  private async getGuestEntitlements(guestSessionDbId: string): Promise<EntitlementsWithSnapshot> {
     const guest = await prisma.guestSession.findUnique({
-      where: { id: owner.guestSessionDbId! },
+      where: { id: guestSessionDbId },
       select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
     })
     const resolved = resolveEntitlements({
@@ -554,9 +606,7 @@ export class PaymentService {
       unlimitedUntil: guest?.unlimitedUntil ?? null,
       subscriptionPlanSlug: asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
     })
-    const canDownloadSnapshot = owner.guestSessionDbId
-      ? await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId)
-      : false
+    const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
     return { ...resolved, canDownloadSnapshot }
   }
 
@@ -613,12 +663,17 @@ export class PaymentService {
             where: { id: owner.userId, creditsBalance: { gt: 0 } },
             data: { creditsBalance: { decrement: 1 } },
           })
-        : await tx.guestSession.updateMany({
-            where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
-            data: { creditsBalance: { decrement: 1 } },
-          })
+        : { count: 0 }
 
-      if (decremented.count === 0) {
+      const guestDecremented =
+        decremented.count === 0 && owner.guestSessionDbId
+          ? await tx.guestSession.updateMany({
+              where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+              data: { creditsBalance: { decrement: 1 } },
+            })
+          : decremented
+
+      if (guestDecremented.count === 0) {
         throw new AppError(
           402,
           'Payment Required',
