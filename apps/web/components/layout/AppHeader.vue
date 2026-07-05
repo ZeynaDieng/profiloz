@@ -80,6 +80,7 @@ onMounted(() => {
       </div>
 
       <div v-else-if="variant === 'dashboard'" class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <BillingEntitlementsSummary compact :show-link="false" class="hidden lg:block max-w-[220px]" />
         <LayoutNotificationBell class="hidden sm:block" />
         <button
           type="button"

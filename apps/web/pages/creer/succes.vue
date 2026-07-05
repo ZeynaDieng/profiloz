@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MSG } from '@profiloz/shared'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import { summarizeEntitlements } from '~/utils/entitlements-summary'
 import {
   isGuestDossierComplete,
   loadGuestDossierState,
@@ -72,6 +73,7 @@ const crossSellCta = computed(() => {
 
 const hasPaidAccess = ref(false)
 const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
+const entitlementsSummary = computed(() => summarizeEntitlements(entitlements.value))
 
 async function refreshEntitlements() {
   try {
@@ -145,21 +147,14 @@ onMounted(async () => {
         />
 
         <div
-          v-if="entitlements"
+          v-if="entitlementsSummary"
           class="mb-4 rounded-xl border border-outline-variant/30 bg-surface-container-low px-4 py-3 text-sm text-on-surface"
         >
-          <template v-if="entitlements.unlimitedActive">
-            <span v-if="entitlements.activePlanSlug === 'business'">Offre Business active</span>
-            <span v-else>Offre Illimité active</span>
-            <span class="text-on-surface-variant"> — dossiers illimités, retéléchargements inclus.</span>
-          </template>
-          <template v-else-if="entitlements.creditsBalance > 0">
-            Crédits restants : <strong>{{ entitlements.creditsBalance }}</strong>
-            <span class="text-on-surface-variant"> (1 crédit = 1 dossier CV + lettre)</span>
-          </template>
-          <template v-else-if="entitlements.canDownloadSnapshot">
+          <p class="font-semibold">{{ entitlementsSummary.title }}</p>
+          <p v-if="entitlementsSummary.detail" class="text-on-surface-variant mt-0.5">{{ entitlementsSummary.detail }}</p>
+          <p v-else-if="entitlements?.canDownloadSnapshot" class="text-on-surface-variant mt-0.5">
             Dossier en cours débloqué — retéléchargements inclus.
-          </template>
+          </p>
         </div>
 
         <div class="mb-6 space-y-3">

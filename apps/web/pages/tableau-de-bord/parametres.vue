@@ -34,6 +34,18 @@ async function logout() {
       <UiCard variant="glass" padding="lg">
         <div class="flex items-start gap-4">
           <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+            <UiPzIcon name="redeem" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="font-bold text-on-surface mb-2">Mon offre</h2>
+            <BillingEntitlementsSummary :show-link="true" />
+          </div>
+        </div>
+      </UiCard>
+
+      <UiCard variant="glass" padding="lg">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
             <UiPzIcon name="person" />
           </div>
           <div class="flex-1 min-w-0">

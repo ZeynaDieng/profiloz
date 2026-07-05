@@ -155,6 +155,9 @@ function formatDate(iso: string) {
         Bonjour<span v-if="greetingName"> {{ greetingName }}</span> 👋
       </h1>
       <p class="text-on-surface-variant mt-1">{{ MSG.guide.dashboardPrompt }}</p>
+      <div class="mt-4 max-w-md">
+        <BillingEntitlementsSummary />
+      </div>
     </section>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter mb-stack-xl">

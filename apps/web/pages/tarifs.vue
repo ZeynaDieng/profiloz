@@ -3,6 +3,7 @@ import { formatXof, MSG, PLANS } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import { summarizeEntitlements } from '~/utils/entitlements-summary'
 import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
 import { withAutoDownloadQuery } from '~/utils/payment-auto-download'
 import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
@@ -40,6 +41,8 @@ const fromPaywall = computed(() => route.query.reason === 'unlock')
 const activePlan = computed(
   () => plans.value[activePlanIndex.value] ?? plans.value.find((p) => p.popular) ?? plans.value[0],
 )
+
+const entitlementsSummary = computed(() => summarizeEntitlements(entitlements.value))
 
 onMounted(async () => {
   authStore.loadFromStorage()
@@ -131,16 +134,11 @@ async function onChoose(plan: PlanDto) {
     </div>
 
     <div
-      v-if="entitlements"
+      v-if="entitlementsSummary"
       class="max-w-2xl mx-auto mb-8 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-center text-on-surface"
     >
-      <template v-if="entitlements.unlimitedActive">
-        <span v-if="entitlements.activePlanSlug === 'business'">Votre offre Business est active.</span>
-        <span v-else>Votre offre Illimité est active.</span>
-      </template>
-      <template v-else>
-        Crédits disponibles : <strong>{{ entitlements.creditsBalance }}</strong>
-      </template>
+      <p class="font-semibold">{{ entitlementsSummary.title }}</p>
+      <p v-if="entitlementsSummary.detail" class="text-on-surface-variant mt-1">{{ entitlementsSummary.detail }}</p>
     </div>
 
     <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-6 max-w-lg mx-auto" />

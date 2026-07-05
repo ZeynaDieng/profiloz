@@ -40,7 +40,8 @@ const { primaryNavItems, secondaryNavItems, isActive } = useAppNavigation()
         </NuxtLink>
       </div>
     </nav>
-    <div class="mt-auto pt-stack-md border-t border-outline-variant">
+    <div class="mt-auto pt-stack-md border-t border-outline-variant space-y-3">
+      <BillingEntitlementsSummary compact />
       <NuxtLink
         to="/creer"
         class="w-full btn-primary rounded-lg py-3"
