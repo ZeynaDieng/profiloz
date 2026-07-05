@@ -119,8 +119,51 @@ function mergeEntitlementResults(
   }
 }
 
+function serializeEntitlementsForClient(result: EntitlementsWithSnapshot) {
+  return {
+    creditsBalance: result.creditsBalance,
+    unlimitedUntil: result.unlimitedUntil ? result.unlimitedUntil.toISOString() : null,
+    unlimitedActive: result.unlimitedActive,
+    activePlanSlug: result.activePlanSlug,
+    features: result.features,
+    canDownloadSnapshot: result.canDownloadSnapshot,
+  }
+}
+
 export class PaymentService {
   constructor(private readonly provider: PaymentProvider = paytechProvider) {}
+
+  private async buildPurchasedPlanSummary(payment: {
+    planSlug: string
+    credits: number
+    amountXof: number
+  }) {
+    const plan = await getResolvedPlan(payment.planSlug)
+    return {
+      slug: plan?.slug ?? payment.planSlug,
+      name: plan?.name ?? payment.planSlug,
+      kind: (plan?.kind ?? 'credits') as 'credits' | 'subscription',
+      credits: payment.credits,
+      amountXof: payment.amountXof,
+      durationDays: plan?.durationDays ?? null,
+      description: plan?.description ?? '',
+      features: plan?.features ?? [],
+    }
+  }
+
+  private async buildConfirmReturnResponse(
+    status: 'paid' | 'already_paid',
+    entitlements: EntitlementsWithSnapshot,
+    payment: { planSlug: string; credits: number; amountXof: number },
+    guestSessionClientId?: string,
+  ) {
+    return {
+      status,
+      entitlements: serializeEntitlementsForClient(entitlements),
+      purchasedPlan: await this.buildPurchasedPlanSummary(payment),
+      ...(guestSessionClientId ? { guestSessionClientId } : {}),
+    }
+  }
 
   private async creditPaidPayment(
     payment: PaidPaymentRecord,
@@ -272,28 +315,43 @@ export class PaymentService {
       ownerMatches = false
     }
 
+    const planPayment = {
+      planSlug: payment.planSlug,
+      credits: payment.credits,
+      amountXof: payment.amountXof,
+    }
+
     // Compte connecté : la commande doit correspondre au compte.
     if (payment.userId) {
       if (!ownerMatches) {
         throw new AppError(403, 'Forbidden', 'Cette commande ne correspond pas à votre compte.')
       }
       if (payment.status === 'PAID') {
-        return { status: 'already_paid' as const, entitlements: await this.getEntitlements(owner) }
+        return this.buildConfirmReturnResponse(
+          'already_paid',
+          await this.getEntitlements(owner),
+          planPayment,
+        )
       }
       if (payment.status !== 'PENDING') {
         throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
       }
       await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
-      return { status: 'paid' as const, entitlements: await this.getEntitlements(owner) }
+      return this.buildConfirmReturnResponse(
+        'paid',
+        await this.getEntitlements(owner),
+        planPayment,
+      )
     }
 
     // Invité : la ref PayTech suffit — créditer la session liée au paiement même si le navigateur a basculé.
     if (!paymentGuestOwner) {
       if (payment.status === 'PAID') {
-        return {
-          status: 'already_paid' as const,
-          entitlements: await this.getEntitlements(owner),
-        }
+        return this.buildConfirmReturnResponse(
+          'already_paid',
+          await this.getEntitlements(owner),
+          planPayment,
+        )
       }
       throw new AppError(400, 'Bad Request', 'Commande invité invalide')
     }
@@ -314,29 +372,33 @@ export class PaymentService {
           || currentEntitlements.canDownloadSnapshot
           || currentEntitlements.unlimitedActive
         ) {
-          return {
-            status: 'already_paid' as const,
-            entitlements: currentEntitlements,
-          }
+          return this.buildConfirmReturnResponse(
+            'already_paid',
+            currentEntitlements,
+            planPayment,
+            guestSessionClientId,
+          )
         }
       }
 
-      return {
-        status: 'already_paid' as const,
-        entitlements: paymentEntitlements,
+      return this.buildConfirmReturnResponse(
+        'already_paid',
+        paymentEntitlements,
+        planPayment,
         guestSessionClientId,
-      }
+      )
     }
     if (payment.status !== 'PENDING') {
       throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
     }
 
     await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
-    return {
-      status: 'paid' as const,
-      entitlements: await this.getEntitlements(paymentGuestOwner),
+    return this.buildConfirmReturnResponse(
+      'paid',
+      await this.getEntitlements(paymentGuestOwner),
+      planPayment,
       guestSessionClientId,
-    }
+    )
   }
 
   /**

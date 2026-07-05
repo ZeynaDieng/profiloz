@@ -3,6 +3,7 @@ import { MSG, PLANS } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
 import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
+import { savePaymentPlanSlug } from '~/utils/payment-purchase'
 import { savePaymentRef } from '~/utils/payment-return'
 
 const paymentService = usePaymentService()
@@ -49,6 +50,7 @@ async function onChoose(plan: PlanDto) {
   try {
     await ensureSession()
     savePaymentDraftBackup(null)
+    savePaymentPlanSlug(plan.slug)
     savePaymentGuestSession(
       import.meta.client ? localStorage.getItem('profiloz:guest-session') : null,
     )

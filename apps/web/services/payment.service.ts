@@ -21,6 +21,24 @@ export interface Entitlements {
   canDownloadSnapshot?: boolean
 }
 
+export interface PurchasedPlanSummary {
+  slug: PlanSlug
+  name: string
+  kind: 'credits' | 'subscription'
+  credits: number
+  amountXof: number
+  durationDays: number | null
+  description: string
+  features: string[]
+}
+
+export interface ConfirmReturnResult {
+  status: string
+  entitlements?: Entitlements
+  purchasedPlan?: PurchasedPlanSummary
+  guestSessionClientId?: string
+}
+
 export function usePaymentService() {
   const { get, post } = useApiClient()
 
@@ -39,11 +57,7 @@ export function usePaymentService() {
 
   /** Confirme le paiement au retour PayTech (fallback si IPN absent ou lent). */
   async function confirmReturn(ref: string) {
-    return post<{
-      status: string
-      entitlements?: Entitlements
-      guestSessionClientId?: string
-    }>('/payments/confirm-return', { ref })
+    return post<ConfirmReturnResult>('/payments/confirm-return', { ref })
   }
 
   /** Démarre un nouveau cycle dossier (pack multi-crédits) après un dossier complet. */

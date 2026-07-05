@@ -24,7 +24,10 @@ interface OrphanLetter {
   resumeId?: string | null
 }
 
+const route = useRoute()
 const authStore = useAuthStore()
+
+const showWelcome = computed(() => route.query.welcome === '1')
 const resumeService = useResumeService()
 const coverLetterService = useCoverLetterService()
 const { confirm } = useConfirm()
@@ -151,6 +154,12 @@ function formatDate(iso: string) {
 <template>
   <div class="page-container">
     <section class="mb-stack-lg">
+      <UiMessageBanner
+        v-if="showWelcome"
+        variant="success"
+        message="Paiement confirmé — votre offre est active. Retrouvez vos crédits et vos dossiers ci-dessous."
+        class="mb-4"
+      />
       <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">
         Bonjour<span v-if="greetingName"> {{ greetingName }}</span> 👋
       </h1>

@@ -14,7 +14,7 @@ import {
   clearPaymentDraftBackup,
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
-import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
+import { saveLastPurchasedPlan } from '~/utils/payment-purchase'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 
@@ -42,6 +42,10 @@ export function usePostPaymentDownload() {
 
   async function confirmPaymentOnce(paymentRef: string) {
     const result = await paymentService.confirmReturn(paymentRef)
+
+    if (result.purchasedPlan) {
+      saveLastPurchasedPlan(result.purchasedPlan)
+    }
 
     if (result.guestSessionClientId) {
       applyGuestSessionId(result.guestSessionClientId)

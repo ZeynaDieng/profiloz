@@ -10,6 +10,12 @@ import {
   type GuestDossierState,
 } from '~/utils/guest-dossier-state'
 import { loadLastDownloadContext } from '~/utils/last-download-context'
+import {
+  classifyPurchaseAudience,
+  isSingleDossierService,
+  isWalletOffer,
+} from '~/utils/payment-journey'
+import { peekLastPurchasedPlan } from '~/utils/payment-purchase'
 
 definePageMeta({ layout: 'guest-flow' })
 
@@ -21,8 +27,15 @@ const route = useRoute()
 const { downloading, downloadError, lastFilename, downloadKind } = useGuestDownload()
 
 const isLetter = computed(() => route.query.type === 'letter')
-const signupRedirect = '/tableau-de-bord'
+const signupRedirect = '/tableau-de-bord?welcome=1'
 const dossierState = ref<GuestDossierState | null>(null)
+
+const purchasedPlan = computed(() => peekLastPurchasedPlan())
+const purchaseAudience = computed(() =>
+  classifyPurchaseAudience(purchasedPlan.value, entitlements.value),
+)
+const isSingleDossier = computed(() => isSingleDossierService(purchaseAudience.value))
+const isWalletPurchase = computed(() => isWalletOffer(purchaseAudience.value))
 
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
@@ -37,9 +50,10 @@ const downloadedFilename = computed(() => {
   return isLetter.value ? 'lettre Profiloz.pdf' : 'cv Profiloz.pdf'
 })
 
-const successHeadline = computed(() =>
-  isLetter.value ? MSG.guide.successLetterHeadline : MSG.guide.successHeadline,
-)
+const successHeadline = computed(() => {
+  if (isLetter.value) return MSG.guide.successLetterHeadline
+  return MSG.guide.successHeadline
+})
 
 const editLink = computed(() => (isLetter.value ? '/creer/lettre/editeur' : '/creer/editeur'))
 
@@ -54,14 +68,14 @@ const crossSellLink = computed(() => {
 })
 
 const crossSellTitle = computed(() => {
-  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvTitle
-  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterTitle
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellLetterTitle
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellCvTitle
   return isLetter.value ? MSG.guide.successCrossSellLetterTitle : MSG.guide.successCrossSellCvTitle
 })
 
 const crossSellBody = computed(() => {
-  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvBody
-  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterBody
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellLetterBody
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellCvBody
   return isLetter.value ? MSG.guide.successCrossSellLetterBody : MSG.guide.successCrossSellCvBody
 })
 
@@ -74,6 +88,19 @@ const crossSellCta = computed(() => {
 const hasPaidAccess = ref(false)
 const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
 const entitlementsSummary = computed(() => summarizeEntitlements(entitlements.value))
+
+const showWalletStatus = computed(() => isWalletPurchase.value && entitlementsSummary.value)
+
+const singleDossierHint = computed(() => {
+  if (!isSingleDossier.value || !hasPaidAccess.value) return null
+  if (isLetter.value && !dossierComplete.value) {
+    return 'Votre lettre a été téléchargée. Votre offre comprend également un CV.'
+  }
+  if (!isLetter.value && showCrossSell.value) {
+    return 'Votre CV a été téléchargé avec succès. Votre offre comprend également une lettre de motivation.'
+  }
+  return null
+})
 
 async function refreshEntitlements() {
   try {
@@ -136,7 +163,9 @@ onMounted(async () => {
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
         <p class="text-base sm:text-lg text-on-surface font-medium mb-2">{{ successHeadline }}</p>
         <p class="text-on-surface-variant text-sm sm:text-base max-w-md mx-auto mb-6">
-          {{ dossierComplete ? MSG.guide.successDossierCompleteLead : MSG.guide.successDownloadReady }}
+          <template v-if="singleDossierHint">{{ singleDossierHint }}</template>
+          <template v-else-if="dossierComplete">{{ MSG.guide.successDossierCompleteLead }}</template>
+          <template v-else>{{ MSG.guide.successDownloadReady }}</template>
         </p>
 
         <UiMessageBanner
@@ -146,14 +175,14 @@ onMounted(async () => {
           class="mb-4 text-left"
         />
 
+        <!-- Crédits / abonnement : visible uniquement pour packs multi-crédits ou abonnement -->
         <div
-          v-if="entitlementsSummary"
-          class="mb-4 rounded-xl border border-outline-variant/30 bg-surface-container-low px-4 py-3 text-sm text-on-surface"
+          v-if="showWalletStatus"
+          class="mb-4 rounded-xl border border-secondary/25 bg-secondary/5 px-4 py-3 text-sm text-on-surface text-left"
         >
-          <p class="font-semibold">{{ entitlementsSummary.title }}</p>
-          <p v-if="entitlementsSummary.detail" class="text-on-surface-variant mt-0.5">{{ entitlementsSummary.detail }}</p>
-          <p v-else-if="entitlements?.canDownloadSnapshot" class="text-on-surface-variant mt-0.5">
-            Dossier en cours débloqué — retéléchargements inclus.
+          <p class="font-semibold">{{ entitlementsSummary!.title }}</p>
+          <p v-if="entitlementsSummary!.detail" class="text-on-surface-variant mt-0.5">
+            {{ entitlementsSummary!.detail }}
           </p>
         </div>
 
@@ -177,8 +206,9 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Cross-sell lettre/CV pour dossier unique -->
         <UiCard
-          v-if="showCrossSell"
+          v-if="showCrossSell && isSingleDossier"
           variant="default"
           padding="md"
           class="mb-6 text-left !bg-secondary/5 border-secondary/20"
@@ -196,6 +226,26 @@ onMounted(async () => {
               <p class="text-xs text-secondary font-semibold mt-2">
                 Inclus dans votre offre — aucun paiement supplémentaire.
               </p>
+            </div>
+          </div>
+        </UiCard>
+
+        <UiCard
+          v-else-if="showCrossSell"
+          variant="default"
+          padding="md"
+          class="mb-6 text-left !bg-secondary/5 border-secondary/20"
+        >
+          <div class="flex items-start gap-3">
+            <UiPzIcon name="redeem" class="text-secondary text-[28px] shrink-0 mt-0.5" />
+            <div class="min-w-0">
+              <h3 class="font-bold text-on-surface mb-1">{{ crossSellTitle }}</h3>
+              <p class="text-sm text-on-surface-variant mb-3">{{ crossSellBody }}</p>
+              <NuxtLink :to="crossSellLink">
+                <UiButton variant="outline" size="sm" icon="arrow_forward">
+                  {{ crossSellCta }}
+                </UiButton>
+              </NuxtLink>
             </div>
           </div>
         </UiCard>
@@ -224,23 +274,11 @@ onMounted(async () => {
           </NuxtLink>
         </div>
 
-        <UiCard v-else variant="default" padding="md" class="text-left !bg-surface-container-low">
-          <h3 class="font-bold text-primary mb-3">{{ MSG.guide.accountPitch }}</h3>
-          <ul class="space-y-2 text-on-surface-variant text-sm mb-4">
-            <li v-for="benefit in MSG.guide.accountBenefits" :key="benefit" class="flex items-center gap-2">
-              <UiPzIcon name="check" class="text-secondary text-[18px]" />
-              {{ benefit }}
-            </li>
-          </ul>
-          <div class="flex flex-col gap-2">
-            <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`">
-              <UiButton variant="primary" block>{{ MSG.buttons.createAccount }}</UiButton>
-            </NuxtLink>
-            <NuxtLink to="/" class="text-secondary py-2 text-center font-semibold hover:underline min-h-11 inline-flex items-center justify-center">
-              Continuer sans compte
-            </NuxtLink>
-          </div>
-        </UiCard>
+        <BillingAccountChoiceCard
+          v-else
+          :signup-redirect="signupRedirect"
+          @continue-guest="void navigateTo('/')"
+        />
       </UiCard>
     </div>
 

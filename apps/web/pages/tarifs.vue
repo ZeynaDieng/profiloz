@@ -5,6 +5,7 @@ import { parseApiAuthError } from '~/utils/api-error'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { summarizeEntitlements } from '~/utils/entitlements-summary'
 import { savePaymentDraftBackup, savePaymentGuestSession } from '~/utils/payment-draft-backup'
+import { savePaymentPlanSlug } from '~/utils/payment-purchase'
 import { withAutoDownloadQuery } from '~/utils/payment-auto-download'
 import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
 
@@ -89,6 +90,7 @@ async function onChoose(plan: PlanDto) {
   try {
     await ensureSession()
     if (returnTo.value) savePaymentReturnTo(returnTo.value)
+    savePaymentPlanSlug(plan.slug)
     savePaymentDraftBackup(returnTo.value)
     savePaymentGuestSession(
       import.meta.client ? localStorage.getItem('profiloz:guest-session') : null,
