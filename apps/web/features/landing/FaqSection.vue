@@ -20,8 +20,6 @@ const fallbackItems = [
 
 const { content, load } = useLandingContent()
 
-onMounted(() => load())
-
 const items = computed(() => {
   if (content.value.faq.length > 0) {
     return content.value.faq.map((item) => ({ q: item.question, a: item.answer }))
@@ -31,11 +29,17 @@ const items = computed(() => {
 
 const showAll = ref(false)
 const openIndex = ref(0)
+const faqHydrated = ref(false)
 const { isMobile } = useBreakpoints()
 const { target, revealed } = useScrollReveal(0.25)
 
+onMounted(() => {
+  load()
+  faqHydrated.value = true
+})
+
 const visibleItems = computed(() => {
-  if (!isMobile.value || showAll.value) return items.value
+  if (!faqHydrated.value || !isMobile.value || showAll.value) return items.value
   return items.value.slice(0, 2)
 })
 

@@ -4,6 +4,7 @@ import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
+import { resolvePersistableResumeId } from '~/utils/resume-id'
 
 definePageMeta({ layout: false })
 
@@ -57,7 +58,9 @@ async function persistToServer() {
   if (!authStore.isAuthenticated) return
 
   const payload = resumeService.toSavePayload(currentSnapshot())
-  const resumeId = (route.query.id as string | undefined) ?? resumeStore.savedResumeId ?? undefined
+  const resumeId = resolvePersistableResumeId(
+    (route.query.id as string | undefined) ?? resumeStore.savedResumeId ?? undefined,
+  )
   const saved = resumeId
     ? await resumeService.update(resumeId, payload)
     : await resumeService.create(payload)
@@ -84,7 +87,7 @@ onMounted(async () => {
   await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})
 
-  const resumeId = route.query.id as string | undefined
+  const resumeId = resolvePersistableResumeId(route.query.id as string | undefined)
 
   if (resumeId) {
     if (!authStore.isAuthenticated) {
@@ -201,7 +204,9 @@ async function downloadPdf() {
     if (authStore.isAuthenticated) {
       const saved = await saveResume(true)
       if (!saved) return
-      const resumeId = (route.query.id as string | undefined) ?? resumeStore.savedResumeId
+      const resumeId = resolvePersistableResumeId(
+        (route.query.id as string | undefined) ?? resumeStore.savedResumeId,
+      )
       if (!resumeId) {
         pdfError.value = MSG.save.error
         return

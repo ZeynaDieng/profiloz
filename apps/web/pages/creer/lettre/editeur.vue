@@ -8,6 +8,7 @@ import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
+import { resolvePersistableResumeId } from '~/utils/resume-id'
 
 definePageMeta({ layout: false })
 
@@ -180,10 +181,13 @@ onMounted(async () => {
 })
 
 async function resolveLinkedResumeId(): Promise<string | undefined> {
-  if (typeof route.query.resumeId === 'string' && route.query.resumeId) {
-    return route.query.resumeId
-  }
-  if (resumeStore.savedResumeId) return resumeStore.savedResumeId
+  const fromQuery = resolvePersistableResumeId(
+    typeof route.query.resumeId === 'string' ? route.query.resumeId : undefined,
+  )
+  if (fromQuery) return fromQuery
+
+  const savedId = resolvePersistableResumeId(resumeStore.savedResumeId)
+  if (savedId) return savedId
 
   resumeStore.rehydrateFromStorage()
   if (!resumeStore.current?.personalInfo.fullName?.trim()) return undefined
@@ -291,7 +295,7 @@ async function downloadPdf() {
     const snapshot = coverLetterStore.toSnapshot()
     if (!snapshot) throw new Error('missing snapshot')
 
-    const linkedResumeId = resumeStore.savedResumeId ?? undefined
+    const linkedResumeId = resolvePersistableResumeId(resumeStore.savedResumeId)
     const { filename } = await pdfService.generateLetterAndDownload(snapshot, linkedResumeId)
     restorePaidGuestSession()
     const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null

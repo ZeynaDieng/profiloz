@@ -33,6 +33,7 @@ export function useTypewriter(
   const visibleCount = ref(0)
   const isComplete = ref(false)
   const isAnimating = ref(false)
+  const hasMounted = ref(false)
 
   function prefersReducedMotion() {
     return import.meta.client && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -202,6 +203,13 @@ export function useTypewriter(
       return
     }
 
+    if (!hasMounted.value) {
+      visibleCount.value = totalLength.value
+      isComplete.value = true
+      isAnimating.value = false
+      return
+    }
+
     isComplete.value = false
     isAnimating.value = true
     runTyping(id, 0, totalLength.value, true)
@@ -221,6 +229,11 @@ export function useTypewriter(
     },
     { immediate: true },
   )
+
+  onMounted(() => {
+    hasMounted.value = true
+    if (toValue(options.active ?? true)) start()
+  })
 
   onUnmounted(stop)
 

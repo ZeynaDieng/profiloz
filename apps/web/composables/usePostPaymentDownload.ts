@@ -16,6 +16,7 @@ import {
 } from '~/utils/payment-draft-backup'
 import { clearPaymentRef, isGuestPdfReturnPath, isLetterReturnPath } from '~/utils/payment-return'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
+import { resolvePersistableResumeId } from '~/utils/resume-id'
 
 const POLL_INTERVAL_MS = 800
 const MAX_POLL_ATTEMPTS = 20
@@ -191,7 +192,7 @@ export function usePostPaymentDownload() {
       resumeStore.rehydrateFromStorage()
       const { filename } = await pdfService.generateLetterAndDownload(
         letterSnapshot,
-        resumeStore.savedResumeId ?? undefined,
+        resolvePersistableResumeId(resumeStore.savedResumeId),
       )
       markGuestDossierDownload('letter')
       saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })

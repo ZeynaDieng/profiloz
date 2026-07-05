@@ -12,6 +12,7 @@ import {
   findResumeSnapshotInStorage,
 } from '~/utils/guest-draft-sync'
 import { saveLastDownloadContext, type LastDownloadKind } from '~/utils/last-download-context'
+import { resolvePersistableResumeId } from '~/utils/resume-id'
 
 export function useGuestDownload() {
   const pdfService = usePdfService()
@@ -84,7 +85,7 @@ export function useGuestDownload() {
 
       if (authStore.isAuthenticated && kind === 'cv') {
         resumeStore.rehydrateFromStorage()
-        const resumeId = resumeStore.savedResumeId
+        const resumeId = resolvePersistableResumeId(resumeStore.savedResumeId)
         const snapshot = loadResumeSnapshot()
         if (resumeId && snapshot) {
           const { filename } = await pdfService.downloadResumeCv(resumeId, snapshot)
@@ -112,7 +113,7 @@ export function useGuestDownload() {
         resumeStore.rehydrateFromStorage()
         const { filename } = await pdfService.generateLetterAndDownload(
           snapshot,
-          resumeStore.savedResumeId ?? undefined,
+          resolvePersistableResumeId(resumeStore.savedResumeId),
         )
         markGuestDossierDownload('letter')
         lastFilename.value = filename

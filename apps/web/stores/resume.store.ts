@@ -14,6 +14,7 @@ import { calculateCompleteness } from '~/utils/completeness'
 import { stripLegacyBase64Photo } from '~/utils/photoUrl'
 import { clearLegacyResumeDraft, createScopedResumeDraftStorage } from '~/utils/resume-draft-storage'
 import { createAminataDemoResume } from '~/features/demo/aminata-persona'
+import { isLocalDemoResumeId } from '~/utils/resume-id'
 import { createRandomId } from '~/utils/random-id'
 import { cvTemplateAccentColors, defaultCvTemplateConfig } from '~/utils/template-accent-colors'
 
@@ -65,12 +66,12 @@ export const useResumeStore = defineStore('resume', {
     },
     loadSnapshot(snapshot: ResumeSnapshot) {
       this.current = { ...snapshot }
-      this.savedResumeId = snapshot.id
+      this.savedResumeId = isLocalDemoResumeId(snapshot.id) ? null : snapshot.id
       this.isDirty = false
     },
     markSaved(snapshot: ResumeSnapshot) {
       this.current = snapshot
-      this.savedResumeId = snapshot.id
+      this.savedResumeId = isLocalDemoResumeId(snapshot.id) ? null : snapshot.id
       this.isDirty = false
     },
     markDraftSynced() {
@@ -84,7 +85,9 @@ export const useResumeStore = defineStore('resume', {
     loadDemoPersona() {
       const slug = this.current?.templateSlug ?? 'PROFESSIONNEL'
       const accent = cvTemplateAccentColors(slug).accent
-      this.loadSnapshot(createAminataDemoResume(slug, accent))
+      this.current = createAminataDemoResume(slug, accent)
+      this.savedResumeId = null
+      this.isDirty = true
     },
     ensureDemoPersonaIfEmpty() {
       this.rehydrateFromStorage()
@@ -110,7 +113,11 @@ export const useResumeStore = defineStore('resume', {
         }>
         if (persisted.current !== undefined) this.current = persisted.current
         if (persisted.isDirty !== undefined) this.isDirty = persisted.isDirty
-        if (persisted.savedResumeId !== undefined) this.savedResumeId = persisted.savedResumeId
+        if (persisted.savedResumeId !== undefined) {
+          this.savedResumeId = isLocalDemoResumeId(persisted.savedResumeId)
+            ? null
+            : persisted.savedResumeId
+        }
         if (this.current?.personalInfo.photoUrl && isBase64PhotoUrl(this.current.personalInfo.photoUrl)) {
           this.current.personalInfo.photoUrl = undefined
         }

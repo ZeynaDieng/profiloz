@@ -23,6 +23,15 @@ const shapeClass = computed(() => {
   return 'rounded-full'
 })
 
+const imageFailed = ref(false)
+
+watch(
+  () => props.photoUrl,
+  () => {
+    imageFailed.value = false
+  },
+)
+
 const fallbackStyles = computed(() => ({
   backgroundColor: props.accent,
   ...props.fallbackStyle,
@@ -31,7 +40,13 @@ const fallbackStyles = computed(() => ({
 
 <template>
   <div :class="[sizeClass, shapeClass, 'overflow-hidden shrink-0']">
-    <img v-if="photoUrl" :src="photoUrl" alt="" class="w-full h-full object-cover" />
+    <img
+      v-if="photoUrl && !imageFailed"
+      :src="photoUrl"
+      alt=""
+      class="w-full h-full object-cover"
+      @error="imageFailed = true"
+    />
     <div
       v-else
       :class="['w-full h-full flex items-center justify-center', fallbackClass]"

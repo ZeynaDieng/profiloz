@@ -56,9 +56,17 @@ export class AvatarService {
       throw new AppError(404, 'Not Found', 'Photo introuvable')
     }
 
-    const buffer = await storageProvider.read(storageKey)
-    const contentType = storageKey.endsWith('.png') ? 'image/png' : 'image/jpeg'
-    return { buffer, contentType }
+    try {
+      const buffer = await storageProvider.read(storageKey)
+      const contentType = storageKey.endsWith('.png') ? 'image/png' : 'image/jpeg'
+      return { buffer, contentType }
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code === 'ENOENT') {
+        throw new AppError(404, 'Not Found', 'Photo introuvable')
+      }
+      throw error
+    }
   }
 
   async remove(storageKey: string, ctx: RequestContext) {
