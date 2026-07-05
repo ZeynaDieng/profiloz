@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto'
+import type { Prisma } from '@prisma/client'
 import {
   getPlan,
   isSubscriptionPlanSlug,
@@ -475,7 +476,7 @@ export class PaymentService {
         const { snapshotUnlockedAt: _removed, ...rest } = baseData
         await prisma.guestSession.update({
           where: { id: owner.guestSessionDbId },
-          data: { data: rest },
+          data: { data: rest as Prisma.InputJsonValue },
         })
       }
     }
@@ -733,7 +734,7 @@ export class PaymentService {
               data: {
                 ...baseData,
                 snapshotUnlockedAt: new Date().toISOString(),
-              },
+              } as Prisma.InputJsonValue,
             },
           })
         }
