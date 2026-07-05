@@ -8,8 +8,11 @@ withDefaults(
 )
 
 const authStore = useAuthStore()
+const route = useRoute()
 const { openMenu } = useMarketingMenuState()
 const { toggleDrawer } = useDrawerState()
+
+const isHome = computed(() => route.path === '/')
 
 onMounted(() => {
   authStore.loadFromStorage()
@@ -31,7 +34,18 @@ onMounted(() => {
         <NuxtLink to="/#templates" class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors">
           Modèles
         </NuxtLink>
-        <NuxtLink to="/tarifs" class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors">
+        <a
+          v-if="isHome"
+          href="#tarifs"
+          class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors"
+        >
+          Tarifs
+        </a>
+        <NuxtLink
+          v-else
+          :to="{ path: '/', hash: '#tarifs' }"
+          class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors"
+        >
           Tarifs
         </NuxtLink>
         <a href="#faq" class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatXof, MSG } from '@profiloz/shared'
+import { formatXof, MSG, PLANS } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 import { parseApiAuthError } from '~/utils/api-error'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
@@ -18,12 +18,14 @@ const route = useRoute()
 const authStore = useAuthStore()
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
+const { fetchEntitlements } = usePaymentEntitlements()
 
 const plans = ref<PlanDto[]>([])
 const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
 const loading = ref(true)
 const checkingOut = ref<string | null>(null)
 const error = ref('')
+const activePlanIndex = ref(0)
 
 const resumeId = computed(() =>
   typeof route.query.resumeId === 'string' && route.query.resumeId ? route.query.resumeId : null,
@@ -35,7 +37,9 @@ const returnTo = computed(() =>
 )
 const fromPaywall = computed(() => route.query.reason === 'unlock')
 
-const popularPlan = computed(() => plans.value.find((p) => p.popular) ?? plans.value[0])
+const activePlan = computed(
+  () => plans.value[activePlanIndex.value] ?? plans.value.find((p) => p.popular) ?? plans.value[0],
+)
 
 onMounted(async () => {
   authStore.loadFromStorage()
@@ -46,15 +50,30 @@ onMounted(async () => {
     plans.value = data
   } catch {
     error.value = MSG.error.loadPlans
+    plans.value = PLANS.map((plan) => ({
+      slug: plan.slug,
+      name: plan.name,
+      priceXof: plan.priceXof,
+      kind: plan.kind,
+      credits: Number.isFinite(plan.credits) ? plan.credits : null,
+      durationDays: plan.durationDays,
+      description: plan.description,
+      features: [...plan.features],
+      popular: plan.popular,
+    }))
   } finally {
     loading.value = false
   }
 
   try {
-    entitlements.value = await paymentService.getEntitlements()
-    if (returnTo.value && fromPaywall.value && hasDossierDownloadAccess(entitlements.value)) {
+    entitlements.value = await fetchEntitlements()
+    if (
+      returnTo.value
+      && fromPaywall.value
+      && entitlements.value
+      && hasDossierDownloadAccess(entitlements.value)
+    ) {
       await navigateTo(withAutoDownloadQuery(returnTo.value), { replace: true })
-      return
     }
   } catch {
     entitlements.value = null
@@ -82,19 +101,33 @@ async function onChoose(plan: PlanDto) {
 </script>
 
 <template>
-  <div class="page-container max-w-6xl mx-auto pb-28 md:pb-12">
-    <header class="text-center mb-stack-lg">
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-on-surface">Des tarifs simples et transparents</h1>
+  <div
+    class="page-container max-w-6xl mx-auto pb-28 md:pb-12"
+    :class="fromPaywall && 'tarifs-page--paywall'"
+  >
+    <header
+      class="text-center mb-stack-lg"
+      :class="fromPaywall && 'tarifs-page__header--paywall'"
+    >
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-on-surface">
+        <template v-if="fromPaywall">Choisissez votre offre</template>
+        <template v-else>Des tarifs simples et transparents</template>
+      </h1>
       <p class="text-on-surface-variant mt-3 max-w-2xl mx-auto text-sm sm:text-base">
-        Créez, modifiez et prévisualisez gratuitement. Vous ne payez qu'au moment de télécharger votre dossier.
+        <template v-if="fromPaywall">
+          Votre dossier est prêt. Comparez les offres et payez uniquement pour télécharger.
+        </template>
+        <template v-else>
+          Créez, modifiez et prévisualisez gratuitement. Vous ne payez qu'au moment de télécharger votre dossier.
+        </template>
       </p>
     </header>
 
     <div
       v-if="fromPaywall"
-      class="max-w-2xl mx-auto mb-8 p-4 rounded-xl bg-secondary-fixed text-on-secondary-fixed text-sm text-center"
+      class="tarifs-page__banner max-w-2xl mx-auto mb-6 md:mb-8 p-4 rounded-xl bg-secondary-fixed text-on-secondary-fixed text-sm text-center"
     >
-      Votre CV est prêt ! Choisissez une offre pour le télécharger — compte facultatif.
+      Votre CV est prêt ! Choisissez une offre pour le télécharger (compte facultatif).
     </div>
 
     <div
@@ -112,66 +145,53 @@ async function onChoose(plan: PlanDto) {
 
     <UiMessageBanner v-if="error" variant="error" :message="error" class="mb-6 max-w-lg mx-auto" />
 
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
-      <UiSkeleton v-for="i in 4" :key="i" variant="rect" height="22rem" />
-    </div>
+    <FeaturesLandingPricingPlansRail
+      v-model:active-index="activePlanIndex"
+      :plans="plans"
+      :loading="loading"
+      :checking-out="checkingOut"
+      :paywall-highlight="fromPaywall"
+      :animate-in="!loading"
+      @choose="onChoose"
+    />
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter items-stretch">
-      <UiCard
-        v-for="plan in plans"
-        :key="plan.slug"
-        :variant="plan.popular ? 'glass' : 'default'"
-        padding="lg"
-        class="relative flex flex-col"
-        :class="plan.popular ? 'border-secondary shadow-lg ring-1 ring-secondary/20' : ''"
-      >
-        <span
-          v-if="plan.popular"
-          class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-secondary text-on-secondary text-xs font-bold"
-        >
-          Le plus populaire
-        </span>
-
-        <h2 class="font-bold text-on-surface text-lg">{{ plan.name }}</h2>
-        <p class="text-sm text-on-surface-variant mt-1 min-h-[2.5rem]">{{ plan.description }}</p>
-
-        <div class="mt-4 mb-5">
-          <span class="text-3xl font-bold text-on-surface">{{ formatXof(plan.priceXof) }}</span>
-          <span v-if="plan.kind === 'subscription'" class="text-on-surface-variant text-sm"> / mois</span>
-        </div>
-
-        <ul class="space-y-3 mb-6 flex-1">
-          <li v-for="feature in plan.features" :key="feature" class="flex items-start gap-2 text-sm text-on-surface">
-            <UiPzIcon name="check_circle" class="text-[18px] text-secondary shrink-0 mt-0.5" />
-            <span>{{ feature }}</span>
-          </li>
-        </ul>
-
-        <UiButton
-          block
-          :variant="plan.popular ? 'secondary' : 'primary'"
-          :loading="checkingOut === plan.slug"
-          @click="onChoose(plan)"
-        >
-          Choisir
-        </UiButton>
-      </UiCard>
-    </div>
-
-    <p class="text-center text-xs text-on-surface-variant mt-10">
-      Paiement sécurisé via PayTech (Carte bancaire, Orange Money, Wave, Free Money…).
-    </p>
-
-    <!-- Mobile : raccourci vers l'offre populaire -->
-    <UiStickyActionBar v-if="popularPlan && !loading" class="md:hidden">
+    <UiStickyActionBar v-if="activePlan && !loading" class="md:hidden">
       <UiButton
         variant="secondary"
         block
-        :loading="checkingOut === popularPlan.slug"
-        @click="onChoose(popularPlan)"
+        :loading="checkingOut === activePlan.slug"
+        @click="onChoose(activePlan)"
       >
-        Choisir {{ popularPlan.name }} — {{ formatXof(popularPlan.priceXof) }}
+        Choisir {{ activePlan.name }} · {{ formatXof(activePlan.priceXof) }}
       </UiButton>
     </UiStickyActionBar>
   </div>
 </template>
+
+<style scoped>
+.tarifs-page--paywall .tarifs-page__header--paywall {
+  animation: tarifs-header-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.tarifs-page--paywall .tarifs-page__banner {
+  animation: tarifs-header-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+@keyframes tarifs-header-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarifs-page--paywall .tarifs-page__header--paywall,
+  .tarifs-page--paywall .tarifs-page__banner {
+    animation: none;
+  }
+}
+</style>

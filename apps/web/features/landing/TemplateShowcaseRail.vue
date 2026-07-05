@@ -8,14 +8,15 @@ const props = withDefaults(
   { autoplay: true, active: true },
 )
 
-/** Vitesse de défilement (~65 px/s à 60 fps) */
-const SCROLL_SPEED = 1.08
+/** Vitesse de défilement (~49 px/s à 60 fps) */
+const SCROLL_SPEED = 0.82
 const MANUAL_SCROLL_MS = 780
 
 const railRef = ref<HTMLElement | null>(null)
 const activeIndex = ref(0)
 const scrollable = ref(false)
 const loopWidth = ref(0)
+const isPointerOver = ref(false)
 
 let rafId: number | null = null
 let resizeObserver: ResizeObserver | undefined
@@ -25,6 +26,7 @@ function shouldRunContinuous() {
   if (!import.meta.client) return false
   if (!props.autoplay || !props.active || !scrollable.value || props.count <= 1) return false
   if (loopWidth.value <= 0) return false
+  if (isPointerOver.value) return false
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
@@ -220,6 +222,16 @@ function onVisibilityChange() {
   else startContinuousScroll()
 }
 
+function onPointerEnter() {
+  isPointerOver.value = true
+  stopContinuousScroll()
+}
+
+function onPointerLeave() {
+  isPointerOver.value = false
+  startContinuousScroll()
+}
+
 function reset() {
   stopContinuousScroll()
   activeIndex.value = 0
@@ -289,7 +301,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="template-rail-wrap">
+  <div
+    class="template-rail-wrap"
+    @mouseenter="onPointerEnter"
+    @mouseleave="onPointerLeave"
+  >
     <button
       v-if="scrollable"
       type="button"

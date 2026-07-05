@@ -44,7 +44,7 @@ const { target, revealed } = useScrollReveal(0.15)
     class="landing-section bg-surface-container-low border-t border-outline-variant/30"
     :class="revealed ? 'scroll-reveal is-revealed' : 'scroll-reveal'"
   >
-    <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden">
+    <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-x-clip">
       <div class="reassurance-stats grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-gutter pb-10 md:pb-12 mb-10 md:mb-12 border-b border-outline-variant/15">
         <FeaturesLandingStatItem :end="12000" suffix="+" label="CV créés" />
         <FeaturesLandingStatItem :end="8" suffix=" min" label="Temps moyen" />
@@ -60,7 +60,7 @@ const { target, revealed } = useScrollReveal(0.15)
         </p>
       </div>
 
-      <div class="mobile-scroll-x sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-gutter">
+      <div class="mobile-scroll-x sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-gutter pb-2">
         <UiCard
           v-for="(item, index) in items"
           :key="item.title"

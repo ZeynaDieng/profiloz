@@ -5,7 +5,7 @@ import { isPaidGuestDossierActive, restorePaidGuestSession } from '~/utils/guest
 /** Restaure la session invité payée et évite de la remplacer par un autre brouillon. */
 export async function syncGuestSessionForEditor() {
   const { applyGuestSessionId, ensureSession } = useGuestSession()
-  const paymentService = usePaymentService()
+  const { fetchEntitlements } = usePaymentEntitlements()
 
   const paidSessionId = restorePaidGuestSession()
   if (paidSessionId) {
@@ -15,8 +15,8 @@ export async function syncGuestSessionForEditor() {
   await ensureSession().catch(() => {})
 
   try {
-    const entitlements = await paymentService.getEntitlements()
-    if (hasDossierDownloadAccess(entitlements)) {
+    const entitlements = await fetchEntitlements()
+    if (entitlements && hasDossierDownloadAccess(entitlements)) {
       return { paid: true as const, entitlements }
     }
   } catch {

@@ -39,7 +39,7 @@
                 EXPERIENCE PROFESSIONNELLE
               </p>
               <p class="text-[8px] pl-2 text-[#555] leading-snug">
-                - Orange Senegal, chef de projet (2021)<br />
+                Orange Senegal, chef de projet (2021)<br />
                 gestion campagnes digital et reseaux sociaux
               </p>
               <p class="text-[9px] font-bold pt-0.5 text-[#444]">FORMATION</p>
@@ -104,9 +104,9 @@
               </p>
               <div class="mb-2">
                 <p class="text-[9px] font-bold text-on-surface">
-                  Chef de projet digital — Orange Sénégal
+                  Chef de projet digital chez Orange Sénégal
                 </p>
-                <p class="text-[8px] text-on-surface-variant">2021 – Présent</p>
+                <p class="text-[8px] text-on-surface-variant">Depuis 2021</p>
               </div>
               <p
                 class="text-[9px] font-bold uppercase text-on-surface mb-1 tracking-wide"
@@ -114,7 +114,7 @@
                 Formation
               </p>
               <p class="text-[9px] text-on-surface mb-2">
-                Master Marketing — UCAD
+                Master Marketing, UCAD
               </p>
               <p
                 class="text-[9px] font-bold uppercase text-on-surface mb-1 tracking-wide"
@@ -196,7 +196,7 @@
             </div>
             <p class="text-[9px] font-bold uppercase mb-1">Expérience</p>
             <p class="text-[9px] text-on-surface mb-2">
-              Chef de projet digital — Orange Sénégal
+              Chef de projet digital chez Orange Sénégal
             </p>
             <div class="flex flex-wrap gap-1">
               <span

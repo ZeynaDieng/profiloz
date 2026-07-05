@@ -140,8 +140,8 @@ onUnmounted(() => stopAutoplay())
             >
               <span v-if="field === 'Nom complet'">Aminata Diallo</span>
               <span v-else-if="field === 'Poste visé'">Responsable marketing</span>
-              <span v-else-if="field === 'Expérience'">Chef de projet — Orange</span>
-              <span v-else>Master Marketing — UCAD</span>
+              <span v-else-if="field === 'Expérience'">Chef de projet chez Orange</span>
+              <span v-else>Master Marketing, UCAD</span>
             </div>
           </div>
         </div>

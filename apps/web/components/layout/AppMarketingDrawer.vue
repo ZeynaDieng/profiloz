@@ -9,7 +9,7 @@ useDrawerA11y(open, closeButtonRef, menuTriggerRef)
 const marketingLinks = [
   { href: '#features', label: 'Fonctionnalités', icon: 'auto_awesome' },
   { href: '/#templates', label: 'Modèles', icon: 'description', isRoute: true },
-  { href: '/tarifs', label: 'Tarifs', icon: 'payments', isRoute: true },
+  { to: { path: '/', hash: '#tarifs' }, label: 'Tarifs', icon: 'payments', isRoute: true },
   { href: '#faq', label: 'FAQ', icon: 'help' },
 ] as const
 
@@ -57,13 +57,13 @@ watch(
           </p>
           <ul class="space-y-0.5">
             <li
-              v-for="(link, i) in marketingLinks"
-              :key="link.href"
+              v-for="link in marketingLinks"
+              :key="link.label"
               class="mobile-drawer-item is-visible"
             >
               <NuxtLink
                 v-if="'isRoute' in link && link.isRoute"
-                :to="link.href"
+                :to="'to' in link ? link.to : link.href"
                 class="mobile-drawer-link group"
                 @click="closeMenu"
               >

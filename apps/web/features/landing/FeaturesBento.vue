@@ -55,7 +55,7 @@ const { target, revealed } = useScrollReveal()
   <section id="features" class="landing-section bg-surface-container-lowest border-y border-outline-variant/20">
     <div
       ref="target"
-      class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden"
+      class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-x-clip"
       :class="revealed ? 'scroll-reveal is-revealed' : 'scroll-reveal'"
     >
       <div class="landing-section-header landing-section-header--left">
@@ -161,6 +161,7 @@ const { target, revealed } = useScrollReveal()
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr;
+  padding-bottom: 0.5rem;
 }
 
 @media (min-width: 768px) {

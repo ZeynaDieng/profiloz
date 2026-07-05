@@ -16,7 +16,7 @@ export const AMINATA_PERSONA = {
   jobTitle: 'Responsable marketing',
   targetPosition: 'Responsable marketing digital',
   companyName: 'Wave Mobile Money',
-  companyAddress: 'Immeuble SDMO, Plateau — Dakar',
+  companyAddress: 'Immeuble SDMO, Plateau, Dakar',
   recruiterName: 'Mme Ndiaye',
 } as const
 
@@ -26,7 +26,7 @@ export function createAminataDemoResume(
 ): ResumeSnapshot {
   return {
     id: 'demo-aminata',
-    title: 'CV — Aminata Diallo',
+    title: 'CV Aminata Diallo',
     templateSlug,
     templateConfig: { accentColor },
     personalInfo: {

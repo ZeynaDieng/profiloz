@@ -53,7 +53,7 @@ const { target, revealed } = useScrollReveal(0.12)
   <section id="comment-ca-marche" class="how-section landing-section border-t border-outline-variant/30">
     <div
       ref="target"
-      class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-hidden"
+      class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-x-clip"
       :class="revealed ? 'scroll-reveal is-revealed' : 'scroll-reveal'"
     >
       <div class="landing-section-header landing-section-header--left">
@@ -71,7 +71,7 @@ const { target, revealed } = useScrollReveal(0.12)
         </p>
       </div>
 
-      <ol class="how-timeline max-w-3xl mx-auto list-none p-0 m-0">
+      <ol class="how-timeline max-w-3xl mx-auto list-none p-0 m-0 pb-2">
         <li
           v-for="(step, index) in steps"
           :key="step.number"
@@ -203,7 +203,7 @@ const { target, revealed } = useScrollReveal(0.12)
 }
 
 .how-timeline__item:last-child {
-  padding-bottom: 0;
+  padding-bottom: 0.5rem;
 }
 
 .how-timeline__rail {
