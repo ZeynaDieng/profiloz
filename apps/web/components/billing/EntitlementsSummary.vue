@@ -39,6 +39,11 @@ onMounted(async () => {
   loading.value = false
 })
 
+async function retryLoad() {
+  loading.value = true
+  localEntitlements.value = await fetchEntitlements()
+  loading.value = false
+}
 defineExpose({
   refresh: async () => {
     loading.value = true
@@ -65,7 +70,7 @@ defineExpose({
       compact ? 'text-xs' : 'text-sm',
       summary.kind === 'unlimited'
         ? 'border-secondary/30 bg-secondary/5'
-        : summary.kind === 'credits'
+        : summary.kind === 'credits' || summary.kind === 'dossier_active'
           ? 'border-outline-variant/30 bg-surface-container-low'
           : 'border-outline-variant/30 bg-surface-container-lowest',
     ]"
@@ -98,5 +103,19 @@ defineExpose({
         </NuxtLink>
       </div>
     </div>
+  </div>
+
+  <div
+    v-else
+    class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest px-3 py-2.5 text-sm"
+  >
+    <p class="text-on-surface-variant">Offre indisponible pour le moment.</p>
+    <button
+      type="button"
+      class="mt-1.5 text-secondary font-semibold hover:underline text-xs"
+      @click="retryLoad"
+    >
+      Réessayer
+    </button>
   </div>
 </template>

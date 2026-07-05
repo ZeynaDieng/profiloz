@@ -6,6 +6,12 @@ export function usePaymentEntitlements() {
   const { ensureSession, resetGuestSessionSync } = useGuestSession()
 
   async function fetchEntitlements(): Promise<Entitlements | null> {
+    if (import.meta.client) {
+      const authStore = useAuthStore()
+      authStore.loadFromStorage()
+      authStore.syncSession()
+    }
+
     await ensureSession()
 
     try {

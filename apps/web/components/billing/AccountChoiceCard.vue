@@ -4,10 +4,15 @@ const props = withDefaults(
     signupRedirect: string
     recommended?: boolean
     compact?: boolean
+    title?: string
+    description?: string
+    /** Quand true, le bouton compte est secondaire (parcours wallet après paiement). */
+    secondaryAccountCta?: boolean
   }>(),
   {
     recommended: true,
     compact: false,
+    secondaryAccountCta: false,
   },
 )
 
@@ -16,6 +21,16 @@ const emit = defineEmits<{
 }>()
 
 const signupHref = computed(() => `/inscription?redirect=${encodeURIComponent(props.signupRedirect)}`)
+
+const cardTitle = computed(() =>
+  props.title ?? (props.recommended ? 'Créez un compte gratuit' : 'Sauvegardez votre travail'),
+)
+
+const cardDescription = computed(
+  () =>
+    props.description
+    ?? 'Vos documents et votre offre seront associés à votre compte. Retrouvez-les sur tous vos appareils.',
+)
 </script>
 
 <template>
@@ -26,15 +41,15 @@ const signupHref = computed(() => `/inscription?redirect=${encodeURIComponent(pr
         Recommandé
       </span>
     </div>
-    <h3 class="font-bold text-on-surface mb-2">
-      {{ recommended ? 'Créez un compte gratuit' : 'Sauvegardez votre travail' }}
-    </h3>
-    <p class="text-sm text-on-surface-variant mb-4">
-      Vos documents et votre offre seront associés à votre compte. Retrouvez-les sur tous vos appareils.
-    </p>
+    <h3 class="font-bold text-on-surface mb-2">{{ cardTitle }}</h3>
+    <p class="text-sm text-on-surface-variant mb-4">{{ cardDescription }}</p>
     <div class="flex flex-col gap-2">
       <NuxtLink :to="signupHref">
-        <UiButton variant="primary" block icon="person_add">
+        <UiButton
+          :variant="secondaryAccountCta ? 'outline' : 'primary'"
+          block
+          icon="person_add"
+        >
           Créer un compte
         </UiButton>
       </NuxtLink>

@@ -277,7 +277,14 @@ onMounted(async () => {
         <BillingAccountChoiceCard
           v-else
           :signup-redirect="signupRedirect"
-          @continue-guest="void navigateTo('/')"
+          :secondary-account-cta="isWalletPurchase"
+          :title="isWalletPurchase ? 'Sauvegardez vos crédits' : undefined"
+          :description="
+            isWalletPurchase
+              ? 'Créez un compte gratuit pour retrouver vos crédits sur tous vos appareils. Vous pourrez aussi le faire plus tard.'
+              : undefined
+          "
+          @continue-guest="void navigateTo(isWalletPurchase ? editLink : '/')"
         />
       </UiCard>
     </div>

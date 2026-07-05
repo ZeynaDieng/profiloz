@@ -216,14 +216,14 @@ onMounted(async () => {
           <!-- Parcours 2 : landing, crédits / abonnement -->
           <template v-else-if="isWalletCatalog">
             <template v-if="entitlements?.unlimitedActive">
-              Votre abonnement est actif. Créez un compte pour retrouver vos droits sur tous vos appareils.
+              Votre abonnement est actif. Vous pouvez créer autant de dossiers que vous le souhaitez.
             </template>
             <template v-else-if="entitlements && entitlements.creditsBalance > 0">
               Vous disposez maintenant de {{ entitlements.creditsBalance }} crédit{{ entitlements.creditsBalance > 1 ? 's' : '' }}.
-              Créez un compte pour les conserver en sécurité.
+              Commencez quand vous voulez.
             </template>
             <template v-else>
-              Votre offre est active. Créez un compte pour accéder à votre espace personnel.
+              Votre offre est active. Vous pouvez commencer à créer vos documents.
             </template>
           </template>
           <!-- Parcours 3 : éditeur (fallback si auto-download échoue) -->
@@ -288,19 +288,25 @@ onMounted(async () => {
           </NuxtLink>
         </template>
         <template v-else>
-          <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`">
-            <UiButton variant="secondary" block icon="person_add" class="min-h-[52px]">
-              Créer mon compte
-            </UiButton>
-          </NuxtLink>
-          <p class="text-xs text-center text-on-surface-variant px-2">
-            Recommandé — vos crédits et votre abonnement seront sauvegardés dans votre espace personnel.
-          </p>
           <NuxtLink to="/creer">
-            <UiButton variant="ghost" block icon="edit_note">
-              Créer mon CV sans compte
+            <UiButton variant="secondary" block icon="edit_note" class="min-h-[52px]">
+              Créer mon CV
             </UiButton>
           </NuxtLink>
+          <NuxtLink to="/creer/lettre">
+            <UiButton variant="outline" block icon="mail">
+              Créer une lettre de motivation
+            </UiButton>
+          </NuxtLink>
+
+          <BillingAccountChoiceCard
+            class="mt-1"
+            :signup-redirect="signupRedirect"
+            secondary-account-cta
+            title="Sauvegardez vos crédits"
+            description="Créez un compte gratuit pour retrouver vos crédits et votre abonnement sur tous vos appareils. Vous pourrez aussi le faire plus tard."
+            @continue-guest="void navigateTo('/creer')"
+          />
         </template>
       </div>
 
@@ -349,9 +355,9 @@ onMounted(async () => {
       v-else-if="showManualActions && !confirming && isWalletCatalog && !authStore.isAuthenticated"
       class="sm:hidden"
     >
-      <NuxtLink :to="`/inscription?redirect=${encodeURIComponent(signupRedirect)}`" class="block">
-        <UiButton variant="secondary" block icon="person_add" class="min-h-[52px]">
-          Créer mon compte
+      <NuxtLink to="/creer" class="block">
+        <UiButton variant="secondary" block icon="edit_note" class="min-h-[52px]">
+          Créer mon CV
         </UiButton>
       </NuxtLink>
     </UiStickyActionBar>

@@ -1,6 +1,6 @@
 import type { Entitlements } from '~/services/payment.service'
 
-export type EntitlementsSummaryKind = 'unlimited' | 'credits' | 'none'
+export type EntitlementsSummaryKind = 'unlimited' | 'credits' | 'dossier_active' | 'none'
 
 export interface EntitlementsSummary {
   kind: EntitlementsSummaryKind
@@ -43,10 +43,49 @@ export function summarizeEntitlements(entitlements: Entitlements | null | undefi
     }
   }
 
+  if (entitlements.canDownloadSnapshot) {
+    return {
+      kind: 'dossier_active',
+      title: 'Dossier en cours débloqué',
+      detail: 'Votre offre couvre le dossier actuel (CV + lettre). Retéléchargements inclus.',
+      icon: 'folder_open',
+    }
+  }
+
   return {
     kind: 'none',
     title: 'Aucune offre active',
     detail: 'Choisissez une offre pour télécharger vos dossiers.',
     icon: 'shopping_bag',
   }
+}
+
+/** Libellés affichables dans Paramètres / Mon offre. */
+export function listOfferFeatures(entitlements: Entitlements): string[] {
+  const items: string[] = []
+  const f = entitlements.features
+
+  if (entitlements.unlimitedActive) {
+    items.push('Dossiers illimités')
+    items.push('Retéléchargements inclus')
+    if (f.historique) items.push('Historique complet de vos dossiers')
+    if (f.importScan) items.push('Import et scan de documents')
+    if (f.businessOrg) items.push('Espace organisation')
+    if (f.multiCollaborators) items.push('Multi-collaborateurs')
+    return items
+  }
+
+  if (entitlements.creditsBalance > 0) {
+    const n = entitlements.creditsBalance
+    items.push(`${n} dossier${n > 1 ? 's' : ''} complet${n > 1 ? 's' : ''} (CV + lettre)`)
+    items.push('Retéléchargements inclus par dossier')
+    return items
+  }
+
+  if (entitlements.canDownloadSnapshot) {
+    items.push('Dossier actuel débloqué (CV + lettre)')
+    items.push('Retéléchargements inclus')
+  }
+
+  return items
 }

@@ -37,8 +37,8 @@ async function logout() {
             <UiPzIcon name="redeem" />
           </div>
           <div class="flex-1 min-w-0">
-            <h2 class="font-bold text-on-surface mb-2">Mon offre</h2>
-            <BillingEntitlementsSummary :show-link="true" />
+            <h2 class="font-bold text-on-surface mb-3">Mon offre</h2>
+            <BillingMyOfferPanel />
           </div>
         </div>
       </UiCard>
