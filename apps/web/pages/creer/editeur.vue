@@ -2,7 +2,6 @@
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
-import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 
@@ -13,8 +12,8 @@ const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 const resumeService = useResumeService()
 const pdfService = usePdfService()
-const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
+const { ensureDownloadAccess } = usePaymentEntitlements()
 const { isDesktop, isMobileOrTablet } = useBreakpoints()
 const { openMenu } = useMarketingMenuState()
 const editorValidation = useResumeEditorValidation()
@@ -197,6 +196,8 @@ async function downloadPdf() {
     await syncGuestSessionForEditor()
     await ensureSession()
 
+    if (!(await ensureDownloadAccess(route.fullPath))) return
+
     if (authStore.isAuthenticated) {
       const saved = await saveResume(true)
       if (!saved) return
@@ -208,27 +209,6 @@ async function downloadPdf() {
       const { filename } = await pdfService.downloadResumeCv(resumeId, currentSnapshot())
       await navigateTo({ path: '/creer/succes', query: { file: filename } })
       return
-    }
-
-    try {
-      const entitlements = await paymentService.getEntitlements()
-      if (!hasDossierDownloadAccess(entitlements)) {
-        await navigateTo({
-          path: '/tarifs',
-          query: { reason: 'unlock', returnTo: route.fullPath },
-        })
-        return
-      }
-    } catch (err) {
-      const problem = err as { status?: number }
-      if (problem.status === 402) {
-        await navigateTo({
-          path: '/tarifs',
-          query: { reason: 'unlock', returnTo: route.fullPath },
-        })
-        return
-      }
-      throw err
     }
 
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())

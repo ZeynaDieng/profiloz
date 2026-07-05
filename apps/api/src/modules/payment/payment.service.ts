@@ -680,6 +680,41 @@ export class PaymentService {
           'Aucun crédit disponible. Choisissez une offre pour débloquer ce dossier.',
         )
       }
+
+      if (owner.userId && decremented.count > 0) {
+        await tx.user.updateMany({
+          where: { id: owner.userId, dossierUnlockedAt: null },
+          data: { dossierUnlockedAt: new Date() },
+        })
+      }
+
+      if (
+        owner.guestSessionDbId
+        && decremented.count === 0
+        && guestDecremented.count > 0
+      ) {
+        const guest = await tx.guestSession.findUnique({
+          where: { id: owner.guestSessionDbId },
+          select: { data: true },
+        })
+        const meta = readGuestSessionMeta(guest?.data)
+        if (!meta.snapshotUnlockedAt) {
+          const baseData =
+            guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
+              ? (guest.data as Record<string, unknown>)
+              : {}
+          await tx.guestSession.update({
+            where: { id: owner.guestSessionDbId },
+            data: {
+              data: {
+                ...baseData,
+                snapshotUnlockedAt: new Date().toISOString(),
+              },
+            },
+          })
+        }
+      }
+
       await tx.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
       return { unlocked: true, consumedCredit: true }
     })

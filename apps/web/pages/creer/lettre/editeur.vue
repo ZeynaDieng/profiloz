@@ -6,7 +6,6 @@ import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
-import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 
@@ -18,8 +17,9 @@ const resumeStore = useResumeStore()
 const coverLetterStore = useCoverLetterStore()
 const coverLetterService = useCoverLetterService()
 const pdfService = usePdfService()
-const paymentService = usePaymentService()
+const resumeService = useResumeService()
 const { ensureSession } = useGuestSession()
+const { ensureDownloadAccess } = usePaymentEntitlements()
 const { isDesktop } = useBreakpoints()
 const { openMenu } = useMarketingMenuState()
 
@@ -179,6 +179,24 @@ onMounted(async () => {
   }
 })
 
+async function resolveLinkedResumeId(): Promise<string | undefined> {
+  if (typeof route.query.resumeId === 'string' && route.query.resumeId) {
+    return route.query.resumeId
+  }
+  if (resumeStore.savedResumeId) return resumeStore.savedResumeId
+
+  resumeStore.rehydrateFromStorage()
+  if (!resumeStore.current?.personalInfo.fullName?.trim()) return undefined
+
+  const payload = resumeService.toSavePayload({
+    ...resumeStore.current,
+    templateConfig: { ...resumeStore.current.templateConfig },
+  })
+  const saved = await resumeService.create(payload)
+  resumeStore.markSaved(saved)
+  return saved.id
+}
+
 async function saveLetterToServer(): Promise<string | null> {
   authStore.syncSession()
   if (!authStore.isAuthenticated) return null
@@ -186,6 +204,8 @@ async function saveLetterToServer(): Promise<string | null> {
   syncStoreFromRefs()
   const draft = coverLetterStore.current
   if (!draft) return null
+
+  const resumeId = await resolveLinkedResumeId()
 
   const payload = {
     title: buildCoverLetterTitle(draft.senderName),
@@ -200,10 +220,7 @@ async function saveLetterToServer(): Promise<string | null> {
     content: draft.content,
     closingText: draft.closingText || undefined,
     templateId: draft.templateSlug,
-    resumeId:
-      typeof route.query.resumeId === 'string'
-        ? route.query.resumeId
-        : resumeStore.savedResumeId ?? undefined,
+    resumeId,
   }
 
   const existingId =
@@ -257,9 +274,7 @@ async function downloadPdf() {
     await syncGuestSessionForEditor()
     await ensureSession()
 
-    restorePaidGuestSession()
-    await syncGuestSessionForEditor()
-    await ensureSession()
+    if (!(await ensureDownloadAccess(route.fullPath))) return
 
     if (authStore.isAuthenticated) {
       const letterId = await saveLetterToServer()
@@ -271,27 +286,6 @@ async function downloadPdf() {
       saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
       await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
       return
-    }
-
-    try {
-      const entitlements = await paymentService.getEntitlements()
-      if (!hasDossierDownloadAccess(entitlements)) {
-        await navigateTo({
-          path: '/tarifs',
-          query: { reason: 'unlock', returnTo: route.fullPath },
-        })
-        return
-      }
-    } catch (err) {
-      const problem = err as { status?: number }
-      if (problem.status === 402) {
-        await navigateTo({
-          path: '/tarifs',
-          query: { reason: 'unlock', returnTo: route.fullPath },
-        })
-        return
-      }
-      throw err
     }
 
     const snapshot = coverLetterStore.toSnapshot()

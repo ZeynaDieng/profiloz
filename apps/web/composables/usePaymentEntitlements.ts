@@ -1,4 +1,5 @@
 import type { Entitlements } from '~/services/payment.service'
+import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 
 export function usePaymentEntitlements() {
   const paymentService = usePaymentService()
@@ -26,5 +27,23 @@ export function usePaymentEntitlements() {
     }
   }
 
-  return { fetchEntitlements }
+  /** Vérifie crédits / abonnement / dossier déjà débloqué avant un téléchargement. */
+  async function ensureDownloadAccess(returnTo: string): Promise<boolean> {
+    restorePaidGuestSession()
+    await ensureSession().catch(() => {})
+    await syncGuestSessionForEditor()
+
+    const entitlements = await fetchEntitlements()
+    if (hasDossierDownloadAccess(entitlements)) {
+      return true
+    }
+
+    await navigateTo({
+      path: '/tarifs',
+      query: { reason: 'unlock', returnTo },
+    })
+    return false
+  }
+
+  return { fetchEntitlements, ensureDownloadAccess }
 }
