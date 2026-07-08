@@ -299,6 +299,11 @@ function buildPdfExpiresAt(): Date {
   return expiresAt
 }
 
+/**
+ * No-op de sécurité : le dossier (CV+lettre) est désormais débloqué
+ * avant le démarrage du job PDF. On conserve l'appel pour rattraper
+ * d'anciens chemins sans double-consommation (consumeSnapshotDownload est idempotent).
+ */
 async function maybeConsumeSnapshotCredit(owner?: SnapshotJobOwner) {
   if (!owner) return
   if (owner.userId && owner.resumeId) return

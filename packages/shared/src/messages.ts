@@ -181,14 +181,14 @@ export const MSG = {
       'Créer plusieurs versions',
       "Accéder à l'historique",
     ] as const,
-    successCrossSellCvTitle: 'Votre pack inclut une lettre de motivation',
+    successCrossSellCvTitle: 'Votre dossier inclut aussi une lettre de motivation',
     successCrossSellCvBody:
-      'Le dossier que vous avez payé comprend CV + lettre. Créez votre lettre maintenant — téléchargement inclus, sans repayer.',
-    successCrossSellLetterTitle: 'Complétez votre dossier avec un CV',
+      '1 dossier = 1 CV + 1 lettre. Créez votre lettre maintenant — téléchargement inclus, sans repayer.',
+    successCrossSellLetterTitle: 'Votre dossier inclut aussi un CV',
     successCrossSellLetterBody:
-      'Votre offre couvre le dossier complet (CV + lettre). Créez ou retrouvez votre CV pour l’envoyer avec votre lettre.',
+      '1 dossier = 1 CV + 1 lettre. Créez ou retrouvez votre CV pour l’envoyer avec votre lettre — sans repayer.',
     successCrossSellCtaLetter: 'Créer ma lettre incluse',
-    successCrossSellCtaCv: 'Créer mon CV',
+    successCrossSellCtaCv: 'Créer mon CV inclus',
     successCrossSellDashboard: 'Voir mon tableau de bord',
     successDossierCompleteTitle: 'Votre dossier est complet',
     successDossierCompleteBody:

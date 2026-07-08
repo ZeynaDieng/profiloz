@@ -78,14 +78,15 @@ const crossSellLink = computed(() => {
 })
 
 const crossSellTitle = computed(() => {
-  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellLetterTitle
-  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellCvTitle
+  // next = lettre → on propose la lettre (pas le CV)
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvTitle
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterTitle
   return isLetter.value ? MSG.guide.successCrossSellLetterTitle : MSG.guide.successCrossSellCvTitle
 })
 
 const crossSellBody = computed(() => {
-  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellLetterBody
-  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellCvBody
+  if (nextDocument.value === 'letter') return MSG.guide.successCrossSellCvBody
+  if (nextDocument.value === 'cv') return MSG.guide.successCrossSellLetterBody
   return isLetter.value ? MSG.guide.successCrossSellLetterBody : MSG.guide.successCrossSellCvBody
 })
 
@@ -103,13 +104,7 @@ const showWalletStatus = computed(() => isWalletPurchase.value && entitlementsSu
 
 const dossierDuoHint = computed(() => {
   if (!showCrossSell.value) return null
-  if (nextDocument.value === 'letter') {
-    return 'Votre document a été téléchargé. Votre offre comprend également une lettre de motivation.'
-  }
-  if (nextDocument.value === 'cv') {
-    return 'Votre document a été téléchargé. Votre offre comprend également un CV.'
-  }
-  return null
+  return 'Votre dossier de candidature comprend 1 CV et 1 lettre de motivation. Vous pouvez créer ou télécharger les deux sans coût supplémentaire.'
 })
 
 async function refreshEntitlements() {

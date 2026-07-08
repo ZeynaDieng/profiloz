@@ -483,14 +483,20 @@ export class PaymentService {
       const meta = readGuestSessionMeta(guest.data)
       if (meta.snapshotUnlockedAt) return { consumed: false }
 
+      // Préserver le reste de guest.data (ne pas écraser avec uniquement meta).
+      const baseData =
+        guest.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
+          ? (guest.data as Record<string, unknown>)
+          : {}
+
       const decremented = await tx.guestSession.updateMany({
         where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
         data: {
           creditsBalance: { decrement: 1 },
           data: {
-            ...meta,
+            ...baseData,
             snapshotUnlockedAt: new Date().toISOString(),
-          },
+          } as Prisma.InputJsonValue,
         },
       })
 
