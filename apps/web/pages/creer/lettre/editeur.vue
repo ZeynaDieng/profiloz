@@ -392,6 +392,7 @@ async function downloadPdf() {
             v-model:recruiter-name="recruiterName"
             v-model:content="content"
             v-model:closing-text="closingText"
+            :show-template-picker="true"
             :field-errors="fieldErrors"
           />
           <UiMessageBanner v-if="pdfError" variant="error" :message="pdfError" class="mt-4" />
