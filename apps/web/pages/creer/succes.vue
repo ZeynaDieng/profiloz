@@ -70,9 +70,11 @@ const hasPaidSession = computed(
 const showCrossSell = computed(() => Boolean(nextDocument.value) && hasPaidSession.value)
 
 const crossSellLink = computed(() => {
-  if (nextDocument.value === 'letter') return '/creer/lettre/editeur'
-  if (nextDocument.value === 'cv') return '/creer/editeur'
-  return isLetter.value ? '/creer/editeur' : '/creer/lettre/editeur'
+  // Pour respecter la promesse "vous pouvez choisir le modèle" :
+  // on passe d'abord par l'étape modèle, puis l'éditeur.
+  if (nextDocument.value === 'letter') return '/creer/lettre/modele'
+  if (nextDocument.value === 'cv') return '/creer/modele'
+  return isLetter.value ? '/creer/modele' : '/creer/lettre/modele'
 })
 
 const crossSellTitle = computed(() => {
