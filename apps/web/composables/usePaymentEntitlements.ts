@@ -1,5 +1,6 @@
 import type { Entitlements } from '~/services/payment.service'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
+import { loadGuestDossierState } from '~/utils/guest-dossier-state'
 
 export function usePaymentEntitlements() {
   const paymentService = usePaymentService()
@@ -39,9 +40,21 @@ export function usePaymentEntitlements() {
     await ensureSession().catch(() => {})
     await syncGuestSessionForEditor()
 
-    const entitlements = await fetchEntitlements()
+    let entitlements = await fetchEntitlements()
     if (hasDossierDownloadAccess(entitlements)) {
       return true
+    }
+
+    // Invité : 1er doc déjà téléchargé → 2e inclus ; re-pin session payée et re-vérifier.
+    const dossier = loadGuestDossierState()
+    if (dossier?.paidAt && (dossier.cvDownloaded || dossier.letterDownloaded)) {
+      restorePaidGuestSession()
+      resetGuestSessionSync()
+      await ensureSession().catch(() => {})
+      entitlements = await fetchEntitlements()
+      if (hasDossierDownloadAccess(entitlements)) {
+        return true
+      }
     }
 
     await navigateTo({

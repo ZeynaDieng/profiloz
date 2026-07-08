@@ -2,7 +2,7 @@
 import { MSG } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
-import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 
@@ -218,8 +218,7 @@ async function downloadPdf() {
 
     const { filename } = await pdfService.generateAndDownload(currentSnapshot())
     restorePaidGuestSession()
-    const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
-    if (guestId && !loadGuestDossierState()) initGuestDossier(guestId, 'cv')
+    ensurePaidGuestDossier('cv')
     markGuestDossierDownload('cv')
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename } })

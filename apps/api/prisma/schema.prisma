@@ -153,6 +153,7 @@ model GuestSession {
   sessionId      String    @unique
   data           Json?
   creditsBalance Int       @default(0)
+  dossierUnlockedAt DateTime?
   unlimitedUntil DateTime?
   subscriptionPlanSlug String?
   expiresAt      DateTime

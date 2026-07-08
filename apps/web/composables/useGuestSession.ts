@@ -34,13 +34,19 @@ export function useGuestSession() {
     if (inflightEnsure) return inflightEnsure
 
     inflightEnsure = (async () => {
+      const paidId = readPaidGuestSessionId()
       let id = localStorage.getItem('profiloz:guest-session')
+
+      // Toujours privilégier la session liée au paiement (évite session brouillon ≠ session payée).
+      if (paidId && id !== paidId) {
+        id = paidId
+        localStorage.setItem('profiloz:guest-session', id)
+        lastSyncedSessionId = null
+      }
+
       if (!id) {
-        // Mobile peut “perdre” profiloz:guest-session entre pages.
-        // On réutilise alors la guestSessionId liée au dossier payé (si présente).
-        const paid = readPaidGuestSessionId()
-        if (paid) {
-          id = paid
+        if (paidId) {
+          id = paidId
           localStorage.setItem('profiloz:guest-session', id)
         } else {
           id = createRandomId()

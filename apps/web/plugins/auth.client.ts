@@ -1,4 +1,5 @@
 import { createRandomId } from '~/utils/random-id'
+import { getPaidGuestSessionId } from '~/utils/guest-dossier-state'
 
 export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
@@ -11,9 +12,16 @@ export default defineNuxtPlugin(() => {
 })
 
 async function registerGuestSession() {
+  const paidId = getPaidGuestSessionId()
   let id = localStorage.getItem('profiloz:guest-session')
+
+  if (paidId && id !== paidId) {
+    id = paidId
+    localStorage.setItem('profiloz:guest-session', id)
+  }
+
   if (!id) {
-    id = createRandomId()
+    id = paidId ?? createRandomId()
     localStorage.setItem('profiloz:guest-session', id)
   }
 

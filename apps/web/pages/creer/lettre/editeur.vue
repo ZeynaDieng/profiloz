@@ -6,7 +6,7 @@ import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
-import { initGuestDossier, loadGuestDossierState, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 
@@ -299,8 +299,7 @@ async function downloadPdf() {
     const linkedResumeId = resolvePersistableResumeId(resumeStore.savedResumeId)
     const { filename } = await pdfService.generateLetterAndDownload(snapshot, linkedResumeId)
     restorePaidGuestSession()
-    const guestId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
-    if (guestId && !loadGuestDossierState()) initGuestDossier(guestId, 'letter')
+    ensurePaidGuestDossier('letter')
     markGuestDossierDownload('letter')
     saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })

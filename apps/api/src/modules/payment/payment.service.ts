@@ -77,8 +77,9 @@ function readGuestSessionMeta(data: unknown): GuestSessionMeta {
 async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string): Promise<boolean> {
   const guest = await prisma.guestSession.findUnique({
     where: { id: guestSessionDbId },
-    select: { data: true },
+    select: { dossierUnlockedAt: true, data: true },
   })
+  if (guest?.dossierUnlockedAt) return true
   return Boolean(readGuestSessionMeta(guest?.data).snapshotUnlockedAt)
 }
 
@@ -476,9 +477,11 @@ export class PaymentService {
     return prisma.$transaction(async (tx) => {
       const guest = await tx.guestSession.findUnique({
         where: { id: owner.guestSessionDbId },
-        select: { data: true, creditsBalance: true },
+        select: { data: true, creditsBalance: true, dossierUnlockedAt: true },
       })
       if (!guest) throw new AppError(404, 'Not Found', 'Session invité introuvable')
+
+      if (guest.dossierUnlockedAt) return { consumed: false }
 
       const meta = readGuestSessionMeta(guest.data)
       if (meta.snapshotUnlockedAt) return { consumed: false }
@@ -493,6 +496,7 @@ export class PaymentService {
         where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
         data: {
           creditsBalance: { decrement: 1 },
+          dossierUnlockedAt: new Date(),
           data: {
             ...baseData,
             snapshotUnlockedAt: new Date().toISOString(),
@@ -533,10 +537,10 @@ export class PaymentService {
     if (owner.guestSessionDbId) {
       const guest = await prisma.guestSession.findUnique({
         where: { id: owner.guestSessionDbId },
-        select: { data: true },
+        select: { data: true, dossierUnlockedAt: true },
       })
       const meta = readGuestSessionMeta(guest?.data)
-      if (meta.snapshotUnlockedAt) {
+      if (meta.snapshotUnlockedAt || guest?.dossierUnlockedAt) {
         const baseData =
           guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
             ? (guest.data as Record<string, unknown>)
@@ -544,7 +548,10 @@ export class PaymentService {
         const { snapshotUnlockedAt: _removed, ...rest } = baseData
         await prisma.guestSession.update({
           where: { id: owner.guestSessionDbId },
-          data: { data: rest as Prisma.InputJsonValue },
+          data: {
+            dossierUnlockedAt: null,
+            data: rest as Prisma.InputJsonValue,
+          },
         })
       }
     }
@@ -750,10 +757,10 @@ export class PaymentService {
       if (owner.guestSessionDbId) {
         const guest = await prisma.guestSession.findUnique({
           where: { id: owner.guestSessionDbId },
-          select: { data: true },
+          select: { data: true, dossierUnlockedAt: true },
         })
         const meta = readGuestSessionMeta(guest?.data)
-        if (!meta.snapshotUnlockedAt) {
+        if (!guest?.dossierUnlockedAt && !meta.snapshotUnlockedAt) {
           const baseData =
             guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
               ? (guest.data as Record<string, unknown>)
@@ -762,6 +769,7 @@ export class PaymentService {
           await prisma.guestSession.update({
             where: { id: owner.guestSessionDbId },
             data: {
+              dossierUnlockedAt: new Date(),
               data: {
                 ...baseData,
                 snapshotUnlockedAt: new Date().toISOString(),
@@ -832,10 +840,10 @@ export class PaymentService {
       ) {
         const guest = await tx.guestSession.findUnique({
           where: { id: owner.guestSessionDbId },
-          select: { data: true },
+          select: { data: true, dossierUnlockedAt: true },
         })
         const meta = readGuestSessionMeta(guest?.data)
-        if (!meta.snapshotUnlockedAt) {
+        if (!guest?.dossierUnlockedAt && !meta.snapshotUnlockedAt) {
           const baseData =
             guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
               ? (guest.data as Record<string, unknown>)
@@ -843,6 +851,7 @@ export class PaymentService {
           await tx.guestSession.update({
             where: { id: owner.guestSessionDbId },
             data: {
+              dossierUnlockedAt: new Date(),
               data: {
                 ...baseData,
                 snapshotUnlockedAt: new Date().toISOString(),
@@ -864,11 +873,19 @@ export class PaymentService {
   async migrateGuestToUser(userId: string, guestSessionDbId: string) {
     const guest = await prisma.guestSession.findUnique({
       where: { id: guestSessionDbId },
-      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true, data: true },
+      select: {
+        creditsBalance: true,
+        unlimitedUntil: true,
+        subscriptionPlanSlug: true,
+        dossierUnlockedAt: true,
+        data: true,
+      },
     })
     if (!guest) return
 
-    const guestSnapshotUnlocked = readGuestSessionMeta(guest.data).snapshotUnlockedAt
+    const guestSnapshotUnlocked =
+      guest.dossierUnlockedAt?.toISOString()
+      ?? readGuestSessionMeta(guest.data).snapshotUnlockedAt
 
     await prisma.$transaction(async (tx) => {
       await tx.resume.updateMany({
