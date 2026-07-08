@@ -145,6 +145,33 @@ export function markGuestDossierDownload(kind: 'cv' | 'letter'): GuestDossierSta
   return state
 }
 
+/** Réaligne l'état dossier après un téléchargement (utile si mobile a perdu le suivi). */
+export function syncGuestDossierFromDownloads(): GuestDossierState | null {
+  const last = loadLastDownloadContext()
+  if (!last) return loadGuestDossierState()
+
+  const guestSessionId =
+    restorePaidGuestSession()
+    ?? (typeof localStorage !== 'undefined' ? localStorage.getItem(GUEST_SESSION_KEY) : null)
+  if (!guestSessionId) return loadGuestDossierState()
+
+  let state = readStorage()
+  if (!state?.paidAt || state.guestSessionId !== guestSessionId) {
+    state = initGuestDossier(guestSessionId, last.kind, { freshPayment: true })
+  }
+
+  if (last.kind === 'cv' && !state.cvDownloaded) {
+    state.cvDownloaded = true
+    writeStorage(state)
+  }
+  if (last.kind === 'letter' && !state.letterDownloaded) {
+    state.letterDownloaded = true
+    writeStorage(state)
+  }
+
+  return readStorage()
+}
+
 export function isGuestDossierComplete(state: GuestDossierState | null = readStorage()): boolean {
   if (!state) return false
   return state.cvDownloaded && state.letterDownloaded

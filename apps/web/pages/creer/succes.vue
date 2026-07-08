@@ -8,6 +8,7 @@ import {
   loadGuestDossierState,
   nextIncludedDocument,
   reconcileGuestDossierFlags,
+  syncGuestDossierFromDownloads,
   type GuestDossierState,
 } from '~/utils/guest-dossier-state'
 import { loadLastDownloadContext } from '~/utils/last-download-context'
@@ -58,7 +59,15 @@ const editLink = computed(() => (isLetter.value ? '/creer/lettre/editeur' : '/cr
 
 const dossierComplete = computed(() => isGuestDossierComplete(dossierState.value))
 const nextDocument = computed(() => nextIncludedDocument(dossierState.value))
-const showCrossSell = computed(() => Boolean(nextDocument.value) && hasPaidAccess.value)
+
+const hasPaidSession = computed(
+  () =>
+    hasPaidAccess.value
+    || Boolean(dossierState.value?.paidAt)
+    || (typeof route.query.file === 'string' && Boolean(route.query.file.trim())),
+)
+
+const showCrossSell = computed(() => Boolean(nextDocument.value) && hasPaidSession.value)
 
 const crossSellLink = computed(() => {
   if (nextDocument.value === 'letter') return '/creer/lettre/editeur'
@@ -124,7 +133,10 @@ onMounted(async () => {
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
   const hasLetterContent = Boolean(coverLetterStore.current?.content?.trim())
-  dossierState.value = reconcileGuestDossierFlags(hasLetterContent) ?? loadGuestDossierState()
+  dossierState.value =
+    reconcileGuestDossierFlags(hasLetterContent)
+    ?? syncGuestDossierFromDownloads()
+    ?? loadGuestDossierState()
 
   const container = document.getElementById('confetti-container')
   if (container) {
@@ -149,14 +161,16 @@ onMounted(async () => {
     const lastKind = loadLastDownloadContext()?.kind ?? (isLetter.value ? 'letter' : 'cv')
     dossierState.value = ensurePaidGuestDossier(lastKind) ?? loadGuestDossierState()
   }
+
+  dossierState.value = syncGuestDossierFromDownloads() ?? dossierState.value
 })
 </script>
 
 <template>
-  <div class="flex flex-col min-h-[calc(100vh-3.25rem)] relative overflow-hidden gradient-mesh pb-28 sm:pb-8">
+  <div class="flex flex-col min-h-[calc(100vh-3.25rem)] relative overflow-y-auto gradient-mesh pb-28 sm:pb-8">
     <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
 
-    <div class="relative flex-1 flex flex-col items-center justify-center p-margin-mobile">
+    <div class="relative flex-1 flex flex-col items-center justify-start sm:justify-center p-margin-mobile py-8">
       <UiCard variant="glass" padding="lg" class="w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">
         <div class="text-5xl mb-4 sm:mb-6">🎉</div>
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 sm:mb-4">Félicitations !</h1>
@@ -255,6 +269,7 @@ onMounted(async () => {
 
         <BillingAccountChoiceCard
           v-else
+          class="mt-2"
           :signup-redirect="signupRedirect"
           :secondary-account-cta="isWalletPurchase"
           :title="showCrossSell ? 'Sauvegardez votre dossier' : isWalletPurchase ? 'Sauvegardez vos crédits' : undefined"
