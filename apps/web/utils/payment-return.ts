@@ -5,20 +5,39 @@ import { getResumeDraftStorageKey } from '~/utils/resume-draft-storage'
 const RETURN_KEY = 'profiloz:payment-return-to'
 const REF_KEY = 'profiloz:payment-ref'
 
+function writeSession(key: string, value: string) {
+  if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, value)
+  if (typeof localStorage !== 'undefined') localStorage.setItem(key, value)
+}
+
+function readSession(key: string): string | null {
+  if (typeof sessionStorage !== 'undefined') {
+    const fromSession = sessionStorage.getItem(key)
+    if (fromSession) return fromSession
+  }
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem(key)
+  }
+  return null
+}
+
+function removeSession(key: string) {
+  if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(key)
+  if (typeof localStorage !== 'undefined') localStorage.removeItem(key)
+}
+
 export function savePaymentReturnTo(path: string) {
-  if (typeof sessionStorage === 'undefined') return
   if (!path.startsWith('/') || path.startsWith('//')) return
-  sessionStorage.setItem(RETURN_KEY, path)
+  writeSession(RETURN_KEY, path)
 }
 
 export function peekPaymentReturnTo(): string | null {
-  if (typeof sessionStorage === 'undefined') return null
-  return sessionStorage.getItem(RETURN_KEY)
+  return readSession(RETURN_KEY)
 }
 
 export function consumePaymentReturnTo(): string | null {
   const value = peekPaymentReturnTo()
-  if (value) sessionStorage.removeItem(RETURN_KEY)
+  if (value) removeSession(RETURN_KEY)
   return value
 }
 
@@ -31,14 +50,12 @@ export function resolvePaymentReturnTo(queryReturnTo: unknown): string | null {
 }
 
 export function savePaymentRef(ref: string) {
-  if (typeof sessionStorage === 'undefined') return
   if (!ref.startsWith('pz_')) return
-  sessionStorage.setItem(REF_KEY, ref)
+  writeSession(REF_KEY, ref)
 }
 
 export function peekPaymentRef(): string | null {
-  if (typeof sessionStorage === 'undefined') return null
-  return sessionStorage.getItem(REF_KEY)
+  return readSession(REF_KEY)
 }
 
 export function resolvePaymentRef(queryRef: unknown): string | null {
@@ -50,8 +67,7 @@ export function resolvePaymentRef(queryRef: unknown): string | null {
 }
 
 export function clearPaymentRef() {
-  if (typeof sessionStorage === 'undefined') return
-  sessionStorage.removeItem(REF_KEY)
+  removeSession(REF_KEY)
 }
 
 export function isGuestPdfReturnPath(path: string): boolean {
