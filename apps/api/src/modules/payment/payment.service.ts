@@ -730,7 +730,43 @@ export class PaymentService {
       select: { id: true, unlockedAt: true },
     })
     if (!resume) throw new AppError(404, 'Not Found', 'Dossier introuvable')
-    if (resume.unlockedAt) return { unlocked: true, consumedCredit: false }
+
+    // Si le CV est déjà débloqué (unlockedAt), alors le dossier de candidature (CV+lettre)
+    // doit aussi être considéré comme débloqué. On synchronise l'état dossier sans consommer.
+    if (resume.unlockedAt) {
+      if (owner.userId) {
+        await prisma.user.updateMany({
+          where: { id: owner.userId, dossierUnlockedAt: null },
+          data: { dossierUnlockedAt: new Date() },
+        })
+      }
+
+      if (owner.guestSessionDbId) {
+        const guest = await prisma.guestSession.findUnique({
+          where: { id: owner.guestSessionDbId },
+          select: { data: true },
+        })
+        const meta = readGuestSessionMeta(guest?.data)
+        if (!meta.snapshotUnlockedAt) {
+          const baseData =
+            guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
+              ? (guest.data as Record<string, unknown>)
+              : {}
+
+          await prisma.guestSession.update({
+            where: { id: owner.guestSessionDbId },
+            data: {
+              data: {
+                ...baseData,
+                snapshotUnlockedAt: new Date().toISOString(),
+              } as Prisma.InputJsonValue,
+            },
+          })
+        }
+      }
+
+      return { unlocked: true, consumedCredit: false }
+    }
 
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) {
