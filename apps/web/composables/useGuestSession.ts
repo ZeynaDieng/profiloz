@@ -3,6 +3,19 @@ import { createRandomId } from '~/utils/random-id'
 let inflightEnsure: Promise<string | null> | null = null
 let lastSyncedSessionId: string | null = null
 
+function readPaidGuestSessionId(): string | null {
+  try {
+    if (typeof localStorage === 'undefined') return null
+    const raw = localStorage.getItem('profiloz:guest-dossier')
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { guestSessionId?: unknown; paidAt?: unknown }
+    if (typeof parsed.guestSessionId === 'string' && typeof parsed.paidAt === 'string') return parsed.guestSessionId
+    return null
+  } catch {
+    return null
+  }
+}
+
 export function useGuestSession() {
   const guestSessionId = useState<string | null>('guestSessionId', () => null)
 
@@ -23,8 +36,16 @@ export function useGuestSession() {
     inflightEnsure = (async () => {
       let id = localStorage.getItem('profiloz:guest-session')
       if (!id) {
-        id = createRandomId()
-        localStorage.setItem('profiloz:guest-session', id)
+        // Mobile peut “perdre” profiloz:guest-session entre pages.
+        // On réutilise alors la guestSessionId liée au dossier payé (si présente).
+        const paid = readPaidGuestSessionId()
+        if (paid) {
+          id = paid
+          localStorage.setItem('profiloz:guest-session', id)
+        } else {
+          id = createRandomId()
+          localStorage.setItem('profiloz:guest-session', id)
+        }
       }
 
       guestSessionId.value = id
