@@ -738,6 +738,14 @@ export class PaymentService {
       return { unlocked: true, consumedCredit: false }
     }
 
+    // Si le dossier (CV+lettre) est déjà débloqué via un crédit snapshot
+    // (dossierUnlockedAt côté user ou snapshotUnlockedAt côté invité),
+    // alors on doit pouvoir débloquer le CV sans reconsommer un 2e crédit.
+    if (entitlements.canDownloadSnapshot) {
+      await prisma.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } })
+      return { unlocked: true, consumedCredit: false }
+    }
+
     return prisma.$transaction(async (tx) => {
       const fresh = await tx.resume.findFirst({
         where: ownerWhere,
