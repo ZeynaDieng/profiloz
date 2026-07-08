@@ -21,6 +21,7 @@ function toDto(letter: {
   content: string
   closingText: string | null
   templateId: string
+  accentColor: string | null
   resumeId: string | null
   createdAt: Date
   updatedAt: Date
@@ -39,6 +40,7 @@ function toDto(letter: {
     content: letter.content,
     closingText: letter.closingText,
     templateId: letter.templateId,
+    accentColor: letter.accentColor,
     resumeId: letter.resumeId,
     createdAt: letter.createdAt.toISOString(),
     updatedAt: letter.updatedAt.toISOString(),
@@ -71,6 +73,7 @@ export class CoverLetterService {
       content: input.content,
       closingText: input.closingText ?? null,
       templateId: input.templateId,
+      accentColor: input.accentColor ?? null,
       ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
     })
     return toDto(letter)
@@ -99,6 +102,7 @@ export class CoverLetterService {
       content: input.content,
       closingText: input.closingText ?? null,
       templateId: input.templateId,
+      accentColor: input.accentColor ?? null,
       ...(input.resumeId !== undefined
         ? input.resumeId
           ? { resume: { connect: { id: input.resumeId } } }
@@ -130,6 +134,7 @@ export class CoverLetterService {
       recruiterName: letter.recruiterName,
       content: letter.content,
       closingText: letter.closingText,
+      accentColor: letter.accentColor,
     }))
   }
 
@@ -161,6 +166,7 @@ export class CoverLetterService {
         recruiterName: letter.recruiterName,
         content: letter.content,
         closingText: letter.closingText,
+        accentColor: letter.accentColor,
       },
       { userId: owner.userId },
     )

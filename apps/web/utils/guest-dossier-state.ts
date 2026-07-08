@@ -120,7 +120,22 @@ export function initGuestDossier(
   return state
 }
 
+export function ensurePaidGuestDossier(kind: 'cv' | 'letter'): GuestDossierState | null {
+  const guestSessionId =
+    restorePaidGuestSession()
+    ?? (typeof localStorage !== 'undefined' ? localStorage.getItem(GUEST_SESSION_KEY) : null)
+  if (!guestSessionId) return readStorage()
+
+  const existing = readStorage()
+  if (existing?.paidAt && existing.guestSessionId === guestSessionId) {
+    return existing
+  }
+
+  return initGuestDossier(guestSessionId, kind, { freshPayment: true })
+}
+
 export function markGuestDossierDownload(kind: 'cv' | 'letter'): GuestDossierState | null {
+  ensurePaidGuestDossier(kind)
   const state = readStorage()
   if (!state) return null
   pinPaidGuestSession(state.guestSessionId)

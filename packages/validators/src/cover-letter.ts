@@ -13,6 +13,11 @@ const templateIdSchema = z.enum(COVER_LETTER_TEMPLATE_IDS).default('CLASSIQUE')
 
 const optionalText = (max: number) => z.string().max(max).nullish()
 
+const accentColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, 'Couleur invalide')
+  .nullish()
+
 const coverLetterFields = {
   resumeId: z.string().nullish(),
   title: z.string().trim().min(1, 'Titre requis').max(200).default('Lettre de motivation'),
@@ -27,6 +32,7 @@ const coverLetterFields = {
   content: z.string().trim().min(1, 'Contenu requis').max(10000),
   closingText: optionalText(500),
   templateId: templateIdSchema,
+  accentColor: accentColorSchema,
 }
 
 export const createCoverLetterSchema = z.object(coverLetterFields)

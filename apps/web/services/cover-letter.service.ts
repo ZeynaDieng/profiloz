@@ -19,6 +19,7 @@ export interface CoverLetter {
   content: string
   closingText?: string | null
   templateId: string
+  accentColor?: string | null
   resumeId?: string | null
   createdAt: string
   updatedAt: string
@@ -49,6 +50,7 @@ export function useCoverLetterService() {
     content: string
     closingText?: string
     templateId?: CoverLetterTemplateSlug
+    accentColor?: string
     resumeId?: string
   }) {
     return post<CoverLetter>('/cover-letters', payload)

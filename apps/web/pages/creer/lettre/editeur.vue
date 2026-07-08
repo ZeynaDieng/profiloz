@@ -224,6 +224,7 @@ async function saveLetterToServer(): Promise<string | null> {
     content: draft.content,
     closingText: draft.closingText || undefined,
     templateId: draft.templateSlug,
+    accentColor: draft.accentColor || undefined,
     resumeId,
   }
 

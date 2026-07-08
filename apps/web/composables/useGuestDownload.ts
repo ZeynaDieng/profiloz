@@ -4,6 +4,7 @@ import {
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
 import {
+  ensurePaidGuestDossier,
   markGuestDossierDownload,
   restorePaidGuestSession,
 } from '~/utils/guest-dossier-state'
@@ -110,6 +111,7 @@ export function useGuestDownload() {
       if (kind === 'letter') {
         const snapshot = loadLetterSnapshot()
         if (!snapshot?.content?.trim()) throw new Error('missing-letter')
+        ensurePaidGuestDossier('letter')
         resumeStore.rehydrateFromStorage()
         const { filename } = await pdfService.generateLetterAndDownload(
           snapshot,
@@ -123,6 +125,7 @@ export function useGuestDownload() {
 
       const snapshot = loadResumeSnapshot()
       if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
+      ensurePaidGuestDossier('cv')
       const { filename } = await pdfService.generateAndDownload(snapshot)
       markGuestDossierDownload('cv')
       lastFilename.value = filename

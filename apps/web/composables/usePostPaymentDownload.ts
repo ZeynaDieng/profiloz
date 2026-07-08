@@ -5,6 +5,7 @@ import {
 } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
+  ensurePaidGuestDossier,
   initGuestDossier,
   markGuestDossierDownload,
   pinPaidGuestSession,
@@ -193,6 +194,7 @@ export function usePostPaymentDownload() {
       const letterSnapshot = loadLetterForDownload()
       await ensureSession()
       if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
+      ensurePaidGuestDossier('letter')
       resumeStore.rehydrateFromStorage()
       const { filename } = await pdfService.generateLetterAndDownload(
         letterSnapshot,
@@ -213,6 +215,7 @@ export function usePostPaymentDownload() {
     await ensureSession()
     if (!resumeSnapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
 
+    ensurePaidGuestDossier('cv')
     const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
     markGuestDossierDownload('cv')
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
