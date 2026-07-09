@@ -14,8 +14,6 @@ const hero = computed(() => section<{
   subtitle?: string
   ctaPrimary?: string
   ctaPrimaryLink?: string
-  ctaSecondary?: string
-  ctaSecondaryLink?: string
   journeySteps?: string[]
 }>('hero'))
 
@@ -133,12 +131,6 @@ function onHeroTitleComplete() {
             class="btn-primary hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
-          </NuxtLink>
-          <NuxtLink
-            :to="hero.ctaSecondaryLink || '/creer/lettre'"
-            class="btn-outline hero-banner__btn hidden sm:inline-flex w-auto px-7 py-3 rounded-2xl bg-white/90"
-          >
-            {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>
         </div>
 
