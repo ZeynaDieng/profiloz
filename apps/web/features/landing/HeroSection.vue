@@ -80,7 +80,6 @@ const heroSubtitle = computed(() => {
 const heroLine2 = computed(() => heroLines.value[1] ?? '')
 
 const heroCopyVisible = ref(false)
-const mobileCtaOpen = ref(false)
 
 watch(
   heroLine2,
@@ -93,16 +92,6 @@ watch(
 function onHeroTitleComplete() {
   heroCopyVisible.value = true
 }
-
-function toggleMobileCta() {
-  mobileCtaOpen.value = !mobileCtaOpen.value
-}
-
-const mobileCtaRoot = ref<HTMLElement | null>(null)
-
-onClickOutside(mobileCtaRoot, () => {
-  mobileCtaOpen.value = false
-})
 </script>
 
 <template>
@@ -134,67 +123,20 @@ onClickOutside(mobileCtaRoot, () => {
           {{ heroSubtitle }}
         </p>
 
-        <!-- Mobile: un seul CTA avec choix CV / lettre -->
         <div
-          ref="mobileCtaRoot"
-          class="hero-copy-reveal hero-banner__actions hero-banner__actions--mobile order-3 mt-6 sm:hidden relative"
-          :class="heroCopyVisible && 'is-visible'"
-          style="transition-delay: 80ms"
-        >
-          <button
-            type="button"
-            class="btn-primary hero-banner__btn w-full px-7 py-3 rounded-2xl premium-shadow-sm inline-flex items-center justify-center gap-2"
-            :aria-expanded="mobileCtaOpen"
-            aria-haspopup="menu"
-            @click="toggleMobileCta"
-          >
-            {{ hero.ctaPrimary || 'Commencer gratuitement' }}
-            <UiPzIcon
-              :name="mobileCtaOpen ? 'expand_less' : 'expand_more'"
-              class="text-[20px]"
-            />
-          </button>
-          <div
-            v-show="mobileCtaOpen"
-            role="menu"
-            class="hero-banner__cta-menu absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-2xl border border-outline-variant/25 bg-white premium-shadow-sm"
-          >
-            <NuxtLink
-              :to="hero.ctaPrimaryLink || '/creer'"
-              role="menuitem"
-              class="flex items-center gap-3 px-4 py-3.5 min-h-11 text-left text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-              @click="mobileCtaOpen = false"
-            >
-              <UiPzIcon name="description" class="text-[20px] text-secondary shrink-0" />
-              Créer mon CV
-            </NuxtLink>
-            <NuxtLink
-              :to="hero.ctaSecondaryLink || '/creer/lettre'"
-              role="menuitem"
-              class="flex items-center gap-3 px-4 py-3.5 min-h-11 text-left text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors border-t border-outline-variant/15"
-              @click="mobileCtaOpen = false"
-            >
-              <UiPzIcon name="mail" class="text-[20px] text-secondary shrink-0" />
-              Créer une lettre
-            </NuxtLink>
-          </div>
-        </div>
-
-        <!-- Desktop / tablet: deux CTAs côte à côte -->
-        <div
-          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 hidden sm:flex flex-row items-center justify-center lg:justify-start gap-3"
+          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
           :class="heroCopyVisible && 'is-visible'"
           style="transition-delay: 80ms"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
-            class="btn-primary hero-banner__btn w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
+            class="btn-primary hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
           </NuxtLink>
           <NuxtLink
             :to="hero.ctaSecondaryLink || '/creer/lettre'"
-            class="btn-outline hero-banner__btn w-auto px-7 py-3 rounded-2xl bg-white/90"
+            class="btn-outline hero-banner__btn hidden sm:inline-flex w-auto px-7 py-3 rounded-2xl bg-white/90"
           >
             {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>
