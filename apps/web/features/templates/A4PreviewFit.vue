@@ -42,8 +42,4 @@ useResizeObserver(containerRef, () => nextTick(updateScale))
   box-shadow: none;
   margin: 0;
 }
-
-.a4-preview-fit :deep(.resume-a4 > p:last-child) {
-  display: none;
-}
 </style>

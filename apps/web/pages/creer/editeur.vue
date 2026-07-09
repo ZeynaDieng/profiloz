@@ -5,6 +5,7 @@ import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accen
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
+import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 
 definePageMeta({ layout: false })
 
@@ -43,13 +44,11 @@ const changeTemplateHref = computed(() => changeTemplateHrefFromRoute(route))
 
 const previewResume = computed(() => {
   if (!resumeStore.current) return null
-  return {
-    ...resumeStore.current,
-    templateConfig: {
-      ...resumeStore.current.templateConfig,
-      accentColor: accentColor.value,
-    },
-  }
+  return buildPreviewSnapshot(
+    resumeStore.current.templateSlug,
+    accentColor.value,
+    resumeStore.current,
+  )
 })
 
 async function persistToServer() {
@@ -183,8 +182,8 @@ async function saveResume(silent = false) {
 async function downloadPdf() {
   pdfError.value = ''
   if (editorValidation && !editorValidation.validateAll()) {
+    // validateAll annonce déjà l’erreur (banner + toast + scroll)
     pdfError.value = MSG.validation.invalidData
-    editorValidation.scrollToFirstError()
     return
   }
   pdfLoading.value = true
@@ -209,6 +208,7 @@ async function downloadPdf() {
       )
       if (!resumeId) {
         pdfError.value = MSG.save.error
+        useAppToast().error(MSG.save.error)
         return
       }
       const { filename } = await pdfService.downloadResumeCv(resumeId, currentSnapshot())
@@ -232,6 +232,7 @@ async function downloadPdf() {
       return
     }
     pdfError.value = MSG.pdf.error
+    useAppToast().error(MSG.pdf.error)
   } finally {
     window.clearInterval(stepTimer)
     pdfLoading.value = false
@@ -319,6 +320,15 @@ async function downloadPdf() {
     <p v-if="autoSaveLabel" class="hidden lg:block text-xs text-secondary text-right px-gutter -mt-1 pb-1 truncate">
       {{ autoSaveLabel }}
     </p>
+
+    <Transition name="form-field__error">
+      <UiMessageBanner
+        v-if="pdfError"
+        variant="error"
+        :message="pdfError"
+        class="mx-margin-mobile md:mx-margin-tablet xl:mx-gutter mt-2 mb-1 shrink-0"
+      />
+    </Transition>
 
     <!-- Status bar mobile -->
     <div
@@ -414,13 +424,6 @@ async function downloadPdf() {
     </UiFullScreenSheet>
 
     <LayoutGuestFlowDrawer />
-
-    <UiMessageBanner
-      v-if="pdfError"
-      variant="error"
-      :message="pdfError"
-      class="rounded-none border-x-0 border-b-0"
-    />
 
     <!-- Chargement PDF narratif -->
     <div

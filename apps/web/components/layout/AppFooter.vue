@@ -9,6 +9,7 @@ const productLinks = [
   { to: '/creer', label: 'Fonctionnalités' },
   { to: '/creer/modele', label: 'Modèles' },
   { to: '/tarifs', label: 'Tarifs' },
+  { to: '/faq', label: 'Questions fréquentes' },
 ]
 
 const legalLinks = [
@@ -27,7 +28,7 @@ const legalLinks = [
       <div class="space-y-4 sm:col-span-2 lg:col-span-1">
         <UiAppLogo size="lg" />
         <p class="text-on-surface-variant text-sm leading-relaxed max-w-xs">
-          La référence premium pour une documentation de carrière moderne.
+          Modèles professionnels de CV et lettre de motivation. Profilo'Z réunit l'ensemble de votre dossier de candidature au même endroit.
         </p>
         <NuxtLink to="/creer" class="btn-primary !inline-flex sm:hidden">
           Créer mon dossier
@@ -38,7 +39,7 @@ const legalLinks = [
         <h5 class="font-bold text-on-surface mb-2">Produit</h5>
         <NuxtLink
           v-for="link in productLinks"
-          :key="link.to"
+          :key="link.label"
           :to="link.to"
           class="min-h-11 inline-flex items-center text-on-surface-variant hover:text-primary text-sm"
         >

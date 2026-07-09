@@ -48,10 +48,10 @@ function removeItem(index: number) {
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
       <UiFormField label="Entreprise" required :error="fieldError(index, 'company')">
-        <input v-model="item.company" type="text" class="form-input w-full" />
+        <input v-model="item.company" type="text" class="form-input w-full" placeholder="Orange Sénégal" />
       </UiFormField>
       <UiFormField label="Poste" required :error="fieldError(index, 'position')">
-        <input v-model="item.position" type="text" class="form-input w-full" />
+        <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
         <UiFormField label="Ville" required :error="fieldError(index, 'location')">

@@ -47,8 +47,4 @@ const previewStyle = computed(() =>
   box-shadow: none;
   margin: 0;
 }
-
-.letter-a4-preview-fit :deep(.letter-a4 > p:last-child) {
-  display: none;
-}
 </style>

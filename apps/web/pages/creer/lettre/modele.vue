@@ -5,6 +5,7 @@ import {
   COVER_LETTER_TEMPLATE_FILTERS,
   COVER_LETTER_TEMPLATE_REGISTRY,
 } from '~/features/cover-letter-templates/registry'
+import { AMINATA_PERSONA } from '~/features/demo/aminata-persona'
 
 definePageMeta({ layout: 'wizard' })
 
@@ -13,16 +14,16 @@ const coverLetterStore = useCoverLetterStore()
 const resumeStore = useResumeStore()
 const route = useRoute()
 const formError = ref('')
+const toast = useAppToast()
 
 onMounted(() => {
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
-  coverLetterStore.initDraft()
-
-  const skipDemo = route.query.fresh === '1' || Boolean(route.query.select || route.query.template)
-  if (!skipDemo && !coverLetterStore.current?.senderName?.trim()) {
-    coverLetterStore.loadDemoPersona(resumeStore.current)
+  // Formulaire vide : la démo Aminata reste uniquement dans l’aperçu
+  if (coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
+    coverLetterStore.startNewDraft()
   }
+  coverLetterStore.initDraft()
 
   if (!selectedSlug.value && coverLetterStore.current?.templateSlug) {
     selectedSlug.value = coverLetterStore.current.templateSlug
@@ -51,8 +52,9 @@ function onContinue() {
   formError.value = ''
   if (!selectedSlug.value) {
     formError.value = MSG.wizard.chooseTemplate
+    toast.error(MSG.wizard.chooseTemplate)
     nextTick(() => {
-      document.querySelector('[data-form-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.querySelector('[role="alert"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     })
     return
   }

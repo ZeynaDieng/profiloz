@@ -3,7 +3,6 @@ import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import {
   COVER_LETTER_TEMPLATE_REGISTRY,
-  DEFAULT_LETTER_CONTENT,
 } from '~/features/cover-letter-templates/registry'
 
 const templateId = defineModel<CoverLetterTemplateSlug>('templateId', { required: true })
@@ -15,7 +14,7 @@ const companyName = defineModel<string>('companyName', { default: '' })
 const companyAddress = defineModel<string>('companyAddress', { default: '' })
 const position = defineModel<string>('position', { default: '' })
 const recruiterName = defineModel<string>('recruiterName', { default: '' })
-const content = defineModel<string>('content', { default: DEFAULT_LETTER_CONTENT })
+const content = defineModel<string>('content', { default: '' })
 const closingText = defineModel<string>('closingText', { default: DEFAULT_CLOSING_TEXT })
 
 defineProps<{
@@ -54,14 +53,24 @@ function fieldError(fieldErrors: Record<string, string> | undefined, key: string
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Expéditeur</h2>
       <UiFormField label="Nom complet" required :error="fieldError(fieldErrors, 'senderName')">
-        <input v-model="senderName" type="text" class="form-input form-input--white w-full" placeholder="Jean Dupont" />
+        <input v-model="senderName" type="text" class="form-input form-input--white w-full" placeholder="Aminata Diallo" />
       </UiFormField>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-sm">
         <UiFormField label="E-mail" :error="fieldError(fieldErrors, 'senderEmail')">
-          <input v-model="senderEmail" type="email" class="form-input form-input--white w-full" />
+          <input
+            v-model="senderEmail"
+            type="email"
+            class="form-input form-input--white w-full"
+            placeholder="aminata@exemple.com"
+          />
         </UiFormField>
         <UiFormField label="Téléphone">
-          <input v-model="senderPhone" type="text" class="form-input form-input--white w-full" />
+          <input
+            v-model="senderPhone"
+            type="text"
+            class="form-input form-input--white w-full"
+            placeholder="+221 77 000 00 00"
+          />
         </UiFormField>
       </div>
       <UiFormField label="Ville / Adresse">
@@ -72,17 +81,32 @@ function fieldError(fieldErrors: Record<string, string> | undefined, key: string
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Destinataire</h2>
       <UiFormField label="Entreprise" required :error="fieldError(fieldErrors, 'companyName')">
-        <input v-model="companyName" type="text" class="form-input form-input--white w-full" placeholder="Acme Corp" />
+        <input v-model="companyName" type="text" class="form-input form-input--white w-full" placeholder="Wave Mobile Money" />
       </UiFormField>
       <UiFormField label="Adresse entreprise (optionnel)">
-        <textarea v-model="companyAddress" rows="2" class="form-input form-input--white w-full resize-y" />
+        <textarea
+          v-model="companyAddress"
+          rows="2"
+          class="form-input form-input--white w-full resize-y"
+          placeholder="Immeuble SDMO, Plateau, Dakar"
+        />
       </UiFormField>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-sm">
         <UiFormField label="Poste visé" required :error="fieldError(fieldErrors, 'position')">
-          <input v-model="position" type="text" class="form-input form-input--white w-full" />
+          <input
+            v-model="position"
+            type="text"
+            class="form-input form-input--white w-full"
+            placeholder="Responsable marketing digital"
+          />
         </UiFormField>
         <UiFormField label="Nom du recruteur (optionnel)">
-          <input v-model="recruiterName" type="text" class="form-input form-input--white w-full" />
+          <input
+            v-model="recruiterName"
+            type="text"
+            class="form-input form-input--white w-full"
+            placeholder="Mme Ndiaye"
+          />
         </UiFormField>
       </div>
     </section>
@@ -90,7 +114,12 @@ function fieldError(fieldErrors: Record<string, string> | undefined, key: string
     <section class="space-y-stack-sm">
       <h2 class="text-sm font-bold text-on-surface">Contenu</h2>
       <UiFormField label="Corps de la lettre" required :error="fieldError(fieldErrors, 'content')">
-        <textarea v-model="content" rows="10" class="form-input form-input--white w-full resize-y" />
+        <textarea
+          v-model="content"
+          rows="10"
+          class="form-input form-input--white w-full resize-y"
+          placeholder="Rédigez votre lettre de motivation…"
+        />
       </UiFormField>
       <UiFormField label="Formule de politesse">
         <textarea v-model="closingText" rows="2" class="form-input form-input--white w-full resize-y" />

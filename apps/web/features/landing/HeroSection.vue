@@ -35,34 +35,52 @@ const heroBannerStyle = computed(() => ({
 }))
 
 const heroLines = computed(() => {
-  if (heroVariant.value === 'transform') {
-    const custom = hero.value.titleTransform?.trim()
-    if (custom) {
-      const dot = custom.indexOf('.')
-      if (dot > 0 && dot < custom.length - 2) {
-        return [custom.slice(0, dot + 1).trim(), custom.slice(dot + 1).trim()]
-      }
-      return [custom, '']
-    }
-    return ['Créez un CV et une lettre', 'en quelques minutes.']
+  // Accroche mobile allégée (priorité produit) — le CMS peut encore surcharger via admin si besoin
+  const custom =
+    heroVariant.value === 'transform'
+      ? hero.value.titleTransform?.trim()
+      : hero.value.titleStart?.trim()
+
+  const fallback = ['Modèles professionnels de CV', 'et lettre de motivation'] as const
+
+  if (!custom) return [...fallback]
+
+  // Anciennes accroches CMS → remplacer par la nouvelle formulation
+  const legacyTitles = [
+    'Créez votre CV et votre lettre de motivation en quelques minutes.',
+    'Créez un CV et une lettre en quelques minutes.',
+    "Tout ce qu'il faut pour réussir votre candidature.",
+  ]
+  if (legacyTitles.some((t) => custom === t || custom.startsWith(t.slice(0, 40)))) {
+    return [...fallback]
   }
 
-  const custom = hero.value.titleStart?.trim()
-  if (custom) {
-    const dot = custom.indexOf('.')
-    if (dot > 0 && dot < custom.length - 2) {
-      return [custom.slice(0, dot + 1).trim(), custom.slice(dot + 1).trim()]
-    }
-    return [custom, '']
+  const dot = custom.indexOf('.')
+  if (dot > 0 && dot < custom.length - 2) {
+    return [custom.slice(0, dot + 1).trim(), custom.slice(dot + 1).trim()]
   }
-  return ['Tout ce qu\'il faut', 'pour réussir votre candidature.']
+  return [custom, '']
 })
 
 const heroPills = ['PDF en quelques minutes', 'Compatible ATS', 'CV + lettre réunis'] as const
+const defaultSubtitle =
+  "Profilo'Z réunit l'ensemble de votre dossier de candidature au même endroit."
+
+const legacySubtitles = [
+  "Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF. L'ensemble de votre dossier de candidature, au même endroit.",
+  "Profilo'Z réunit modèles professionnels, éditeur guidé et export PDF. Votre dossier complet, au même endroit.",
+]
+
+const heroSubtitle = computed(() => {
+  const custom = hero.value.subtitle?.trim()
+  if (!custom || legacySubtitles.includes(custom)) return defaultSubtitle
+  return custom
+})
 
 const heroLine2 = computed(() => heroLines.value[1] ?? '')
 
 const heroCopyVisible = ref(false)
+const mobileCtaOpen = ref(false)
 
 watch(
   heroLine2,
@@ -75,6 +93,16 @@ watch(
 function onHeroTitleComplete() {
   heroCopyVisible.value = true
 }
+
+function toggleMobileCta() {
+  mobileCtaOpen.value = !mobileCtaOpen.value
+}
+
+const mobileCtaRoot = ref<HTMLElement | null>(null)
+
+onClickOutside(mobileCtaRoot, () => {
+  mobileCtaOpen.value = false
+})
 </script>
 
 <template>
@@ -103,26 +131,70 @@ function onHeroTitleComplete() {
           class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
           :class="heroCopyVisible && 'is-visible'"
         >
-          {{
-            hero.subtitle
-              || "Profilo'Z réunit modèles professionnels, éditeur guidé et export PDF. Votre dossier complet, au même endroit."
-          }}
+          {{ heroSubtitle }}
         </p>
 
+        <!-- Mobile: un seul CTA avec choix CV / lettre -->
         <div
-          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 lg:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
+          ref="mobileCtaRoot"
+          class="hero-copy-reveal hero-banner__actions hero-banner__actions--mobile order-3 mt-6 sm:hidden relative"
+          :class="heroCopyVisible && 'is-visible'"
+          style="transition-delay: 80ms"
+        >
+          <button
+            type="button"
+            class="btn-primary hero-banner__btn w-full px-7 py-3 rounded-2xl premium-shadow-sm inline-flex items-center justify-center gap-2"
+            :aria-expanded="mobileCtaOpen"
+            aria-haspopup="menu"
+            @click="toggleMobileCta"
+          >
+            {{ hero.ctaPrimary || 'Commencer gratuitement' }}
+            <UiPzIcon
+              :name="mobileCtaOpen ? 'expand_less' : 'expand_more'"
+              class="text-[20px]"
+            />
+          </button>
+          <div
+            v-show="mobileCtaOpen"
+            role="menu"
+            class="hero-banner__cta-menu absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-2xl border border-outline-variant/25 bg-white premium-shadow-sm"
+          >
+            <NuxtLink
+              :to="hero.ctaPrimaryLink || '/creer'"
+              role="menuitem"
+              class="flex items-center gap-3 px-4 py-3.5 min-h-11 text-left text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+              @click="mobileCtaOpen = false"
+            >
+              <UiPzIcon name="description" class="text-[20px] text-secondary shrink-0" />
+              Créer mon CV
+            </NuxtLink>
+            <NuxtLink
+              :to="hero.ctaSecondaryLink || '/creer/lettre'"
+              role="menuitem"
+              class="flex items-center gap-3 px-4 py-3.5 min-h-11 text-left text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors border-t border-outline-variant/15"
+              @click="mobileCtaOpen = false"
+            >
+              <UiPzIcon name="mail" class="text-[20px] text-secondary shrink-0" />
+              Créer une lettre
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Desktop / tablet: deux CTAs côte à côte -->
+        <div
+          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 hidden sm:flex flex-row items-center justify-center lg:justify-start gap-3"
           :class="heroCopyVisible && 'is-visible'"
           style="transition-delay: 80ms"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
-            class="btn-primary hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
+            class="btn-primary hero-banner__btn w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
           </NuxtLink>
           <NuxtLink
             :to="hero.ctaSecondaryLink || '/creer/lettre'"
-            class="btn-outline hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl bg-white/90"
+            class="btn-outline hero-banner__btn w-auto px-7 py-3 rounded-2xl bg-white/90"
           >
             {{ hero.ctaSecondary || 'Créer une lettre' }}
           </NuxtLink>

@@ -9,7 +9,7 @@ const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
 const { previewResume } = useWizardPreviewResume()
-const { fieldError, formError, clearAll, setFieldError, clearField, scrollToFirstError } = useFormValidation()
+const { fieldError, formError, clearAll, setFieldError, clearField, announceFormError } = useFormValidation()
 
 useWizardDraftInit()
 
@@ -69,7 +69,7 @@ function validateStep(): boolean {
 
 function onContinue() {
   if (!validateStep()) {
-    scrollToFirstError()
+    announceFormError(formError.value || undefined)
     return
   }
   resumeStore.updatePersonalInfo({ ...form })
@@ -113,7 +113,7 @@ useWizardStep({ onContinue })
               v-model="form.fullName"
               type="text"
               class="form-input w-full"
-              placeholder="Jean Dupont"
+              placeholder="Aminata Diallo"
               @input="clearField('fullName')"
             >
           </UiFormField>
@@ -122,7 +122,7 @@ useWizardStep({ onContinue })
               v-model="form.email"
               type="email"
               class="form-input w-full"
-              placeholder="jean.dupont@exemple.com"
+              placeholder="aminata@exemple.com"
               @input="clearField('email')"
             >
           </UiFormField>
@@ -132,13 +132,13 @@ useWizardStep({ onContinue })
         </div>
         <div class="space-y-stack-lg">
           <UiFormField label="Poste visé">
-            <input v-model="form.jobTitle" type="text" class="form-input w-full" placeholder="Designer produit senior" />
+            <input v-model="form.jobTitle" type="text" class="form-input w-full" placeholder="Responsable marketing" />
           </UiFormField>
           <UiFormField label="Localisation">
             <input v-model="form.location" type="text" class="form-input w-full" placeholder="Dakar, Sénégal" />
           </UiFormField>
           <UiFormField label="Profil LinkedIn">
-            <input v-model="form.linkedinUrl" type="url" class="form-input w-full" placeholder="linkedin.com/in/jeandupont" />
+            <input v-model="form.linkedinUrl" type="url" class="form-input w-full" placeholder="linkedin.com/in/aminatadiallo" />
           </UiFormField>
         </div>
       </form>

@@ -40,13 +40,13 @@ function removeItem(index: number) {
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
       <UiFormField label="Établissement" required :error="fieldError(index, 'institution')">
-        <input v-model="item.institution" type="text" class="form-input w-full" />
+        <input v-model="item.institution" type="text" class="form-input w-full" placeholder="Université Cheikh Anta Diop" />
       </UiFormField>
       <UiFormField label="Diplôme" required :error="fieldError(index, 'degree')">
-        <input v-model="item.degree" type="text" class="form-input w-full" />
+        <input v-model="item.degree" type="text" class="form-input w-full" placeholder="Master Marketing" />
       </UiFormField>
       <UiFormField label="Domaine" required :error="fieldError(index, 'field')">
-        <input v-model="item.field" type="text" class="form-input w-full" placeholder="Ex. Informatique, Commerce…" />
+        <input v-model="item.field" type="text" class="form-input w-full" placeholder="Marketing digital" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
         <UiFormField label="Début" required :error="fieldError(index, 'startDate')">

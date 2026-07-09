@@ -59,7 +59,7 @@ h1, h2, h3, h4 {
 }
 
 .form-input {
-  @apply px-4 py-3 min-h-11 rounded-xl border border-outline-variant bg-surface-container-lowest focus:border-secondary outline-none;
+  @apply px-4 py-3 min-h-11 rounded-xl border border-outline-variant bg-surface-container-lowest focus:border-secondary outline-none placeholder:text-on-surface-variant/55;
   transition:
     border-color var(--pz-duration-normal) var(--pz-ease-out),
     box-shadow var(--pz-duration-normal) var(--pz-ease-out);
@@ -76,11 +76,13 @@ h1, h2, h3, h4 {
 .form-field--error .form-input,
 .form-field--error textarea.form-input {
   border-color: var(--color-error);
+  border-width: 1.5px;
+  background-color: color-mix(in srgb, var(--color-error-container) 45%, white);
 }
 
 .form-field--error .form-input:focus,
 .form-field--error textarea.form-input:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
 }
 
 /* ── Mobile First layout utilities ── */

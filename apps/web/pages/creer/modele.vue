@@ -11,6 +11,7 @@ const resumeStore = useResumeStore()
 const route = useRoute()
 const { goNext } = useWizardNavigation()
 const formError = ref('')
+const toast = useAppToast()
 
 const returnPath = computed(() => resolveTemplatePickerReturn(route))
 
@@ -53,8 +54,9 @@ function onContinue() {
   formError.value = ''
   if (!selectedSlug.value) {
     formError.value = MSG.wizard.chooseTemplate
+    toast.error(MSG.wizard.chooseTemplate)
     nextTick(() => {
-      document.querySelector('[data-form-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.querySelector('[role="alert"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     })
     return
   }

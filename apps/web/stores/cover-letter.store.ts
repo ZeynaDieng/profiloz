@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import type { CoverLetterSnapshot, CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
-import { DEFAULT_LETTER_CONTENT } from '~/features/cover-letter-templates/registry'
 import { createScopedCoverLetterDraftStorage } from '~/utils/cover-letter-draft-storage'
 import { coverLetterDraftFromResume } from '~/features/demo/aminata-persona'
 import type { ResumeSnapshot } from '@profiloz/shared'
@@ -37,7 +36,7 @@ function createEmptyDraft(): CoverLetterDraft {
     companyAddress: '',
     position: '',
     recruiterName: '',
-    content: DEFAULT_LETTER_CONTENT,
+    content: '',
     closingText: DEFAULT_CLOSING_TEXT,
     accentColor: defaultLetterAccentColor('CLASSIQUE'),
     lastModified: new Date().toISOString(),

@@ -27,20 +27,11 @@ const items = computed(() => {
   return fallbackItems.map((item) => ({ q: item.q, a: item.a }))
 })
 
-const showAll = ref(false)
 const openIndex = ref(0)
-const faqHydrated = ref(false)
-const { isMobile } = useBreakpoints()
 const { target, revealed } = useScrollReveal(0.25)
 
 onMounted(() => {
   load()
-  faqHydrated.value = true
-})
-
-const visibleItems = computed(() => {
-  if (!faqHydrated.value || !isMobile.value || showAll.value) return items.value
-  return items.value.slice(0, 2)
 })
 
 function toggle(index: number) {
@@ -66,7 +57,7 @@ function toggle(index: number) {
 
       <div class="space-y-3">
         <div
-          v-for="(item, index) in visibleItems"
+          v-for="(item, index) in items"
           :key="item.q"
           class="rounded-2xl border border-outline-variant/25 bg-white overflow-hidden premium-shadow-sm"
         >
@@ -90,15 +81,6 @@ function toggle(index: number) {
           </div>
         </div>
       </div>
-
-      <button
-        v-if="isMobile && !showAll && items.length > 2"
-        type="button"
-        class="mt-5 text-secondary font-bold text-sm hover:underline min-h-11"
-        @click="showAll = true"
-      >
-        Voir toutes les questions
-      </button>
     </div>
   </section>
 </template>

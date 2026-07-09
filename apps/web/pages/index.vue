@@ -7,9 +7,7 @@
     <FeaturesLandingFeaturesBento />
     <FeaturesLandingHowItWorksSection />
     <FeaturesLandingApplicationDuoSection />
-    <FeaturesLandingReassuranceSection />
     <FeaturesLandingPricingSection />
-    <FeaturesLandingFaqSection />
     <FeaturesLandingCtaSection />
   </div>
 </template>

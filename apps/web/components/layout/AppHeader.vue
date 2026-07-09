@@ -48,9 +48,12 @@ onMounted(() => {
         >
           Tarifs
         </NuxtLink>
-        <a href="#faq" class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors">
+        <NuxtLink
+          to="/faq"
+          class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors"
+        >
           FAQ
-        </a>
+        </NuxtLink>
       </nav>
 
       <div v-if="variant === 'marketing'" class="flex items-center gap-1 shrink-0">

@@ -10,7 +10,7 @@ const marketingLinks = [
   { href: '#features', label: 'Fonctionnalités', icon: 'auto_awesome' },
   { href: '/#templates', label: 'Modèles', icon: 'description', isRoute: true },
   { to: { path: '/', hash: '#tarifs' }, label: 'Tarifs', icon: 'payments', isRoute: true },
-  { href: '#faq', label: 'FAQ', icon: 'help' },
+  { to: '/faq', label: 'Questions fréquentes', icon: 'help', isRoute: true },
 ] as const
 
 onMounted(() => {

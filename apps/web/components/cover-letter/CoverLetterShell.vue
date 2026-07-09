@@ -1,5 +1,6 @@
 <script setup lang="ts">
 defineProps<{
+  /** Conservé pour compatibilité avec les templates existants. */
   templateName?: string
 }>()
 </script>
@@ -7,9 +8,6 @@ defineProps<{
 <template>
   <div class="letter-a4 bg-white text-on-surface shadow-xl mx-auto">
     <slot />
-    <p v-if="templateName" class="text-[10px] text-on-surface-variant/30 mt-8 text-right">
-      {{ templateName }} — Profilo'Z
-    </p>
   </div>
 </template>
 

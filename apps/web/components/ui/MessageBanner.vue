@@ -16,7 +16,7 @@ const variantConfig = {
   },
   error: {
     icon: 'error',
-    class: 'bg-error/8 border-error/20 text-on-surface',
+    class: 'bg-error-container border-error/40 text-on-surface font-medium',
     iconClass: 'text-error',
   },
   info: {

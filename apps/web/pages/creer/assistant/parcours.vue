@@ -6,7 +6,7 @@ definePageMeta({ layout: 'wizard', wizardFooter: true })
 const resumeStore = useResumeStore()
 const { goNext } = useWizardNavigation()
 const { previewResume } = useWizardPreviewResume()
-const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
+const { fieldErrors, formError, clearAll, setFieldError, announceFormError } = useFormValidation()
 
 useWizardDraftInit()
 
@@ -54,7 +54,7 @@ function validateStep(): boolean {
 
 function onContinue() {
   if (!validateStep()) {
-    scrollToFirstError()
+    announceFormError(formError.value || undefined)
     return
   }
   persist()

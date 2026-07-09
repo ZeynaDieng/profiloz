@@ -48,11 +48,22 @@ export function useFormValidation() {
 
   function scrollToFirstError() {
     nextTick(() => {
-      document.querySelector('[data-form-error]')?.scrollIntoView({
+      const target =
+        document.querySelector('[data-form-error]')
+        ?? document.querySelector('[role="alert"]')
+      target?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       })
     })
+  }
+
+  /** Affiche le résumé + scroll vers le premier champ en erreur. */
+  function announceFormError(summary = MSG.validation.invalidData) {
+    formError.value = summary
+    const toast = useAppToast()
+    toast.error(summary)
+    scrollToFirstError()
   }
 
   function fieldError(key: string) {
@@ -68,6 +79,7 @@ export function useFormValidation() {
     setFromZod,
     hasFieldErrors,
     scrollToFirstError,
+    announceFormError,
     fieldError,
   }
 }

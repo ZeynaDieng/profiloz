@@ -3,7 +3,7 @@ import type { Certification, Education, Experience, Interest, Skill } from '@pro
 import { MSG, resolveShowPhoto } from '@profiloz/shared'
 
 const resumeStore = useResumeStore()
-const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, fieldError } = useFormValidation()
+const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 
 const openSection = ref('personal')
 const sectionErrors = reactive<Record<string, string>>({})
@@ -157,7 +157,11 @@ function validateAll(): boolean {
 }
 
 provideResumeEditorValidation({
-  validateAll,
+  validateAll: () => {
+    const ok = validateAll()
+    if (!ok) announceFormError(formError.value || undefined)
+    return ok
+  },
   scrollToFirstError,
 })
 </script>
@@ -221,6 +225,7 @@ provideResumeEditorValidation({
                   v-model="personalForm.fullName"
                   type="text"
                   class="form-input w-full"
+                  placeholder="Aminata Diallo"
                   @input="clearField('fullName')"
                 >
               </UiFormField>
@@ -229,20 +234,41 @@ provideResumeEditorValidation({
                   v-model="personalForm.email"
                   type="email"
                   class="form-input w-full"
+                  placeholder="aminata@exemple.com"
                   @input="clearField('email')"
                 >
               </UiFormField>
               <UiFormField label="Téléphone">
-                <input v-model="personalForm.phone" type="tel" class="form-input w-full" />
+                <input
+                  v-model="personalForm.phone"
+                  type="tel"
+                  class="form-input w-full"
+                  placeholder="+221 77 000 00 00"
+                />
               </UiFormField>
               <UiFormField label="Poste visé">
-                <input v-model="personalForm.jobTitle" type="text" class="form-input w-full" />
+                <input
+                  v-model="personalForm.jobTitle"
+                  type="text"
+                  class="form-input w-full"
+                  placeholder="Responsable marketing"
+                />
               </UiFormField>
               <UiFormField label="Localisation">
-                <input v-model="personalForm.location" type="text" class="form-input w-full" />
+                <input
+                  v-model="personalForm.location"
+                  type="text"
+                  class="form-input w-full"
+                  placeholder="Dakar, Sénégal"
+                />
               </UiFormField>
               <UiFormField label="LinkedIn">
-                <input v-model="personalForm.linkedinUrl" type="url" class="form-input w-full" />
+                <input
+                  v-model="personalForm.linkedinUrl"
+                  type="url"
+                  class="form-input w-full"
+                  placeholder="linkedin.com/in/aminatadiallo"
+                />
               </UiFormField>
             </div>
           </template>

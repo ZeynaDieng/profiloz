@@ -9,6 +9,8 @@ import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/cove
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
+import { buildCoverLetterPreviewSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
+import { AMINATA_PERSONA } from '~/features/demo/aminata-persona'
 
 definePageMeta({ layout: false })
 
@@ -29,7 +31,7 @@ const pdfLoading = ref(false)
 const pdfLoadingStep = ref(0)
 const pdfError = ref('')
 const previewOpen = ref(false)
-const { fieldErrors, formError, clearAll, setFieldError, scrollToFirstError } = useFormValidation()
+const { fieldErrors, formError, clearAll, setFieldError, announceFormError } = useFormValidation()
 
 const templateId = ref<CoverLetterTemplateSlug>('CLASSIQUE')
 const accentColor = ref('#0051d5')
@@ -47,20 +49,22 @@ const closingText = ref(DEFAULT_CLOSING_TEXT)
 const accentColors = computed(() => getLetterAccentPalette(templateId.value))
 
 const previewLetter = computed(() =>
-  coverLetterService.toSnapshot({
-    templateId: templateId.value,
-    accentColor: accentColor.value,
-    senderName: senderName.value,
-    senderEmail: senderEmail.value,
-    senderPhone: senderPhone.value,
-    senderLocation: senderLocation.value,
-    companyName: companyName.value,
-    companyAddress: companyAddress.value,
-    position: position.value,
-    recruiterName: recruiterName.value,
-    content: content.value,
-    closingText: closingText.value,
-  }),
+  buildCoverLetterPreviewSnapshot(
+    templateId.value,
+    {
+      senderName: senderName.value,
+      senderEmail: senderEmail.value,
+      senderPhone: senderPhone.value,
+      senderLocation: senderLocation.value,
+      companyName: companyName.value,
+      companyAddress: companyAddress.value,
+      position: position.value,
+      recruiterName: recruiterName.value,
+      content: content.value,
+      closingText: closingText.value,
+    },
+    accentColor.value,
+  ),
 )
 
 function syncStoreFromRefs() {
@@ -164,9 +168,12 @@ onMounted(async () => {
       content: importDraft.content ?? '',
       closingText: importDraft.closingText ?? DEFAULT_CLOSING_TEXT,
     })
-  } else if (!coverLetterStore.current?.senderName?.trim()) {
-    resumeStore.rehydrateFromStorage()
-    coverLetterStore.loadDemoPersona(resumeStore.current)
+  } else if (coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
+    // Ancien brouillon démo → formulaire vide (aperçu garde Aminata via merge)
+    coverLetterStore.startNewDraft()
+    if (templateFromQuery) {
+      coverLetterStore.setTemplate(normalizeCoverLetterTemplateSlug(templateFromQuery))
+    }
   }
 
   loadRefsFromStore()
@@ -262,7 +269,7 @@ async function downloadPdf() {
   formError.value = validation.formError
   if (validation.formError) {
     pdfError.value = validation.formError
-    scrollToFirstError()
+    announceFormError(validation.formError)
     return
   }
 
@@ -285,6 +292,7 @@ async function downloadPdf() {
       const letterId = await saveLetterToServer()
       if (!letterId) {
         pdfError.value = MSG.letter.saveError
+        useAppToast().error(MSG.letter.saveError)
         return
       }
       const { filename } = await coverLetterService.downloadPdf(letterId)
@@ -313,6 +321,7 @@ async function downloadPdf() {
       return
     }
     pdfError.value = MSG.letter.error
+    useAppToast().error(MSG.letter.error)
   } finally {
     window.clearInterval(stepTimer)
     pdfLoading.value = false
