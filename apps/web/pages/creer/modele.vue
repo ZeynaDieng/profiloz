@@ -94,7 +94,7 @@ useWizardStep(computed(() => ({
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Choisissez votre modèle</h1>
         <p class="text-on-surface-variant mt-1 text-sm sm:text-base">
-          {{ filteredTemplates.length }} modèles — une colonne sur mobile pour comparer facilement.
+          {{ filteredTemplates.length }} modèles pour un CV clair et professionnel.
         </p>
       </div>
       <UiMessageBanner
@@ -129,7 +129,7 @@ useWizardStep(computed(() => ({
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 sm:gap-y-7 lg:gap-y-10">
       <FeatureTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"
