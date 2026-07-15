@@ -8,7 +8,7 @@ useSeoPage({
 </script>
 
 <template>
-  <UiLegalArticle title="Conditions d'utilisation" updated="juin 2026">
+  <UiLegalArticle title="Conditions d'utilisation" updated="juillet 2026">
     <section>
       <h2>1. Objet</h2>
       <p>
@@ -63,8 +63,7 @@ useSeoPage({
     <section>
       <h2>7. Contact</h2>
       <p>
-        Pour toute question :
-        <a href="mailto:contact@profiloz.fr">contact@profiloz.fr</a>.
+        Pour toute question, vous pouvez nous contacter par téléphone au <a href="tel:+221771133926">+221 77 113 39 26</a> ou par e-mail à <a href="mailto:contact@profiloz.com">contact@profiloz.com</a>.
       </p>
     </section>
   </UiLegalArticle>

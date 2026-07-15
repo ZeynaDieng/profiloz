@@ -8,17 +8,17 @@ useSeoPage({
 </script>
 
 <template>
-  <UiLegalArticle title="Mentions légales" updated="juin 2026">
+  <UiLegalArticle title="Mentions légales" updated="juillet 2026">
     <section>
       <h2>Éditeur du site</h2>
       <p>
-        Profilo'Z<br>
-        E-mail :
-        <a href="mailto:contact@profiloz.fr">contact@profiloz.fr</a>
-      </p>
-      <p class="text-sm italic">
-        [Raison sociale, forme juridique, capital social et adresse du siège social à compléter avant
-        publication officielle.]
+        <strong>MATKAM</strong><br>
+        Adresse : Ouakam, Dakar, Sénégal<br>
+        Téléphone : <a href="tel:+221771133926">+221 77 113 39 26</a><br>
+        E-mail : <a href="mailto:contact@profiloz.com">contact@profiloz.com</a><br>
+        Site web : <a href="https://profiloz.com" target="_blank" rel="noopener noreferrer">profiloz.com</a><br>
+        RCCM : SN.DKR.2026.A.21376<br>
+        NINEA : 013125324
       </p>
     </section>
 

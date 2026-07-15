@@ -8,12 +8,12 @@ useSeoPage({
 </script>
 
 <template>
-  <UiLegalArticle title="Politique de confidentialité" updated="juin 2026">
+  <UiLegalArticle title="Politique de confidentialité" updated="juillet 2026">
     <section>
       <h2>1. Responsable du traitement</h2>
       <p>
         Profilo'Z est responsable du traitement des données personnelles collectées via la plateforme
-        profiloz.fr et ses sous-domaines associés.
+        profiloz.com et ses sous-domaines associés.
       </p>
     </section>
 
@@ -51,8 +51,8 @@ useSeoPage({
       <h2>5. Vos droits</h2>
       <p>
         Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de
-        limitation, d'opposition et de portabilité. Pour exercer vos droits :
-        <a href="mailto:contact@profiloz.fr">contact@profiloz.fr</a>.
+        limitation, d'opposition et de portabilité. Pour exercer vos droits, vous pouvez nous contacter par téléphone au <a href="tel:+221771133926">+221 77 113 39 26</a> ou par e-mail à :
+        <a href="mailto:contact@profiloz.com">contact@profiloz.com</a>.
       </p>
     </section>
 
