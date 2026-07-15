@@ -11,9 +11,10 @@ import { savePaymentRef, savePaymentReturnTo } from '~/utils/payment-return'
 
 definePageMeta({ layout: 'default' })
 
-useSeoMeta({
-  title: "Tarifs | Profilo'Z",
+useSeoPage({
+  title: 'Tarifs',
   description: "Choisissez l'offre qui vous correspond. Paiement uniquement au téléchargement de votre dossier.",
+  keywords: 'tarifs, prix, abonnement, CV professionnel, offres',
 })
 
 const route = useRoute()

@@ -5,6 +5,7 @@ node_modules
 # Build
 dist
 .output
+.nuxt
 .next
 .turbo
 *.tsbuildinfo

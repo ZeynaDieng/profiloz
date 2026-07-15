@@ -28,7 +28,7 @@ import { hasSkippedAccountGate, saveLastPurchasedPlan } from '~/utils/payment-pu
 
 definePageMeta({ layout: 'guest-flow' })
 
-useSeoMeta({ title: "Paiement réussi | Profilo'Z" })
+useSeoPage({ title: 'Paiement réussi', noindex: true })
 
 const route = useRoute()
 const authStore = useAuthStore()

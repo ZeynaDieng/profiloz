@@ -1,8 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
-useSeoMeta({
-  title: "Conditions d'utilisation | Profilo'Z",
+useSeoPage({
+  title: "Conditions d'utilisation",
   description: "Conditions générales d'utilisation du service Profilo'Z.",
 })
 </script>

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 
+useSeoPage({
+  title: 'Blog',
+  description: "Conseils, astuces et guides pour créer le CV parfait et décrocher l'emploi de vos rêves.",
+  keywords: 'blog, conseils CV, astuces emploi, guide lettre de motivation',
+})
+
 const posts = ref<Array<Record<string, unknown>>>([])
 const loading = ref(true)
 

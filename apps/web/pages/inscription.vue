@@ -5,6 +5,12 @@ import { parseRegisterError } from '~/utils/api-error'
 
 definePageMeta({ layout: 'auth' })
 
+useSeoPage({
+  title: 'Créer un compte',
+  description: "Inscrivez-vous sur Profilo'Z pour sauvegarder vos CV.",
+  noindex: true,
+})
+
 const route = useRoute()
 const authStore = useAuthStore()
 const resumeStore = useResumeStore()

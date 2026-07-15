@@ -1,8 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
-useSeoMeta({
-  title: "Politique de confidentialité | Profilo'Z",
+useSeoPage({
+  title: 'Politique de confidentialité',
   description: "Politique de confidentialité de Profilo'Z — collecte, utilisation et protection de vos données.",
 })
 </script>

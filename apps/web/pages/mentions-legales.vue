@@ -1,8 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
-useSeoMeta({
-  title: "Mentions légales | Profilo'Z",
+useSeoPage({
+  title: 'Mentions légales',
   description: "Mentions légales du service Profilo'Z.",
 })
 </script>

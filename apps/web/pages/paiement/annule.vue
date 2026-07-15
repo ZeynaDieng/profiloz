@@ -3,7 +3,7 @@ import { MSG } from '@profiloz/shared'
 
 definePageMeta({ layout: 'default' })
 
-useSeoMeta({ title: "Paiement annulé | Profilo'Z" })
+useSeoPage({ title: 'Paiement annulé', noindex: true })
 
 const route = useRoute()
 const resumeId = computed(() =>

@@ -7,7 +7,7 @@ import { markAccountGateSkipped } from '~/utils/payment-purchase'
 
 definePageMeta({ layout: 'guest-flow' })
 
-useSeoMeta({ title: "Commencer | Profilo'Z" })
+useSeoPage({ title: 'Commencer', noindex: true })
 
 const route = useRoute()
 const authStore = useAuthStore()

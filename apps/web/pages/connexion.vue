@@ -5,6 +5,12 @@ import { parseApiAuthError } from '~/utils/api-error'
 
 definePageMeta({ layout: 'auth' })
 
+useSeoPage({
+  title: 'Connexion',
+  description: "Connectez-vous à votre compte Profilo'Z.",
+  noindex: true,
+})
+
 const route = useRoute()
 const authStore = useAuthStore()
 
