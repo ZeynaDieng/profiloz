@@ -14,7 +14,7 @@ useSchemaOrg([
     url: 'https://profiloz.com',
     inLanguage: 'fr-FR',
   }),
-  defineSoftwareApplication({
+  defineSoftwareApp({
     name: "Profilo'Z",
     operatingSystem: 'Web',
     applicationCategory: 'BusinessApplication',
