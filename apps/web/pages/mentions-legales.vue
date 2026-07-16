@@ -24,14 +24,13 @@ useSeoPage({
 
     <section>
       <h2>Directeur de la publication</h2>
-      <p>[Nom du directeur de publication à compléter.]</p>
+      <p>Le représentant légal de MATKAM.</p>
     </section>
 
     <section>
       <h2>Hébergement</h2>
       <p>
-        [Nom et coordonnées de l'hébergeur à compléter avant mise en production — ex. fournisseur cloud
-        ou VPS utilisé en production.]
+        Le site profiloz.com est hébergé par la société Contabo GmbH, Aschauer Str. 32a, 81549 Munich, Allemagne (Téléphone : +49 89 35647170, Site web : contabo.com).
       </p>
     </section>
 
