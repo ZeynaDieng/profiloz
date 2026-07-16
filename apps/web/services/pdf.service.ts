@@ -67,6 +67,20 @@ export function usePdfService() {
 
   async function downloadWithAuth(relativePath: string, filename = 'cv Profiloz.pdf') {
     const url = getDownloadUrl(relativePath)
+
+    if (import.meta.client) {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      const isInApp = /Instagram|FBAN|FBAV|LinkedInApp|WhatsApp|Messenger/i.test(navigator.userAgent)
+      
+      // Les navigateurs mobiles et in-app bloquent souvent la création de Blob + click() virtuel.
+      // Puisque l'endpoint /pdf/download/:jobId est public et renvoie les bons headers de Content-Disposition,
+      // la redirection directe (window.location.assign) déclenche le téléchargement natif de façon 100% fiable.
+      if ((isMobile || isInApp) && relativePath.includes('/pdf/download/')) {
+        window.location.assign(url)
+        return
+      }
+    }
+
     const headers: Record<string, string> = {}
 
     if (import.meta.client) {
