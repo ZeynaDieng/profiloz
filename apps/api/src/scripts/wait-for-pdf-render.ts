@@ -5,7 +5,8 @@ async function main() {
   const appUrl = resolveAppUrl()
   console.log(`Waiting for PDF render page at ${appUrl}/imprimer/cv ...`)
 
-  const result = await waitForPdfRenderReady({ timeoutMs: 90_000, intervalMs: 2_000 })
+  const timeoutMs = process.env.STRICT_PDF_READINESS === 'true' ? 90_000 : 2_000
+  const result = await waitForPdfRenderReady({ timeoutMs, intervalMs: 2_000 })
   if (result.ok) {
     console.log(`PDF render target ready (HTTP ${result.status ?? 'ok'})`)
     return
