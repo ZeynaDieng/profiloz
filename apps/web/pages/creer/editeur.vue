@@ -241,9 +241,63 @@ async function downloadPdf() {
 </script>
 
 <template>
-  <div v-if="loading" class="h-screen flex flex-col items-center justify-center gap-4 text-on-surface-variant p-margin-mobile">
-    <UiSkeleton variant="circle" width="3rem" height="3rem" />
-    <p>Chargement de l'éditeur...</p>
+  <!-- Skeleton Loader de l'éditeur de CV -->
+  <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
+    <!-- Topbar skeleton -->
+    <header class="flex items-center justify-between px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 min-h-[3.25rem]">
+      <div class="flex items-center gap-2">
+        <UiSkeleton variant="circle" width="2rem" height="2rem" />
+        <UiSkeleton variant="rect" width="6rem" height="1.25rem" class="rounded animate-pulse" />
+      </div>
+      <div class="flex items-center gap-2">
+        <UiSkeleton variant="rect" width="8rem" height="2.25rem" class="rounded-xl animate-pulse" />
+      </div>
+    </header>
+
+    <!-- Content skeleton -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+      <!-- Form column -->
+      <div class="flex flex-col overflow-y-auto p-4 md:p-6 border-r border-outline-variant space-y-6">
+        <div class="space-y-3">
+          <UiSkeleton variant="rect" width="40%" height="1.5rem" class="rounded animate-pulse" />
+          <UiSkeleton variant="rect" width="90%" height="3rem" class="rounded-xl animate-pulse" />
+        </div>
+        <div class="space-y-4">
+          <UiSkeleton variant="rect" width="30%" height="1.25rem" class="rounded animate-pulse" />
+          <div class="grid grid-cols-2 gap-4">
+            <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
+            <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
+          </div>
+          <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
+        </div>
+        <div class="space-y-3">
+          <UiSkeleton variant="rect" width="50%" height="1.25rem" class="rounded animate-pulse" />
+          <UiSkeleton variant="rect" height="8rem" class="rounded-xl animate-pulse" />
+        </div>
+      </div>
+
+      <!-- Preview column (Hidden on mobile) -->
+      <div class="hidden lg:flex flex-col items-center justify-center p-8 bg-surface-container-lowest overflow-y-auto">
+        <div class="w-full max-w-[21cm] aspect-[1/1.414] bg-white rounded-xl shadow-lg border border-outline-variant/30 p-12 space-y-6">
+          <div class="flex items-center gap-4">
+            <UiSkeleton variant="circle" width="5rem" height="5rem" class="animate-pulse" />
+            <div class="space-y-2 flex-1">
+              <UiSkeleton variant="rect" width="60%" height="2rem" class="rounded animate-pulse" />
+              <UiSkeleton variant="rect" width="40%" height="1.25rem" class="rounded animate-pulse" />
+            </div>
+          </div>
+          <hr class="border-outline-variant/30" />
+          <div class="space-y-4">
+            <UiSkeleton variant="rect" width="30%" height="1.5rem" class="rounded animate-pulse" />
+            <UiSkeleton variant="text" :lines="4" class="animate-pulse" />
+          </div>
+          <div class="space-y-4">
+            <UiSkeleton variant="rect" width="40%" height="1.5rem" class="rounded animate-pulse" />
+            <UiSkeleton variant="text" :lines="3" class="animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div v-else-if="pageError" class="h-screen flex flex-col items-center justify-center gap-4 p-margin-mobile max-w-md w-full">
