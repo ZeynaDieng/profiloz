@@ -178,6 +178,17 @@ onMounted(async () => {
   }
 
   dossierState.value = syncGuestDossierFromDownloads() ?? dossierState.value
+
+  // Déclencher le téléchargement automatique s'il y a un jobId
+  const jobId = typeof route.query.jobId === 'string' ? route.query.jobId : null
+  const file = typeof route.query.file === 'string' ? route.query.file : null
+  if (jobId && file) {
+    const downloadUrl = `/api/v1/pdf/download/${jobId}`
+    const pdfService = usePdfService()
+    pdfService.downloadWithAuth(downloadUrl, file).catch((err) => {
+      console.error('Erreur lors du téléchargement automatique:', err)
+    })
+  }
 })
 </script>
 
@@ -320,6 +331,16 @@ onMounted(async () => {
           "
           @continue-guest="void navigateTo(showCrossSell ? crossSellLink : isWalletPurchase ? editLink : '/')"
         />
+
+        <!-- Retour à l'accueil et découverte du site -->
+        <div class="mt-6 pt-5 border-t border-outline-variant/20 flex flex-col gap-2.5 items-center">
+          <NuxtLink to="/" class="text-sm text-secondary hover:text-primary font-bold flex items-center gap-1.5 hover:underline">
+            🏠 Retourner à l'accueil
+          </NuxtLink>
+          <NuxtLink to="/" class="text-xs text-on-surface-variant/80 hover:text-primary hover:underline">
+            Explorer les autres modèles & services du site
+          </NuxtLink>
+        </div>
       </UiCard>
     </div>
 

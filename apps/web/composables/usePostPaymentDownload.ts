@@ -18,6 +18,8 @@ import {
 import { saveLastPurchasedPlan } from '~/utils/payment-purchase'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
+import { buildResumePdfFilename } from '~/utils/resumePdfFilename'
+import { buildCoverLetterPdfFilename } from '~/utils/coverLetterPdfFilename'
 
 const POLL_INTERVAL_MS = 800
 const MAX_POLL_ATTEMPTS = 20
@@ -196,16 +198,20 @@ export function usePostPaymentDownload() {
       if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
       ensurePaidGuestDossier('letter')
       resumeStore.rehydrateFromStorage()
-      const { filename } = await pdfService.generateLetterAndDownload(
+      
+      const filename = buildCoverLetterPdfFilename(letterSnapshot.senderName)
+      const result = await pdfService.generateLetterFromSnapshot(
         letterSnapshot,
         resolvePersistableResumeId(resumeStore.savedResumeId),
       )
+      const jobId = result.jobId
+
       markGuestDossierDownload('letter', letterSnapshot.id)
       saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
       clearPaymentDraftBackup()
       clearPaymentRef()
       await navigateTo(
-        { path: '/creer/succes', query: { file: filename, type: 'letter' } },
+        { path: '/creer/succes', query: { file: filename, type: 'letter', jobId } },
         { replace: true },
       )
       return true
@@ -216,12 +222,15 @@ export function usePostPaymentDownload() {
     if (!resumeSnapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
 
     ensurePaidGuestDossier('cv')
-    const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
+    const filename = buildResumePdfFilename(resumeSnapshot)
+    const result = await pdfService.generateFromSnapshot(resumeSnapshot)
+    const jobId = result.jobId
+
     markGuestDossierDownload('cv', resumeSnapshot.id)
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     clearPaymentDraftBackup()
     clearPaymentRef()
-    await navigateTo({ path: '/creer/succes', query: { file: filename } }, { replace: true })
+    await navigateTo({ path: '/creer/succes', query: { file: filename, jobId } }, { replace: true })
     return true
   }
 
