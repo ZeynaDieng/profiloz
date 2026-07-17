@@ -111,6 +111,20 @@ async function onChoose(plan: PlanDto) {
     class="page-container max-w-6xl mx-auto pb-28 md:pb-12"
     :class="fromPaywall && 'tarifs-page--paywall'"
   >
+    <!-- Lien de retour à l'éditeur si returnTo est présent -->
+    <div
+      v-if="returnTo"
+      class="mb-6 text-left"
+    >
+      <NuxtLink
+        :to="returnTo"
+        class="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary font-semibold hover:underline"
+      >
+        <UiPzIcon name="arrow_back" class="text-[18px]" />
+        Retourner à mon brouillon (continuer l'édition)
+      </NuxtLink>
+    </div>
+
     <header
       class="text-center mb-stack-lg"
       :class="fromPaywall && 'tarifs-page__header--paywall'"

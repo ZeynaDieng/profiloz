@@ -188,19 +188,21 @@ async function downloadPdf() {
     pdfError.value = MSG.validation.invalidData
     return
   }
-  pdfLoading.value = true
-  pdfLoadingStep.value = 0
-  const stepTimer = window.setInterval(() => {
-    if (pdfLoadingStep.value < MSG.pdf.steps.length - 1) {
-      pdfLoadingStep.value += 1
-    }
-  }, 1200)
+  let stepTimer: number | undefined
   try {
     restorePaidGuestSession()
     await syncGuestSessionForEditor()
     await ensureSession()
 
     if (!(await ensureDownloadAccess(route.fullPath))) return
+
+    pdfLoading.value = true
+    pdfLoadingStep.value = 0
+    stepTimer = window.setInterval(() => {
+      if (pdfLoadingStep.value < MSG.pdf.steps.length - 1) {
+        pdfLoadingStep.value += 1
+      }
+    }, 1200)
 
     if (authStore.isAuthenticated) {
       const saved = await saveResume(true)
@@ -225,8 +227,9 @@ async function downloadPdf() {
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch (err) {
-    const problem = err as { status?: number }
-    if (problem.status === 402) {
+    const problem = err as { status?: number; statusCode?: number }
+    const status = problem.status ?? problem.statusCode
+    if (status === 402) {
       await navigateTo({
         path: '/tarifs',
         query: { reason: 'unlock', returnTo: route.fullPath },
@@ -236,7 +239,7 @@ async function downloadPdf() {
     pdfError.value = MSG.pdf.error
     useAppToast().error(MSG.pdf.error)
   } finally {
-    window.clearInterval(stepTimer)
+    if (stepTimer !== undefined) window.clearInterval(stepTimer)
     pdfLoading.value = false
   }
 }
