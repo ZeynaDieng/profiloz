@@ -16,6 +16,7 @@ export interface CoverLetterTemplateDefinition {
 }
 
 export interface CoverLetterSnapshot {
+  id?: string
   templateSlug: CoverLetterTemplateSlug
   title?: string
   senderName?: string
@@ -58,6 +59,7 @@ export function normalizeCoverLetterTemplateSlug(value?: string | null): CoverLe
 }
 
 export function toCoverLetterSnapshot(data: {
+  id?: string | null
   templateId?: string | null
   title?: string | null
   senderName?: string | null
@@ -73,6 +75,7 @@ export function toCoverLetterSnapshot(data: {
   accentColor?: string | null
 }): CoverLetterSnapshot {
   return {
+    id: data.id ?? undefined,
     templateSlug: normalizeCoverLetterTemplateSlug(data.templateId),
     title: data.title ?? undefined,
     senderName: data.senderName ?? undefined,

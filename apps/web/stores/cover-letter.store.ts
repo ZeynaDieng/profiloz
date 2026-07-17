@@ -139,6 +139,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
     toSnapshot(): CoverLetterSnapshot | null {
       if (!this.current) return null
       return {
+        id: this.current.id,
         templateSlug: this.current.templateSlug,
         senderName: this.current.senderName || undefined,
         senderEmail: this.current.senderEmail || undefined,

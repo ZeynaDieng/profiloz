@@ -102,7 +102,7 @@ export function useGuestDownload() {
           typeof useRoute().query.letterId === 'string' ? useRoute().query.letterId : null
         if (letterId) {
           const { filename } = await coverLetterService.downloadPdf(letterId)
-          markGuestDossierDownload('letter')
+          markGuestDossierDownload('letter', letterId)
           lastFilename.value = filename
           saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
           return filename

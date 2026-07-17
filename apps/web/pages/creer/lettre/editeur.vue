@@ -310,7 +310,7 @@ async function downloadPdf() {
     const { filename } = await pdfService.generateLetterAndDownload(snapshot, linkedResumeId)
     restorePaidGuestSession()
     ensurePaidGuestDossier('letter')
-    markGuestDossierDownload('letter')
+    markGuestDossierDownload('letter', snapshot.id)
     saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
