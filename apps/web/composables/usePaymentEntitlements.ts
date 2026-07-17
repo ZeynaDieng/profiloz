@@ -1,6 +1,6 @@
 import type { Entitlements } from '~/services/payment.service'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
-import { loadGuestDossierState } from '~/utils/guest-dossier-state'
+import { loadGuestDossierState, syncGuestDossierFromEntitlements } from '~/utils/guest-dossier-state'
 
 export function usePaymentEntitlements() {
   const paymentService = usePaymentService()
@@ -16,7 +16,9 @@ export function usePaymentEntitlements() {
     await ensureSession()
 
     try {
-      return await paymentService.getEntitlements()
+      const entitlements = await paymentService.getEntitlements()
+      syncGuestDossierFromEntitlements(entitlements)
+      return entitlements
     } catch (err) {
       const status = (err as { status?: number }).status
       if (status !== 401) {
@@ -27,7 +29,9 @@ export function usePaymentEntitlements() {
       await ensureSession()
 
       try {
-        return await paymentService.getEntitlements()
+        const entitlements = await paymentService.getEntitlements()
+        syncGuestDossierFromEntitlements(entitlements)
+        return entitlements
       } catch {
         return null
       }

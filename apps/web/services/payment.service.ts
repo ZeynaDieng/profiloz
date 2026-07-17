@@ -19,6 +19,7 @@ export interface Entitlements {
   activePlanSlug: SubscriptionPlanSlug | null
   features: PlanFeatures
   canDownloadSnapshot?: boolean
+  downloadedDocIds?: string[]
 }
 
 export interface PurchasedPlanSummary {

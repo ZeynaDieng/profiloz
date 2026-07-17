@@ -120,7 +120,10 @@ function asSubscriptionPlanSlug(value: string | null | undefined): SubscriptionP
   return value && isSubscriptionPlanSlug(value) ? value : null
 }
 
-type EntitlementsWithSnapshot = ResolvedEntitlements & { canDownloadSnapshot: boolean }
+type EntitlementsWithSnapshot = ResolvedEntitlements & {
+  canDownloadSnapshot: boolean
+  downloadedDocIds?: string[]
+}
 
 function mergeEntitlementResults(
   primary: EntitlementsWithSnapshot,
@@ -142,6 +145,7 @@ function mergeEntitlementResults(
   return {
     ...merged,
     canDownloadSnapshot: primary.canDownloadSnapshot || secondary.canDownloadSnapshot,
+    downloadedDocIds: primary.downloadedDocIds || secondary.downloadedDocIds,
   }
 }
 
@@ -153,6 +157,7 @@ function serializeEntitlementsForClient(result: EntitlementsWithSnapshot) {
     activePlanSlug: result.activePlanSlug,
     features: result.features,
     canDownloadSnapshot: result.canDownloadSnapshot,
+    downloadedDocIds: result.downloadedDocIds,
   }
 }
 
@@ -777,7 +782,7 @@ export class PaymentService {
   private async getGuestEntitlements(guestSessionDbId: string): Promise<EntitlementsWithSnapshot> {
     const guest = await prisma.guestSession.findUnique({
       where: { id: guestSessionDbId },
-      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true },
+      select: { creditsBalance: true, unlimitedUntil: true, subscriptionPlanSlug: true, data: true },
     })
     const resolved = resolveEntitlements({
       creditsBalance: guest?.creditsBalance ?? 0,
@@ -785,7 +790,8 @@ export class PaymentService {
       subscriptionPlanSlug: asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
     })
     const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
-    return { ...resolved, canDownloadSnapshot }
+    const meta = readGuestSessionMeta(guest?.data)
+    return { ...resolved, canDownloadSnapshot, downloadedDocIds: meta.downloadedDocIds }
   }
 
   /**

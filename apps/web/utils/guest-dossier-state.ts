@@ -273,6 +273,33 @@ export function resetGuestDossierCycleFlags(): GuestDossierState | null {
   return state
 }
 
+export function syncGuestDossierFromEntitlements(entitlements: any) {
+  if (!entitlements || !import.meta.client) return
+  const state = readStorage()
+  if (!state) return
+
+  if (Array.isArray(entitlements.downloadedDocIds)) {
+    const downloadedIds = entitlements.downloadedDocIds
+    state.downloadedDocIds = downloadedIds
+    if (downloadedIds.length < 2) {
+      if (downloadedIds.length === 0) {
+        state.cvDownloaded = false
+        state.letterDownloaded = false
+      } else {
+        const hasLetter = downloadedIds.some(
+          (id: any) => typeof id === 'string' && (id.startsWith('letter') || id.includes('letter')),
+        )
+        state.cvDownloaded = !hasLetter
+        state.letterDownloaded = hasLetter
+      }
+    } else {
+      state.cvDownloaded = true
+      state.letterDownloaded = true
+    }
+    writeStorage(state)
+  }
+}
+
 export function clearGuestDossierState() {
   if (typeof localStorage === 'undefined') return
   localStorage.removeItem(STORAGE_KEY)
