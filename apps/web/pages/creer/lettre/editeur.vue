@@ -9,6 +9,7 @@ import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/cove
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
+import { clearPaymentDraftBackup } from '~/utils/payment-draft-backup'
 import { buildCoverLetterPreviewSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
 import { AMINATA_PERSONA } from '~/features/demo/aminata-persona'
 
@@ -141,6 +142,7 @@ const pdfLoadingMessage = computed(() => {
 })
 
 onMounted(async () => {
+  clearPaymentDraftBackup()
   authStore.loadFromStorage()
   await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})

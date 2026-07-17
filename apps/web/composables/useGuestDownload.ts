@@ -1,6 +1,7 @@
 import { MSG } from '@profiloz/shared'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
+  clearPaymentDraftBackup,
   loadPaymentDraftBackup,
 } from '~/utils/payment-draft-backup'
 import {
@@ -119,7 +120,8 @@ export function useGuestDownload() {
         )
         markGuestDossierDownload('letter')
         lastFilename.value = filename
-        saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+        saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
+        clearPaymentDraftBackup()
         return filename
       }
 
@@ -129,7 +131,8 @@ export function useGuestDownload() {
       const { filename } = await pdfService.generateAndDownload(snapshot)
       markGuestDossierDownload('cv')
       lastFilename.value = filename
-      saveLastDownloadContext({ kind, filename, downloadedAt: new Date().toISOString() })
+      saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
+      clearPaymentDraftBackup()
       return filename
     } catch (err) {
       const code = err instanceof Error ? err.message : ''

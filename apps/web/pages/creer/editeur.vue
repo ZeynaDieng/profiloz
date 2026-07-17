@@ -5,6 +5,7 @@ import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accen
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
+import { clearPaymentDraftBackup } from '~/utils/payment-draft-backup'
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 
 definePageMeta({ layout: false })
@@ -82,6 +83,7 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
 })
 
 onMounted(async () => {
+  clearPaymentDraftBackup()
   authStore.loadFromStorage()
   await syncGuestSessionForEditor()
   await ensureSession().catch(() => {})
