@@ -194,7 +194,7 @@ onMounted(async () => {
 
 <template>
   <div class="flex flex-col min-h-[calc(100vh-3.25rem)] relative overflow-y-auto gradient-mesh pb-28 sm:pb-8">
-    <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden" />
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none overflow-hidden z-0" />
 
     <div class="relative flex-1 flex flex-col items-center justify-start sm:justify-center p-margin-mobile py-8">
       <UiCard variant="glass" padding="lg" class="w-full max-w-2xl text-center animate-zoom-in shadow-lg !p-6 sm:!p-12">

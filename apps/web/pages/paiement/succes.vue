@@ -194,9 +194,11 @@ onMounted(async () => {
       <UiSkeleton variant="circle" width="4rem" height="4rem" class="mx-auto" />
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-on-surface mb-2">{{ MSG.payment.success }}</h1>
-        <p class="text-on-surface-variant text-sm sm:text-base">
-          {{ message || 'Activation de votre offre en cours…' }}
-        </p>
+        <div class="min-h-[48px] flex items-center justify-center">
+          <p class="text-on-surface-variant text-sm sm:text-base text-center">
+            {{ message || 'Activation de votre offre en cours…' }}
+          </p>
+        </div>
       </div>
     </div>
 
