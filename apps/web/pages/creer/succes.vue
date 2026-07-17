@@ -102,6 +102,11 @@ const entitlementsSummary = computed(() => summarizeEntitlements(entitlements.va
 
 const showWalletStatus = computed(() => isWalletPurchase.value && entitlementsSummary.value)
 
+const isInAppBrowser = computed(() => {
+  if (!import.meta.client) return false
+  return /Instagram|FBAN|FBAV|LinkedInApp|WhatsApp|Messenger/i.test(navigator.userAgent)
+})
+
 const dossierDuoHint = computed(() => {
   if (!showCrossSell.value) return null
   return 'Votre dossier de candidature comprend 1 CV et 1 lettre de motivation. Vous pouvez créer ou télécharger les deux sans coût supplémentaire.'
@@ -183,6 +188,13 @@ onMounted(async () => {
           variant="error"
           :message="downloadError"
           class="mb-4 text-left"
+        />
+
+        <UiMessageBanner
+          v-if="isInAppBrowser"
+          variant="warning"
+          message="⚠️ Attention : vous utilisez le navigateur interne de WhatsApp/Instagram. Les téléchargements de fichiers y sont bloqués par l'application. Pour récupérer votre PDF, cliquez sur le menu en haut à droite (les 3 points) et sélectionnez 'Ouvrir dans le navigateur' (Safari ou Chrome)."
+          class="mb-4 text-left font-medium"
         />
 
         <!-- Crédits / abonnement : visible uniquement pour packs multi-crédits ou abonnement -->
