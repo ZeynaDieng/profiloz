@@ -200,7 +200,7 @@ export function usePostPaymentDownload() {
         letterSnapshot,
         resolvePersistableResumeId(resumeStore.savedResumeId),
       )
-      markGuestDossierDownload('letter')
+      markGuestDossierDownload('letter', letterSnapshot.id)
       saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
       clearPaymentDraftBackup()
       clearPaymentRef()
@@ -217,7 +217,7 @@ export function usePostPaymentDownload() {
 
     ensurePaidGuestDossier('cv')
     const { filename } = await pdfService.generateAndDownload(resumeSnapshot)
-    markGuestDossierDownload('cv')
+    markGuestDossierDownload('cv', resumeSnapshot.id)
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     clearPaymentDraftBackup()
     clearPaymentRef()
