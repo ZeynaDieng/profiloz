@@ -118,7 +118,7 @@ export function useGuestDownload() {
           snapshot,
           resolvePersistableResumeId(resumeStore.savedResumeId),
         )
-        markGuestDossierDownload('letter')
+        markGuestDossierDownload('letter', snapshot.id)
         lastFilename.value = filename
         saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
         clearPaymentDraftBackup()
@@ -129,7 +129,7 @@ export function useGuestDownload() {
       if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
       ensurePaidGuestDossier('cv')
       const { filename } = await pdfService.generateAndDownload(snapshot)
-      markGuestDossierDownload('cv')
+      markGuestDossierDownload('cv', snapshot.id)
       lastFilename.value = filename
       saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
       clearPaymentDraftBackup()

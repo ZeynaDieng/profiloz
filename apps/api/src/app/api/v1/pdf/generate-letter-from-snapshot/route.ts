@@ -59,12 +59,14 @@ export async function POST(request: Request) {
     const resumeId = typeof body.resumeId === 'string' ? body.resumeId : undefined
     const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId, resumeId }
 
+    const letterId = typeof body.snapshot?.id === 'string' ? body.snapshot.id : undefined
+
     // 1 dossier = CV + lettre : débloquer immédiatement au premier téléchargement
     // (pas après génération PDF), pour que le 2e document du duo reste gratuit.
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
     } else {
-      await paymentService.consumeSnapshotDownload(owner)
+      await paymentService.consumeSnapshotDownload(owner, letterId)
     }
 
     const result = await pdfService.startCoverLetterPdfJob(letter, {

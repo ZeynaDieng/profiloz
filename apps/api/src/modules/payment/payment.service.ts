@@ -66,21 +66,46 @@ function assertPaymentOwner(
   }
 }
 
-type GuestSessionMeta = { snapshotUnlockedAt?: string }
+type GuestSessionMeta = {
+  snapshotUnlockedAt?: string
+  downloadedDocIds?: string[]
+}
 
 function readGuestSessionMeta(data: unknown): GuestSessionMeta {
   if (!data || typeof data !== 'object') return {}
-  const raw = data as GuestSessionMeta
-  return typeof raw.snapshotUnlockedAt === 'string' ? { snapshotUnlockedAt: raw.snapshotUnlockedAt } : {}
+  const raw = data as any
+  return {
+    snapshotUnlockedAt: typeof raw.snapshotUnlockedAt === 'string' ? raw.snapshotUnlockedAt : undefined,
+    downloadedDocIds: Array.isArray(raw.downloadedDocIds) ? raw.downloadedDocIds : undefined,
+  }
 }
 
-async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string): Promise<boolean> {
+async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string, docId?: string): Promise<boolean> {
   const guest = await prisma.guestSession.findUnique({
     where: { id: guestSessionDbId },
     select: { dossierUnlockedAt: true, data: true },
   })
-  if (guest?.dossierUnlockedAt) return true
-  return Boolean(readGuestSessionMeta(guest?.data).snapshotUnlockedAt)
+  if (!guest) return false
+
+  const meta = readGuestSessionMeta(guest.data)
+  const downloadedIds = meta.downloadedDocIds || []
+
+  // Si le document a déjà été téléchargé, on l'autorise gratuitement
+  if (docId && downloadedIds.includes(docId)) {
+    return true
+  }
+
+  // S'il n'y a pas de docId, c'est une vérification globale d'accès
+  if (!docId) {
+    return Boolean(guest.dossierUnlockedAt || meta.snapshotUnlockedAt)
+  }
+
+  // S'il y a moins de 2 documents distincts téléchargés, on autorise l'accès si débloqué
+  if (downloadedIds.length < 2 && (guest.dossierUnlockedAt || meta.snapshotUnlockedAt)) {
+    return true
+  }
+
+  return false
 }
 
 async function isUserSnapshotDossierUnlocked(userId: string): Promise<boolean> {
@@ -428,7 +453,7 @@ export class PaymentService {
   /**
    * Débloque le dossier snapshot (1 crédit = CV + lettre, retéléchargements gratuits).
    */
-  async consumeSnapshotDownload(owner: EntitlementOwner) {
+  async consumeSnapshotDownload(owner: EntitlementOwner, docId?: string) {
     requireOwner(owner)
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return { consumed: false }
@@ -436,7 +461,7 @@ export class PaymentService {
     if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
       return { consumed: false }
     }
-    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
+    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId, docId))) {
       return { consumed: false }
     }
 
@@ -481,10 +506,8 @@ export class PaymentService {
       })
       if (!guest) throw new AppError(404, 'Not Found', 'Session invité introuvable')
 
-      if (guest.dossierUnlockedAt) return { consumed: false }
-
       const meta = readGuestSessionMeta(guest.data)
-      if (meta.snapshotUnlockedAt) return { consumed: false }
+      const downloadedIds = meta.downloadedDocIds || []
 
       // Préserver le reste de guest.data (ne pas écraser avec uniquement meta).
       const baseData =
@@ -492,26 +515,71 @@ export class PaymentService {
           ? (guest.data as Record<string, unknown>)
           : {}
 
-      const decremented = await tx.guestSession.updateMany({
-        where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
-        data: {
-          creditsBalance: { decrement: 1 },
-          dossierUnlockedAt: new Date(),
-          data: {
-            ...baseData,
-            snapshotUnlockedAt: new Date().toISOString(),
-          } as Prisma.InputJsonValue,
-        },
-      })
-
-      if (decremented.count === 0) {
-        throw new AppError(
-          402,
-          'Payment Required',
-          'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
-        )
+      if (docId && downloadedIds.includes(docId)) {
+        return { consumed: false }
       }
-      return { consumed: true }
+
+      if (downloadedIds.length < 2) {
+        const newDownloadedIds = docId ? [...downloadedIds, docId] : downloadedIds
+
+        if (!guest.dossierUnlockedAt && !meta.snapshotUnlockedAt) {
+          const decremented = await tx.guestSession.updateMany({
+            where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+            data: {
+              creditsBalance: { decrement: 1 },
+              dossierUnlockedAt: new Date(),
+              data: {
+                ...baseData,
+                snapshotUnlockedAt: new Date().toISOString(),
+                downloadedDocIds: newDownloadedIds,
+              } as Prisma.InputJsonValue,
+            },
+          })
+          if (decremented.count === 0) {
+            throw new AppError(
+              402,
+              'Payment Required',
+              'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+            )
+          }
+          return { consumed: true }
+        } else {
+          await tx.guestSession.update({
+            where: { id: owner.guestSessionDbId },
+            data: {
+              data: {
+                ...baseData,
+                downloadedDocIds: newDownloadedIds,
+              } as Prisma.InputJsonValue,
+            },
+          })
+          return { consumed: false }
+        }
+      } else {
+        // Limite dépassée : on consomme un nouveau crédit pour entamer un nouveau cycle de 2 documents
+        const newDownloadedIds = docId ? [docId] : []
+        const decremented = await tx.guestSession.updateMany({
+          where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+          data: {
+            creditsBalance: { decrement: 1 },
+            dossierUnlockedAt: new Date(),
+            data: {
+              ...baseData,
+              snapshotUnlockedAt: new Date().toISOString(),
+              downloadedDocIds: newDownloadedIds,
+            } as Prisma.InputJsonValue,
+          },
+        })
+
+        if (decremented.count === 0) {
+          throw new AppError(
+            402,
+            'Payment Required',
+            'Limite de 2 documents par dossier atteinte. Veuillez reprendre une offre pour créer un nouveau dossier.',
+          )
+        }
+        return { consumed: true }
+      }
     })
   }
 

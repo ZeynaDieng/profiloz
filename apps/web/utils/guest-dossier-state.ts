@@ -140,20 +140,39 @@ export function markGuestDossierDownload(kind: 'cv' | 'letter', docId?: string):
   const state = readStorage()
   if (!state) return null
   pinPaidGuestSession(state.guestSessionId)
-  if (kind === 'cv') state.cvDownloaded = true
-  else state.letterDownloaded = true
 
   if (!state.downloadedDocIds) {
     state.downloadedDocIds = []
-    if (state.cvDownloaded && kind !== 'cv') state.downloadedDocIds.push('old-cv')
-    if (state.letterDownloaded && kind !== 'letter') state.downloadedDocIds.push('old-letter')
+    if (state.cvDownloaded) state.downloadedDocIds.push('old-cv')
+    if (state.letterDownloaded) state.downloadedDocIds.push('old-letter')
   }
 
   if (docId && !state.downloadedDocIds.includes(docId)) {
-    state.downloadedDocIds.push(docId)
+    if (state.downloadedDocIds.length >= 2) {
+      // Début d'un nouveau cycle (pack multi-crédits)
+      state.downloadedDocIds = [docId]
+      state.cvDownloaded = kind === 'cv'
+      state.letterDownloaded = kind === 'letter'
+    } else {
+      state.downloadedDocIds.push(docId)
+      if (kind === 'cv') state.cvDownloaded = true
+      else state.letterDownloaded = true
+    }
   } else if (!docId) {
     const fallbackId = `${kind}-fallback-${Date.now()}`
-    state.downloadedDocIds.push(fallbackId)
+    if (state.downloadedDocIds.length >= 2) {
+      state.downloadedDocIds = [fallbackId]
+      state.cvDownloaded = kind === 'cv'
+      state.letterDownloaded = kind === 'letter'
+    } else {
+      state.downloadedDocIds.push(fallbackId)
+      if (kind === 'cv') state.cvDownloaded = true
+      else state.letterDownloaded = true
+    }
+  } else {
+    // Retéléchargement d'un document existant, on s'assure juste que les flags sont cohérents
+    if (kind === 'cv') state.cvDownloaded = true
+    else state.letterDownloaded = true
   }
 
   // Si on a atteint 2 documents différents, on considère le dossier comme complet en forçant les flags
