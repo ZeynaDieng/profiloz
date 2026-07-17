@@ -11,6 +11,7 @@ export type GuestDossierState = {
   cvDownloaded: boolean
   letterDownloaded: boolean
   paidAt: string
+  downloadedDocIds?: string[]
 }
 
 function readStorage(): GuestDossierState | null {
@@ -134,13 +135,33 @@ export function ensurePaidGuestDossier(kind: 'cv' | 'letter'): GuestDossierState
   return initGuestDossier(guestSessionId, kind, { freshPayment: true })
 }
 
-export function markGuestDossierDownload(kind: 'cv' | 'letter'): GuestDossierState | null {
+export function markGuestDossierDownload(kind: 'cv' | 'letter', docId?: string): GuestDossierState | null {
   ensurePaidGuestDossier(kind)
   const state = readStorage()
   if (!state) return null
   pinPaidGuestSession(state.guestSessionId)
   if (kind === 'cv') state.cvDownloaded = true
   else state.letterDownloaded = true
+
+  if (!state.downloadedDocIds) {
+    state.downloadedDocIds = []
+    if (state.cvDownloaded && kind !== 'cv') state.downloadedDocIds.push('old-cv')
+    if (state.letterDownloaded && kind !== 'letter') state.downloadedDocIds.push('old-letter')
+  }
+
+  if (docId && !state.downloadedDocIds.includes(docId)) {
+    state.downloadedDocIds.push(docId)
+  } else if (!docId) {
+    const fallbackId = `${kind}-fallback-${Date.now()}`
+    state.downloadedDocIds.push(fallbackId)
+  }
+
+  // Si on a atteint 2 documents différents, on considère le dossier comme complet en forçant les flags
+  if (state.downloadedDocIds.length >= 2) {
+    state.cvDownloaded = true
+    state.letterDownloaded = true
+  }
+
   writeStorage(state)
   return state
 }
@@ -174,6 +195,9 @@ export function syncGuestDossierFromDownloads(): GuestDossierState | null {
 
 export function isGuestDossierComplete(state: GuestDossierState | null = readStorage()): boolean {
   if (!state) return false
+  if (state.downloadedDocIds && state.downloadedDocIds.length >= 2) {
+    return true
+  }
   return state.cvDownloaded && state.letterDownloaded
 }
 
