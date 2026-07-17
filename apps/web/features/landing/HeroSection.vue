@@ -116,15 +116,14 @@ function onHeroTitleComplete() {
 
         <p
           class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
-          :class="heroCopyVisible && 'is-visible'"
+          style="animation-delay: 150ms"
         >
           {{ heroSubtitle }}
         </p>
 
         <div
           class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
-          :class="heroCopyVisible && 'is-visible'"
-          style="transition-delay: 80ms"
+          style="animation-delay: 300ms"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
@@ -136,7 +135,7 @@ function onHeroTitleComplete() {
 
         <div
           class="hero-copy-reveal hero-banner__badges order-4 lg:order-3 mt-5 md:mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
-          :class="heroCopyVisible && 'is-visible'"
+          style="animation-delay: 450ms"
         >
           <span
             v-for="pill in heroPills"
@@ -167,11 +166,14 @@ function onHeroTitleComplete() {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-color: #ffffff;
-  background-image: var(--hero-banner-image);
-  background-repeat: no-repeat;
-  background-size: 100% auto;
-  background-position: top center;
+  background-color: #f7f9ff;
+  background-image:
+    var(--hero-banner-image),
+    radial-gradient(at 0% 0%, rgba(49, 107, 243, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(113, 248, 228, 0.06) 0px, transparent 50%);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size: 100% auto, 100% 100%, 100% 100%;
+  background-position: top center, center, center;
 }
 
 .hero-banner__scrim {
@@ -195,9 +197,12 @@ function onHeroTitleComplete() {
 
   .hero-banner__bg {
     inset: 0;
-    background-image: var(--hero-banner-image-mobile, var(--hero-banner-image));
-    background-size: cover;
-    background-position: center 35%;
+    background-image:
+      var(--hero-banner-image-mobile, var(--hero-banner-image)),
+      radial-gradient(at 0% 0%, rgba(49, 107, 243, 0.04) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(113, 248, 228, 0.06) 0px, transparent 50%);
+    background-size: cover, 100% 100%, 100% 100%;
+    background-position: center 35%, center, center;
   }
 
   /* Voile blanc léger : couleurs desktop + image plus visible */

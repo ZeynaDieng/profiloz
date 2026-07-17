@@ -530,15 +530,15 @@ a.btn-ghost:active {
 
 .hero-copy-reveal {
   opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 500ms var(--pz-ease-out),
-    transform 500ms var(--pz-ease-out);
+  transform: translateY(12px);
+  animation: pz-hero-reveal 0.7s var(--pz-ease-out) both;
 }
 
-.hero-copy-reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes pz-hero-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
