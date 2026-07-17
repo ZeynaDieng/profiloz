@@ -17,6 +17,7 @@ import {
   isWalletOffer,
 } from '~/utils/payment-journey'
 import { peekLastPurchasedPlan } from '~/utils/payment-purchase'
+import { clearPaymentDraftBackup } from '~/utils/payment-draft-backup'
 
 definePageMeta({ layout: 'guest-flow' })
 
@@ -128,6 +129,18 @@ async function triggerDownload() {
   await downloadKind(isLetter.value ? 'letter' : 'cv')
   dossierState.value = loadGuestDossierState()
   await refreshEntitlements()
+}
+
+function startSecondCv() {
+  resumeStore.startNewDraft()
+  clearPaymentDraftBackup()
+  navigateTo('/creer/modele')
+}
+
+function startSecondLetter() {
+  coverLetterStore.current = null
+  clearPaymentDraftBackup()
+  navigateTo('/creer/lettre/modele')
 }
 
 onMounted(async () => {
@@ -245,6 +258,22 @@ onMounted(async () => {
                   {{ crossSellCta }}
                 </UiButton>
               </NuxtLink>
+              <button
+                v-if="nextDocument === 'letter'"
+                type="button"
+                class="text-xs text-secondary font-semibold hover:underline block mt-3"
+                @click="startSecondCv"
+              >
+                🔄 Créer un 2ème CV à la place de la lettre
+              </button>
+              <button
+                v-if="nextDocument === 'cv'"
+                type="button"
+                class="text-xs text-secondary font-semibold hover:underline block mt-3"
+                @click="startSecondLetter"
+              >
+                🔄 Créer une 2ème lettre à la place du CV
+              </button>
               <p class="text-xs text-secondary font-semibold mt-2">
                 Inclus dans votre offre — aucun paiement supplémentaire.
               </p>
@@ -281,12 +310,12 @@ onMounted(async () => {
           class="mt-2"
           :signup-redirect="signupRedirect"
           :secondary-account-cta="isWalletPurchase"
-          :title="showCrossSell ? 'Sauvegardez votre dossier' : isWalletPurchase ? 'Sauvegardez vos crédits' : undefined"
+          :title="showCrossSell ? 'Sauvegardez votre travail' : isWalletPurchase ? 'Sauvegardez vos crédits' : undefined"
           :description="
             showCrossSell
-              ? 'Créez un compte gratuit pour retrouver votre CV, votre lettre et votre offre sur tous vos appareils. Vous pourrez aussi le faire plus tard.'
+              ? 'Créez un compte gratuit pour sauvegarder votre travail actuel, retrouver vos documents sur tous vos appareils et pouvoir modifier votre dossier de candidature à l\'infini (sans limite de temps).'
               : isWalletPurchase
-                ? 'Créez un compte gratuit pour retrouver vos crédits sur tous vos appareils. Vous pourrez aussi le faire plus tard.'
+                ? 'Créez un compte gratuit pour sauvegarder vos crédits et retrouver vos documents sur tous vos appareils.'
                 : undefined
           "
           @continue-guest="void navigateTo(showCrossSell ? crossSellLink : isWalletPurchase ? editLink : '/')"
