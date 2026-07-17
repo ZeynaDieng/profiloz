@@ -316,7 +316,8 @@ async function downloadPdf() {
     <!-- Header compact mobile-first -->
     <header class="grid grid-cols-[minmax(0,1fr)_auto] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
       <div class="flex items-center gap-2 min-w-0">
-        <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8" />
+        <UiAppLogo size="sm" variant="icon" class="lg:hidden shrink-0 [&_img]:h-8" />
+        <UiAppLogo size="sm" variant="full" class="hidden lg:inline-flex shrink-0 [&_img]:h-8" />
         <span class="text-on-surface-variant text-sm truncate hidden lg:inline">{{ resume.title }}</span>
       </div>
 
@@ -366,7 +367,7 @@ async function downloadPdf() {
         <UiButton
           variant="secondary"
           size="sm"
-          class="hidden xl:inline-flex"
+          class="!hidden xl:!inline-flex"
           icon="download"
           :loading="pdfLoading"
           @click="downloadPdf"
