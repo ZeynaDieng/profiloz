@@ -418,7 +418,7 @@ async function downloadPdf() {
     <UiStickyActionBar v-if="isMobileOrTablet">
       <div class="flex gap-2">
         <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
-          Aperçu
+          Voir l'aperçu du CV
         </UiButton>
         <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
           {{ MSG.buttons.downloadPdf }}
