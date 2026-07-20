@@ -63,10 +63,10 @@ function onConfirm(data: Partial<ResumeSnapshot>) {
   resumeStore.mergeImportedData(data, { documentType: meta.value.type })
   if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
     resumeStore.setTemplate(template as TemplateSlug)
-    navigateTo(`/creer/modele?select=${template}&flow=import`)
+    navigateTo('/creer/editeur')
     return
   }
-  navigateTo('/creer/assistant/informations?fresh=1')
+  navigateTo('/creer/modele?flow=import')
 }
 
 function onReset() {
