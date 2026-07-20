@@ -56,7 +56,7 @@ const selectedTemplate = computed(() => {
 })
 
 const createLink = computed(() =>
-  selectedTemplate.value ? cvCreateLink(selectedTemplate.value) : '/creer/assistant/informations',
+  selectedTemplate.value ? `/creer/editeur?template=${selectedTemplate.value}` : '/creer/modele',
 )
 const importLink = computed(() =>
   selectedTemplate.value ? cvImportLink(selectedTemplate.value) : '/creer/importer/cv',

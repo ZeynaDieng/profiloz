@@ -6,9 +6,9 @@ export function cvTemplateStartLink(slug: TemplateSlug | string) {
   return `/creer?template=${slug}`
 }
 
-/** Création manuelle avec modèle présélectionné (brouillon vide). */
+/** Création manuelle avec modèle présélectionné (brouillon vide dans l'éditeur). */
 export function cvCreateLink(slug: TemplateSlug | string) {
-  return `/creer/assistant/informations?template=${slug}&fresh=1`
+  return `/creer/editeur?template=${slug}`
 }
 
 /** Import OCR puis édition avec le modèle choisi. */

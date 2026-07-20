@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { MSG } from '@profiloz/shared'
+import type { TemplateSlug } from '@profiloz/shared'
+import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
@@ -105,9 +106,9 @@ onMounted(async () => {
     }
   } else {
     resumeStore.initDraft()
-    if (!resumeStore.current?.personalInfo.fullName) {
-      await navigateTo('/creer/assistant/informations')
-      return
+    const templateQuery = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
+    if (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug)) {
+      resumeStore.setTemplate(templateQuery as TemplateSlug)
     }
   }
 
