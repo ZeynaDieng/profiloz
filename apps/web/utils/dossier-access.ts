@@ -3,7 +3,6 @@ import { loadGuestDossierState } from '~/utils/guest-dossier-state'
 
 /** Droit de télécharger CV ou lettre (1 crédit = dossier complet, retéléchargements inclus). */
 export function hasDossierDownloadAccess(entitlements?: Entitlements | null) {
-  if (import.meta.dev) return true
 
   const dossier = loadGuestDossierState()
   const guestDuoInProgress =
