@@ -178,6 +178,26 @@ onMounted(async () => {
     }
   }
 
+  // Pré-remplissage automatique des coordonnées et du poste visé depuis le CV s'ils sont vides
+  const cvInfo = resumeStore.current?.personalInfo
+  if (cvInfo) {
+    if (!coverLetterStore.current?.senderName?.trim() && cvInfo.fullName) {
+      coverLetterStore.patchFields({ senderName: cvInfo.fullName })
+    }
+    if (!coverLetterStore.current?.senderEmail?.trim() && cvInfo.email) {
+      coverLetterStore.patchFields({ senderEmail: cvInfo.email })
+    }
+    if (!coverLetterStore.current?.senderPhone?.trim() && cvInfo.phone) {
+      coverLetterStore.patchFields({ senderPhone: cvInfo.phone })
+    }
+    if (!coverLetterStore.current?.senderLocation?.trim() && cvInfo.location) {
+      coverLetterStore.patchFields({ senderLocation: cvInfo.location })
+    }
+    if (!coverLetterStore.current?.position?.trim() && cvInfo.jobTitle) {
+      coverLetterStore.patchFields({ position: cvInfo.jobTitle })
+    }
+  }
+
   loadRefsFromStore()
   loading.value = false
 
