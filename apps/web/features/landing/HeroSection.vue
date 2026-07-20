@@ -60,9 +60,9 @@ const heroLines = computed(() => {
   return [custom, '']
 })
 
-const heroPills = ['PDF en quelques minutes', 'Compatible ATS', 'CV + lettre réunis'] as const
+const heroPills = ['Import IA & Photo', 'Compatible ATS', 'Générateur de Lettre'] as const
 const defaultSubtitle =
-  "Profilo'Z réunit l'ensemble de votre dossier de candidature au même endroit."
+  "Profilo'Z réunit l'IA d'importation, l'éditeur de CV et la création de lettres au même endroit."
 
 const legacySubtitles = [
   "Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF. L'ensemble de votre dossier de candidature, au même endroit.",
