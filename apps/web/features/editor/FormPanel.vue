@@ -120,27 +120,27 @@ watch(summary, (v) => {
 
 watch(educations, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.updateEducations(v)
+  resumeStore.setEducations(v)
 }, { deep: true })
 
 watch(experiences, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.updateExperiences(v)
+  resumeStore.setExperiences(v)
 }, { deep: true })
 
 watch(skills, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.updateSkills(v)
+  resumeStore.setSkills(v)
 }, { deep: true })
 
 watch(certifications, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.updateCertifications(v)
+  resumeStore.setCertifications(v)
 }, { deep: true })
 
 watch(interests, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.updateInterests(v)
+  resumeStore.setInterests(v)
 }, { deep: true })
 
 const sections = [
