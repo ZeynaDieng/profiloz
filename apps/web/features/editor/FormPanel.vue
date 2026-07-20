@@ -20,6 +20,8 @@ const personalForm = reactive({
   photoUrl: undefined as string | undefined,
 })
 
+const showExtraContactFields = ref(false)
+
 const summary = ref('')
 const educations = ref<Education[]>([])
 const experiences = ref<Experience[]>([])
@@ -32,6 +34,19 @@ const isHydratingFromStore = ref(false)
 const showPhotoOnCv = computed({
   get: () => resolveShowPhoto(resumeStore.current),
   set: (value: boolean) => resumeStore.setTemplateConfig({ showPhoto: value }),
+})
+
+const completionPercentage = computed(() => {
+  let score = 0
+  if (personalForm.fullName?.trim()) score += 15
+  if (personalForm.email?.trim()) score += 10
+  if (personalForm.phone?.trim()) score += 10
+  if (personalForm.jobTitle?.trim()) score += 10
+  if (summary.value?.trim()) score += 15
+  if (experiences.value.some((e) => e.company?.trim() || e.position?.trim())) score += 20
+  if (educations.value.some((e) => e.institution?.trim() || e.degree?.trim())) score += 10
+  if (skills.value.some((s) => s.name?.trim())) score += 10
+  return score
 })
 
 async function handleEnhanceSummary() {
@@ -58,6 +73,9 @@ function loadFromStore() {
     photoUrl: undefined as string | undefined,
     ...r.personalInfo,
   })
+  if (r.personalInfo?.location || r.personalInfo?.linkedinUrl) {
+    showExtraContactFields.value = true
+  }
   summary.value = r.summary ?? ''
   educations.value = r.educations.length
     ? [...r.educations]
@@ -94,39 +112,43 @@ function onPhotoUrlUpdate(value: string | undefined) {
   if (isHydratingFromStore.value) return
   resumeStore.updatePersonalInfo({ photoUrl: value })
 }
+
 watch(summary, (v) => {
   if (isHydratingFromStore.value) return
   resumeStore.setSummary(v)
 })
+
 watch(educations, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.setEducations(
-    v.filter((e) => e.institution?.trim() || e.degree?.trim() || e.field?.trim() || e.startDate?.trim() || e.endDate?.trim()),
-  )
+  resumeStore.updateEducations(v)
 }, { deep: true })
+
 watch(experiences, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.setExperiences(filterExperiencesWithContent(v))
+  resumeStore.updateExperiences(v)
 }, { deep: true })
+
 watch(skills, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.setSkills(v)
+  resumeStore.updateSkills(v)
 }, { deep: true })
+
 watch(certifications, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.setCertifications(v.filter((c) => c.name))
+  resumeStore.updateCertifications(v)
 }, { deep: true })
+
 watch(interests, (v) => {
   if (isHydratingFromStore.value) return
-  resumeStore.setInterests(v.filter((i) => i.name))
+  resumeStore.updateInterests(v)
 }, { deep: true })
 
 const sections = [
-  { id: 'personal', label: 'Informations', icon: 'person' },
-  { id: 'summary', label: 'Profil', icon: 'article' },
-  { id: 'parcours', label: 'Parcours', icon: 'work_history' },
-  { id: 'qualifications', label: 'Qualifications', icon: 'stars' },
-] as const
+  { id: 'personal', label: 'Informations personnelles', icon: 'person' },
+  { id: 'summary', label: 'Profil / Résumé', icon: 'description' },
+  { id: 'parcours', label: 'Parcours & Expériences', icon: 'work' },
+  { id: 'qualifications', label: 'Compétences & Formation', icon: 'school' },
+]
 
 function toggleSection(id: string) {
   openSection.value = openSection.value === id ? '' : id
@@ -179,18 +201,29 @@ provideResumeEditorValidation({
 
 <template>
   <div class="flex flex-col h-full bg-surface">
-    <div class="px-4 py-3 border-b border-outline-variant shrink-0">
-      <h2 class="font-bold text-on-surface">Modifier le contenu</h2>
-      <p class="text-xs text-on-surface-variant mt-0.5">
-        <span class="xl:hidden">Les changements s’affichent dans l’aperçu.</span>
-        <span class="hidden xl:inline">Les changements s'affichent instantanément à droite.</span>
-      </p>
+    <!-- En-tête avec barre de complétion du CV -->
+    <div class="px-4 py-3 border-b border-outline-variant shrink-0 space-y-2">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-on-surface text-sm sm:text-base">Contenu du CV</h2>
+        <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+          {{ completionPercentage }}% complété
+        </span>
+      </div>
+
+      <!-- Barre de progression -->
+      <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+        <div
+          class="bg-primary h-full transition-all duration-500 rounded-full"
+          :style="{ width: `${completionPercentage}%` }"
+        />
+      </div>
+
       <Transition name="form-field__error">
         <UiMessageBanner
           v-if="formError"
           variant="error"
           :message="formError"
-          class="mt-3"
+          class="mt-2"
         />
       </Transition>
     </div>
@@ -204,7 +237,7 @@ provideResumeEditorValidation({
           @click="toggleSection(section.id)"
         >
           <UiPzIcon :name="section.icon" class="text-secondary text-[20px]" />
-          <span class="font-semibold text-on-surface flex-1">{{ section.label }}</span>
+          <span class="font-semibold text-on-surface flex-1 text-sm sm:text-base">{{ section.label }}</span>
           <UiPzIcon
             v-if="sectionErrors[section.id]"
             name="error"
@@ -235,59 +268,80 @@ provideResumeEditorValidation({
                 <input
                   v-model="personalForm.fullName"
                   type="text"
-                  class="form-input w-full"
+                  class="form-input w-full text-sm"
                   placeholder="Aminata Diallo"
                   @input="clearField('fullName')"
                 >
               </UiFormField>
-              <UiFormField label="E-mail" required :error="fieldError('email')">
-                <input
-                  v-model="personalForm.email"
-                  type="email"
-                  class="form-input w-full"
-                  placeholder="aminata@exemple.com"
-                  @input="clearField('email')"
-                >
-              </UiFormField>
-              <UiFormField label="Téléphone">
-                <input
-                  v-model="personalForm.phone"
-                  type="tel"
-                  class="form-input w-full"
-                  placeholder="+221 77 000 00 00"
-                />
-              </UiFormField>
+
               <UiFormField label="Poste visé">
                 <input
                   v-model="personalForm.jobTitle"
                   type="text"
-                  class="form-input w-full"
+                  class="form-input w-full text-sm"
                   placeholder="Responsable marketing"
                 />
               </UiFormField>
-              <UiFormField label="Localisation">
-                <input
-                  v-model="personalForm.location"
-                  type="text"
-                  class="form-input w-full"
-                  placeholder="Dakar, Sénégal"
-                />
-              </UiFormField>
-              <UiFormField label="LinkedIn">
-                <input
-                  v-model="personalForm.linkedinUrl"
-                  type="url"
-                  class="form-input w-full"
-                  placeholder="linkedin.com/in/aminatadiallo"
-                />
-              </UiFormField>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <UiFormField label="E-mail" required :error="fieldError('email')">
+                  <input
+                    v-model="personalForm.email"
+                    type="email"
+                    class="form-input w-full text-sm"
+                    placeholder="aminata@exemple.com"
+                    @input="clearField('email')"
+                  >
+                </UiFormField>
+
+                <UiFormField label="Téléphone">
+                  <input
+                    v-model="personalForm.phone"
+                    type="tel"
+                    class="form-input w-full text-sm"
+                    placeholder="+221 77 000 00 00"
+                  />
+                </UiFormField>
+              </div>
+
+              <!-- Masquage des champs secondaires pour simplifier la saisie -->
+              <div v-if="showExtraContactFields">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <UiFormField label="Localisation / Ville">
+                    <input
+                      v-model="personalForm.location"
+                      type="text"
+                      class="form-input w-full text-sm"
+                      placeholder="Dakar, Sénégal"
+                    />
+                  </UiFormField>
+
+                  <UiFormField label="Lien LinkedIn">
+                    <input
+                      v-model="personalForm.linkedinUrl"
+                      type="url"
+                      class="form-input w-full text-sm"
+                      placeholder="linkedin.com/in/aminatadiallo"
+                    />
+                  </UiFormField>
+                </div>
+              </div>
+              <button
+                v-else
+                type="button"
+                class="text-xs font-semibold text-primary hover:underline flex items-center gap-1 pt-1 self-start"
+                @click="showExtraContactFields = true"
+              >
+                <UiPzIcon name="add" class="text-sm" />
+                <span>+ Ajouter adresse, LinkedIn...</span>
+              </button>
             </div>
           </template>
 
           <template v-else-if="section.id === 'summary'">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <label class="text-xs font-semibold text-on-surface">Résumé professionnel</label>
+                <label class="text-xs font-semibold text-on-surface">Résumé / Présentation</label>
                 <button
                   v-if="summary?.trim()"
                   type="button"
@@ -302,35 +356,28 @@ provideResumeEditorValidation({
               <textarea
                 v-model="summary"
                 rows="4"
-                class="form-input w-full resize-none"
-                placeholder="Quelques lignes sur votre profil..."
+                class="form-input w-full text-sm resize-y"
+                placeholder="Ex : Professionnel passionné avec 5 ans d'expérience..."
               />
             </div>
           </template>
 
           <template v-else-if="section.id === 'parcours'">
-            <div class="space-y-stack-md">
-              <p class="text-sm font-bold text-on-surface">Formation</p>
-              <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
-            </div>
-            <div class="space-y-stack-md pt-4 border-t border-outline-variant/30">
-              <p class="text-sm font-bold text-on-surface">Expérience</p>
-              <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
-            </div>
+            <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
           </template>
 
           <template v-else-if="section.id === 'qualifications'">
-            <div class="space-y-stack-md">
-              <p class="text-sm font-bold text-on-surface">Compétences</p>
-              <FeatureWizardSkillsForm v-model="skills" />
-            </div>
-            <div class="space-y-stack-md pt-4 border-t border-outline-variant/30">
-              <p class="text-sm font-bold text-on-surface">Certifications</p>
-              <FeatureWizardCertificationsForm v-model="certifications" />
-            </div>
-            <div class="space-y-stack-md pt-4 border-t border-outline-variant/30">
-              <p class="text-sm font-bold text-on-surface">Centres d'intérêt</p>
-              <FeatureWizardInterestsForm v-model="interests" />
+            <div class="space-y-6">
+              <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
+              <div class="border-t border-outline-variant/30 pt-4">
+                <FeatureWizardSkillForm v-model="skills" />
+              </div>
+              <div class="border-t border-outline-variant/30 pt-4">
+                <FeatureWizardCertificationForm v-model="certifications" />
+              </div>
+              <div class="border-t border-outline-variant/30 pt-4">
+                <FeatureWizardInterestForm v-model="interests" />
+              </div>
             </div>
           </template>
         </div>
