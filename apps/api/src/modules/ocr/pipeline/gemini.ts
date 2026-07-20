@@ -1,5 +1,7 @@
 import type { ExtractionMeta, ResumeSnapshot } from '@profiloz/shared'
 import type { LlmEnhancer } from './llm'
+import { cropPhotoFromBuffer } from './crop-photo'
+import { renderPdfPagesToImages } from '../ocr.service'
 
 export class GeminiLlmEnhancer implements LlmEnhancer {
   readonly name = 'gemini-3.5-flash'
@@ -20,7 +22,7 @@ export class GeminiLlmEnhancer implements LlmEnhancer {
     try {
       const parts: any[] = []
 
-      // 1. Si le buffer d'origine est disponible (PDF ou Image), on le transmet directement en Vision multimodale !
+      // 1. Transmettre le buffer du document (PDF ou Image) pour l'analyse visuelle
       if (
         input.buffer &&
         input.mimeType &&
@@ -34,7 +36,7 @@ export class GeminiLlmEnhancer implements LlmEnhancer {
         })
       }
 
-      // 2. Consignes strictes d'extraction avec fidélité maximale
+      // 2. Consignes strictes d'extraction avec Résumé (Profil) et Détection de Photo de Profil
       const prompt = `Tu es un expert mondial en analyse et extraction de CV.
 Examine avec une précision absolue le document de CV ci-joint (PDF/Image) ainsi que le texte extrait ci-dessous :
 ---
@@ -42,13 +44,18 @@ ${input.rawText}
 ---
 
 CONSIGNES STRICTES :
-1. Extraction 100% fidèle : n'omets AUCUNE expérience professionnelle, AUCUN diplôme et AUCUNE compétence présents sur le document.
-2. Pour chaque expérience professionnelle : extrait le nom de l'entreprise, le poste, les dates exactes, la ville et TOUTES les puces/descriptions détaillées des tâches. Ne résume pas les descriptions.
-3. Pour la formation : extrait chaque établissement, le nom exact du diplôme et les dates.
-4. Pour les compétences : extrait TOUTES les compétences techniques, outils et savoir-être mentionnés.
+1. "summary" (Profil / À propos / Résumé professionnel) : S'il y a un texte d'accroche, un paragraphe de présentation ou de profil en haut du CV, extrait-le INTÉGRALEMENT dans le champ "summary". N'omets aucun mot du profil.
+2. "photo" (Photo de portrait du candidat) : Si le document contient une photo de portrait du candidat, indique "present": true et donne sa bounding box [ymin, xmin, ymax, xmax] normalisée de 0 à 1000.
+3. Expériences professionnelles : Extrait TOUTES les expériences sans omission, avec l'entreprise, le poste, les dates et TOUTES les descriptions de tâches intégrales.
+4. Formations, Compétences et Langues : Extrait tout fidèlement.
 
 Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure :
 {
+  "summary": "Texte intégral du profil / à propos / résumé professionnel (null si absent)",
+  "photo": {
+    "present": true ou false,
+    "box": [ymin, xmin, ymax, xmax] (coordonnées 0..1000 du visage/photo si présente, sinon null)
+  },
   "personalInfo": {
     "fullName": "Nom et prénom exacts",
     "jobTitle": "Titre du poste principal",
@@ -57,17 +64,17 @@ Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure
     "location": "Ville / Pays",
     "linkedin": "Lien LinkedIn si présent",
     "website": "Site web / Portfolio",
-    "summary": "Résumé de profil ou accroche intégrale"
+    "summary": "Même résumé de profil qu'au dessus"
   },
   "experiences": [
     {
       "company": "Nom de l'entreprise",
       "position": "Intitulé du poste",
       "location": "Ville / Lieu",
-      "startDate": "Date de début (ex: 2020-01 ou 2020)",
-      "endDate": "Date de fin (ex: 2022 ou Présent)",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
       "current": true ou false,
-      "description": "Toutes les puces / tâches réalisées de manière intégrale"
+      "description": "Description intégrale des tâches"
     }
   ],
   "educations": [
@@ -85,7 +92,7 @@ Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure
     { "name": "Nom de la compétence", "category": "Technique / Humaine / Outil" }
   ],
   "languages": [
-    { "language": "Langue", "level": "Niveau (ex: Courant, Bilingue, Notions)" }
+    { "language": "Langue", "level": "Niveau" }
   ]
 }
 
@@ -121,11 +128,50 @@ Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par
 
       const parsed = JSON.parse(textOutput)
 
+      // Extraction du Résumé (Profil) au niveau racine du snapshot
+      const extractedSummary =
+        (typeof parsed.summary === 'string' && parsed.summary.trim()) ||
+        (typeof parsed.personalInfo?.summary === 'string' && parsed.personalInfo.summary.trim()) ||
+        input.data.summary
+
+      // Extraction et découpage automatique de la photo de profil si présente
+      let extractedPhotoUrl: string | undefined = input.data.personalInfo?.photoUrl
+
+      if (parsed.photo?.present && Array.isArray(parsed.photo?.box) && input.buffer) {
+        try {
+          let imageBufferToCrop: Buffer | null = null
+
+          if (input.mimeType?.startsWith('image/')) {
+            imageBufferToCrop = input.buffer
+          } else if (input.mimeType === 'application/pdf') {
+            const pages = await renderPdfPagesToImages(input.buffer)
+            if (pages.length > 0 && pages[0]) {
+              imageBufferToCrop = pages[0]
+            }
+          }
+
+          if (imageBufferToCrop) {
+            const croppedDataUrl = await cropPhotoFromBuffer(
+              imageBufferToCrop,
+              parsed.photo.box as [number, number, number, number],
+            )
+            if (croppedDataUrl) {
+              extractedPhotoUrl = croppedDataUrl
+            }
+          }
+        } catch (cropErr) {
+          console.warn('Photo extraction failed:', cropErr)
+        }
+      }
+
       const mergedData: Partial<ResumeSnapshot> = {
         ...input.data,
+        summary: extractedSummary,
         personalInfo: {
           ...input.data.personalInfo,
           ...(parsed.personalInfo || {}),
+          photoUrl: extractedPhotoUrl,
+          summary: extractedSummary,
         },
         experiences:
           Array.isArray(parsed.experiences) && parsed.experiences.length > 0

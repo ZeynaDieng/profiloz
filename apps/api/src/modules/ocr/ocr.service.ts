@@ -423,7 +423,7 @@ async function extractPdfNativeText(buffer: Buffer): Promise<string> {
   return repairSpacedOutText(bestText)
 }
 
-async function renderPdfPagesToImages(buffer: Buffer): Promise<Buffer[]> {
+export async function renderPdfPagesToImages(buffer: Buffer): Promise<Buffer[]> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
   await configurePdfJs(pdfjs)
   const { createCanvas } = await import('@napi-rs/canvas')
