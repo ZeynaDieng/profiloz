@@ -22,7 +22,7 @@ function removeInterest(index: number) {
       <input
         v-model="newInterest"
         type="text"
-        class="form-input flex-1"
+        class="form-input flex-1 min-w-0"
         placeholder="Ex : Photographie, Bénévolat, Randonnée"
         @keyup.enter.prevent="addInterest"
       />

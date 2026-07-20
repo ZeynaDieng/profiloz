@@ -29,7 +29,7 @@ function removeSkill(index: number) {
       <input
         v-model="newSkill"
         type="text"
-        class="form-input flex-1"
+        class="form-input flex-1 min-w-0"
         placeholder="Ex : Figma, TypeScript, Gestion de projet"
         @keyup.enter.prevent="addSkill"
       />

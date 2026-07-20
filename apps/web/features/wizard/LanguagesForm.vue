@@ -30,27 +30,29 @@ function removeLanguage(index: number) {
 
 <template>
   <div class="space-y-3 w-full">
-    <div class="flex gap-2">
+    <div class="flex flex-col sm:flex-row gap-2">
       <input
         v-model="newName"
         type="text"
-        class="form-input flex-1 text-sm"
+        class="form-input flex-1 text-sm min-w-0"
         placeholder="Ex : Français, Anglais, Espagnol..."
         @keyup.enter.prevent="addLanguage"
       />
-      <select v-model="newLevel" class="form-input w-auto text-xs sm:text-sm">
-        <option value="NATIVE">Maternelle</option>
-        <option value="PROFESSIONAL">Courant</option>
-        <option value="CONVERSATIONAL">Intermédiaire</option>
-        <option value="BASIC">Notions</option>
-      </select>
-      <button
-        type="button"
-        class="px-4 py-2.5 bg-secondary text-white rounded-lg font-bold text-sm shrink-0"
-        @click="addLanguage"
-      >
-        Ajouter
-      </button>
+      <div class="flex gap-2">
+        <select v-model="newLevel" class="form-input flex-1 sm:w-auto text-xs sm:text-sm">
+          <option value="NATIVE">Maternelle</option>
+          <option value="PROFESSIONAL">Courant</option>
+          <option value="CONVERSATIONAL">Intermédiaire</option>
+          <option value="BASIC">Notions</option>
+        </select>
+        <button
+          type="button"
+          class="px-4 py-2.5 bg-secondary text-white rounded-lg font-bold text-sm shrink-0"
+          @click="addLanguage"
+        >
+          Ajouter
+        </button>
+      </div>
     </div>
 
     <div v-if="model && model.length" class="space-y-2">
