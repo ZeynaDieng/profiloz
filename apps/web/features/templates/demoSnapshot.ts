@@ -1,4 +1,5 @@
 import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
+import { resolveShowPhoto } from '@profiloz/shared'
 import { AMINATA_DEMO_RESUME, createAminataDemoResume } from '~/features/demo/aminata-persona'
 import { cvTemplateAccentColors } from '~/utils/template-accent-colors'
 
@@ -53,6 +54,7 @@ export function buildPreviewSnapshot(
     templateConfig: {
       ...base.templateConfig,
       ...userSnapshot.templateConfig,
+      showPhoto: resolveShowPhoto(userSnapshot),
       accentColor:
         accentColor
         ?? userSnapshot.templateConfig?.accentColor
