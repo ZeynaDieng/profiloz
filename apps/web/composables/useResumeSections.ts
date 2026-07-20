@@ -11,7 +11,7 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
   const config = useRuntimeConfig()
 
   const apiBaseUrl = computed(() => {
-    const internal = config.apiInternalBaseUrl?.trim()
+    const internal = (config.public as any).apiInternalBaseUrl?.trim() || (config as any).apiInternalBaseUrl?.trim()
     if (import.meta.server && internal) return internal.replace(/\/$/, '')
     return config.public.apiBaseUrl.replace(/\/$/, '')
   })

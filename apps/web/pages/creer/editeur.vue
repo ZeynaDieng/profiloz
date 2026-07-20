@@ -247,8 +247,9 @@ async function downloadPdf() {
 </script>
 
 <template>
-  <!-- Skeleton Loader de l'éditeur de CV -->
-  <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
+  <div class="editor-page-root min-h-screen">
+    <!-- Skeleton Loader de l'éditeur de CV -->
+    <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
     <!-- Topbar skeleton -->
     <header class="flex items-center justify-between px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 min-h-[3.25rem]">
       <div class="flex items-center gap-2">
@@ -501,4 +502,5 @@ async function downloadPdf() {
       </UiCard>
     </div>
   </div>
+</div>
 </template>

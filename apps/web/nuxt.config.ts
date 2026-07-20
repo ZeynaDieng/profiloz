@@ -89,9 +89,9 @@ export default defineNuxtConfig({
 
   // ─── Runtime Config ──────────────────────────────────────────────
   runtimeConfig: {
-    /** URL API joignable depuis le conteneur web (SSR / page d'impression). Vide = utiliser apiBaseUrl public. */
     apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL || '',
     public: {
+      apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL || '',
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api/v1',
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://profiloz.com',
