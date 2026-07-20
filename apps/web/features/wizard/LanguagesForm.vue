@@ -5,6 +5,13 @@ const model = defineModel<Language[]>({ default: () => [] })
 const newName = ref('')
 const newLevel = ref<LanguageLevel>('PROFESSIONAL')
 
+const levelOptions: Array<{ value: LanguageLevel; label: string }> = [
+  { value: 'NATIVE', label: 'Maternelle' },
+  { value: 'PROFESSIONAL', label: 'Courant' },
+  { value: 'CONVERSATIONAL', label: 'Intermédiaire' },
+  { value: 'BASIC', label: 'Notions' },
+]
+
 const levelLabels: Record<LanguageLevel, string> = {
   NATIVE: 'Langue maternelle',
   PROFESSIONAL: 'Courant / Professionnel',
@@ -30,32 +37,43 @@ function removeLanguage(index: number) {
 
 <template>
   <div class="space-y-3 w-full">
-    <div class="flex flex-col sm:flex-row gap-2">
-      <input
-        v-model="newName"
-        type="text"
-        class="form-input flex-1 text-sm min-w-0"
-        placeholder="Ex : Français, Anglais, Espagnol..."
-        @keyup.enter.prevent="addLanguage"
-      />
+    <div class="space-y-2">
       <div class="flex gap-2">
-        <select v-model="newLevel" class="form-input flex-1 sm:w-auto text-xs sm:text-sm">
-          <option value="NATIVE">Maternelle</option>
-          <option value="PROFESSIONAL">Courant</option>
-          <option value="CONVERSATIONAL">Intermédiaire</option>
-          <option value="BASIC">Notions</option>
-        </select>
+        <input
+          v-model="newName"
+          type="text"
+          class="form-input flex-1 text-sm min-w-0"
+          placeholder="Ex : Français, Anglais, Espagnol..."
+          @keyup.enter.prevent="addLanguage"
+        />
         <button
           type="button"
-          class="px-4 py-2.5 bg-secondary text-white rounded-lg font-bold text-sm shrink-0"
+          class="px-5 py-2.5 bg-secondary text-white rounded-lg font-bold text-sm shrink-0 hover:bg-secondary-hover transition-colors"
           @click="addLanguage"
         >
           Ajouter
         </button>
       </div>
+
+      <!-- Sélecteur de niveau sous forme de puces interactives -->
+      <div class="flex flex-wrap gap-1.5 pt-1">
+        <button
+          v-for="opt in levelOptions"
+          :key="opt.value"
+          type="button"
+          class="px-3 py-1 text-xs rounded-full border transition-all font-medium"
+          :class="newLevel === opt.value
+            ? 'bg-primary text-white border-primary font-bold shadow-xs'
+            : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-container-high'"
+          @click="newLevel = opt.value"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
     </div>
 
-    <div v-if="model && model.length" class="space-y-2">
+    <!-- Liste des langues ajoutées -->
+    <div v-if="model && model.length" class="space-y-2 pt-1">
       <div
         v-for="(lang, index) in model"
         :key="index"
