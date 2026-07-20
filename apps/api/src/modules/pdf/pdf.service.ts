@@ -181,7 +181,7 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
       if (document.fonts?.ready) {
         await Promise.race([
           document.fonts.ready,
-          new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+          new Promise<void>((resolve) => setTimeout(resolve, 200)),
         ])
       }
     })

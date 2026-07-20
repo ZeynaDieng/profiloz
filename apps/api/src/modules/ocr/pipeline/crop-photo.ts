@@ -51,3 +51,34 @@ export async function cropPhotoFromBuffer(
     return null
   }
 }
+
+/**
+ * Redimensionne et compresse une image lourde avant de l'envoyer à Gemini API
+ * pour diviser le temps de transfert réseau par 10 (passant de 10MB à 300KB).
+ */
+export async function compressImageForAi(
+  buffer: Buffer,
+  maxDimension = 1600,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  try {
+    const img = await loadImage(buffer)
+    const { width, height } = img
+
+    if (width <= maxDimension && height <= maxDimension) {
+      return { buffer, mimeType: 'image/jpeg' }
+    }
+
+    const scale = Math.min(maxDimension / width, maxDimension / height)
+    const targetW = Math.round(width * scale)
+    const targetH = Math.round(height * scale)
+
+    const canvas = createCanvas(targetW, targetH)
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0, targetW, targetH)
+
+    const compressed = canvas.toBuffer('image/jpeg')
+    return { buffer: compressed, mimeType: 'image/jpeg' }
+  } catch {
+    return { buffer, mimeType: 'image/jpeg' }
+  }
+}

@@ -1,6 +1,6 @@
 import type { ExtractionMeta, ResumeSnapshot } from '@profiloz/shared'
 import type { LlmEnhancer } from './llm'
-import { cropPhotoFromBuffer } from './crop-photo'
+import { cropPhotoFromBuffer, compressImageForAi } from './crop-photo'
 import { renderPdfPagesToImages } from '../ocr.service'
 
 export class GeminiLlmEnhancer implements LlmEnhancer {
@@ -22,16 +22,25 @@ export class GeminiLlmEnhancer implements LlmEnhancer {
     try {
       const parts: any[] = []
 
-      // 1. Transmettre le buffer du document (PDF ou Image) pour l'analyse visuelle
+      // 1. Transmettre le buffer du document (PDF ou Image) avec compression si image lourde
       if (
         input.buffer &&
         input.mimeType &&
         (input.mimeType.startsWith('image/') || input.mimeType === 'application/pdf')
       ) {
+        let payloadBuffer = input.buffer
+        let payloadMime = input.mimeType
+
+        if (input.mimeType.startsWith('image/')) {
+          const compressed = await compressImageForAi(input.buffer)
+          payloadBuffer = compressed.buffer
+          payloadMime = compressed.mimeType
+        }
+
         parts.push({
           inlineData: {
-            mimeType: input.mimeType,
-            data: input.buffer.toString('base64'),
+            mimeType: payloadMime,
+            data: payloadBuffer.toString('base64'),
           },
         })
       }
@@ -110,6 +119,7 @@ Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par
             generationConfig: {
               responseMimeType: 'application/json',
               temperature: 0.1,
+              maxOutputTokens: 2048,
             },
           }),
         },
