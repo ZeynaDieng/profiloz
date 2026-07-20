@@ -372,13 +372,25 @@ provideResumeEditorValidation({
           <template v-else-if="section.id === 'qualifications'">
             <div class="space-y-6">
               <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
-              <div class="border-t border-outline-variant/30 pt-4">
+              <div class="border-t border-outline-variant/30 pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                  <UiPzIcon name="psychology" class="text-secondary text-base" />
+                  <span>Compétences</span>
+                </h3>
                 <FeatureWizardSkillsForm v-model="skills" />
               </div>
-              <div class="border-t border-outline-variant/30 pt-4">
+              <div class="border-t border-outline-variant/30 pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                  <UiPzIcon name="workspace_premium" class="text-secondary text-base" />
+                  <span>Certifications</span>
+                </h3>
                 <FeatureWizardCertificationsForm v-model="certifications" />
               </div>
-              <div class="border-t border-outline-variant/30 pt-4">
+              <div class="border-t border-outline-variant/30 pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                  <UiPzIcon name="interests" class="text-secondary text-base" />
+                  <span>Centres d'intérêt</span>
+                </h3>
                 <FeatureWizardInterestsForm v-model="interests" />
               </div>
             </div>
