@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Certification, Education, Experience, Interest, Skill } from '@profiloz/shared'
 import { MSG, resolveShowPhoto } from '@profiloz/shared'
+import { useAi } from '~/composables/useAi'
 
 const resumeStore = useResumeStore()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
+const { enhanceText, loading: aiLoading } = useAi()
 
 const openSection = ref('personal')
 const sectionErrors = reactive<Record<string, string>>({})
@@ -31,6 +33,15 @@ const showPhotoOnCv = computed({
   get: () => resolveShowPhoto(resumeStore.current),
   set: (value: boolean) => resumeStore.setTemplateConfig({ showPhoto: value }),
 })
+
+async function handleEnhanceSummary() {
+  if (!summary.value?.trim()) return
+  const context = personalForm.jobTitle ? `Poste visé : ${personalForm.jobTitle}` : undefined
+  const result = await enhanceText(summary.value, context)
+  if (result) {
+    summary.value = result
+  }
+}
 
 function loadFromStore() {
   const r = resumeStore.current
@@ -274,14 +285,27 @@ provideResumeEditorValidation({
           </template>
 
           <template v-else-if="section.id === 'summary'">
-            <UiFormField label="Résumé professionnel">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-on-surface">Résumé professionnel</label>
+                <button
+                  v-if="summary?.trim()"
+                  type="button"
+                  class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
+                  :disabled="aiLoading"
+                  @click="handleEnhanceSummary"
+                >
+                  <UiPzIcon name="auto_awesome" class="text-[13px]" />
+                  <span>{{ aiLoading ? 'Reformulation...' : '✨ Reformuler avec l’IA' }}</span>
+                </button>
+              </div>
               <textarea
                 v-model="summary"
                 rows="4"
                 class="form-input w-full resize-none"
                 placeholder="Quelques lignes sur votre profil..."
               />
-            </UiFormField>
+            </div>
           </template>
 
           <template v-else-if="section.id === 'parcours'">

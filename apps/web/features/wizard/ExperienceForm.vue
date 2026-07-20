@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import type { Experience } from '@profiloz/shared'
 import type { ExperienceFieldKey } from '~/utils/experience'
+import { useAi } from '~/composables/useAi'
 
 const model = defineModel<Experience[]>({ required: true })
 
 const props = defineProps<{
   fieldErrors?: Record<string, string>
 }>()
+
+const { enhanceText, suggestBullets, loading: aiLoading } = useAi()
+const activeAiIndex = ref<number | null>(null)
+const aiActionType = ref<'enhance' | 'bullets' | null>(null)
 
 function fieldError(index: number, field: ExperienceFieldKey) {
   return props.fieldErrors?.[`exp-${index}-${field}`] ?? ''
@@ -33,6 +38,34 @@ function addItem() {
 function removeItem(index: number) {
   model.value.splice(index, 1)
 }
+
+async function handleEnhanceExperience(index: number) {
+  const item = model.value[index]
+  if (!item || !item.description?.trim()) return
+  activeAiIndex.value = index
+  aiActionType.value = 'enhance'
+  const context = item.position ? `Poste : ${item.position}` : undefined
+  const result = await enhanceText(item.description, context)
+  if (result) {
+    item.description = result
+  }
+  activeAiIndex.value = null
+  aiActionType.value = null
+}
+
+async function handleSuggestBullets(index: number) {
+  const item = model.value[index]
+  if (!item || !item.position?.trim()) return
+  activeAiIndex.value = index
+  aiActionType.value = 'bullets'
+  const bullets = await suggestBullets(item.position)
+  if (bullets && bullets.length > 0) {
+    const formattedBullets = bullets.map((b: string) => `- ${b}`).join('\n')
+    item.description = item.description ? `${item.description}\n${formattedBullets}` : formattedBullets
+  }
+  activeAiIndex.value = null
+  aiActionType.value = null
+}
 </script>
 
 <template>
@@ -47,12 +80,29 @@ function removeItem(index: number) {
         <span class="font-label-sm font-bold text-on-surface">Expérience {{ index + 1 }}</span>
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
+
       <UiFormField label="Entreprise" required :error="fieldError(index, 'company')">
         <input v-model="item.company" type="text" class="form-input w-full" placeholder="Orange Sénégal" />
       </UiFormField>
-      <UiFormField label="Poste" required :error="fieldError(index, 'position')">
+
+      <div class="space-y-1">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-on-surface">Poste <span class="text-error">*</span></label>
+          <button
+            v-if="item.position?.trim()"
+            type="button"
+            class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
+            :disabled="aiLoading"
+            @click="handleSuggestBullets(index)"
+          >
+            <UiPzIcon name="auto_awesome" class="text-[13px]" />
+            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? 'Génération...' : '💡 Suggerer des puces IA' }}</span>
+          </button>
+        </div>
         <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />
-      </UiFormField>
+        <p v-if="fieldError(index, 'position')" class="text-xs text-error mt-1">{{ fieldError(index, 'position') }}</p>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
         <UiFormField label="Ville" required :error="fieldError(index, 'location')">
           <input v-model="item.location" type="text" class="form-input w-full" placeholder="Ex. Dakar" />
@@ -61,6 +111,7 @@ function removeItem(index: number) {
           <input v-model="item.country" type="text" class="form-input w-full" placeholder="Ex. Sénégal" />
         </UiFormField>
       </div>
+
       <div class="grid grid-cols-2 gap-4">
         <UiFormField label="Début" required :error="fieldError(index, 'startDate')">
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2021" />
@@ -75,18 +126,34 @@ function removeItem(index: number) {
           />
         </UiFormField>
       </div>
+
       <label class="flex items-center gap-2 text-label-sm text-on-surface-variant">
         <input v-model="item.isCurrent" type="checkbox" class="rounded border-outline-variant" />
         Poste actuel
       </label>
-      <UiFormField label="Description">
+
+      <div class="space-y-1">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-on-surface">Description</label>
+          <button
+            v-if="item.description?.trim()"
+            type="button"
+            class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
+            :disabled="aiLoading"
+            @click="handleEnhanceExperience(index)"
+          >
+            <UiPzIcon name="auto_awesome" class="text-[13px]" />
+            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Reformulation...' : '✨ Embellir avec l’IA' }}</span>
+          </button>
+        </div>
         <textarea
           v-model="item.description"
           rows="3"
           class="form-input w-full resize-none"
           placeholder="Missions, réalisations… (optionnel)"
         />
-      </UiFormField>
+      </div>
+
       <UiFormField label="Compétences utilisées">
         <input
           type="text"
@@ -97,9 +164,10 @@ function removeItem(index: number) {
         />
       </UiFormField>
     </div>
+
     <button
       type="button"
-      class="w-full py-3 border-2 border-dashed border-outline-variant rounded-xl text-secondary font-bold hover:border-secondary"
+      class="w-full py-3 border-2 border-dashed border-outline-variant rounded-xl text-secondary font-bold hover:border-secondary transition-colors"
       @click="addItem"
     >
       + Ajouter une expérience
