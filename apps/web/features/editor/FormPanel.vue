@@ -370,13 +370,13 @@ provideResumeEditorValidation({
             <div class="space-y-6">
               <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
               <div class="border-t border-outline-variant/30 pt-4">
-                <FeatureWizardSkillForm v-model="skills" />
+                <FeatureWizardSkillsForm v-model="skills" />
               </div>
               <div class="border-t border-outline-variant/30 pt-4">
-                <FeatureWizardCertificationForm v-model="certifications" />
+                <FeatureWizardCertificationsForm v-model="certifications" />
               </div>
               <div class="border-t border-outline-variant/30 pt-4">
-                <FeatureWizardInterestForm v-model="interests" />
+                <FeatureWizardInterestsForm v-model="interests" />
               </div>
             </div>
           </template>

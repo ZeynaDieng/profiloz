@@ -332,7 +332,7 @@ async function downloadPdf() {
           <UiPzIcon name="menu" class="text-[22px]" />
         </button>
 
-        <LayoutAuthStatus icon-only show-guest-badge="false" class="lg:hidden" />
+        <LayoutAuthStatus icon-only :show-guest-badge="false" class="lg:hidden" />
 
         <button
           type="button"
