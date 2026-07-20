@@ -1,5 +1,4 @@
-<script setup lang="ts">
-import type { Certification, Education, Experience, Interest, Skill } from '@profiloz/shared'
+import type { Certification, Education, Experience, Interest, Language, Skill } from '@profiloz/shared'
 import { MSG, resolveShowPhoto } from '@profiloz/shared'
 import { useAi } from '~/composables/useAi'
 
@@ -26,6 +25,7 @@ const summary = ref('')
 const educations = ref<Education[]>([])
 const experiences = ref<Experience[]>([])
 const skills = ref<Skill[]>([])
+const languages = ref<Language[]>([])
 const certifications = ref<Certification[]>([])
 const interests = ref<Interest[]>([])
 
@@ -84,6 +84,7 @@ function loadFromStore() {
     ? [...r.experiences]
     : [{ company: '', position: '', location: '', startDate: '', endDate: '', isCurrent: false, description: '' }]
   skills.value = [...r.skills]
+  languages.value = [...(r.languages || [])]
   certifications.value = [...r.certifications]
   interests.value = [...r.interests]
   nextTick(() => {
@@ -131,6 +132,11 @@ watch(experiences, (v) => {
 watch(skills, (v) => {
   if (isHydratingFromStore.value) return
   resumeStore.setSkills(v)
+}, { deep: true })
+
+watch(languages, (v) => {
+  if (isHydratingFromStore.value) return
+  resumeStore.setLanguages(v)
 }, { deep: true })
 
 watch(certifications, (v) => {
@@ -378,6 +384,13 @@ provideResumeEditorValidation({
                   <span>Compétences</span>
                 </h3>
                 <FeatureWizardSkillsForm v-model="skills" />
+              </div>
+              <div class="border-t border-outline-variant/30 pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                  <UiPzIcon name="translate" class="text-secondary text-base" />
+                  <span>Langues parlées</span>
+                </h3>
+                <FeatureWizardLanguagesForm v-model="languages" />
               </div>
               <div class="border-t border-outline-variant/30 pt-4 space-y-2">
                 <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">

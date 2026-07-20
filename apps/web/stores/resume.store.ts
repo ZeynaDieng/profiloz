@@ -4,6 +4,7 @@ import type {
   Education,
   Experience,
   Interest,
+  Language,
   ResumeSnapshot,
   Skill,
   TemplateSlug,
@@ -181,6 +182,14 @@ export const useResumeStore = defineStore('resume', {
       this.initDraft()
       if (this.current) {
         this.current.interests = interests
+        touch(this.current)
+        this.isDirty = true
+      }
+    },
+    setLanguages(languages: Language[]) {
+      this.initDraft()
+      if (this.current) {
+        this.current.languages = languages
         touch(this.current)
         this.isDirty = true
       }
