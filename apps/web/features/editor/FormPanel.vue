@@ -50,9 +50,9 @@ const completionPercentage = computed(() => {
 })
 
 async function handleEnhanceSummary() {
-  if (!summary.value?.trim()) return
+  const textToProcess = summary.value?.trim() || `Rédige un profil professionnel d'accroche captivant et dynamique pour un ${personalForm.jobTitle || 'professionnel'}.`
   const context = personalForm.jobTitle ? `Poste visé : ${personalForm.jobTitle}` : undefined
-  const result = await enhanceText(summary.value, context)
+  const result = await enhanceText(textToProcess, context)
   if (result) {
     summary.value = result
   }
@@ -347,14 +347,13 @@ provideResumeEditorValidation({
               <div class="flex items-center justify-between">
                 <label class="text-xs font-semibold text-on-surface">Résumé / Présentation</label>
                 <button
-                  v-if="summary?.trim()"
                   type="button"
                   class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
                   :disabled="aiLoading"
                   @click="handleEnhanceSummary"
                 >
                   <UiPzIcon name="auto_awesome" class="text-[13px]" />
-                  <span>{{ aiLoading ? 'Reformulation...' : '✨ Reformuler avec l’IA' }}</span>
+                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? '✨ Reformuler' : '✨ Générer avec l’IA') }}</span>
                 </button>
               </div>
               <textarea

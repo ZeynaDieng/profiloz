@@ -41,11 +41,12 @@ function removeItem(index: number) {
 
 async function handleEnhanceExperience(index: number) {
   const item = model.value[index]
-  if (!item || !item.description?.trim()) return
+  if (!item) return
   activeAiIndex.value = index
   aiActionType.value = 'enhance'
+  const textToProcess = item.description?.trim() || `Rédige une description professionnelle percutante avec 3-4 puces de missions clés pour le poste de ${item.position || 'professionnel'}.`
   const context = item.position ? `Poste : ${item.position}` : undefined
-  const result = await enhanceText(item.description, context)
+  const result = await enhanceText(textToProcess, context)
   if (result) {
     item.description = result
   }
@@ -55,10 +56,11 @@ async function handleEnhanceExperience(index: number) {
 
 async function handleSuggestBullets(index: number) {
   const item = model.value[index]
-  if (!item || !item.position?.trim()) return
+  if (!item) return
+  const positionToUse = item.position?.trim() || 'Professionnel Polyvalent'
   activeAiIndex.value = index
   aiActionType.value = 'bullets'
-  const bullets = await suggestBullets(item.position)
+  const bullets = await suggestBullets(positionToUse)
   if (bullets && bullets.length > 0) {
     const formattedBullets = bullets.map((b: string) => `- ${b}`).join('\n')
     item.description = item.description ? `${item.description}\n${formattedBullets}` : formattedBullets
@@ -136,14 +138,13 @@ async function handleSuggestBullets(index: number) {
         <div class="flex items-center justify-between">
           <label class="text-xs font-semibold text-on-surface">Description</label>
           <button
-            v-if="item.description?.trim()"
             type="button"
             class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
             :disabled="aiLoading"
             @click="handleEnhanceExperience(index)"
           >
             <UiPzIcon name="auto_awesome" class="text-[13px]" />
-            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Reformulation...' : '✨ Embellir avec l’IA' }}</span>
+            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Génération...' : (item.description?.trim() ? '✨ Embellir' : '✨ Générer avec l’IA') }}</span>
           </button>
         </div>
         <textarea
