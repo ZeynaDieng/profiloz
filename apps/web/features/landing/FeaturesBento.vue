@@ -2,9 +2,9 @@
 const features = [
   {
     id: 'import',
-    badge: '📸 Vision IA',
+    badge: 'Import intelligent',
     title: 'Importez votre ancien CV',
-    description: 'PDF, Word ou photo : l\'IA extrait l\'essentiel et recadre votre photo. Vous n\'avez pas à tout retaper.',
+    description: 'PDF, Word ou photo : extraction du texte et découpage automatique de votre photo de profil.',
     icon: 'document_scanner',
     accent: '#0051d5',
     canvas: '#ebf7ff',
@@ -13,7 +13,7 @@ const features = [
   },
   {
     id: 'templates',
-    badge: '✨ Design Pro',
+    badge: 'Compatibilité ATS',
     title: 'Des modèles qui impressionnent',
     description: 'Pensés pour les recruteurs et les logiciels de sélection.',
     icon: 'design_services',
@@ -24,9 +24,9 @@ const features = [
   },
   {
     id: 'letter',
-    badge: '🎯 Assistant IA',
+    badge: 'Rédaction ciblée',
     title: 'Une lettre par candidature',
-    description: 'Rédigez une lettre personnalisée sur-mesure d\'après une offre d\'emploi en quelques secondes.',
+    description: 'Générez une lettre de motivation sur-mesure adaptée à l’offre d’emploi visée.',
     icon: 'edit_note',
     accent: '#7c3aed',
     canvas: '#f3f4ff',
