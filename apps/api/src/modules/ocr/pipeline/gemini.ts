@@ -2,13 +2,15 @@ import type { ExtractionMeta, ResumeSnapshot } from '@profiloz/shared'
 import type { LlmEnhancer } from './llm'
 
 export class GeminiLlmEnhancer implements LlmEnhancer {
-  readonly name = 'gemini-1.5-flash'
+  readonly name = 'gemini-3.5-flash'
 
   async enhance(input: {
     rawText: string
     lines: string[]
     data: Partial<ResumeSnapshot>
     meta: ExtractionMeta
+    buffer?: Buffer
+    mimeType?: string
   }): Promise<{ data: Partial<ResumeSnapshot>; meta: ExtractionMeta }> {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
@@ -16,43 +18,66 @@ export class GeminiLlmEnhancer implements LlmEnhancer {
     }
 
     try {
-      const prompt = `Tu es un assistant IA spécialisé dans l'analyse et la structuration de CV professionnels.
-Voici le texte brut extrait d'un CV :
+      const parts: any[] = []
+
+      // 1. Si le buffer d'origine est disponible (PDF ou Image), on le transmet directement en Vision multimodale !
+      if (
+        input.buffer &&
+        input.mimeType &&
+        (input.mimeType.startsWith('image/') || input.mimeType === 'application/pdf')
+      ) {
+        parts.push({
+          inlineData: {
+            mimeType: input.mimeType,
+            data: input.buffer.toString('base64'),
+          },
+        })
+      }
+
+      // 2. Consignes strictes d'extraction avec fidélité maximale
+      const prompt = `Tu es un expert mondial en analyse et extraction de CV.
+Examine avec une précision absolue le document de CV ci-joint (PDF/Image) ainsi que le texte extrait ci-dessous :
 ---
 ${input.rawText}
 ---
 
-Analyse le texte et réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure :
+CONSIGNES STRICTES :
+1. Extraction 100% fidèle : n'omets AUCUNE expérience professionnelle, AUCUN diplôme et AUCUNE compétence présents sur le document.
+2. Pour chaque expérience professionnelle : extrait le nom de l'entreprise, le poste, les dates exactes, la ville et TOUTES les puces/descriptions détaillées des tâches. Ne résume pas les descriptions.
+3. Pour la formation : extrait chaque établissement, le nom exact du diplôme et les dates.
+4. Pour les compétences : extrait TOUTES les compétences techniques, outils et savoir-être mentionnés.
+
+Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure :
 {
   "personalInfo": {
-    "fullName": "Nom et prénom (ex: Jean Dupont)",
-    "jobTitle": "Titre du poste principal (ex: Développeur Full Stack)",
-    "email": "Adresse email",
-    "phone": "Numéro de téléphone",
+    "fullName": "Nom et prénom exacts",
+    "jobTitle": "Titre du poste principal",
+    "email": "Email",
+    "phone": "Téléphone",
     "location": "Ville / Pays",
-    "linkedin": "Profil LinkedIn si présent",
-    "website": "Site web ou portfolio",
-    "summary": "Résumé de profil / accroche"
+    "linkedin": "Lien LinkedIn si présent",
+    "website": "Site web / Portfolio",
+    "summary": "Résumé de profil ou accroche intégrale"
   },
   "experiences": [
     {
       "company": "Nom de l'entreprise",
       "position": "Intitulé du poste",
       "location": "Ville / Lieu",
-      "startDate": "Date de début (ex: 2020-01)",
-      "endDate": "Date de fin ou Présent",
+      "startDate": "Date de début (ex: 2020-01 ou 2020)",
+      "endDate": "Date de fin (ex: 2022 ou Présent)",
       "current": true ou false,
-      "description": "Description des tâches et réalisations"
+      "description": "Toutes les puces / tâches réalisées de manière intégrale"
     }
   ],
   "educations": [
     {
       "institution": "Nom de l'école ou université",
-      "degree": "Diplôme ou certification",
+      "degree": "Diplôme ou formation",
       "fieldOfStudy": "Domaine d'études",
       "location": "Ville / Lieu",
-      "startDate": "Année début",
-      "endDate": "Année fin",
+      "startDate": "Date début",
+      "endDate": "Date fin",
       "description": "Détails"
     }
   ],
@@ -66,13 +91,15 @@ Analyse le texte et réponds UNIQUEMENT avec un objet JSON valide suivant exacte
 
 Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par le JSON.`
 
+      parts.push({ text: prompt })
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: [{ parts }],
             generationConfig: {
               responseMimeType: 'application/json',
               temperature: 0.1,

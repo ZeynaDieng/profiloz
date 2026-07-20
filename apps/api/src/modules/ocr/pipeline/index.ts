@@ -19,6 +19,10 @@ export interface ResumePipelineOptions {
   llm?: LlmEnhancer
   /** Confiance OCR (0→1) — active le mode conservateur si trop basse. */
   ocrConfidence?: number
+  /** Buffer du fichier d'origine pour analyse multimodale vision IA. */
+  buffer?: Buffer
+  /** Type MIME du fichier d'origine. */
+  mimeType?: string
 }
 
 function detectSections(lines: string[]): ExtractionSectionKind[] {
@@ -179,7 +183,14 @@ export async function runResumePipeline(
 
   if (llm !== noopLlmEnhancer) {
     try {
-      const enhanced = await llm.enhance({ rawText, lines, data: merged, meta })
+      const enhanced = await llm.enhance({
+        rawText,
+        lines,
+        data: merged,
+        meta,
+        buffer: options.buffer,
+        mimeType: options.mimeType,
+      })
       return {
         ...enhanced.data,
         _extraction: { ...enhanced.meta, engine: 'heuristic+llm' },

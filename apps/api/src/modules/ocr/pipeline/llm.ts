@@ -19,6 +19,8 @@ export interface LlmEnhancer {
     lines: string[]
     data: Partial<ResumeSnapshot>
     meta: ExtractionMeta
+    buffer?: Buffer
+    mimeType?: string
   }): Promise<{ data: Partial<ResumeSnapshot>; meta: ExtractionMeta }>
 }
 

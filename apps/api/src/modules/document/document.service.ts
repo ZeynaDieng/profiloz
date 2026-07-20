@@ -6,6 +6,7 @@ import { storageProvider } from '@/lib/storage'
 import type { RequestContext } from '@/lib/request-context'
 import { ocrService } from '@/modules/ocr/ocr.service'
 import { runResumePipeline } from '@/modules/ocr/pipeline'
+import { geminiLlmEnhancer } from '@/modules/ocr/pipeline/gemini'
 import { documentRepository } from './document.repository'
 import { randomUUID } from 'crypto'
 import path from 'path'
@@ -100,7 +101,12 @@ export class DocumentService {
       try {
         parsed = (
           doc.type === 'CV'
-            ? await runResumePipeline(rawText, { ocrConfidence: confidence })
+            ? await runResumePipeline(rawText, {
+                ocrConfidence: confidence,
+                llm: geminiLlmEnhancer,
+                buffer,
+                mimeType: doc.mimeType,
+              })
             : await ocrService.parseStructured(rawText, doc.type, confidence)
         ) as Awaited<ReturnType<typeof runResumePipeline>>
       } catch (error) {
