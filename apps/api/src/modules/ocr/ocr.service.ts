@@ -2,6 +2,7 @@ import type { DocumentType } from '@profiloz/shared'
 import { PSM } from 'tesseract.js'
 import { parseDocumentText } from './ocr.parser'
 import { runResumePipeline } from './pipeline'
+import { geminiLlmEnhancer } from './pipeline/gemini'
 import { repairSpacedOutText, scoreExtractedPdfText, measureSpacedOutScore } from './text-repair'
 import { preprocessImageForOcr } from './image-preprocess'
 import type { OcrExtractDetails } from './ocr.types'
@@ -610,7 +611,7 @@ export class OcrService {
 
   async parseStructured(rawText: string, documentType: DocumentType = 'CV', ocrConfidence?: number) {
     if (documentType === 'CV') {
-      return runResumePipeline(rawText, { ocrConfidence })
+      return runResumePipeline(rawText, { ocrConfidence, llm: geminiLlmEnhancer })
     }
     return parseDocumentText(rawText, documentType)
   }
