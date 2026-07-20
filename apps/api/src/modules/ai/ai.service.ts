@@ -32,7 +32,11 @@ CONSIGNES STRICTES :
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3 },
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 512,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       },
     )
@@ -68,7 +72,12 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères (strings) va
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.3,
+            maxOutputTokens: 512,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       },
     )
@@ -126,7 +135,12 @@ Réponds UNIQUEMENT avec un objet JSON valide :
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.5 },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.4,
+            maxOutputTokens: 1024,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       },
     )
