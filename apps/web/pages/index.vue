@@ -31,6 +31,7 @@ useSchemaOrg([
 <template>
   <div class="landing-page overflow-x-clip max-w-full">
     <FeaturesLandingHeroSection />
+    <FeaturesLandingAiFeaturesSection />
     <FeaturesLandingTemplatesShowcase />
     <FeaturesLandingTestimonialsStrip />
 
