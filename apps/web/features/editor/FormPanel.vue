@@ -232,7 +232,7 @@ provideResumeEditorValidation({
       </Transition>
     </div>
 
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto pb-32 xl:pb-6">
       <div v-for="section in sections" :key="section.id" class="border-b border-outline-variant/50">
         <button
           type="button"
