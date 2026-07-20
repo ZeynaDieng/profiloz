@@ -66,16 +66,12 @@ function onContinue() {
     navigateTo(back)
     return
   }
-  if (route.query.flow === 'import') {
-    navigateTo('/creer/editeur')
-    return
-  }
-  goNext()
+  navigateTo('/creer/editeur')
 }
 
 useWizardStep(computed(() => ({
   onContinue,
-  nextLabel: returnPath.value ? 'Appliquer ce modèle' : 'Continuer',
+  nextLabel: returnPath.value ? 'Appliquer ce modèle' : 'Commencer la rédaction',
 })))
 </script>
 
