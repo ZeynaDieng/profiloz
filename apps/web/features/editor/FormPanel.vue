@@ -211,7 +211,7 @@ provideResumeEditorValidation({
       </div>
 
       <p class="text-xs text-on-surface-variant block xl:hidden">
-        💡 Remplissez vos informations ci-dessous. Appuyez sur <strong>« Aperçu »</strong> en bas pour voir le rendu A4 de votre CV.
+        Remplissez vos informations ci-dessous. Appuyez sur <strong>« Aperçu »</strong> en bas pour voir le rendu A4 de votre CV.
       </p>
 
       <!-- Barre de progression -->
