@@ -319,10 +319,6 @@ async function downloadPdf() {
     <header class="grid grid-cols-[minmax(0,1fr)_auto] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
       <div class="flex items-center gap-2 min-w-0">
         <UiAppLogo size="sm" variant="full" class="shrink-0 [&_img]:h-8" />
-        <span v-if="autoSaveLabel" class="text-[11px] font-medium text-emerald-600 flex items-center gap-1 shrink-0 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>{{ autoSaveLabel }}</span>
-        </span>
       </div>
 
       <div class="flex items-center gap-0.5 shrink-0">
