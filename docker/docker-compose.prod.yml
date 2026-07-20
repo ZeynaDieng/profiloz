@@ -67,6 +67,7 @@ services:
       RUN_SEED: ${RUN_SEED:-true}
       CRON_SECRET: ${CRON_SECRET:-change-me-cron-secret}
       PROFILOZ_OWNER_EMAIL: ${PROFILOZ_OWNER_EMAIL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - storage_persistent:/app/storage/persistent
       - storage_temp:/app/storage/temp
