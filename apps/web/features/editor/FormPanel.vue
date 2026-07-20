@@ -2,6 +2,7 @@ import type { Certification, Education, Experience, Interest, Language, Skill } 
 import { MSG, resolveShowPhoto } from '@profiloz/shared'
 import { useAi } from '~/composables/useAi'
 
+// FormPanel pour l'édition dynamique du CV
 const resumeStore = useResumeStore()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 const { enhanceText, loading: aiLoading } = useAi()
