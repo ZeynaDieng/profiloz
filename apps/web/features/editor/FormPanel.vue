@@ -1,3 +1,4 @@
+<script setup lang="ts">
 import type { Certification, Education, Experience, Interest, Language, Skill } from '@profiloz/shared'
 import { MSG, resolveShowPhoto } from '@profiloz/shared'
 import { useAi } from '~/composables/useAi'
