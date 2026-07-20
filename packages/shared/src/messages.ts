@@ -169,8 +169,8 @@ export const MSG = {
     letterModelStep: 'Étape 1 · Choisissez le modèle qui vous plaît.',
     letterModelSelected: 'Parfait ! Il ne reste plus qu\'à personnaliser votre lettre.',
     infoStep: 'Étape 1 · Commençons par vos informations.',
-    modelStep: 'Étape 2 · Choisissez le modèle qui vous plaît.',
-    modelSelected: "Parfait ! Il ne reste plus qu'à compléter votre parcours.",
+    modelStep: 'Étape 1 · Choisissez le modèle qui vous plaît.',
+    modelSelected: "Parfait ! Modèle sélectionné.",
     successHeadline: 'Votre CV professionnel est prêt.',
     successLetterHeadline: 'Votre lettre professionnelle est prête.',
     successLead:
