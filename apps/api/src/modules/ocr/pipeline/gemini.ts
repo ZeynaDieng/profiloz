@@ -4,7 +4,7 @@ import { cropPhotoFromBuffer, compressImageForAi } from './crop-photo'
 import { renderPdfPagesToImages } from '../ocr.service'
 
 export class GeminiLlmEnhancer implements LlmEnhancer {
-  readonly name = 'gemini-3.5-flash'
+  readonly name = 'gemini-3.1-flash-lite'
 
   async enhance(input: {
     rawText: string
@@ -110,7 +110,7 @@ Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par
       parts.push({ text: prompt })
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
