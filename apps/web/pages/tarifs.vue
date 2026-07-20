@@ -72,9 +72,10 @@ onMounted(async () => {
 
   try {
     entitlements.value = await fetchEntitlements()
+    const justPaid = route.query.paid === 'true' || route.query.status === 'success' || route.query.reason === 'paid'
     if (
       returnTo.value
-      && fromPaywall.value
+      && justPaid
       && entitlements.value
       && hasDossierDownloadAccess(entitlements.value)
     ) {

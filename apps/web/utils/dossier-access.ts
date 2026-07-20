@@ -3,15 +3,14 @@ import { loadGuestDossierState } from '~/utils/guest-dossier-state'
 
 /** Droit de télécharger CV ou lettre (1 crédit = dossier complet, retéléchargements inclus). */
 export function hasDossierDownloadAccess(entitlements?: Entitlements | null) {
+  if (!entitlements) {
+    const dossier = loadGuestDossierState()
+    return Boolean(dossier?.paidAt && (dossier.cvDownloaded || dossier.letterDownloaded))
+  }
 
-  const dossier = loadGuestDossierState()
-  const guestDuoInProgress =
-    Boolean(dossier?.paidAt && (dossier.cvDownloaded || dossier.letterDownloaded))
-
-  if (!entitlements) return guestDuoInProgress
-
-  return entitlements.unlimitedActive
-    || entitlements.creditsBalance > 0
-    || entitlements.canDownloadSnapshot === true
-    || guestDuoInProgress
+  return (
+    Boolean(entitlements.unlimitedActive) ||
+    Number(entitlements.creditsBalance) > 0 ||
+    Boolean(entitlements.canDownloadSnapshot)
+  )
 }
