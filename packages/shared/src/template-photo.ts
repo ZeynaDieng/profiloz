@@ -17,6 +17,14 @@ export function templatePhotoDefault(slug: TemplateSlug): boolean {
 export function resolveShowPhoto(snapshot: ResumeSnapshot | null | undefined): boolean {
   if (!snapshot) return true
   const explicit = snapshot.templateConfig.showPhoto
-  if (explicit !== undefined) return explicit
+  // Respecter la désactivation explicite par l'utilisateur
+  if (explicit === false) return false
+  // Respecter l'activation explicite par l'utilisateur
+  if (explicit === true) return true
+
+  // Si le CV contient une photo de profil, elle est activée par défaut sur n'importe quel modèle choisi
+  const hasPhoto = Boolean(snapshot.personalInfo?.photoUrl?.trim())
+  if (hasPhoto) return true
+
   return templatePhotoDefault(snapshot.templateSlug)
 }

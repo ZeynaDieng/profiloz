@@ -188,11 +188,20 @@ export const useResumeStore = defineStore('resume', {
     setTemplate(slug: TemplateSlug) {
       this.initDraft()
       if (this.current) {
+        const hasPhoto = Boolean(this.current.personalInfo?.photoUrl?.trim())
+        const explicitShowPhoto = this.current.templateConfig.showPhoto
+        const targetShowPhoto =
+          explicitShowPhoto !== undefined
+            ? explicitShowPhoto
+            : hasPhoto
+            ? true
+            : templatePhotoDefault(slug)
+
         this.current.templateSlug = slug
         this.current.templateConfig = {
           ...this.current.templateConfig,
           accentColor: cvTemplateAccentColors(slug).accent,
-          showPhoto: templatePhotoDefault(slug),
+          showPhoto: targetShowPhoto,
         }
         touch(this.current)
         this.isDirty = true
@@ -231,6 +240,9 @@ export const useResumeStore = defineStore('resume', {
 
       if (replace) {
         this.current.personalInfo = { ...(data.personalInfo ?? {}) }
+        if (data.personalInfo?.photoUrl?.trim()) {
+          this.current.templateConfig.showPhoto = true
+        }
         this.current.summary = data.summary?.trim() || undefined
         this.current.title = data.title?.trim() || this.current.title
         this.current.experiences = (data.experiences ?? []).map((exp) => ({
