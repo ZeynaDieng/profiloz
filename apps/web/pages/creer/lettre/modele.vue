@@ -82,11 +82,6 @@ function onContinue() {
           {{ filteredTemplates.length }} modèles pour une lettre claire et professionnelle.
         </p>
       </div>
-      <UiMessageBanner
-        v-if="selectedSlug"
-        variant="success"
-        :message="MSG.guide.letterModelSelected"
-      />
       <Transition name="form-field__error">
         <UiMessageBanner
           v-if="formError"
@@ -114,7 +109,7 @@ function onContinue() {
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+    <div class="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-gutter">
       <FeatureCoverLetterTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"

@@ -391,124 +391,22 @@ async function handleGenerateFromJobOffer() {
           </div>
         </div>
 
-        <!-- 🖼️ MODÈLE DE LETTRE AVEC VRAIES MINIATURES DU RENDU FINAL -->
+        <!-- 🖼️ MODÈLE DE LETTRE (LES VRAIS MODÈLES IDENTIQUES AU CHOIX DE MODÈLE) -->
         <div v-if="showTemplatePicker !== false" class="space-y-2.5">
-          <p class="text-xs font-bold text-on-surface">Modèle de Lettre (Rendu visuel exact)</p>
+          <p class="text-xs font-bold text-on-surface">Modèle de Lettre (Rendu réel)</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <button
+            <FeatureCoverLetterTemplatesPreviewCard
               v-for="tpl in COVER_LETTER_TEMPLATE_REGISTRY"
               :key="tpl.slug"
-              type="button"
-              class="group relative rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-2xs"
-              :class="
-                templateId === tpl.slug
-                  ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                  : 'border-outline-variant/60 hover:border-primary/50 bg-surface-container-lowest'
-              "
-              @click="templateId = tpl.slug"
+              :slug="tpl.slug"
+              :selected="templateId === tpl.slug"
+              @select="templateId = $event"
             >
-              <!-- 🖼️ VRAIE MINIATURE FIDÈLE DU DESIGN EN SVG -->
-              <div class="w-full aspect-[4/3] rounded-lg bg-surface-container/30 border border-outline-variant/30 mb-2.5 p-2 overflow-hidden flex flex-col justify-between group-hover:bg-surface-container/60 transition-colors">
-                <!-- CLASSIQUE : En-tête centré traditionnel -->
-                <template v-if="tpl.slug === 'CLASSIQUE'">
-                  <div class="flex flex-col items-center space-y-1">
-                    <div class="h-1.5 w-1/2 rounded-full bg-on-surface/60" />
-                    <div class="h-1 w-1/3 rounded-full bg-on-surface-variant/30" />
-                    <div class="h-[1px] w-full bg-outline-variant/60 my-0.5" />
-                  </div>
-                  <div class="space-y-1 my-1">
-                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
-                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
-                    <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
-                  </div>
-                  <div class="h-1 w-1/4 rounded-full bg-on-surface/50 ml-auto" />
-                </template>
-
-                <!-- MODERNE : Bandeau supérieur coloré avec titre -->
-                <template v-else-if="tpl.slug === 'MODERNE'">
-                  <div
-                    class="w-full h-3.5 rounded-md p-1 flex items-center justify-between transition-colors mb-1"
-                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                  >
-                    <div class="h-1.5 w-1/3 bg-white/90 rounded-full" />
-                    <div class="h-1 w-1/4 bg-white/60 rounded-full" />
-                  </div>
-                  <div class="space-y-1 my-1">
-                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
-                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
-                  </div>
-                  <div
-                    class="h-1 w-1/3 rounded-full ml-auto"
-                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                  />
-                </template>
-
-                <!-- ACCENT : Bandeau latéral coloré sur toute la hauteur -->
-                <template v-else-if="tpl.slug === 'ACCENT'">
-                  <div class="flex h-full gap-1.5">
-                    <div
-                      class="w-2 h-full rounded-sm shrink-0 transition-colors"
-                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                    />
-                    <div class="flex-1 flex flex-col justify-between">
-                      <div class="h-1.5 w-2/3 bg-on-surface/60 rounded-full" />
-                      <div class="space-y-1">
-                        <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
-                        <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
-                      </div>
-                      <div class="h-1 w-1/3 bg-on-surface-variant/40 rounded-full" />
-                    </div>
-                  </div>
-                </template>
-
-                <!-- PROFESSIONNEL : En-tête 2 colonnes avec barre séparatrice forte -->
-                <template v-else-if="tpl.slug === 'PROFESSIONNEL'">
-                  <div class="space-y-1">
-                    <div class="flex justify-between items-center">
-                      <div class="h-1.5 w-1/2 bg-on-surface/70 rounded-full" />
-                      <div class="h-1 w-1/3 bg-on-surface-variant/40 rounded-full" />
-                    </div>
-                    <div
-                      class="h-0.5 w-full rounded-full transition-colors"
-                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                    />
-                  </div>
-                  <div class="space-y-1 my-1">
-                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
-                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
-                  </div>
-                  <div class="h-1 w-1/3 bg-on-surface/50 ml-auto rounded-full" />
-                </template>
-
-                <!-- CRÉATIF : Badge d'en-tête créatif et avatar circulaire -->
-                <template v-else-if="tpl.slug === 'CREATIF'">
-                  <div class="flex items-center gap-1.5 mb-1">
-                    <div
-                      class="w-3.5 h-3.5 rounded-full shrink-0 transition-colors"
-                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                    />
-                    <div class="space-y-0.5 flex-1">
-                      <div class="h-1.5 w-2/3 bg-on-surface/70 rounded-full" />
-                      <div class="h-1 w-1/2 bg-on-surface-variant/40 rounded-full" />
-                    </div>
-                  </div>
-                  <div class="space-y-1 my-1">
-                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
-                    <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
-                  </div>
-                  <div
-                    class="h-1 w-1/3 rounded-full ml-auto"
-                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
-                  />
-                </template>
+              <div>
+                <h4 class="font-bold text-xs text-on-surface">{{ tpl.name }}</h4>
+                <p class="text-[10px] text-on-surface-variant line-clamp-1 font-medium">{{ tpl.description }}</p>
               </div>
-
-              <div class="flex items-center justify-between">
-                <p class="font-extrabold text-xs text-on-surface">{{ tpl.name }}</p>
-                <span v-if="templateId === tpl.slug" class="w-2 h-2 rounded-full bg-primary" />
-              </div>
-              <p class="text-[10px] text-on-surface-variant mt-0.5 line-clamp-1 font-medium">{{ tpl.description }}</p>
-            </button>
+            </FeatureCoverLetterTemplatesPreviewCard>
           </div>
         </div>
       </div>
