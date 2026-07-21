@@ -7,7 +7,7 @@ export type TemplateAccentColors = {
 }
 
 /** Palette élargie pour personnalisation dans l’éditeur */
-const EXTENDED_ACCENT_PALETTE = [
+export const EXTENDED_ACCENT_PALETTE = [
   '#0051d5',
   '#1d4ed8',
   '#1a3050',

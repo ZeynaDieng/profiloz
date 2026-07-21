@@ -12,6 +12,8 @@
  * - Google Ads via NUXT_PUBLIC_GOOGLE_ADS_ID
  */
 export default defineNuxtPlugin(() => {
+  if (import.meta.server) return
+
   const config = useRuntimeConfig()
 
   const gtagId = config.public.gtagId as string
@@ -22,32 +24,26 @@ export default defineNuxtPlugin(() => {
 
   // --- Google Analytics 4 ---
   if (gtagId) {
-    useScript({
-      src: `https://www.googletagmanager.com/gtag/js?id=${gtagId}`,
-      async: true,
-    }, {
-      trigger: 'idle',
-    })
-    // Initialiser gtag après chargement
+    const s = document.createElement('script')
+    s.async = true
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${gtagId}`
+    document.head.appendChild(s)
+
     window.dataLayer = window.dataLayer || []
-    function gtag(..._args: unknown[]) {
-      // eslint-disable-next-line prefer-rest-params
-      window.dataLayer.push(arguments)
+    function gtag(...args: unknown[]) {
+      window.dataLayer.push(args)
     }
     gtag('js', new Date())
-    gtag('config', gtagId, {
-      send_page_view: true,
-    })
+    gtag('config', gtagId, { send_page_view: true })
   }
 
   // --- Google Tag Manager ---
   if (gtmId) {
-    useScript({
-      src: `https://www.googletagmanager.com/gtm.js?id=${gtmId}`,
-      async: true,
-    }, {
-      trigger: 'idle',
-    })
+    const s = document.createElement('script')
+    s.async = true
+    s.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`
+    document.head.appendChild(s)
+
     window.dataLayer = window.dataLayer || []
     window.dataLayer.push({
       'gtm.start': new Date().getTime(),
@@ -57,55 +53,25 @@ export default defineNuxtPlugin(() => {
 
   // --- Microsoft Clarity ---
   if (clarityId) {
-    useScript({
-      innerHTML: `
-        (function(c,l,a,r,i,t,y){
-          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "${clarityId}");
-      `,
-    }, {
-      trigger: 'idle',
-    })
+    const s = document.createElement('script')
+    s.async = true
+    s.text = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "${clarityId}");`
+    document.head.appendChild(s)
   }
 
   // --- Meta / Facebook Pixel ---
   if (metaPixelId) {
-    useScript({
-      innerHTML: `
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '${metaPixelId}');
-        fbq('track', 'PageView');
-      `,
-    }, {
-      trigger: 'idle',
-    })
+    const s = document.createElement('script')
+    s.async = true
+    s.text = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init', '${metaPixelId}');fbq('track', 'PageView');`
+    document.head.appendChild(s)
   }
 
   // --- Google Ads ---
   if (googleAdsId) {
-    useScript({
-      src: `https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`,
-      async: true,
-    }, {
-      trigger: 'idle',
-    })
+    const s = document.createElement('script')
+    s.async = true
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`
+    document.head.appendChild(s)
   }
 })
-
-// Type augmentation pour window.dataLayer
-declare global {
-  interface Window {
-    dataLayer: Record<string, unknown>[]
-    fbq?: (...args: unknown[]) => void
-    clarity?: (...args: unknown[]) => void
-  }
-}
