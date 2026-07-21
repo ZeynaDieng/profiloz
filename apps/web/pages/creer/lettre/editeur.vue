@@ -442,23 +442,9 @@ async function downloadPdf() {
               class="mb-4"
             />
           </Transition>
-          <div class="mb-5">
-            <p class="text-sm font-semibold text-on-surface mb-2">Couleur d’accent</p>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="color in accentColors"
-                :key="color"
-                type="button"
-                class="w-9 h-9 rounded-full ring-2 ring-offset-2 transition-transform hover:scale-105"
-                :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
-                :style="{ backgroundColor: color }"
-                :aria-label="`Couleur ${color}`"
-                @click="accentColor = color"
-              />
-            </div>
-          </div>
           <FeatureCoverLetterForm
             v-model:template-id="templateId"
+            v-model:accent-color="accentColor"
             v-model:sender-name="senderName"
             v-model:sender-email="senderEmail"
             v-model:sender-phone="senderPhone"
@@ -469,6 +455,7 @@ async function downloadPdf() {
             v-model:recruiter-name="recruiterName"
             v-model:content="content"
             v-model:closing-text="closingText"
+            :accent-colors="accentColors"
             :show-template-picker="true"
             :field-errors="fieldErrors"
           />
