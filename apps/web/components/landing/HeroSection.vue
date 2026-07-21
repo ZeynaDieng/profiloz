@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// HeroSection component for SaaS landing page
+import LandingFloatingBadge from '~/components/landing/FloatingBadge.vue'
 </script>
 
 <template>

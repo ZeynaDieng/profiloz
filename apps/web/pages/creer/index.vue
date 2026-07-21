@@ -2,6 +2,9 @@
 import type { TemplateSlug } from '@profiloz/shared'
 import { TEMPLATE_SLUGS } from '@profiloz/shared'
 import { cvImportLink } from '~/utils/template-links'
+import LandingHeroSection from '~/components/landing/HeroSection.vue'
+import LandingActionButtons from '~/components/landing/ActionButtons.vue'
+import LandingBenefitCard from '~/components/landing/BenefitCard.vue'
 
 definePageMeta({ layout: 'wizard' })
 
