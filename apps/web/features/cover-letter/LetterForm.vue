@@ -32,11 +32,20 @@ const targetCompanyInput = ref('')
 const targetPositionInput = ref('')
 const showAllColors = ref(false)
 
-// Section ouverte par défaut : Contenu & IA (pour une action immédiate !)
+// Section ouverte par défaut : Contenu & IA
 const openSection = ref<string>('content')
 
-function toggleSection(id: string) {
-  openSection.value = openSection.value === id ? '' : id
+// Ouverture avec défilement automatique vers la section ouverte pour ne plus avoir à glisser !
+function toggleSection(id: string, event?: Event) {
+  const isOpening = openSection.value !== id
+  openSection.value = isOpening ? id : ''
+
+  if (isOpening && event?.currentTarget) {
+    nextTick(() => {
+      const btn = event.currentTarget as HTMLElement
+      btn.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 }
 
 // 6 Couleurs principales présélectionnées (Design Épuré)
@@ -48,7 +57,7 @@ const displayedColors = computed(() => {
   return primaryPalette
 })
 
-// Calcul dynamique du taux de complétion et des étapes restantes
+// Calcul dynamique du taux de complétion
 const completionScore = computed(() => {
   let score = 0
   if (senderName.value?.trim()) score += 25
@@ -56,15 +65,6 @@ const completionScore = computed(() => {
   if (position.value?.trim()) score += 25
   if (content.value?.trim()) score += 25
   return score
-})
-
-const remainingStepsCount = computed(() => {
-  let steps = 4
-  if (senderName.value?.trim()) steps--
-  if (companyName.value?.trim()) steps--
-  if (position.value?.trim()) steps--
-  if (content.value?.trim()) steps--
-  return Math.max(0, steps)
 })
 
 function fieldError(fieldErrors: Record<string, string> | undefined, key: string) {
@@ -111,80 +111,53 @@ async function handleGenerateFromJobOffer() {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- 🚀 3. HÉROS IA EMBLEMÉTIQUE (Canva / Linear Style) -->
-    <div class="relative overflow-hidden p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-primary/15 via-secondary/10 to-primary/5 border border-primary/25 shadow-xs transition-all hover:border-primary/40">
-      <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="space-y-1.5 max-w-xl">
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-[11px] font-extrabold tracking-wide uppercase">
-            <UiPzIcon name="auto_awesome" class="text-xs animate-pulse" />
-            <span>Générateur IA Sur-Mesure</span>
-          </div>
-          <h3 class="text-base sm:text-lg font-extrabold text-on-surface leading-tight">
-            Rédigez une lettre captivante en moins de 30 secondes
+  <div class="space-y-4 pb-12">
+    <!-- 🚀 BANNIÈRE HERO IA (ÉPURÉE & CLAIRE SANS SURCHARGE DE TEXTE) -->
+    <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/10 border border-primary/25 shadow-xs">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5">
+        <div class="space-y-1">
+          <h3 class="text-sm sm:text-base font-extrabold text-on-surface">
+            Générer ma lettre avec l'IA en 1 clic
           </h3>
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant pt-0.5">
-            <span class="flex items-center gap-1 font-medium"><UiPzIcon name="check_circle" class="text-emerald-500 text-sm" /> IA entraînée pour les recruteurs</span>
-            <span class="flex items-center gap-1 font-medium"><UiPzIcon name="bolt" class="text-amber-500 text-sm" /> +10 000 lettres générées</span>
-          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Collez une offre d'emploi ou votre poste et l'IA rédige une lettre sur-mesure en 5 secondes.
+          </p>
         </div>
-
         <button
           type="button"
-          class="w-full sm:w-auto px-5 py-3 rounded-xl bg-primary text-on-primary font-extrabold text-xs sm:text-sm hover:bg-primary-hover shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95 group"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs sm:text-sm hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
           @click="aiModalOpen = true"
         >
-          <UiPzIcon name="auto_awesome" class="text-base group-hover:rotate-12 transition-transform" />
+          <UiPzIcon name="auto_awesome" class="text-base" />
           <span>✨ Rédiger ma lettre avec l'IA</span>
         </button>
       </div>
     </div>
 
-    <!-- 📊 2. CARTE DE PROGRESSION ENGAGEANTE -->
-    <div class="p-4 rounded-2xl bg-surface-container/50 border border-outline-variant/40 shadow-2xs backdrop-blur-sm space-y-2.5 transition-all">
+    <!-- 📊 BARRE DE PROGRESSION ÉPURÉE (1 SEULE LIGNE LISIBLE) -->
+    <div class="p-3.5 rounded-2xl bg-surface-container/40 border border-outline-variant/40 shadow-2xs space-y-2">
       <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <div
-            class="w-7 h-7 rounded-full flex items-center justify-center font-extrabold text-xs transition-colors shrink-0"
-            :class="completionScore >= 100 ? 'bg-emerald-500 text-white' : 'bg-primary/10 text-primary'"
-          >
-            {{ completionScore >= 100 ? '✓' : `${completionScore}%` }}
-          </div>
-          <div>
-            <h4 class="text-xs sm:text-sm font-bold text-on-surface">
-              Votre lettre est complétée à <span class="text-primary font-extrabold">{{ completionScore }}%</span>
-            </h4>
-            <p class="text-[11px] text-on-surface-variant font-medium">
-              <template v-if="completionScore >= 100">🎉 Votre lettre est 100% prête à être exportée en PDF !</template>
-              <template v-else>Encore {{ remainingStepsCount }} étape{{ remainingStepsCount > 1 ? 's' : '' }} simple{{ remainingStepsCount > 1 ? 's' : '' }} avant votre PDF HD</template>
-            </p>
-          </div>
-        </div>
-        <div class="text-right shrink-0">
-          <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full" :class="completionScore >= 100 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-primary/10 text-primary'">
-            <UiPzIcon name="schedule" class="text-xs" />
-            <span>{{ completionScore >= 100 ? 'Prêt' : '~1 min' }}</span>
-          </span>
-        </div>
+        <span class="text-xs font-bold text-on-surface">
+          Votre lettre est complétée à <span class="text-primary font-extrabold">{{ completionScore }}%</span>
+        </span>
+        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full" :class="completionScore >= 100 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-primary/10 text-primary'">
+          {{ completionScore >= 100 ? 'Prête' : `${completionScore}%` }}
+        </span>
       </div>
-
-      <!-- Barre de progression animée -->
       <div class="w-full h-2 bg-outline-variant/20 rounded-full overflow-hidden p-0.5">
         <div
-          class="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full transition-all duration-500 ease-out shadow-2xs"
+          class="h-full bg-primary rounded-full transition-all duration-500 ease-out"
           :style="{ width: `${completionScore}%` }"
         />
       </div>
     </div>
-
-    <!-- 6. ACCORDÉONS UNIFORMISÉS AVEC ICÔNES -->
 
     <!-- ACCORDÉON 1 (OUVERT PAR DÉFAUT) : 📝 Contenu de la Lettre & IA -->
     <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
       <button
         type="button"
         class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('content')"
+        @click="toggleSection('content', $event)"
       >
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
@@ -209,14 +182,13 @@ async function handleGenerateFromJobOffer() {
           <div class="space-y-2">
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs text-on-surface-variant font-medium">Texte principal de la lettre</span>
-              <!-- Bouton IA TOUJOURS VISIBLE ET REHAUSSÉ -->
               <button
                 type="button"
                 class="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all active:scale-95 shrink-0"
                 :disabled="aiLoading"
                 @click="handleEnhanceContent"
               >
-                <UiPzIcon name="auto_awesome" class="text-sm animate-pulse" />
+                <UiPzIcon name="auto_awesome" class="text-sm" />
                 <span>{{ aiLoading ? 'Génération IA...' : '✨ Reformuler avec l’IA' }}</span>
               </button>
             </div>
@@ -244,7 +216,7 @@ async function handleGenerateFromJobOffer() {
       <button
         type="button"
         class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('sender')"
+        @click="toggleSection('sender', $event)"
       >
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center font-bold text-sm shrink-0">
@@ -307,7 +279,7 @@ async function handleGenerateFromJobOffer() {
       <button
         type="button"
         class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('recipient')"
+        @click="toggleSection('recipient', $event)"
       >
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center font-bold text-sm shrink-0">
@@ -365,12 +337,12 @@ async function handleGenerateFromJobOffer() {
       </div>
     </div>
 
-    <!-- ACCORDÉON 4 : 🎨 Modèle & Couleurs (Design Visuel Canva Style) -->
-    <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
+    <!-- ACCORDÉON 4 : 🎨 Modèle & Couleurs (Design avec vraies miniatures du modèle) -->
+    <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70 mb-8">
       <button
         type="button"
         class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('design')"
+        @click="toggleSection('design', $event)"
       >
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center font-bold text-sm shrink-0">
@@ -379,7 +351,7 @@ async function handleGenerateFromJobOffer() {
           <div>
             <h3 class="font-bold text-sm text-on-surface">4. Modèle & Couleurs (Design)</h3>
             <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
-              Choisir le modèle visuel et la palette de couleur
+              Choisir le modèle visuel et la couleur d'accent
             </p>
           </div>
         </div>
@@ -391,7 +363,7 @@ async function handleGenerateFromJobOffer() {
       </button>
 
       <div v-show="openSection === 'design'" class="p-4 sm:p-5 space-y-5 border-t border-outline-variant/30">
-        <!-- 5. PALETTE DE COULEURS SIMPLIFIÉE + "+ PLUS DE COULEURS" -->
+        <!-- PALETTE DE COULEURS SIMPLIFIÉE -->
         <div>
           <div class="flex items-center justify-between mb-2">
             <p class="text-xs font-bold text-on-surface">Couleur d'accent</p>
@@ -419,9 +391,9 @@ async function handleGenerateFromJobOffer() {
           </div>
         </div>
 
-        <!-- 4. MODÈLE DE LETTRE VISUEL AVEC MINIATURES SVG (Canva / Resume.io Style) -->
+        <!-- 🖼️ MODÈLE DE LETTRE AVEC VRAIES MINIATURES DU RENDU FINAL -->
         <div v-if="showTemplatePicker !== false" class="space-y-2.5">
-          <p class="text-xs font-bold text-on-surface">Modèle de Lettre (Choisissez avec les yeux)</p>
+          <p class="text-xs font-bold text-on-surface">Modèle de Lettre (Rendu visuel exact)</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <button
               v-for="tpl in COVER_LETTER_TEMPLATE_REGISTRY"
@@ -435,25 +407,100 @@ async function handleGenerateFromJobOffer() {
               "
               @click="templateId = tpl.slug"
             >
-              <!-- Miniature Vectorielle du Design -->
-              <div class="w-full aspect-[4/3] rounded-lg bg-surface-container/40 border border-outline-variant/20 mb-2 p-2 flex flex-col justify-between overflow-hidden group-hover:bg-surface-container/70 transition-colors">
-                <!-- Header preview mini -->
-                <div class="space-y-1">
+              <!-- 🖼️ VRAIE MINIATURE FIDÈLE DU DESIGN EN SVG -->
+              <div class="w-full aspect-[4/3] rounded-lg bg-surface-container/30 border border-outline-variant/30 mb-2.5 p-2 overflow-hidden flex flex-col justify-between group-hover:bg-surface-container/60 transition-colors">
+                <!-- CLASSIQUE : En-tête centré traditionnel -->
+                <template v-if="tpl.slug === 'CLASSIQUE'">
+                  <div class="flex flex-col items-center space-y-1">
+                    <div class="h-1.5 w-1/2 rounded-full bg-on-surface/60" />
+                    <div class="h-1 w-1/3 rounded-full bg-on-surface-variant/30" />
+                    <div class="h-[1px] w-full bg-outline-variant/60 my-0.5" />
+                  </div>
+                  <div class="space-y-1 my-1">
+                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
+                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
+                    <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
+                  </div>
+                  <div class="h-1 w-1/4 rounded-full bg-on-surface/50 ml-auto" />
+                </template>
+
+                <!-- MODERNE : Bandeau supérieur coloré avec titre -->
+                <template v-else-if="tpl.slug === 'MODERNE'">
                   <div
-                    class="h-1.5 rounded-full transition-all"
-                    :class="tpl.slug === 'ACCENT' ? 'w-full bg-primary' : 'w-1/2 bg-on-surface/40'"
-                    :style="templateId === tpl.slug ? { backgroundColor: accentColor } : {}"
+                    class="w-full h-3.5 rounded-md p-1 flex items-center justify-between transition-colors mb-1"
+                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
+                  >
+                    <div class="h-1.5 w-1/3 bg-white/90 rounded-full" />
+                    <div class="h-1 w-1/4 bg-white/60 rounded-full" />
+                  </div>
+                  <div class="space-y-1 my-1">
+                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
+                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
+                  </div>
+                  <div
+                    class="h-1 w-1/3 rounded-full ml-auto"
+                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
                   />
-                  <div class="h-1 w-1/3 rounded-full bg-on-surface-variant/30" />
-                </div>
-                <!-- Body lines mini -->
-                <div class="space-y-1 my-1">
-                  <div class="h-1 w-full bg-on-surface-variant/25 rounded-full" />
-                  <div class="h-1 w-5/6 bg-on-surface-variant/25 rounded-full" />
-                  <div class="h-1 w-4/5 bg-on-surface-variant/25 rounded-full" />
-                </div>
-                <!-- Signature line mini -->
-                <div class="h-1 w-1/4 rounded-full bg-primary/40 ml-auto" />
+                </template>
+
+                <!-- ACCENT : Bandeau latéral coloré sur toute la hauteur -->
+                <template v-else-if="tpl.slug === 'ACCENT'">
+                  <div class="flex h-full gap-1.5">
+                    <div
+                      class="w-2 h-full rounded-sm shrink-0 transition-colors"
+                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
+                    />
+                    <div class="flex-1 flex flex-col justify-between">
+                      <div class="h-1.5 w-2/3 bg-on-surface/60 rounded-full" />
+                      <div class="space-y-1">
+                        <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
+                        <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
+                      </div>
+                      <div class="h-1 w-1/3 bg-on-surface-variant/40 rounded-full" />
+                    </div>
+                  </div>
+                </template>
+
+                <!-- PROFESSIONNEL : En-tête 2 colonnes avec barre séparatrice forte -->
+                <template v-else-if="tpl.slug === 'PROFESSIONNEL'">
+                  <div class="space-y-1">
+                    <div class="flex justify-between items-center">
+                      <div class="h-1.5 w-1/2 bg-on-surface/70 rounded-full" />
+                      <div class="h-1 w-1/3 bg-on-surface-variant/40 rounded-full" />
+                    </div>
+                    <div
+                      class="h-0.5 w-full rounded-full transition-colors"
+                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
+                    />
+                  </div>
+                  <div class="space-y-1 my-1">
+                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
+                    <div class="h-1 w-5/6 bg-on-surface-variant/30 rounded-full" />
+                  </div>
+                  <div class="h-1 w-1/3 bg-on-surface/50 ml-auto rounded-full" />
+                </template>
+
+                <!-- CRÉATIF : Badge d'en-tête créatif et avatar circulaire -->
+                <template v-else-if="tpl.slug === 'CREATIF'">
+                  <div class="flex items-center gap-1.5 mb-1">
+                    <div
+                      class="w-3.5 h-3.5 rounded-full shrink-0 transition-colors"
+                      :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
+                    />
+                    <div class="space-y-0.5 flex-1">
+                      <div class="h-1.5 w-2/3 bg-on-surface/70 rounded-full" />
+                      <div class="h-1 w-1/2 bg-on-surface-variant/40 rounded-full" />
+                    </div>
+                  </div>
+                  <div class="space-y-1 my-1">
+                    <div class="h-1 w-full bg-on-surface-variant/30 rounded-full" />
+                    <div class="h-1 w-4/5 bg-on-surface-variant/30 rounded-full" />
+                  </div>
+                  <div
+                    class="h-1 w-1/3 rounded-full ml-auto"
+                    :style="{ backgroundColor: templateId === tpl.slug ? accentColor : '#0051d5' }"
+                  />
+                </template>
               </div>
 
               <div class="flex items-center justify-between">
@@ -491,7 +538,7 @@ async function handleGenerateFromJobOffer() {
             </button>
           </div>
 
-          <!-- Body Scrollable (Résistant au clavier mobile) -->
+          <!-- Body Scrollable -->
           <div class="flex-1 overflow-y-auto py-4 space-y-4 text-left">
             <UiFormField label="Texte de l'offre d'emploi" required>
               <textarea
@@ -522,7 +569,7 @@ async function handleGenerateFromJobOffer() {
             </div>
           </div>
 
-          <!-- Footer Sticky Actions (TOUJOURS VISIBLE MÊME CLAVIER OUVERT) -->
+          <!-- Footer Sticky Actions -->
           <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-outline-variant/30 shrink-0 bg-surface">
             <button
               type="button"
