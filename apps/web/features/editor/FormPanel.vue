@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { Certification, Education, Experience, Interest, Language, Skill } from '@profiloz/shared'
-import { MSG, resolveShowPhoto } from '@profiloz/shared'
-import { useAi } from '~/composables/useAi'
+import type { Certification, Education, Experience, Interest, Language, Skill, TemplateSlug } from '@profiloz/shared'
+import { resolveShowPhoto } from '@profiloz/shared'
+import { EXTENDED_ACCENT_PALETTE } from '~/utils/template-accent-colors'
 
-// FormPanel pour l'édition dynamique du CV
+// FormPanel pour l'édition dynamique du CV avec ergonomie SaaS Mobile Premium
 const resumeStore = useResumeStore()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 const { enhanceText, loading: aiLoading } = useAi()
 
 const openSection = ref('personal')
 const sectionErrors = reactive<Record<string, string>>({})
+const showAllColors = ref(false)
 
 const personalForm = reactive({
   fullName: '',
@@ -38,6 +39,31 @@ const showPhotoOnCv = computed({
   set: (value: boolean) => resumeStore.setTemplateConfig({ showPhoto: value }),
 })
 
+const currentTemplateSlug = computed<TemplateSlug>(() => resumeStore.current?.templateSlug ?? 'PROFESSIONNEL')
+const currentAccentColor = computed<string>(() => resumeStore.current?.templateConfig?.accentColor ?? '#0051d5')
+
+const availableAccentColors = [...EXTENDED_ACCENT_PALETTE]
+
+// 6 Couleurs d'accent stars
+const primaryPalette = ['#0051d5', '#1e293b', '#10b981', '#8b5cf6', '#f97316', '#ef4444']
+
+const displayedAccentColors = computed(() => {
+  if (!availableAccentColors.value || availableAccentColors.value.length === 0) return primaryPalette
+  if (showAllColors.value) return availableAccentColors.value
+  return primaryPalette
+})
+
+const CV_TEMPLATES: { slug: TemplateSlug; name: string; desc: string }[] = [
+  { slug: 'PROFESSIONNEL', name: 'Professionnel', desc: 'Structure rigoureuse et intemporelle' },
+  { slug: 'MODERNE', name: 'Moderne', desc: 'Design épuré et contemporain' },
+  { slug: 'ETUDIANT', name: 'Étudiant', desc: 'Mise en valeur des formations' },
+  { slug: 'DEVELOPPEUR', name: 'Développeur', desc: 'Axé compétences et projets' },
+  { slug: 'COMMERCIAL', name: 'Commercial', desc: 'Dynamic et orienté résultats' },
+  { slug: 'MANAGER', name: 'Executive', desc: 'Élégant pour cadres et responsables' },
+  { slug: 'INTERNATIONAL', name: 'International', desc: 'Format standard bilingue' },
+  { slug: 'MINIMALISTE', name: 'Minimaliste', desc: 'Clarté et sobriété absolue' },
+]
+
 const completionPercentage = computed(() => {
   let score = 0
   if (personalForm.fullName?.trim()) score += 15
@@ -57,6 +83,7 @@ async function handleEnhanceSummary() {
   const result = await enhanceText(textToProcess, context)
   if (result) {
     summary.value = result
+    openSection.value = 'summary'
   }
 }
 
@@ -152,14 +179,41 @@ watch(interests, (v) => {
 }, { deep: true })
 
 const sections = [
-  { id: 'personal', label: 'Informations personnelles', icon: 'person' },
-  { id: 'summary', label: 'Profil / Résumé', icon: 'description' },
-  { id: 'parcours', label: 'Parcours & Expériences', icon: 'work' },
-  { id: 'qualifications', label: 'Compétences & Formation', icon: 'school' },
+  { id: 'personal', label: '1. Informations personnelles', icon: 'person', shortLabel: 'Profil' },
+  { id: 'summary', label: '2. Profil / Résumé IA', icon: 'description', shortLabel: 'Résumé' },
+  { id: 'parcours', label: '3. Parcours & Expériences', icon: 'work', shortLabel: 'Expériences' },
+  { id: 'qualifications', label: '4. Compétences & Formation', icon: 'school', shortLabel: 'Compétences' },
+  { id: 'design', label: '5. Modèle & Couleurs (Design)', icon: 'palette', shortLabel: 'Design' },
 ]
 
-function toggleSection(id: string) {
-  openSection.value = openSection.value === id ? '' : id
+function toggleSection(id: string, event?: Event) {
+  const isOpening = openSection.value !== id
+  openSection.value = isOpening ? id : ''
+
+  if (isOpening && event?.currentTarget) {
+    nextTick(() => {
+      const btn = event.currentTarget as HTMLElement
+      btn.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+}
+
+function scrollToSection(id: string) {
+  openSection.value = id
+  nextTick(() => {
+    const el = document.querySelector(`[data-section-id="${id}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+}
+
+function selectTemplate(slug: TemplateSlug) {
+  resumeStore.setTemplate(slug)
+}
+
+function selectAccentColor(color: string) {
+  resumeStore.setTemplateConfig({ accentColor: color })
 }
 
 function applyValidationResult(
@@ -209,25 +263,45 @@ provideResumeEditorValidation({
 
 <template>
   <div class="flex flex-col h-full bg-surface">
-    <!-- En-tête avec barre de complétion du CV -->
-    <div class="px-4 py-3 border-b border-outline-variant shrink-0 space-y-2">
-      <div class="flex items-center justify-between">
-        <h2 class="font-bold text-on-surface text-sm sm:text-base">Contenu du CV</h2>
-        <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-          {{ completionPercentage }}% complété
+    <!-- 🚀 BARRE DE PROGRESSION & HÉROS IA -->
+    <div class="p-3.5 sm:p-4 border-b border-outline-variant/40 shrink-0 space-y-3 bg-surface-container/20">
+      <!-- Progression 1 ligne épurée -->
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-bold text-on-surface">
+          Votre CV est complété à <span class="text-primary font-extrabold">{{ completionPercentage }}%</span>
+        </span>
+        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full" :class="completionPercentage >= 100 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-primary/10 text-primary'">
+          {{ completionPercentage >= 100 ? 'Prêt' : `${completionPercentage}%` }}
         </span>
       </div>
 
-      <p class="text-xs text-on-surface-variant block xl:hidden">
-        Remplissez vos informations ci-dessous. Appuyez sur <strong>« Aperçu »</strong> en bas pour voir le rendu A4 de votre CV.
-      </p>
-
       <!-- Barre de progression -->
-      <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+      <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden p-0.5">
         <div
           class="bg-primary h-full transition-all duration-500 rounded-full"
           :style="{ width: `${completionPercentage}%` }"
         />
+      </div>
+
+      <!-- BANNIÈRE HERO IA TOUT EN HAUT -->
+      <div class="p-3.5 rounded-xl bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/10 border border-primary/25 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="space-y-0.5">
+          <h3 class="text-xs sm:text-sm font-extrabold text-on-surface flex items-center gap-1.5">
+            <UiPzIcon name="auto_awesome" class="text-primary text-base animate-pulse" />
+            <span>Booster mon CV avec l'IA en 1 clic</span>
+          </h3>
+          <p class="text-[11px] text-on-surface-variant leading-relaxed">
+            L'IA rédige votre profil, suggère des puces d'expérience et corrige les fautes.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95"
+          @click="handleEnhanceSummary(); openSection = 'summary'"
+        >
+          <UiPzIcon name="auto_awesome" class="text-sm" />
+          <span>{{ aiLoading ? 'Génération...' : '✨ Générer mon profil IA' }}</span>
+        </button>
       </div>
 
       <Transition name="form-field__error">
@@ -240,16 +314,36 @@ provideResumeEditorValidation({
       </Transition>
     </div>
 
+    <!-- 📱 PUCES DE NAVIGATION RAPIDE PAR SECTIONS (ACCÈS 1 TAP SUR MOBILE) -->
+    <div class="flex items-center gap-2 px-3 py-2 overflow-x-auto border-b border-outline-variant/30 bg-surface-container/40 scrollbar-none shrink-0">
+      <button
+        v-for="sec in sections"
+        :key="sec.id"
+        type="button"
+        class="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+        :class="openSection === sec.id ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+        @click="scrollToSection(sec.id)"
+      >
+        <UiPzIcon :name="sec.icon" class="text-xs" />
+        <span>{{ sec.shortLabel }}</span>
+      </button>
+    </div>
+
     <div class="flex-1 overflow-y-auto pb-32 xl:pb-6">
-      <div v-for="section in sections" :key="section.id" class="border-b border-outline-variant/50">
+      <div
+        v-for="section in sections"
+        :key="section.id"
+        :data-section-id="section.id"
+        class="border-b border-outline-variant/40"
+      >
         <button
           type="button"
-          class="w-full flex items-center gap-3 px-4 py-3 min-h-11 text-left hover:bg-surface-container-low transition-colors"
+          class="w-full flex items-center gap-3 px-4 py-3.5 min-h-12 text-left hover:bg-surface-container-low transition-colors"
           :class="{ 'bg-error/5': sectionErrors[section.id] }"
-          @click="toggleSection(section.id)"
+          @click="toggleSection(section.id, $event)"
         >
-          <UiPzIcon :name="section.icon" class="text-secondary text-[20px]" />
-          <span class="font-semibold text-on-surface flex-1 text-sm sm:text-base">{{ section.label }}</span>
+          <UiPzIcon :name="section.icon" class="text-secondary text-[20px] shrink-0" />
+          <span class="font-bold text-on-surface flex-1 text-sm sm:text-base">{{ section.label }}</span>
           <UiPzIcon
             v-if="sectionErrors[section.id]"
             name="error"
@@ -258,7 +352,7 @@ provideResumeEditorValidation({
           />
           <UiPzIcon
             :name="openSection === section.id ? 'expand_less' : 'expand_more'"
-            class="text-on-surface-variant"
+            class="text-on-surface-variant shrink-0"
           />
         </button>
 
@@ -352,22 +446,22 @@ provideResumeEditorValidation({
 
           <template v-else-if="section.id === 'summary'">
             <div class="space-y-2">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between gap-2">
                 <label class="text-xs font-semibold text-on-surface">Résumé / Présentation</label>
                 <button
                   type="button"
-                  class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
+                  class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95"
                   :disabled="aiLoading"
                   @click="handleEnhanceSummary"
                 >
                   <UiPzIcon name="auto_awesome" class="text-[13px]" />
-                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? '✨ Reformuler' : '✨ Générer avec l’IA') }}</span>
+                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? '✨ Reformuler avec l’IA' : '✨ Générer mon profil IA') }}</span>
                 </button>
               </div>
               <textarea
                 v-model="summary"
                 rows="4"
-                class="form-input w-full text-sm resize-y"
+                class="form-input w-full text-sm resize-y leading-relaxed"
                 placeholder="Ex : Professionnel passionné avec 5 ans d'expérience..."
               />
             </div>
@@ -410,8 +504,94 @@ provideResumeEditorValidation({
               </div>
             </div>
           </template>
+
+          <!-- 🎨 SECTION 5 : MODÈLE & COULEURS DU CV EN GRILLE DE 2 SUR MOBILE -->
+          <template v-else-if="section.id === 'design'">
+            <div class="space-y-5 pt-2">
+              <!-- PALETTE DE COULEURS SIMPLIFIÉE -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs font-bold text-on-surface">Couleur d'accent du CV</p>
+                  <button
+                    v-if="availableAccentColors && availableAccentColors.length > 6"
+                    type="button"
+                    class="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                    @click="showAllColors = !showAllColors"
+                  >
+                    <span>{{ showAllColors ? 'Voir moins' : '+ Plus de couleurs' }}</span>
+                    <UiPzIcon :name="showAllColors ? 'expand_less' : 'expand_more'" class="text-xs" />
+                  </button>
+                </div>
+                <div class="flex flex-wrap gap-2.5">
+                  <button
+                    v-for="color in displayedAccentColors"
+                    :key="color"
+                    type="button"
+                    class="w-8 h-8 rounded-full ring-2 ring-offset-2 transition-all hover:scale-110 active:scale-95 shadow-2xs"
+                    :class="currentAccentColor === color ? 'ring-primary scale-105' : 'ring-transparent opacity-85 hover:opacity-100'"
+                    :style="{ backgroundColor: color }"
+                    :aria-label="`Couleur ${color}`"
+                    @click="selectAccentColor(color)"
+                  />
+                </div>
+              </div>
+
+              <!-- CHOIX DU MODÈLE DE CV EN GRILLE DE 2 SUR MOBILE -->
+              <div class="space-y-2.5">
+                <p class="text-xs font-bold text-on-surface">Modèles de CV disponibles</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <button
+                    v-for="tpl in CV_TEMPLATES"
+                    :key="tpl.slug"
+                    type="button"
+                    class="group relative rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-2xs"
+                    :class="
+                      currentTemplateSlug === tpl.slug
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-outline-variant/60 hover:border-primary/50 bg-surface-container-lowest'
+                    "
+                    @click="selectTemplate(tpl.slug)"
+                  >
+                    <!-- Miniature vectorielle du modèle de CV -->
+                    <div class="w-full aspect-[3/4] rounded-lg bg-surface-container/30 border border-outline-variant/30 mb-2 p-1.5 overflow-hidden flex flex-col justify-between group-hover:bg-surface-container/60 transition-colors">
+                      <div class="space-y-1">
+                        <div
+                          class="h-2 rounded-sm transition-colors"
+                          :style="{ backgroundColor: currentTemplateSlug === tpl.slug ? currentAccentColor : '#0051d5' }"
+                        />
+                        <div class="h-1 w-2/3 bg-on-surface/60 rounded-full" />
+                        <div class="h-1 w-1/2 bg-on-surface-variant/30 rounded-full" />
+                      </div>
+                      <div class="space-y-1 my-1">
+                        <div class="h-1 w-full bg-on-surface-variant/25 rounded-full" />
+                        <div class="h-1 w-5/6 bg-on-surface-variant/25 rounded-full" />
+                        <div class="h-1 w-4/5 bg-on-surface-variant/25 rounded-full" />
+                      </div>
+                      <div class="h-1.5 w-full bg-surface-container-high rounded-xs" />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                      <p class="font-extrabold text-xs text-on-surface">{{ tpl.name }}</p>
+                      <span v-if="currentTemplateSlug === tpl.slug" class="w-2 h-2 rounded-full bg-primary" />
+                    </div>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5 line-clamp-1 font-medium">{{ tpl.desc }}</p>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+</style>
