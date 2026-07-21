@@ -35,8 +35,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="relative overflow-hidden bg-[#F8FAFF] min-h-screen py-10 px-5 sm:px-8">
-    <div class="max-w-6xl mx-auto space-y-12 sm:space-y-16">
+  <div class="relative overflow-hidden bg-[#F8FAFF] min-h-screen py-8 sm:py-12 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto space-y-8 sm:space-y-10">
 
       <!-- HERO SECTION -->
       <LandingHeroSection />
@@ -48,7 +48,7 @@ onMounted(async () => {
       />
 
       <!-- STRIPE-STYLE BENEFITS GRID -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
         <LandingBenefitCard
           icon="bolt"
           title="Rapide"
