@@ -35,53 +35,13 @@ onMounted(async () => {
   <div class="relative overflow-hidden bg-[#F8FAFF] min-h-screen pt-2 pb-24 px-4 sm:px-6">
     <div class="max-w-md mx-auto sm:max-w-xl space-y-6">
 
-      <!-- 🖼️ HERO IMAGE CONTAINER WITH FLOATING CARDS & DECORATIVE CURVES -->
-      <div class="relative w-full aspect-[4/3] sm:aspect-[16/11] rounded-[28px] overflow-hidden bg-white/70 backdrop-blur-md border border-[rgba(37,99,235,0.08)] shadow-[0_25px_60px_rgba(30,64,175,0.08)]">
-        <!-- Candidate Photo -->
+      <!-- 🖼️ HERO IMAGE CONTAINER (CLEAN FULL BG IMAGE WITHOUT OVERLAY BORDERS) -->
+      <div class="relative w-full aspect-[16/10] sm:aspect-[16/10] rounded-[24px] overflow-hidden shadow-sm">
         <img
-          src="/landing/hero-woman.png"
+          src="/landing/hero-bg-full.jpg"
           alt="Profilo'Z Candidate"
           class="w-full h-full object-cover object-center"
         />
-
-        <!-- 🎨 BLUE DECORATIVE SPIRAL CURVES (SVG Overlay) -->
-        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 300 240" fill="none">
-          <path d="M 230,40 Q 250,70 235,100 T 215,130" stroke="#2F5BFF" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
-          <path d="M 50,110 Q 70,80 100,90" stroke="#2F5BFF" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
-        </svg>
-
-        <!-- 🏷️ FLOATING CARD 1: Top Right - CV prêt -->
-        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[rgba(37,99,235,0.12)] shadow-[0_10px_25px_rgba(30,64,175,0.12)]">
-          <div class="w-5 h-5 rounded-md bg-[#EEF4FF] text-[#2F5BFF] flex items-center justify-center shrink-0">
-            <UiPzIcon name="description" class="text-xs font-bold" />
-          </div>
-          <span class="text-[11px] font-extrabold text-[#0F172A] whitespace-nowrap">CV prêt</span>
-          <div class="w-3.5 h-3.5 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[9px] font-black shrink-0">
-            ✓
-          </div>
-        </div>
-
-        <!-- 🏷️ FLOATING CARD 2: Middle Right - Prêt à postuler -->
-        <div class="absolute top-1/2 -translate-y-1/2 right-3 z-20 flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[rgba(37,99,235,0.12)] shadow-[0_10px_25px_rgba(30,64,175,0.12)]">
-          <div class="w-5 h-5 rounded-md bg-[#EEF4FF] text-[#2F5BFF] flex items-center justify-center shrink-0">
-            <UiPzIcon name="target" class="text-xs font-bold" />
-          </div>
-          <span class="text-[11px] font-extrabold text-[#0F172A] whitespace-nowrap">Prêt à postuler</span>
-          <div class="w-3.5 h-3.5 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[9px] font-black shrink-0">
-            ✓
-          </div>
-        </div>
-
-        <!-- 🏷️ FLOATING CARD 3: Left - Lettre de motivation -->
-        <div class="absolute top-1/3 left-3 z-20 flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[rgba(37,99,235,0.12)] shadow-[0_10px_25px_rgba(30,64,175,0.12)]">
-          <div class="w-5 h-5 rounded-md bg-[#EEF4FF] text-[#2F5BFF] flex items-center justify-center shrink-0">
-            <UiPzIcon name="mail" class="text-xs font-bold" />
-          </div>
-          <span class="text-[11px] font-extrabold text-[#0F172A] whitespace-nowrap">Lettre de motivation</span>
-          <div class="w-3.5 h-3.5 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[9px] font-black shrink-0">
-            ✓
-          </div>
-        </div>
       </div>
 
       <!-- 📝 HEADER TITLES & BADGE -->
