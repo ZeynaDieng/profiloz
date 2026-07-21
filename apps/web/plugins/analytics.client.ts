@@ -11,6 +11,12 @@
  * - Meta/Facebook Pixel via NUXT_PUBLIC_META_PIXEL_ID
  * - Google Ads via NUXT_PUBLIC_GOOGLE_ADS_ID
  */
+declare global {
+  interface Window {
+    dataLayer: any[]
+  }
+}
+
 export default defineNuxtPlugin(() => {
   if (import.meta.server) return
 

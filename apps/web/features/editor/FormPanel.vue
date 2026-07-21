@@ -48,8 +48,7 @@ const availableAccentColors = [...EXTENDED_ACCENT_PALETTE]
 const primaryPalette = ['#0051d5', '#1e293b', '#10b981', '#8b5cf6', '#f97316', '#ef4444']
 
 const displayedAccentColors = computed(() => {
-  if (!availableAccentColors.value || availableAccentColors.value.length === 0) return primaryPalette
-  if (showAllColors.value) return availableAccentColors.value
+  if (showAllColors.value) return availableAccentColors
   return primaryPalette
 })
 
@@ -533,46 +532,23 @@ provideResumeEditorValidation({
                 </div>
               </div>
 
-              <!-- CHOIX DU MODÈLE DE CV EN GRILLE DE 2 SUR MOBILE -->
+              <!-- CHOIX DU MODÈLE DE CV EN GRILLE DE 2 SUR MOBILE AVEC RENDU A4 RÉEL -->
               <div class="space-y-2.5">
-                <p class="text-xs font-bold text-on-surface">Modèles de CV disponibles</p>
+                <p class="text-xs font-bold text-on-surface">Modèles de CV disponibles (Rendu réel)</p>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <button
+                  <FeatureTemplatesPreviewCard
                     v-for="tpl in CV_TEMPLATES"
                     :key="tpl.slug"
-                    type="button"
-                    class="group relative rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-2xs"
-                    :class="
-                      currentTemplateSlug === tpl.slug
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                        : 'border-outline-variant/60 hover:border-primary/50 bg-surface-container-lowest'
-                    "
-                    @click="selectTemplate(tpl.slug)"
+                    :slug="tpl.slug"
+                    :selected="currentTemplateSlug === tpl.slug"
+                    :user-snapshot="resumeStore.current"
+                    @select="selectTemplate(tpl.slug)"
                   >
-                    <!-- Miniature vectorielle du modèle de CV -->
-                    <div class="w-full aspect-[3/4] rounded-lg bg-surface-container/30 border border-outline-variant/30 mb-2 p-1.5 overflow-hidden flex flex-col justify-between group-hover:bg-surface-container/60 transition-colors">
-                      <div class="space-y-1">
-                        <div
-                          class="h-2 rounded-sm transition-colors"
-                          :style="{ backgroundColor: currentTemplateSlug === tpl.slug ? currentAccentColor : '#0051d5' }"
-                        />
-                        <div class="h-1 w-2/3 bg-on-surface/60 rounded-full" />
-                        <div class="h-1 w-1/2 bg-on-surface-variant/30 rounded-full" />
-                      </div>
-                      <div class="space-y-1 my-1">
-                        <div class="h-1 w-full bg-on-surface-variant/25 rounded-full" />
-                        <div class="h-1 w-5/6 bg-on-surface-variant/25 rounded-full" />
-                        <div class="h-1 w-4/5 bg-on-surface-variant/25 rounded-full" />
-                      </div>
-                      <div class="h-1.5 w-full bg-surface-container-high rounded-xs" />
+                    <div>
+                      <h4 class="font-bold text-xs text-on-surface">{{ tpl.name }}</h4>
+                      <p class="text-[10px] text-on-surface-variant line-clamp-1 font-medium">{{ tpl.desc }}</p>
                     </div>
-
-                    <div class="flex items-center justify-between">
-                      <p class="font-extrabold text-xs text-on-surface">{{ tpl.name }}</p>
-                      <span v-if="currentTemplateSlug === tpl.slug" class="w-2 h-2 rounded-full bg-primary" />
-                    </div>
-                    <p class="text-[10px] text-on-surface-variant mt-0.5 line-clamp-1 font-medium">{{ tpl.desc }}</p>
-                  </button>
+                  </FeatureTemplatesPreviewCard>
                 </div>
               </div>
             </div>
