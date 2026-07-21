@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BillingEntitlementsSummary from '~/components/billing/EntitlementsSummary.vue'
+
 withDefaults(
   defineProps<{
     variant?: 'marketing' | 'dashboard' | 'minimal'
@@ -74,11 +76,11 @@ onMounted(() => {
         />
         <button
           type="button"
-          class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+          class="md:hidden w-10 h-10 rounded-xl bg-surface-container/60 hover:bg-[#EEF4FF] text-on-surface hover:text-[#2F5BFF] border border-[rgba(37,99,235,0.08)] transition-all duration-200 flex items-center justify-center active:scale-95 cursor-pointer"
           aria-label="Menu"
           @click="openMenu($event.currentTarget as HTMLElement)"
         >
-          <UiPzIcon name="menu" class="text-[22px]" />
+          <UiPzIcon name="menu" class="text-[20px]" />
         </button>
       </div>
 
@@ -87,11 +89,11 @@ onMounted(() => {
         <LayoutNotificationBell class="hidden sm:block" />
         <button
           type="button"
-          class="md:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+          class="md:hidden w-10 h-10 rounded-xl bg-surface-container/60 hover:bg-[#EEF4FF] text-on-surface-variant hover:text-[#2F5BFF] border border-[rgba(37,99,235,0.08)] transition-all duration-200 flex items-center justify-center active:scale-95 cursor-pointer"
           aria-label="Menu"
           @click="toggleDrawer($event.currentTarget as HTMLElement)"
         >
-          <UiPzIcon name="menu" />
+          <UiPzIcon name="menu" class="text-[20px]" />
         </button>
         <LayoutAuthStatus icon-only class="sm:hidden" />
         <LayoutAuthStatus compact class="hidden sm:flex" />
