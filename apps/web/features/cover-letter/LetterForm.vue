@@ -128,7 +128,6 @@ async function handleGenerateFromJobOffer() {
           class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs sm:text-sm hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
           @click="aiModalOpen = true"
         >
-          <UiPzIcon name="auto_awesome" class="text-base" />
           <span>✨ Rédiger ma lettre avec l'IA</span>
         </button>
       </div>
@@ -188,7 +187,6 @@ async function handleGenerateFromJobOffer() {
                 :disabled="aiLoading"
                 @click="handleEnhanceContent"
               >
-                <UiPzIcon name="auto_awesome" class="text-sm" />
                 <span>{{ aiLoading ? 'Génération IA...' : '✨ Reformuler avec l’IA' }}</span>
               </button>
             </div>
@@ -482,7 +480,6 @@ async function handleGenerateFromJobOffer() {
               :disabled="aiLoading || !jobOfferInput.trim()"
               @click="handleGenerateFromJobOffer"
             >
-              <UiPzIcon name="auto_awesome" class="text-base" />
               <span>{{ aiLoading ? 'Génération...' : '✨ Rédiger la lettre' }}</span>
             </button>
           </div>

@@ -287,8 +287,7 @@ provideResumeEditorValidation({
       <div class="p-3.5 rounded-xl bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/10 border border-primary/25 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="space-y-0.5">
           <h3 class="text-xs sm:text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-            <UiPzIcon name="auto_awesome" class="text-primary text-base animate-pulse" />
-            <span>Booster mon CV avec l'IA en 1 clic</span>
+            <span>✨ Booster mon CV avec l'IA en 1 clic</span>
           </h3>
           <p class="text-[11px] text-on-surface-variant leading-relaxed">
             L'IA rédige votre profil, suggère des puces d'expérience et corrige les fautes.
@@ -299,8 +298,7 @@ provideResumeEditorValidation({
           class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95"
           @click="handleEnhanceSummary(); openSection = 'summary'"
         >
-          <UiPzIcon name="auto_awesome" class="text-sm" />
-          <span>{{ aiLoading ? 'Génération...' : '✨ Générer mon profil IA' }}</span>
+          <span>{{ aiLoading ? 'Génération...' : 'Générer mon profil IA' }}</span>
         </button>
       </div>
 
@@ -454,7 +452,6 @@ provideResumeEditorValidation({
                   :disabled="aiLoading"
                   @click="handleEnhanceSummary"
                 >
-                  <UiPzIcon name="auto_awesome" class="text-[13px]" />
                   <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? '✨ Reformuler avec l’IA' : '✨ Générer mon profil IA') }}</span>
                 </button>
               </div>

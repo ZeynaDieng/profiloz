@@ -97,8 +97,7 @@ async function handleSuggestBullets(index: number) {
             :disabled="aiLoading"
             @click="handleSuggestBullets(index)"
           >
-            <UiPzIcon name="auto_awesome" class="text-[13px]" />
-            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? 'Génération...' : '💡 Suggerer des puces IA' }}</span>
+            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? 'Génération...' : '💡 Suggérer des puces IA' }}</span>
           </button>
         </div>
         <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />
@@ -143,7 +142,6 @@ async function handleSuggestBullets(index: number) {
             :disabled="aiLoading"
             @click="handleEnhanceExperience(index)"
           >
-            <UiPzIcon name="auto_awesome" class="text-[13px]" />
             <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Génération...' : (item.description?.trim() ? '✨ Embellir' : '✨ Générer avec l’IA') }}</span>
           </button>
         </div>
