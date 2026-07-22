@@ -169,7 +169,7 @@ function onHeroTitleComplete() {
     />
 
     <div
-      class="relative z-[2] w-full max-w-container-max mx-auto px-0 lg:px-margin-desktop md:px-margin-tablet grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
+      class="relative z-[2] w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
     >
       <div
         class="flex flex-col text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full"
