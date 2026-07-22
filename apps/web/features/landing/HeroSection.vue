@@ -234,25 +234,28 @@ function onHeroTitleComplete() {
         </div>
 
         <div
-          class="order-4 lg:order-3 mt-5 grid grid-cols-2 gap-y-2.5 gap-x-4 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2 transition-opacity duration-500 ease-out motion-reduce:transition-none"
+          class="order-4 lg:order-3 mt-5 flex flex-wrap items-center justify-start gap-x-4 gap-y-2.5 sm:gap-x-5 sm:gap-y-2 transition-opacity duration-500 ease-out motion-reduce:transition-none"
           :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
           style="transition-delay: 450ms"
         >
           <!-- Item 1: Import -->
-          <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 justify-start">
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 shrink-0">
             <span class="w-4 h-4 rounded-full bg-[#EEF4FF] border border-[#2563eb]/20 text-[#2563eb] flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
             <span class="sm:hidden">Import</span>
             <span class="hidden sm:inline">Import IA & Photo</span>
           </span>
 
           <!-- Item 2: Compatible ATS -->
-          <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 justify-start">
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 shrink-0">
             <span class="w-4 h-4 rounded-full bg-[#EEF4FF] border border-[#2563eb]/20 text-[#2563eb] flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
             <span>Compatible ATS</span>
           </span>
 
-          <!-- Item 3: Générateur de Lettre (prend les 2 colonnes sur mobile) -->
-          <span class="col-span-2 sm:col-span-1 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 justify-start">
+          <!-- Saut de ligne uniquement sur mobile -->
+          <div class="w-full h-0 sm:hidden" aria-hidden="true" />
+
+          <!-- Item 3: Générateur de Lettre -->
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 shrink-0">
             <span class="w-4 h-4 rounded-full bg-[#EEF4FF] border border-[#2563eb]/20 text-[#2563eb] flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
             <span>Générateur de Lettre</span>
           </span>
