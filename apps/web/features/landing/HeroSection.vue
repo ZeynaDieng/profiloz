@@ -226,7 +226,7 @@ function onHeroTitleComplete() {
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
-            class="self-start bg-secondary text-on-secondary px-4 py-3 rounded-2xl premium-shadow-sm text-sm"
+            class="self-start bg-secondary text-on-secondary px-6 py-3 rounded-2xl premium-shadow-sm text-sm font-bold transition-all duration-200 hover:bg-secondary-container hover:-translate-y-0.5 active:scale-95 cursor-pointer"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
           </NuxtLink>

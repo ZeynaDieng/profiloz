@@ -65,7 +65,7 @@ onMounted(() => {
         />
         <NuxtLink
           to="/creer"
-          class="hidden md:inline-flex btn-secondary font-label-sm px-6 py-2.5 rounded-xl whitespace-nowrap"
+          class="hidden md:inline-flex bg-secondary text-on-secondary font-label-sm font-bold px-6 py-2.5 rounded-2xl premium-shadow-sm whitespace-nowrap transition-all duration-200 hover:bg-secondary-container hover:-translate-y-0.5 active:scale-95 cursor-pointer"
         >
           Créer mon dossier
         </NuxtLink>
