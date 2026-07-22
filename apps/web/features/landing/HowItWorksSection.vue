@@ -58,14 +58,15 @@ const { target, revealed } = useScrollReveal(0.12)
     >
       <div class="landing-section-header landing-section-header--left">
         <p class="landing-eyebrow">Parcours guidé</p>
-        <UiTypewriterText
-          tag="h2"
-          class="landing-title"
-          :active="revealed"
-          :segments="[{ text: 'Comment ça marche' }]"
-          loop
-          loop-mode="full"
-        />
+        <h2 class="landing-title min-h-[1.25em]">
+          <UiTypewriterText
+            tag="span"
+            :active="revealed"
+            :segments="[{ text: 'Comment ça marche' }]"
+            loop
+            loop-mode="full"
+          />
+        </h2>
         <p class="landing-lead !max-w-xl">
           Quatre étapes <span class="text-secondary font-semibold">simples</span>, une progression claire du début au PDF.
         </p>

@@ -28,17 +28,18 @@ const { target, revealed } = useScrollReveal()
         <div class="space-y-5 order-2 lg:order-1">
           <div class="landing-section-header landing-section-header--left !mb-0">
             <p class="landing-eyebrow">Dossier complet</p>
-            <UiTypewriterText
-              tag="h2"
-              class="landing-title"
-              :active="revealed"
-              :segments="[
-                { text: 'CV + lettre :' },
-                { text: ' le duo gagnant', class: 'text-secondary' },
-              ]"
-              loop
-              loop-mode="tail"
-            />
+            <h2 class="landing-title">
+              <span>CV + lettre : </span>
+              <span class="block sm:inline-block text-secondary min-h-[1.25em]">
+                <UiTypewriterText
+                  tag="span"
+                  :active="revealed"
+                  :segments="[{ text: 'le duo gagnant' }]"
+                  loop
+                  loop-mode="tail"
+                />
+              </span>
+            </h2>
             <p class="landing-lead !max-w-lg">
               Créez l'ensemble de votre candidature depuis une seule plateforme, harmonisé et exportable en PDF.
             </p>

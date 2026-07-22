@@ -35,18 +35,19 @@ const { target, revealed } = useScrollReveal(0.25)
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
           <div class="cta-copy p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-center lg:text-left">
             <p class="landing-eyebrow mb-2">Prêt à candidater ?</p>
-            <UiTypewriterText
-              tag="h2"
-              class="landing-title text-balance"
-              :active="revealed"
-              :segments="[
-                { text: 'Votre prochaine ' },
-                { text: 'opportunité', class: 'text-secondary' },
-                { text: ' commence ici' },
-              ]"
-              loop
-              loop-mode="accent"
-            />
+            <h2 class="landing-title text-balance">
+              <span>Votre prochaine </span>
+              <span class="block sm:inline-block text-secondary min-h-[1.25em]">
+                <UiTypewriterText
+                  tag="span"
+                  :active="revealed"
+                  :segments="[{ text: 'opportunité' }]"
+                  loop
+                  loop-mode="accent"
+                />
+              </span>
+              <span> commence ici</span>
+            </h2>
             <p class="landing-lead mx-auto lg:mx-0 mt-3 sm:mt-4 text-balance">
               Le moyen le plus rapide de créer un CV qui donne envie d'être lu.
             </p>

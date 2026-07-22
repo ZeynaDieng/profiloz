@@ -60,17 +60,18 @@ const { target, revealed } = useScrollReveal()
     >
       <div class="landing-section-header landing-section-header--left">
         <p class="landing-eyebrow">Fonctionnalités</p>
-        <UiTypewriterText
-          tag="h2"
-          class="landing-title"
-          :active="revealed"
-          :segments="[
-            { text: 'Bien plus qu\'un simple' },
-            { text: ' créateur de CV', class: 'text-secondary' },
-          ]"
-          loop
-          loop-mode="tail"
-        />
+        <h2 class="landing-title">
+          <span>Bien plus qu'un simple </span>
+          <span class="block sm:inline-block text-secondary min-h-[1.25em]">
+            <UiTypewriterText
+              tag="span"
+              :active="revealed"
+              :segments="[{ text: 'créateur de CV' }]"
+              loop
+              loop-mode="tail"
+            />
+          </span>
+        </h2>
         <p class="landing-lead !max-w-2xl">
           Chaque bloc vous guide vers un dossier prêt à envoyer : import, modèles, lettre et PDF.
         </p>
