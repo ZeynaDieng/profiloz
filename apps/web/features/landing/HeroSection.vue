@@ -165,8 +165,7 @@ function onHeroTitleComplete() {
     <div
       aria-hidden="true"
       class="absolute inset-0 z-[1] pointer-events-none
-             bg-[image:linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.62)_28%,rgba(255,255,255,0.28)_48%,rgba(255,255,255,0.06)_68%,transparent_88%)]
-             lg:bg-[image:linear-gradient(90deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.08)_18%,transparent_38%)]"
+             bg-[image:linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.85)_40%,rgba(255,255,255,0.4)_65%,transparent_90%)]"
     />
 
     <div
