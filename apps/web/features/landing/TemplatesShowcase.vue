@@ -87,18 +87,18 @@ const { target, revealed } = useScrollReveal(0.25)
     :class="revealed && 'is-revealed'"
   >
     <div class="landing-section-header landing-section-header--left">
-      <p class="landing-eyebrow">Modèles testés</p>
-      <UiTypewriterText
-        tag="h2"
-        class="landing-title"
-        :active="revealed"
-        :segments="[
-          { text: 'Des modèles pour ' },
-          { text: 'votre candidature', class: 'text-secondary block sm:inline' },
-        ]"
-        loop
-        loop-mode="tail"
-      />
+      <h2 class="landing-title">
+        <span>Des modèles pour </span>
+        <span class="block sm:inline-block text-secondary min-h-[1.25em]">
+          <UiTypewriterText
+            tag="span"
+            :active="revealed"
+            :segments="[{ text: 'votre candidature' }]"
+            loop
+            loop-mode="tail"
+          />
+        </span>
+      </h2>
       <p class="landing-lead !max-w-xl hidden sm:block">
         CV et lettres conçus pour impressionner les recruteurs. Parcourez, comparez, personnalisez.
       </p>
