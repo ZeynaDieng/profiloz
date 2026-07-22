@@ -2,7 +2,10 @@
 const config = useRuntimeConfig()
 const { content, load, section } = useLandingContent()
 
-onMounted(() => load())
+onMounted(() => {
+  load()
+  reducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+})
 
 const heroVariant = computed(() =>
   (config.public.heroVariant as string) === 'start' ? 'start' : 'transform',
@@ -21,15 +24,42 @@ const heroBannerSrc = computed(
   () => (config.public.heroBannerUrl as string)?.trim() || '/landing/hero-banner.png',
 )
 
-const heroBannerMobileSrc = computed(() => {
-  const mobile = (config.public.heroBannerMobileUrl as string)?.trim()
-  if (mobile) return mobile
-  return heroBannerSrc.value
+// Prefer a dedicated mobile crop when one is configured (sharper: it's sized
+// for a narrow/tall viewport instead of a wide desktop banner). Otherwise fall
+// back to the desktop photo so mobile still shows an image, accepting that a
+// wide crop stretched via `cover` will look a little softer until a real
+// mobile asset is provided.
+const heroBannerMobileUrlRaw = computed(() => (config.public.heroBannerMobileUrl as string)?.trim())
+const hasMobilePhoto = computed(() => true)
+const heroBannerMobileSrc = computed(() => heroBannerMobileUrlRaw.value || heroBannerSrc.value)
+
+// Preload the LCP image only for the viewport(s) that will actually render one.
+useHead({
+  link: [
+    ...(hasMobilePhoto.value
+      ? [{
+          rel: 'preload',
+          as: 'image',
+          href: heroBannerMobileSrc.value,
+          media: '(max-width: 1023px)',
+          fetchpriority: 'high',
+        }]
+      : []),
+    {
+      rel: 'preload',
+      as: 'image',
+      href: heroBannerSrc.value,
+      media: '(min-width: 1024px)',
+      fetchpriority: 'high',
+    },
+  ],
 })
 
 const heroBannerStyle = computed(() => ({
   '--hero-banner-image': `url('${heroBannerSrc.value}')`,
-  '--hero-banner-image-mobile': `url('${heroBannerMobileSrc.value}')`,
+  // 'none' when no dedicated mobile asset exists, so the mobile background
+  // layer falls back to the plain gradient instead of a stretched, blurry photo.
+  '--hero-banner-image-mobile': hasMobilePhoto.value ? `url('${heroBannerMobileSrc.value}')` : 'none',
 }))
 
 const heroLines = computed(() => {
@@ -60,6 +90,14 @@ const heroLines = computed(() => {
   return [custom, '']
 })
 
+// Shorter first line for small screens only. Only kicks in for the default
+// fallback title — a custom CMS title is short enough already or can't be
+// safely shortened automatically, so it's reused as-is on mobile too.
+const heroFirstLineShort = computed(() => {
+  const fallbackFirstLine = 'Modèles professionnels de CV'
+  return heroLines.value[0] === fallbackFirstLine ? 'Modèles de CV' : heroLines.value[0]
+})
+
 const heroPills = ['Import IA & Photo', 'Compatible ATS', 'Générateur de Lettre'] as const
 const defaultSubtitle =
   "Profilo'Z réunit l'IA d'importation, l'éditeur de CV et la création de lettres au même endroit."
@@ -75,14 +113,26 @@ const heroSubtitle = computed(() => {
   return custom
 })
 
+// Shorter phrasing for small screens only — sm: and up still use heroSubtitle.
+// If the CMS doesn't provide a dedicated short version, fall back to a
+// deliberately brief default rather than truncating the long one mid-sentence.
+const defaultSubtitleShort = "L'IA d'importation, l'éditeur de CV et les lettres, au même endroit."
+
+const heroSubtitleShort = computed(() => {
+  const customShort = (hero.value as { subtitleShort?: string }).subtitleShort?.trim()
+  return customShort || defaultSubtitleShort
+})
+
 const heroLine2 = computed(() => heroLines.value[1] ?? '')
 
+const reducedMotion = ref(false)
+// Show everything immediately if there's no second line, or if the user asked for reduced motion.
 const heroCopyVisible = ref(false)
 
 watch(
-  heroLine2,
-  (line) => {
-    if (!line) heroCopyVisible.value = true
+  [heroLine2, reducedMotion],
+  ([line, reduced]) => {
+    if (!line || reduced) heroCopyVisible.value = true
   },
   { immediate: true },
 )
@@ -93,18 +143,55 @@ function onHeroTitleComplete() {
 </script>
 
 <template>
-  <section class="hero-banner" :style="heroBannerStyle">
-    <div class="hero-banner__bg" aria-hidden="true" />
-    <div class="hero-banner__scrim" aria-hidden="true" />
+  <section
+    class="hero-banner relative overflow-hidden flex items-center min-h-[26rem] py-10 lg:min-h-[clamp(22rem,66.6vw,42.625rem)] lg:py-[clamp(2.5rem,5vw,3.75rem)] [@media(max-height:450px)_and_(orientation:landscape)]:min-h-[20rem] [@media(max-height:450px)_and_(orientation:landscape)]:py-6"
+    :style="heroBannerStyle"
+  >
+    <!--
+      Background layer.
+      Mobile: brand gradients only (or the dedicated mobile photo, if one is configured).
+      Desktop (lg:): the full banner photo.
+    -->
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 z-0 pointer-events-none bg-[#f7f9ff]
+             bg-[image:var(--hero-banner-image-mobile),radial-gradient(at_0%_0%,rgba(49,107,243,0.06)_0px,transparent_55%),radial-gradient(at_100%_0%,rgba(113,248,228,0.1)_0px,transparent_55%)]
+             bg-[position:center_35%,center,center] bg-[size:cover,100%_100%,100%_100%] bg-no-repeat
+             lg:bg-[image:var(--hero-banner-image),radial-gradient(at_0%_0%,rgba(49,107,243,0.04)_0px,transparent_50%),radial-gradient(at_100%_0%,rgba(113,248,228,0.06)_0px,transparent_50%)]
+             lg:bg-[position:top_center,center,center] lg:bg-[size:100%_auto,100%_100%,100%_100%]"
+    />
+
+    <!-- Scrim: only meaningful over a photo, so it's inert (no visible photo) on mobile without one, and fades the desktop photo on the left. -->
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 z-[1] pointer-events-none
+             bg-[image:linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.62)_28%,rgba(255,255,255,0.28)_48%,rgba(255,255,255,0.06)_68%,transparent_88%)]
+             lg:bg-[image:linear-gradient(90deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.08)_18%,transparent_38%)]"
+    />
 
     <div
-      class="hero-banner__inner max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
+      class="relative z-[2] w-full max-w-container-max mx-auto px-0 lg:px-margin-desktop md:px-margin-tablet grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
     >
-      <div class="hero-banner__copy flex flex-col text-center lg:text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full">
-        <h1 class="hero-banner__title landing-display">
-          <span class="hero-banner__title-line text-on-surface">{{ heroLines[0] }}</span>
-          <span v-if="heroLine2" class="hero-banner__title-line hero-banner__title-line--typewriter text-secondary">
+      <div
+        class="flex flex-col text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full"
+      >
+        <h1
+          class="landing-display flex flex-col gap-[0.2rem] text-balance
+                 text-[1.375rem] sm:text-2xl lg:text-4xl"
+        >
+          <span class="sm:hidden block leading-[1.14] break-words [hyphens:auto] text-on-surface">
+            {{ heroFirstLineShort }}
+          </span>
+          <span class="hidden sm:block leading-[1.14] break-words [hyphens:auto] text-on-surface">
+            {{ heroLines[0] }}
+          </span>
+          <span
+            v-if="heroLine2"
+            class="block leading-[1.14] break-words [hyphens:auto] min-h-[1.2em] mt-0.5 text-secondary"
+          >
+            <span v-if="reducedMotion">{{ heroLine2 }}</span>
             <UiTypewriterText
+              v-else
               tag="span"
               :segments="[{ text: heroLine2 }]"
               loop
@@ -115,183 +202,53 @@ function onHeroTitleComplete() {
         </h1>
 
         <p
-          class="hero-copy-reveal landing-lead mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
-          style="animation-delay: 150ms"
+          class="landing-lead sm:hidden mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2
+                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
+          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
+          style="transition-delay: 150ms"
+        >
+          {{ heroSubtitleShort }}
+        </p>
+        <p
+          class="landing-lead hidden sm:block mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2
+                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
+          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
+          style="transition-delay: 150ms"
         >
           {{ heroSubtitle }}
         </p>
 
+        <!-- items-start from the mobile breakpoint up: this is what stops the button from stretching full-width -->
         <div
-          class="hero-copy-reveal hero-banner__actions order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3"
-          style="animation-delay: 300ms"
+          class="order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-start justify-center lg:justify-start gap-3
+                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
+          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
+          style="transition-delay: 300ms"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
-            class="btn-primary hero-banner__btn w-full sm:w-auto px-7 py-3 rounded-2xl premium-shadow-sm"
+            class="self-start bg-secondary text-on-secondary px-4 py-3 rounded-2xl premium-shadow-sm text-sm"
           >
             {{ hero.ctaPrimary || 'Commencer gratuitement' }}
           </NuxtLink>
         </div>
 
         <div
-          class="hero-copy-reveal hero-banner__badges order-4 lg:order-3 mt-5 md:mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
-          style="animation-delay: 450ms"
+          class="order-4 lg:order-3 mt-5 flex flex-wrap items-center justify-start gap-x-5 gap-y-2
+                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
+          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
+          style="transition-delay: 450ms"
         >
           <span
             v-for="pill in heroPills"
             :key="pill"
-            class="landing-pill hero-banner__pill"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800"
           >
-            <span class="landing-pill__dot" aria-hidden="true" />
-            {{ pill }}
+            <span class="w-4 h-4 rounded-full bg-[#EEF4FF] border border-[#2563eb]/20 text-[#2563eb] flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
+            <span>{{ pill }}</span>
           </span>
         </div>
       </div>
     </div>
   </section>
 </template>
-
-<style scoped>
-.hero-banner {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  min-height: clamp(22rem, 66.6vw, 42.625rem);
-  padding: clamp(2.5rem, 5vw, 3.75rem) 0;
-}
-
-.hero-banner__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-color: #f7f9ff;
-  background-image:
-    var(--hero-banner-image),
-    radial-gradient(at 0% 0%, rgba(49, 107, 243, 0.04) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(113, 248, 228, 0.06) 0px, transparent 50%);
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: 100% auto, 100% 100%, 100% 100%;
-  background-position: top center, center, center;
-}
-
-.hero-banner__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(255, 255, 255, 0.18) 28%,
-    transparent 52%
-  );
-}
-
-@media (max-width: 1023px) {
-  .hero-banner {
-    min-height: auto;
-    padding: 2.5rem 0;
-  }
-
-  .hero-banner__bg {
-    inset: 0;
-    background-image:
-      var(--hero-banner-image-mobile, var(--hero-banner-image)),
-      radial-gradient(at 0% 0%, rgba(49, 107, 243, 0.04) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(113, 248, 228, 0.06) 0px, transparent 50%);
-    background-size: cover, 100% 100%, 100% 100%;
-    background-position: center 35%, center, center;
-  }
-
-  /* Voile blanc léger : couleurs desktop + image plus visible */
-  .hero-banner__scrim {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.82) 0%,
-      rgba(255, 255, 255, 0.62) 28%,
-      rgba(255, 255, 255, 0.28) 48%,
-      rgba(255, 255, 255, 0.06) 68%,
-      transparent 88%
-    );
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .hero-banner__inner {
-    padding: 0;
-  }
-
-  .hero-banner__title.landing-display {
-    font-size: 1.375rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .hero-banner__scrim {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.28) 0%,
-      rgba(255, 255, 255, 0.08) 18%,
-      transparent 38%
-    );
-  }
-}
-
-.hero-banner__inner {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-}
-
-.hero-banner__title {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  text-wrap: balance;
-}
-
-.hero-banner__title-line {
-  display: block;
-  line-height: 1.14;
-  overflow-wrap: anywhere;
-}
-
-.hero-banner__title-line--typewriter {
-  min-height: 1.2em;
-  margin-top: 0.125rem;
-}
-
-.hero-banner__pill {
-  font-size: 0.6875rem;
-  padding: 0.375rem 0.75rem;
-}
-
-@media (min-width: 640px) {
-  .hero-banner__pill {
-    font-size: 0.75rem;
-  }
-}
-
-.hero-banner__btn {
-  font-size: 0.875rem;
-}
-
-.hero-banner__steps {
-  font-size: 0.6875rem;
-}
-
-@media (min-width: 640px) {
-  .hero-banner__steps {
-    font-size: 0.75rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-enter {
-    opacity: 1;
-    animation: none;
-  }
-}
-</style>
