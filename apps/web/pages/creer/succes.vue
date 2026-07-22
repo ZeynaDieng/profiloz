@@ -188,6 +188,13 @@ onMounted(async () => {
     pdfService.downloadWithAuth(downloadUrl, file).catch((err) => {
       console.error('Erreur lors du téléchargement automatique:', err)
     })
+
+    // Supprimer le jobId et le file des paramètres de l'URL pour éviter le re-déclenchement au retour/rafraîchissement
+    const router = useRouter()
+    const query = { ...route.query }
+    delete query.jobId
+    delete query.file
+    router.replace({ query })
   }
 })
 </script>

@@ -116,6 +116,13 @@ async function runAutoDownload() {
   autoDownloadError.value = ''
   try {
     await downloadFromReturnPath(returnTo.value, paymentRef.value)
+
+    // Nettoyer les paramètres d'URL (ref, returnTo) pour éviter le déclenchement en boucle
+    const router = useRouter()
+    const query = { ...route.query }
+    delete query.ref
+    delete query.returnTo
+    router.replace({ query })
   } catch (err) {
     const problem = err as { status?: number; detail?: string }
     const code = err instanceof Error ? err.message : ''

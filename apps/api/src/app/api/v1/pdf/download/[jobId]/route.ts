@@ -16,7 +16,12 @@ export async function GET(request: Request, { params }: Params) {
     const filename = filenameParam ? decodeURIComponent(filenameParam) : 'cv Profiloz.pdf'
     const safeFilename = filename.replace(/[/\\:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim() || 'cv Profiloz.pdf'
 
-    const buffer = await pdfService.readPdf(job.storageKey)
+    let buffer: Buffer
+    try {
+      buffer = await pdfService.readPdf(job.storageKey)
+    } catch {
+      throw new AppError(404, 'Not Found', 'Le fichier PDF est introuvable ou a expiré')
+    }
     const response = new Response(new Uint8Array(buffer), {
       status: 200,
       headers: {
