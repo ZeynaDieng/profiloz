@@ -31,6 +31,66 @@ export const COVER_LETTER_TEMPLATE_REGISTRY: CoverLetterTemplateDefinition[] = [
     category: 'Créatif',
     description: 'Design original tout en restant lisible et professionnel.',
   },
+  {
+    slug: 'TECH_LEAD',
+    name: 'Tech Lead',
+    category: 'Technical',
+    description: 'Style monospace sombre moderne adapté aux profils technologiques.',
+  },
+  {
+    slug: 'ELEGANCE',
+    name: 'Élégance',
+    category: 'Distinctif',
+    description: 'Style épuré avec typographie serif haut de gamme pour postes de prestige.',
+  },
+  {
+    slug: 'IMPACT',
+    name: 'Impact',
+    category: 'Créatif',
+    description: 'Souligné par une couleur accent et des blocs modernes structurés.',
+  },
+  {
+    slug: 'CABINET',
+    name: 'Cabinet',
+    category: 'Corporate',
+    description: 'Gabarit ultra-formel classique idéal pour le conseil, droit et finance.',
+  },
+  {
+    slug: 'ACADEMIQUE',
+    name: 'Académique',
+    category: 'Professionnel',
+    description: 'Mise en page classique à une colonne centrée pour la recherche ou l\'enseignement.',
+  },
+  {
+    slug: 'ATELIER',
+    name: 'Atelier',
+    category: 'Créatif',
+    description: 'Teintes chaudes naturelles et marges aérées pour artistes et créateurs.',
+  },
+  {
+    slug: 'CLINIQUE',
+    name: 'Clinique',
+    category: 'Professionnel',
+    description: 'Design soigné et rassurant dans les tons bleus/verts médicaux.',
+  },
+  {
+    slug: 'DUOTONE',
+    name: 'DuoTone',
+    category: 'Créatif',
+    description: 'Mise en page bicolore asymétrique très visuelle pour la communication.',
+  },
+  {
+    slug: 'CHRONOS',
+    name: 'Chronos',
+    category: 'Professionnel',
+    description: 'Design minimaliste et propre parfait pour la gestion de projet.',
+  },
+  {
+    slug: 'ATS_FRIENDLY',
+    name: 'ATS Friendly',
+    category: 'Professionnel',
+    description: 'Structure brute optimisée à 100% pour la lecture par robots recruteurs.',
+  },
 ]
 
 export const COVER_LETTER_TEMPLATE_FILTERS = [

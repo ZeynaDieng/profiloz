@@ -16,6 +16,16 @@ const TEMPLATE_SEED = [
   { slug: TemplateSlug.CADRE, name: 'Cadre', category: 'Corporate', sortOrder: 11, previewUrl: '/templates/previews/cadre.webp' },
   { slug: TemplateSlug.EXECUTIF, name: 'Exécutif', category: 'Sales', sortOrder: 12, previewUrl: '/templates/previews/executif.webp' },
   { slug: TemplateSlug.EPURE, name: 'Épuré', category: 'Clean', sortOrder: 13, previewUrl: '/templates/previews/epure.webp' },
+  { slug: TemplateSlug.TECH_LEAD, name: 'Tech Lead', category: 'Technical', sortOrder: 14, previewUrl: '/templates/previews/tech_lead.webp' },
+  { slug: TemplateSlug.ELEGANCE, name: 'Élégance', category: 'Exclusive', sortOrder: 15, previewUrl: '/templates/previews/elegance.webp' },
+  { slug: TemplateSlug.IMPACT, name: 'Impact', category: 'Creative', sortOrder: 16, previewUrl: '/templates/previews/impact.webp' },
+  { slug: TemplateSlug.CABINET, name: 'Cabinet', category: 'Corporate', sortOrder: 17, previewUrl: '/templates/previews/cabinet.webp' },
+  { slug: TemplateSlug.ACADEMIQUE, name: 'Académique', category: 'Clean', sortOrder: 18, previewUrl: '/templates/previews/academique.webp' },
+  { slug: TemplateSlug.ATELIER, name: 'Atelier', category: 'Clean', sortOrder: 19, previewUrl: '/templates/previews/atelier.webp' },
+  { slug: TemplateSlug.CLINIQUE, name: 'Clinique', category: 'Corporate', sortOrder: 20, previewUrl: '/templates/previews/clinique.webp' },
+  { slug: TemplateSlug.DUOTONE, name: 'DuoTone', category: 'Creative', sortOrder: 21, previewUrl: '/templates/previews/duotone.webp' },
+  { slug: TemplateSlug.CHRONOS, name: 'Chronos', category: 'Clean', sortOrder: 22, previewUrl: '/templates/previews/chronos.webp' },
+  { slug: TemplateSlug.ATS_FRIENDLY, name: 'ATS Friendly', category: 'Clean', sortOrder: 23, previewUrl: '/templates/previews/ats_friendly.webp' },
 ]
 
 async function main() {
