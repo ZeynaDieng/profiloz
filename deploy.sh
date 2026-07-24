@@ -24,6 +24,10 @@ echo "🐳 Reconstruction des images Docker..."
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build
 
 echo ""
+echo "🛑 Arrêt des conteneurs en cours..."
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down
+
+echo ""
 echo "🚀 Redémarrage des services (avec scaling API x3)..."
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up --scale api=3 -d --remove-orphans
 
