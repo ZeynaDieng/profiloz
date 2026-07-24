@@ -93,11 +93,7 @@ useWizardStep(computed(() => ({
           {{ filteredTemplates.length }} modèles pour un CV clair et professionnel.
         </p>
       </div>
-      <UiMessageBanner
-        v-if="selectedSlug"
-        variant="success"
-        :message="MSG.guide.modelSelected"
-      />
+
       <Transition name="form-field__error">
         <UiMessageBanner
           v-if="formError"
