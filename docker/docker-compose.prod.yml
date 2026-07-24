@@ -114,7 +114,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - '${WEB_PORT:-3000}:3000'
+      - '${WEB_PORT:-3005}:3000'
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
       interval: 10s
