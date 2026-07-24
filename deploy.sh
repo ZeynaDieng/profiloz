@@ -6,8 +6,9 @@ PROJECT_DIR="/opt/profiloz/profiloz"
 COMPOSE_FILE="$PROJECT_DIR/docker/docker-compose.prod.yml"
 ENV_FILE="$PROJECT_DIR/docker/.env.production"
 
-# Définir le port web correspondant à la configuration Nginx du VPS
+# Définir les ports de secours pour éviter les collisions sur le VPS
 export WEB_PORT=3005
+export UPTIME_KUMA_PORT=3009
 
 echo "==================================="
 echo "🚀 Déploiement Profilo'Z (Scale x3)"
