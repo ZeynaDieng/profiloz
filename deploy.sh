@@ -33,11 +33,6 @@ echo "🚀 Redémarrage des services (avec scaling API x3)..."
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up --scale api=3 -d --remove-orphans
 
 echo ""
-echo "🗄️ Application des migrations et seed Prisma..."
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm api pnpm --filter @profiloz/api exec prisma migrate deploy
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm api pnpm --filter @profiloz/api db:seed
-
-echo ""
 echo "🧹 Nettoyage des anciennes images..."
 docker image prune -f
 
