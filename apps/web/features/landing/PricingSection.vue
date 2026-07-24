@@ -81,13 +81,7 @@ async function onChoose(plan: PlanDto) {
         </p>
       </div>
 
-      <UiMessageBanner
-        v-if="error && usedFallback"
-        variant="warning"
-        message="Affichage des tarifs par défaut. Le paiement reste disponible."
-        class="mb-6 max-w-lg"
-      />
-      <UiMessageBanner v-else-if="error" variant="error" :message="error" class="mb-6 max-w-lg" />
+      <UiMessageBanner v-if="error && !usedFallback" variant="error" :message="error" class="mb-6 max-w-lg" />
 
       <FeaturesLandingPricingPlansRail
         v-if="plans.length > 0 || loading"
