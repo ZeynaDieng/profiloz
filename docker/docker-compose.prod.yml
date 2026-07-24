@@ -72,8 +72,8 @@ services:
       - storage_persistent:/app/storage/persistent
       - storage_temp:/app/storage/temp
       - storage_temp:/tmp/pdfs
-    ports:
-      - '${API_PORT:-3001}:3001'
+    expose:
+      - '3001'
     depends_on:
       postgres:
         condition: service_healthy
