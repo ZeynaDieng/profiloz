@@ -41,6 +41,14 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
     ⚠️ <strong>Important :</strong> Ce lien de téléchargement direct expire dans <strong>24 heures</strong> pour des raisons de sécurité. 
     Pas d'inquiétude ! Vous pourrez toujours régénérer votre document gratuitement depuis votre tableau de bord.
   </p>
+
+  <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+    <h4 style="color: #166534; margin: 0 0 5px 0; font-size: 1.05em; font-weight: bold;">💾 Conservez vos documents à vie !</h4>
+    <p style="margin: 0; font-size: 0.9em; color: #15803d; line-height: 1.5;">
+      Si ce n'est pas déjà fait, nous vous conseillons de <strong>créer un compte gratuit</strong> sur Profilo'Z avec votre adresse e-mail. 
+      Cela vous permettra de sauvegarder votre travail en toute sécurité, de retrouver votre historique et de modifier vos documents à tout moment depuis n'importe quel appareil.
+    </p>
+  </div>
   
   <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
   
@@ -55,7 +63,7 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
   <p>Merci pour votre confiance,<br />L'équipe Profilo'Z</p>
 </div>
     `,
-    bodyText: 'Votre {{documentType}} est prêt ! 🚀\n\nBonjour {{firstName}},\n\nVous venez de générer votre {{documentType}} sur Profilo\'Z. Vous pouvez le télécharger via ce lien : {{downloadUrl}}\n\nCe lien expire dans 24 heures.\nAccédez à votre espace client pour gérer vos documents : {{dashboardUrl}}',
+    bodyText: 'Votre {{documentType}} est prêt ! 🚀\n\nBonjour {{firstName}},\n\nVous venez de générer votre {{documentType}} sur Profilo\'Z. Vous pouvez le télécharger via ce lien : {{downloadUrl}}\n\nCe lien expire dans 24 heures.\n\n💾 Conservez vos documents à vie : Pensez à créer un compte gratuit sur Profilo\'Z pour retrouver tout votre historique, modifier vos documents et les sauvegarder à vie.\n\nAccédez à votre espace client pour gérer vos documents : {{dashboardUrl}}',
   },
 }
 
