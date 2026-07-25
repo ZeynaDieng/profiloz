@@ -186,9 +186,8 @@ onMounted(async () => {
     autoDownloadError.value = ''
   }
 
-  if (canAutoDownload.value) {
-    await runAutoDownload()
-  }
+  // Le téléchargement n'est plus automatique après paiement pour éviter les blocages pop-up mobiles.
+  // L'utilisateur clique manuellement sur le bouton pour lancer le téléchargement.
 })
 </script>
 
