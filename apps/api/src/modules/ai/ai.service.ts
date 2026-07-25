@@ -14,7 +14,8 @@ export class AiService {
     const apiKey = this.getApiKey()
 
     const prompt = `Tu es un expert en rédaction professionnelle de CV en français.
-Améliore ce texte pour qu'il soit percutant, élégant et sans fautes.
+Améliore ce texte pour qu'il soit percutant, élégant, sans fautes et surtout extrêmement concis et factuel.
+Ne rallonge pas le texte inutilement et évite le remplissage ou les phrases trop longues.
 ${context ? `Contexte : ${context}` : ''}
 Texte : "${text}"
 
@@ -48,7 +49,12 @@ Réponds UNIQUEMENT avec le texte final amélioré. Aucun commentaire, aucune in
     if (!jobTitle || !jobTitle.trim()) return []
     const apiKey = this.getApiKey()
 
-    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations et tâches professionnelles percutantes en français.
+    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations et tâches professionnelles percutantes en français pour un CV.
+Consignes strictes de style :
+- Sois très concis, direct et percutant.
+- Commence chaque puce par un verbe d'action fort (ex: "Gestion de", "Optimisation de", "Développement de", "Conception de").
+- Rédige des phrases courtes (maximum 10 à 12 mots par puce). Évite le remplissage corporatif inutile.
+
 Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide :
 [
   "Mise en place de...",
