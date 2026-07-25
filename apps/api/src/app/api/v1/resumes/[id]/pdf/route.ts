@@ -6,6 +6,9 @@ import { resumeService } from '@/modules/resume/resume.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { getRequestContext, requireAuth } from '@/lib/request-context'
+import { sendEmailTemplate } from '@/lib/email/mail.service'
+import { pdfCacheService } from '@/lib/redis/pdf-cache'
+import { prisma } from '@/lib/prisma'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -39,6 +42,34 @@ export async function POST(request: Request, { params }: Params) {
 
     const snapshot = sanitizeSnapshot(await resumeService.get(id, userId))
     const result = await pdfService.generateFromSnapshot(snapshot, undefined, { userId })
+
+    // Envoi asynchrone de l'e-mail avec anti-spam Redis (1h)
+    try {
+      const cacheKey = `mail_sent:resume:${id}`
+      const alreadySent = await pdfCacheService.getRaw(cacheKey)
+      if (!alreadySent) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, firstName: true },
+        })
+        if (user?.email) {
+          const publicAppUrl = process.env.PUBLIC_APP_URL || 'https://profiloz.com'
+          const downloadUrl = `${publicAppUrl}/api/v1/pdf/download/${result.jobId}?filename=${encodeURIComponent(snapshot.title || 'CV')}.pdf`
+          const dashboardUrl = `${publicAppUrl}/creer`
+          
+          void sendEmailTemplate('document_download', user.email, {
+            firstName: user.firstName ?? user.email.split('@')[0] ?? 'Client',
+            documentType: 'CV',
+            downloadUrl,
+            dashboardUrl,
+          }).catch((err) => console.warn('[mail] document_download failed:', err))
+          
+          await pdfCacheService.setRaw(cacheKey, 'true', 3600)
+        }
+      }
+    } catch (mailErr) {
+      console.warn('[mail] document_download error:', mailErr)
+    }
 
     const response = jsonResponse(
       {

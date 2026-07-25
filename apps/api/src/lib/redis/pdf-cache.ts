@@ -170,6 +170,22 @@ export class PdfCacheService {
   }
 
   /**
+   * Récupère une valeur brute depuis Redis
+   */
+  async getRaw(key: string): Promise<string | null> {
+    if (!this.enabled || !this.redis) return null
+    return this.redis.get(key)
+  }
+
+  /**
+   * Stocke une valeur brute avec TTL dans Redis
+   */
+  async setRaw(key: string, value: string, ttlSeconds: number): Promise<void> {
+    if (!this.enabled || !this.redis) return
+    await this.redis.setex(key, ttlSeconds, value)
+  }
+
+  /**
    * Ferme la connexion Redis
    */
   async disconnect(): Promise<void> {
