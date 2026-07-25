@@ -13,7 +13,7 @@ import {
   loadPaymentDraftBackup,
   peekPaymentGuestSession,
 } from '~/utils/payment-draft-backup'
-import { initGuestDossier, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { initGuestDossier, restorePaidGuestSession, loadGuestDossierState } from '~/utils/guest-dossier-state'
 import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
@@ -68,7 +68,21 @@ const isWalletCatalog = computed(
   () => isCatalogCheckout.value && isWalletOffer(purchaseAudience.value),
 )
 
-const canAutoDownload = computed(() => hasEditorReturn.value)
+const canAutoDownload = computed(() => {
+  if (hasEditorReturn.value) return true
+
+  const backup = loadPaymentDraftBackup()
+  if (backup?.returnTo && isGuestPdfReturnPath(backup.returnTo)) {
+    return true
+  }
+
+  const dossier = loadGuestDossierState()
+  if (dossier && (!dossier.cvDownloaded || !dossier.letterDownloaded)) {
+    return true
+  }
+
+  return false
+})
 
 const showManualActions = computed(
   () => !confirming.value && (!autoDownloadStarted.value || Boolean(autoDownloadError.value) || phase.value === 'idle'),
@@ -186,8 +200,9 @@ onMounted(async () => {
     autoDownloadError.value = ''
   }
 
-  // Le téléchargement n'est plus automatique après paiement pour éviter les blocages pop-up mobiles.
-  // L'utilisateur clique manuellement sur le bouton pour lancer le téléchargement.
+  if (canAutoDownload.value) {
+    await runAutoDownload()
+  }
 })
 </script>
 
