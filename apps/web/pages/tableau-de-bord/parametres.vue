@@ -1,16 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
 import { MSG } from '@profiloz/shared'
 
 definePageMeta({ layout: 'dashboard' })
 
 const authStore = useAuthStore()
 const { confirm } = useConfirm()
+const toast = useAppToast()
+
+const autoTourEnabled = ref(true)
 
 onMounted(async () => {
   authStore.loadFromStorage()
   await authStore.refreshProfile()
   if (!authStore.isAuthenticated) navigateTo('/connexion')
+
+  const val = localStorage.getItem('profiloz:settings:auto-onboarding')
+  autoTourEnabled.value = val === null ? true : val === 'true'
 })
+
+watch(autoTourEnabled, (newVal) => {
+  localStorage.setItem('profiloz:settings:auto-onboarding', String(newVal))
+})
+
+function resetTour() {
+  localStorage.removeItem('profiloz:onboarding-completed')
+  toast.success('Le guide interactif a été réinitialisé ! Il s\'affichera à votre prochaine ouverture de l\'éditeur.')
+}
 
 async function logout() {
   const ok = await confirm(MSG.auth.logoutConfirm, {
@@ -63,10 +79,26 @@ async function logout() {
           <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
             <UiPzIcon name="tune" />
           </div>
-          <div>
-            <h2 class="font-bold text-on-surface mb-1">Préférences</h2>
-            <p class="text-sm text-on-surface-variant">Langue : Français (fr-FR)</p>
-            <p class="text-xs text-on-surface-variant/70 mt-2">D'autres options seront disponibles prochainement.</p>
+          <div class="flex-1 space-y-4">
+            <h2 class="font-bold text-on-surface">Préférences</h2>
+            <div class="space-y-3">
+              <label class="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  v-model="autoTourEnabled"
+                  type="checkbox"
+                  class="rounded border-outline-variant text-primary focus:ring-primary mt-1"
+                />
+                <div class="space-y-0.5">
+                  <p class="text-sm font-bold text-on-surface">Lancer le guide automatiquement</p>
+                  <p class="text-xs text-on-surface-variant">Active la visite guidée d'aide lors de l'ouverture de l'éditeur de CV.</p>
+                </div>
+              </label>
+            </div>
+            <div class="pt-2 border-t border-outline-variant/30">
+              <UiButton variant="outline" size="sm" icon="replay" @click="resetTour">
+                Réinitialiser la visite guidée
+              </UiButton>
+            </div>
           </div>
         </div>
       </UiCard>

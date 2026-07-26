@@ -119,8 +119,11 @@ onMounted(async () => {
   )
   loading.value = false
 
+  const autoOnboardingPref = localStorage.getItem('profiloz:settings:auto-onboarding')
+  const isAutoOnboardingEnabled = autoOnboardingPref === null ? true : autoOnboardingPref === 'true'
   const tourCompleted = localStorage.getItem('profiloz:onboarding-completed')
-  if (!tourCompleted) {
+
+  if (isAutoOnboardingEnabled && !tourCompleted) {
     setTimeout(() => {
       tourActive.value = true
     }, 800)
