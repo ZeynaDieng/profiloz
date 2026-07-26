@@ -3,8 +3,61 @@ import type { ResumeSnapshot } from '@profiloz/shared'
 import { resolveShowPhoto } from '@profiloz/shared'
 import { resolveCvAccentColor } from '~/utils/template-accent-colors'
 
+function parseDateString(dateStr?: string | null): Date {
+  if (!dateStr) return new Date(0)
+  const clean = dateStr.trim()
+  if (!clean) return new Date(0)
+
+  if (/^\d{4}$/.test(clean)) {
+    return new Date(parseInt(clean, 10), 0, 1)
+  }
+
+  if (/^\d{4}-\d{2}/.test(clean)) {
+    return new Date(clean)
+  }
+
+  const slashMatch = clean.match(/^(\d{1,2})\/(\d{4})$/)
+  if (slashMatch) {
+    const month = parseInt(slashMatch[1], 10) - 1
+    const year = parseInt(slashMatch[2], 10)
+    return new Date(year, month, 1)
+  }
+
+  const parsed = new Date(clean)
+  if (!isNaN(parsed.getTime())) return parsed
+
+  return new Date(0)
+}
+
+function compareDates(
+  a: { startDate?: string; endDate?: string; isCurrent?: boolean },
+  b: { startDate?: string; endDate?: string; isCurrent?: boolean }
+): number {
+  if (a.isCurrent && !b.isCurrent) return -1
+  if (!a.isCurrent && b.isCurrent) return 1
+
+  const aEnd = parseDateString(a.endDate)
+  const bEnd = parseDateString(b.endDate)
+  if (aEnd.getTime() !== bEnd.getTime()) {
+    return bEnd.getTime() - aEnd.getTime()
+  }
+
+  const aStart = parseDateString(a.startDate)
+  const bStart = parseDateString(b.startDate)
+  return bStart.getTime() - aStart.getTime()
+}
+
 export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
-  const snapshot = computed(() => toValue(resume))
+  const snapshot = computed(() => {
+    const raw = toValue(resume)
+    const experiences = [...raw.experiences].sort(compareDates)
+    const educations = [...raw.educations].sort(compareDates)
+    return {
+      ...raw,
+      experiences,
+      educations,
+    }
+  })
   const accent = computed(() =>
     resolveCvAccentColor(snapshot.value.templateSlug, snapshot.value.templateConfig.accentColor),
   )
@@ -60,6 +113,6 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
 
 export function formatDateRange(start?: string, end?: string, isCurrent?: boolean) {
   if (!start && !end) return ''
-  const endLabel = isCurrent ? 'Présent' : end ?? ''
+  const endLabel = isCurrent ? 'Present' : end ?? ''
   return start ? `${start} – ${endLabel}` : endLabel
 }

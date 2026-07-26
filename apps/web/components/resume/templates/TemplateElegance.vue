@@ -41,9 +41,7 @@ const {
       <div class="grid grid-cols-12 gap-8">
         <main class="col-span-8 space-y-8">
           <section v-if="hasExperiences">
-            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">
-              Parcours Professionnel
-            </h2>
+            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">Experience</h2>
             <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-6 font-serif">
               <ExperienceEntry :exp="exp" period-class="text-xs text-slate-400 font-sans italic" />
             </div>
@@ -52,18 +50,14 @@ const {
 
         <aside class="col-span-4 space-y-8">
           <section v-if="hasEducations">
-            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">
-              Cursus
-            </h2>
+            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">Education</h2>
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-4 text-sm font-serif">
               <EducationEntry :edu="edu" />
             </div>
           </section>
 
           <section v-if="hasSkills">
-            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">
-              Expertises
-            </h2>
+            <h2 class="text-xs uppercase tracking-[0.25em] text-slate-500 font-serif border-b border-slate-200 pb-2 mb-4">Skills</h2>
             <ul class="space-y-1 text-sm font-sans text-slate-600">
               <li v-for="(skill, i) in snapshot.skills" :key="i" class="list-disc list-inside">
                 {{ skill.name }}

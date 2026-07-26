@@ -109,7 +109,7 @@ const hasCertifications = computed(
         class="font-mono text-[7.5pt] font-bold uppercase tracking-[0.18em] mb-4 flex items-center gap-2"
         :style="{ color: accent }"
       >
-        <span>Expérience</span>
+        <span>Experience</span>
         <span
           class="h-px flex-1 opacity-20"
           :style="{ backgroundColor: accent }"
@@ -141,7 +141,7 @@ const hasCertifications = computed(
         class="font-mono text-[7.5pt] font-bold uppercase tracking-[0.18em] mb-4 flex items-center gap-2"
         :style="{ color: accent }"
       >
-        <span>Formation</span>
+        <span>Education</span>
         <span
           class="h-px flex-1 opacity-20"
           :style="{ backgroundColor: accent }"

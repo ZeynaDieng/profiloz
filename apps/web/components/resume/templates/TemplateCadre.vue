@@ -115,7 +115,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasLanguages" class="cadre-section">
-          <h2 class="cadre-section-title">Langues</h2>
+          <h2 class="cadre-section-title">Languages</h2>
           <div class="cadre-section-line" />
           <ul class="cadre-languages-list">
             <li v-for="(lang, i) in snapshot.languages" :key="i" class="cadre-language-item">
@@ -131,7 +131,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasSkills" class="cadre-section">
-          <h2 class="cadre-section-title">Compétences</h2>
+          <h2 class="cadre-section-title">Skills</h2>
           <div class="cadre-section-line" />
           <div class="cadre-skills">
             <span
@@ -145,7 +145,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasInterests" class="cadre-section">
-          <h2 class="cadre-section-title">Centres d'intérêt</h2>
+          <h2 class="cadre-section-title">Interests</h2>
           <div class="cadre-section-line" />
           <ul class="cadre-interests-list">
             <li v-for="(interest, i) in snapshot.interests" :key="i" class="cadre-interest-item">
@@ -158,7 +158,7 @@ const contactRows = computed(() =>
       <!-- Contenu principal -->
       <main class="cadre-main">
         <section v-if="hasEducations" class="cadre-section cadre-section-main">
-          <h2 class="cadre-section-title">Formation</h2>
+          <h2 class="cadre-section-title">Education</h2>
           <div class="cadre-section-line" />
           <div class="cadre-educations">
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="cadre-education">

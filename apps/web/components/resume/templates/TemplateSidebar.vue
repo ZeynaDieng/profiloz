@@ -42,18 +42,14 @@ const {
         </header>
 
         <section v-if="hasSummary" class="mb-8">
-          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-3">
-            Profil
-          </h2>
+          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-3">Profile</h2>
           <p class="text-[9.5pt] text-[#475569] leading-[1.8]">
             {{ snapshot.summary }}
           </p>
         </section>
 
         <section v-if="hasExperiences" class="mb-8">
-          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-4">
-            Expérience
-          </h2>
+          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-4">Experience</h2>
           <div
             v-for="(exp, i) in snapshot.experiences"
             :key="i"
@@ -69,9 +65,7 @@ const {
         </section>
 
         <section v-if="hasEducations">
-          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-4">
-            Formation
-          </h2>
+          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-4">Education</h2>
           <div
             v-for="(edu, i) in snapshot.educations"
             :key="i"
@@ -102,9 +96,7 @@ const {
         <div class="h-px bg-[#f1f5f9]" />
 
         <div v-if="hasSkills">
-          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-3">
-            Compétences
-          </h2>
+          <h2 class="text-[7pt] uppercase tracking-[0.2em] font-bold text-[#94a3b8] mb-3">Skills</h2>
           <ul class="space-y-2">
             <li
               v-for="(skill, i) in snapshot.skills"

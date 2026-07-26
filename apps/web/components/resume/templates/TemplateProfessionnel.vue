@@ -76,9 +76,7 @@ const {
           <h2
             class="text-[7pt] font-black uppercase tracking-[0.18em] mb-3 pb-1"
             :style="{ color: accent, borderBottom: `1.5px solid ${accent}` }"
-          >
-            Compétences
-          </h2>
+          >Skills</h2>
           <ul class="space-y-1.5">
             <li
               v-for="(skill, i) in snapshot.skills"
@@ -103,7 +101,7 @@ const {
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3 flex items-center gap-2"
             :style="{ color: accent }"
           >
-            <span>Profil</span>
+            <span>Profile</span>
             <span
               class="h-px flex-1 opacity-25"
               :style="{ backgroundColor: accent }"
@@ -122,7 +120,7 @@ const {
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-4 flex items-center gap-2"
             :style="{ color: accent }"
           >
-            <span>Expérience</span>
+            <span>Experience</span>
             <span
               class="h-px flex-1 opacity-25"
               :style="{ backgroundColor: accent }"
@@ -153,7 +151,7 @@ const {
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-4 flex items-center gap-2"
             :style="{ color: accent }"
           >
-            <span>Formation</span>
+            <span>Education</span>
             <span
               class="h-px flex-1 opacity-25"
               :style="{ backgroundColor: accent }"

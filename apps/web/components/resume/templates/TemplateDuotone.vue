@@ -60,18 +60,14 @@ const {
       <!-- Right side (White) -->
       <main class="col-span-7 pl-6 py-2">
         <section v-if="hasExperiences" class="mb-6">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 border-b-2 pb-1 mb-4" :style="{ borderColor: accent }">
-            Expériences
-          </h2>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 border-b-2 pb-1 mb-4" :style="{ borderColor: accent }">Experience</h2>
           <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4">
             <ExperienceEntry :exp="exp" period-class="text-xs text-slate-400 font-semibold" />
           </div>
         </section>
 
         <section v-if="hasEducations" class="mb-6">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 border-b-2 pb-1 mb-4" :style="{ borderColor: accent }">
-            Formations
-          </h2>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 border-b-2 pb-1 mb-4" :style="{ borderColor: accent }">Education</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-sm">
             <EducationEntry :edu="edu" />
           </div>
