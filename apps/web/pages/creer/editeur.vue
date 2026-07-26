@@ -450,6 +450,15 @@ async function downloadPdf() {
           Modèle · {{ templateName }}
         </NuxtLink>
 
+        <button
+          type="button"
+          class="w-full flex items-center min-h-11 px-3 rounded-xl text-sm text-on-surface hover:bg-surface-container text-left"
+          @click="actionsOpen = false; tourActive = true"
+        >
+          <UiPzIcon name="help_outline" class="mr-3 text-secondary" />
+          Guide interactif
+        </button>
+
         <div class="px-3 py-4 border-t border-outline-variant/30 mt-2">
           <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-3">Couleur d'accent</p>
           <div class="flex flex-wrap gap-3">
