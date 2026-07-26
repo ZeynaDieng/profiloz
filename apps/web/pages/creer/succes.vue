@@ -179,15 +179,18 @@ onMounted(async () => {
 
   dossierState.value = syncGuestDossierFromDownloads() ?? dossierState.value
 
-  // Déclencher le téléchargement automatique s'il y a un jobId
+  // Déclencher le téléchargement automatique après un court délai de 1.5s
+  // pour laisser la page s'initialiser et éviter que le navigateur ne bloque la redirection.
   const jobId = typeof route.query.jobId === 'string' ? route.query.jobId : null
   const file = typeof route.query.file === 'string' ? route.query.file : null
   if (jobId && file) {
-    const downloadUrl = `/api/v1/pdf/download/${jobId}`
-    const pdfService = usePdfService()
-    pdfService.downloadWithAuth(downloadUrl, file).catch((err) => {
-      console.error('Erreur lors du téléchargement automatique:', err)
-    })
+    setTimeout(() => {
+      const downloadUrl = `/api/v1/pdf/download/${jobId}`
+      const pdfService = usePdfService()
+      pdfService.downloadWithAuth(downloadUrl, file).catch((err) => {
+        console.error('Erreur lors du téléchargement automatique:', err)
+      })
+    }, 1500)
 
     // Supprimer le jobId et le file des paramètres de l'URL pour éviter le re-déclenchement au retour/rafraîchissement
     const router = useRouter()
