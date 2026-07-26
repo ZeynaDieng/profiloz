@@ -25,7 +25,7 @@ const steps: TourStep[] = [
   {
     target: '[data-section-id="personal"]',
     title: '📞 Informations personnelles',
-    content: 'Saisissez vos coordonnées de contact. Assurez-vous de bien vérifier votre adresse e-mail et votre numéro de téléphone afin de rester joignable par les recruteurs.',
+    content: 'Saisissez vos coordonnées de contact. Vous pouvez ajouter une **photo de profil** : cochez ou décochez simplement la case d\'activation pour l\'afficher ou la masquer sur votre CV. La mise en page du modèle s\'adaptera automatiquement à votre choix ! Renseignez soigneusement votre e-mail et numéro de téléphone.',
     section: 'personal',
   },
   {
