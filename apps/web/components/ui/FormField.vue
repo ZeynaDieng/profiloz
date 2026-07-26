@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 defineProps<{
   label?: string
   required?: boolean
@@ -6,6 +8,8 @@ defineProps<{
   valid?: boolean
   tooltip?: string
 }>()
+
+const isOpen = ref(false)
 </script>
 
 <template>
@@ -14,17 +18,49 @@ defineProps<{
     :class="{ 'form-field--error': error }"
     :data-form-error="error ? '' : undefined"
   >
-    <label v-if="label" class="font-label-sm text-on-surface flex items-center gap-1.5 mb-1.5">
+    <label v-if="label" class="font-label-sm text-on-surface flex items-center gap-1.5 mb-1.5 select-none">
       <span>{{ label }}</span>
       <span v-if="required" class="text-error" aria-hidden="true">*</span>
-      <span v-if="tooltip" class="group relative inline-flex items-center cursor-help" tabindex="0">
-        <UiPzIcon name="help_outline" class="text-[15px] text-on-surface-variant/70 hover:text-primary transition-colors" />
-        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 bg-slate-900/95 border border-slate-800 shadow-xl text-[11px] text-slate-100 p-2.5 rounded-xl leading-relaxed z-[100] font-normal text-left">
-          {{ tooltip }}
-          <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></span>
+      
+      <span v-if="tooltip" class="inline-flex items-center">
+        <!-- Icône d'aide interactive (Clic pour Mobile, Hover pour Desktop) -->
+        <button
+          type="button"
+          class="inline-flex items-center justify-center p-0.5 rounded-full hover:bg-surface-container focus:outline-none transition-colors"
+          :class="isOpen ? 'text-primary bg-primary/10' : 'text-on-surface-variant/60 hover:text-primary'"
+          aria-label="Aide"
+          @click="isOpen = !isOpen"
+        >
+          <UiPzIcon name="help_outline" class="text-[15px]" />
+        </button>
+
+        <!-- Tooltip Desktop (Hover) -->
+        <span class="hidden lg:block group relative">
+          <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface/95 border border-outline-variant shadow-xl text-[11px] text-on-surface-variant p-3 rounded-2xl leading-relaxed z-[100] font-medium backdrop-blur-md">
+            {{ tooltip }}
+            <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface/95"></span>
+          </span>
         </span>
       </span>
     </label>
+
+    <!-- Tooltip Expansif Mobile (Inline Card) -->
+    <div
+      v-if="tooltip && isOpen"
+      class="lg:hidden mb-2.5 p-3 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent border border-primary/20 text-xs text-on-surface-variant leading-relaxed flex items-start gap-2.5 animate-fade-in shadow-xs"
+    >
+      <UiPzIcon name="info" class="text-primary text-[15px] mt-0.5 shrink-0" />
+      <div class="flex-1 font-medium leading-normal pr-1 select-text">
+        {{ tooltip }}
+      </div>
+      <button
+        type="button"
+        class="text-on-surface-variant/50 hover:text-on-surface p-0.5 hover:bg-surface-container rounded-md shrink-0 transition-colors"
+        @click="isOpen = false"
+      >
+        <UiPzIcon name="close" class="text-sm font-bold" />
+      </button>
+    </div>
 
     <div class="relative">
       <slot />
