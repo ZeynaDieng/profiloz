@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   label?: string
   required?: boolean
   error?: string
@@ -9,7 +9,14 @@ defineProps<{
   tooltip?: string
 }>()
 
-const isOpen = ref(false)
+// État partagé pour s'assurer qu'UNE seule bulle d'aide est ouverte à la fois
+const activeTooltip = useState<string | null>('active-form-tooltip', () => null)
+const isOpen = computed({
+  get: () => !!props.label && activeTooltip.value === props.label,
+  set: (val) => {
+    activeTooltip.value = val ? (props.label || 'default') : null
+  }
+})
 </script>
 
 <template>
