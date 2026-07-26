@@ -88,7 +88,10 @@ watch(
 </script>
 
 <template>
-  <UiFormField label="Photo de profil (facultatif)">
+  <UiFormField
+    label="Photo de profil (facultatif)"
+    tooltip="Format carré (JPEG ou PNG) recommandé, max 2 Mo. Activez ou désactivez l'interrupteur pour l'afficher ou la masquer sur votre CV. La mise en page du modèle s'adaptera automatiquement de façon esthétique."
+  >
     <div class="flex items-center justify-between gap-3 mb-3">
       <p class="text-sm text-on-surface-variant">{{ MSG.photo.showOnCv }}</p>
       <button
