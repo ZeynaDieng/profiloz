@@ -376,13 +376,15 @@ provideResumeEditorValidation({
           />
 
           <template v-if="section.id === 'personal'">
-            <FeatureWizardPhotoUpload
-              :model-value="personalForm.photoUrl"
-              v-model:show-on-cv="showPhotoOnCv"
-              @update:model-value="onPhotoUrlUpdate"
-            />
+            <div id="tour-field-photo">
+              <FeatureWizardPhotoUpload
+                :model-value="personalForm.photoUrl"
+                v-model:show-on-cv="showPhotoOnCv"
+                @update:model-value="onPhotoUrlUpdate"
+              />
+            </div>
             <div class="grid grid-cols-1 gap-3">
-              <UiFormField label="Nom complet" required :error="fieldError('fullName')" tooltip="Saisissez votre prénom et nom tels qu'ils doivent apparaître dans l'en-tête de votre CV.">
+              <UiFormField id="tour-field-fullname" label="Nom complet" required :error="fieldError('fullName')" tooltip="Saisissez votre prénom et nom tels qu'ils doivent apparaître dans l'en-tête de votre CV.">
                 <input
                   v-model="personalForm.fullName"
                   type="text"
@@ -392,7 +394,7 @@ provideResumeEditorValidation({
                 >
               </UiFormField>
 
-              <UiFormField label="Poste visé" tooltip="Le titre exact du poste recherché (ex: Développeur Web, Responsable Commercial). C'est le titre principal de votre profil.">
+              <UiFormField id="tour-field-job" label="Poste visé" tooltip="Le titre exact du poste recherché (ex: Développeur Web, Responsable Commercial). C'est le titre principal de votre profil.">
                 <input
                   v-model="personalForm.jobTitle"
                   type="text"
@@ -401,7 +403,7 @@ provideResumeEditorValidation({
                 />
               </UiFormField>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div id="tour-field-contact" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <UiFormField label="E-mail" required :error="fieldError('email')" tooltip="Utilisez une adresse e-mail professionnelle (ex: prenom.nom@domaine.com).">
                   <input
                     v-model="personalForm.email"
@@ -457,7 +459,7 @@ provideResumeEditorValidation({
           </template>
 
           <template v-else-if="section.id === 'summary'">
-            <UiFormField label="Résumé / Présentation" tooltip="Rédigez 2 ou 3 phrases percutantes pour résumer vos compétences, votre expérience et vos objectifs professionnels. C'est l'introduction de votre CV. Utilisez le bouton IA pour générer ou reformuler cette partie instantanément.">
+            <UiFormField id="tour-field-summary" label="Résumé / Présentation" tooltip="Rédigez 2 ou 3 phrases percutantes pour résumer vos compétences, votre expérience et vos objectifs professionnels. C'est l'introduction de votre CV. Utilisez le bouton IA pour générer ou reformuler cette partie instantanément.">
               <div class="flex items-center justify-between gap-2 mb-2">
                 <span class="text-xs text-on-surface-variant">Présentez brièvement vos points forts.</span>
                 <button
@@ -479,7 +481,9 @@ provideResumeEditorValidation({
           </template>
 
           <template v-else-if="section.id === 'parcours'">
-            <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
+            <div id="tour-field-experience">
+              <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
+            </div>
           </template>
 
           <template v-else-if="section.id === 'qualifications'">
