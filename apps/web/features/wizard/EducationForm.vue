@@ -39,20 +39,20 @@ function removeItem(index: number) {
         <span class="font-label-sm font-bold text-on-surface">Formation {{ index + 1 }}</span>
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
-      <UiFormField label="Établissement" required :error="fieldError(index, 'institution')">
+      <UiFormField label="Établissement" required :error="fieldError(index, 'institution')" tooltip="Le nom de l'école ou de l'université (ex: HEC, Université Cheikh Anta Diop).">
         <input v-model="item.institution" type="text" class="form-input w-full" placeholder="Université Cheikh Anta Diop" />
       </UiFormField>
-      <UiFormField label="Diplôme" required :error="fieldError(index, 'degree')">
+      <UiFormField label="Diplôme" required :error="fieldError(index, 'degree')" tooltip="L'intitulé exact de votre diplôme ou certification (ex: Licence, Master, Certificat de formation).">
         <input v-model="item.degree" type="text" class="form-input w-full" placeholder="Master Marketing" />
       </UiFormField>
-      <UiFormField label="Domaine" required :error="fieldError(index, 'field')">
+      <UiFormField label="Domaine" required :error="fieldError(index, 'field')" tooltip="Votre spécialité d'études (ex: Finance, Marketing, Informatique).">
         <input v-model="item.field" type="text" class="form-input w-full" placeholder="Marketing digital" />
       </UiFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Début" required :error="fieldError(index, 'startDate')">
+        <UiFormField label="Début" required :error="fieldError(index, 'startDate')" tooltip="L'année de début d'études (ex: '2018').">
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2018" />
         </UiFormField>
-        <UiFormField label="Fin" required :error="fieldError(index, 'endDate')">
+        <UiFormField label="Fin" required :error="fieldError(index, 'endDate')" tooltip="L'année d'obtention de votre diplôme ou la date prévue (ex: '2022' ou 'Présent' si toujours en cours).">
           <input v-model="item.endDate" type="text" class="form-input w-full" placeholder="2022" />
         </UiFormField>
       </div>

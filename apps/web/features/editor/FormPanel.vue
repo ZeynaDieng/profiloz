@@ -382,7 +382,7 @@ provideResumeEditorValidation({
               @update:model-value="onPhotoUrlUpdate"
             />
             <div class="grid grid-cols-1 gap-3">
-              <UiFormField label="Nom complet" required :error="fieldError('fullName')">
+              <UiFormField label="Nom complet" required :error="fieldError('fullName')" tooltip="Saisissez votre prénom et nom tels qu'ils doivent apparaître dans l'en-tête de votre CV.">
                 <input
                   v-model="personalForm.fullName"
                   type="text"
@@ -392,7 +392,7 @@ provideResumeEditorValidation({
                 >
               </UiFormField>
 
-              <UiFormField label="Poste visé">
+              <UiFormField label="Poste visé" tooltip="Le titre exact du poste recherché (ex: Développeur Web, Responsable Commercial). C'est le titre principal de votre profil.">
                 <input
                   v-model="personalForm.jobTitle"
                   type="text"
@@ -402,7 +402,7 @@ provideResumeEditorValidation({
               </UiFormField>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <UiFormField label="E-mail" required :error="fieldError('email')">
+                <UiFormField label="E-mail" required :error="fieldError('email')" tooltip="Utilisez une adresse e-mail professionnelle (ex: prenom.nom@domaine.com).">
                   <input
                     v-model="personalForm.email"
                     type="email"
@@ -412,7 +412,7 @@ provideResumeEditorValidation({
                   >
                 </UiFormField>
 
-                <UiFormField label="Téléphone">
+                <UiFormField label="Téléphone" tooltip="Renseignez un numéro de téléphone valide. Si vous visez des postes à l'étranger, incluez l'indicatif pays (ex: +221 pour le Sénégal).">
                   <input
                     v-model="personalForm.phone"
                     type="tel"
@@ -425,7 +425,7 @@ provideResumeEditorValidation({
               <!-- Masquage des champs secondaires pour simplifier la saisie -->
               <div v-if="showExtraContactFields">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <UiFormField label="Localisation / Ville">
+                  <UiFormField label="Localisation / Ville" tooltip="La ville et le pays où vous résidez actuellement (ex: Dakar, Sénégal).">
                     <input
                       v-model="personalForm.location"
                       type="text"
@@ -434,7 +434,7 @@ provideResumeEditorValidation({
                     />
                   </UiFormField>
 
-                  <UiFormField label="Lien LinkedIn">
+                  <UiFormField label="Lien LinkedIn" tooltip="Facultatif mais fortement recommandé. Permet aux recruteurs d'accéder directement à votre profil en ligne.">
                     <input
                       v-model="personalForm.linkedinUrl"
                       type="url"
@@ -457,12 +457,12 @@ provideResumeEditorValidation({
           </template>
 
           <template v-else-if="section.id === 'summary'">
-            <div class="space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <label class="text-xs font-semibold text-on-surface">Résumé / Présentation</label>
+            <UiFormField label="Résumé / Présentation" tooltip="Rédigez 2 ou 3 phrases percutantes pour résumer vos compétences, votre expérience et vos objectifs professionnels. C'est l'introduction de votre CV. Utilisez le bouton IA pour générer ou reformuler cette partie instantanément.">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs text-on-surface-variant">Présentez brièvement vos points forts.</span>
                 <button
                   type="button"
-                  class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95"
+                  class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95 shrink-0"
                   :disabled="aiLoading"
                   @click="handleEnhanceSummary"
                 >
@@ -475,7 +475,7 @@ provideResumeEditorValidation({
                 class="form-input w-full text-sm resize-y leading-relaxed"
                 placeholder="Ex : Professionnel passionné avec 5 ans d'expérience..."
               />
-            </div>
+            </UiFormField>
           </template>
 
           <template v-else-if="section.id === 'parcours'">

@@ -83,13 +83,13 @@ async function handleSuggestBullets(index: number) {
         <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
       </div>
 
-      <UiFormField label="Entreprise" required :error="fieldError(index, 'company')">
+      <UiFormField label="Entreprise" required :error="fieldError(index, 'company')" tooltip="Nom de la société, entreprise ou organisation (ex: Orange Sénégal, Google).">
         <input v-model="item.company" type="text" class="form-input w-full" placeholder="Orange Sénégal" />
       </UiFormField>
 
-      <div class="space-y-1">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-on-surface">Poste <span class="text-error">*</span></label>
+      <UiFormField label="Poste" required :error="fieldError(index, 'position')" tooltip="L'intitulé précis de votre poste (ex: Chef de projet digital, Développeur web). C'est le titre que le recruteur lira en premier.">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-xs text-on-surface-variant">Nom de vos fonctions</span>
           <button
             v-if="item.position?.trim()"
             type="button"
@@ -101,23 +101,22 @@ async function handleSuggestBullets(index: number) {
           </button>
         </div>
         <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />
-        <p v-if="fieldError(index, 'position')" class="text-xs text-error mt-1">{{ fieldError(index, 'position') }}</p>
-      </div>
+      </UiFormField>
 
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Ville" required :error="fieldError(index, 'location')">
+        <UiFormField label="Ville" required :error="fieldError(index, 'location')" tooltip="La ville où se situait le poste (ex: Dakar, Paris).">
           <input v-model="item.location" type="text" class="form-input w-full" placeholder="Ex. Dakar" />
         </UiFormField>
-        <UiFormField label="Pays">
+        <UiFormField label="Pays" tooltip="Le pays où se situait le poste (ex: Sénégal, France).">
           <input v-model="item.country" type="text" class="form-input w-full" placeholder="Ex. Sénégal" />
         </UiFormField>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
-        <UiFormField label="Début" required :error="fieldError(index, 'startDate')">
+        <UiFormField label="Début" required :error="fieldError(index, 'startDate')" tooltip="L'année ou la date de début (ex: '2021' ou '05/2021').">
           <input v-model="item.startDate" type="text" class="form-input w-full" placeholder="2021" />
         </UiFormField>
-        <UiFormField label="Fin" :required="!item.isCurrent" :error="fieldError(index, 'endDate')">
+        <UiFormField label="Fin" :required="!item.isCurrent" :error="fieldError(index, 'endDate')" tooltip="L'année ou la date de fin (ex: '2024' ou '08/2024'). Laissez vide ou cochez 'Poste actuel' ci-dessous s'il s'agit de votre poste actuel.">
           <input
             v-model="item.endDate"
             type="text"
@@ -133,9 +132,9 @@ async function handleSuggestBullets(index: number) {
         Poste actuel
       </label>
 
-      <div class="space-y-1">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-on-surface">Description</label>
+      <UiFormField label="Description" tooltip="Décrivez vos missions et vos résultats sous forme de puces courtes. Utilisez des verbes d'action au début de chaque ligne (ex: 'Coordonner l'équipe', 'Augmenter le chiffre d'affaires').">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-xs text-on-surface-variant">Vos réalisations et tâches clés</span>
           <button
             type="button"
             class="text-[11px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
@@ -151,7 +150,7 @@ async function handleSuggestBullets(index: number) {
           class="form-input w-full resize-none"
           placeholder="Missions, réalisations… (optionnel)"
         />
-      </div>
+      </UiFormField>
 
       <UiFormField label="Compétences utilisées">
         <input
