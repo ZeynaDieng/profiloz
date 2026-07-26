@@ -8,7 +8,7 @@ const resumeStore = useResumeStore()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 const { enhanceText, loading: aiLoading } = useAi()
 
-const openSection = ref('personal')
+const openSection = useState<string>('active-editor-section', () => 'personal')
 const sectionErrors = reactive<Record<string, string>>({})
 const showAllColors = ref(false)
 

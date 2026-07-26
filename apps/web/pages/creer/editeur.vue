@@ -30,6 +30,7 @@ const pdfLoadingStep = ref(0)
 const pdfError = ref('')
 const previewOpen = ref(false)
 const actionsOpen = ref(false)
+const tourActive = ref(false)
 
 const accentColors = computed(() =>
   getCvAccentPalette(resumeStore.current?.templateSlug ?? 'PROFESSIONNEL'),
@@ -117,6 +118,13 @@ onMounted(async () => {
     resumeStore.current?.templateConfig.accentColor,
   )
   loading.value = false
+
+  const tourCompleted = localStorage.getItem('profiloz:onboarding-completed')
+  if (!tourCompleted) {
+    setTimeout(() => {
+      tourActive.value = true
+    }, 800)
+  }
 
   if (route.query.download === '1') {
     await nextTick()
@@ -344,14 +352,24 @@ async function downloadPdf() {
 
         <LayoutAuthStatus compact class="hidden lg:flex" />
 
+        <button
+          type="button"
+          class="hidden sm:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center gap-1 mr-1"
+          @click="tourActive = true"
+        >
+          <UiPzIcon name="help_outline" class="text-[18px]" />
+          Guide
+        </button>
+
         <NuxtLink
+          id="tour-template-selector"
           :to="changeTemplateHref"
           class="hidden xl:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center gap-1"
         >
           <UiPzIcon name="dashboard_customize" class="text-[18px]" />
           {{ templateName }}
         </NuxtLink>
-        <div class="hidden lg:flex gap-1">
+        <div id="tour-color-picker" class="hidden lg:flex gap-1">
           <button
             v-for="color in accentColors"
             :key="color"
@@ -365,6 +383,7 @@ async function downloadPdf() {
         </div>
 
         <UiButton
+          id="tour-download-btn"
           variant="secondary"
           size="sm"
           class="!hidden xl:!inline-flex"
@@ -392,7 +411,7 @@ async function downloadPdf() {
         <FeatureEditorFormPanel />
       </div>
 
-      <div v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">
+      <div id="tour-preview-panel" v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">
         <FeatureEditorPreviewPanel :resume="previewResume" />
       </div>
     </main>
@@ -469,6 +488,7 @@ async function downloadPdf() {
     </UiFullScreenSheet>
 
     <LayoutGuestFlowDrawer />
+    <EditorOnboardingTour v-model="tourActive" />
 
     <!-- Chargement PDF narratif -->
     <div
