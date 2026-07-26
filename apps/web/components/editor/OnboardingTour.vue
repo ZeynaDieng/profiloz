@@ -130,6 +130,9 @@ function updatePosition() {
       return
     }
 
+    // Faire défiler l'élément de manière à ce qu'il soit pleinement visible
+    el.scrollIntoView({ block: 'nearest', behavior: 'auto' })
+
     const rect = el.getBoundingClientRect()
     const scrollY = window.scrollY
     const scrollX = window.scrollX

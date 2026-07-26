@@ -135,6 +135,7 @@ export default defineNuxtConfig({
     { path: '~/components/layout', prefix: 'Layout' },
     { path: '~/components/ui', prefix: 'Ui' },
     { path: '~/components/dashboard', prefix: 'Dashboard' },
+    { path: '~/components/editor', prefix: 'Editor' },
     { path: '~/components/wizard' },
     { path: '~/components/resume', pathPrefix: true },
     { path: '~/components/cover-letter/templates', prefix: 'CoverLetter' },
