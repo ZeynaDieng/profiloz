@@ -113,6 +113,6 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
 
 export function formatDateRange(start?: string, end?: string, isCurrent?: boolean) {
   if (!start && !end) return ''
-  const endLabel = isCurrent ? 'Present' : end ?? ''
+  const endLabel = isCurrent ? 'Présent' : end ?? ''
   return start ? `${start} – ${endLabel}` : endLabel
 }

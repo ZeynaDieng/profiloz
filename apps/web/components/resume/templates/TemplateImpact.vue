@@ -45,7 +45,7 @@ const {
       <div class="grid grid-cols-12 gap-6 mt-6">
         <main class="col-span-8 space-y-6">
           <section v-if="hasExperiences">
-            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 px-2 py-1 text-white rounded bg-slate-800 inline-block" :style="{ backgroundColor: accent }">Key Experience</h2>
+            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 px-2 py-1 text-white rounded bg-slate-800 inline-block" :style="{ backgroundColor: accent }">Expériences Clés</h2>
             <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5 border-l-2 pl-4" :style="{ borderColor: `${accent}40` }">
               <ExperienceEntry :exp="exp" period-class="text-xs font-semibold text-slate-400" />
             </div>
@@ -54,7 +54,7 @@ const {
 
         <aside class="col-span-4 space-y-6">
           <section v-if="hasSkills">
-            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 border-b pb-1" :style="{ borderColor: accent }">Skills</h2>
+            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 border-b pb-1" :style="{ borderColor: accent }">Compétences</h2>
             <div class="flex flex-wrap gap-1.5">
               <span
                 v-for="(skill, i) in snapshot.skills"
@@ -67,7 +67,7 @@ const {
           </section>
 
           <section v-if="hasEducations">
-            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 border-b pb-1" :style="{ borderColor: accent }">Education</h2>
+            <h2 class="text-sm font-bold uppercase tracking-wider mb-4 border-b pb-1" :style="{ borderColor: accent }">Formation</h2>
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-xs">
               <EducationEntry :edu="edu" />
             </div>

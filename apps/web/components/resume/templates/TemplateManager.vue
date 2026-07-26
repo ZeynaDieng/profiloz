@@ -94,7 +94,7 @@ function parseQuote(name: string) {
 
       <!-- Profile -->
       <section v-if="hasSummary" class="manager-section">
-        <h2 class="manager-section-title">Profile</h2>
+        <h2 class="manager-section-title">Profil</h2>
         <hr class="manager-divider" />
         <p class="manager-summary">{{ snapshot.summary }}</p>
       </section>
@@ -139,7 +139,7 @@ function parseQuote(name: string) {
 
       <!-- Education -->
       <section v-if="hasEducations" class="manager-section">
-        <h2 class="manager-section-title">Education</h2>
+        <h2 class="manager-section-title">Formation</h2>
         <hr class="manager-divider" />
         <div class="manager-educations">
           <div
@@ -166,7 +166,7 @@ function parseQuote(name: string) {
 
       <!-- Skills -->
       <section v-if="hasSkills" class="manager-section">
-        <h2 class="manager-section-title">Skills</h2>
+        <h2 class="manager-section-title">Compétences</h2>
         <hr class="manager-divider" />
         <div class="manager-skills-grid">
           <div
@@ -189,7 +189,7 @@ function parseQuote(name: string) {
 
       <!-- Languages -->
       <section v-if="hasLanguages" class="manager-section">
-        <h2 class="manager-section-title">Languages</h2>
+        <h2 class="manager-section-title">Langues</h2>
         <hr class="manager-divider" />
         <div class="manager-languages">
           <span

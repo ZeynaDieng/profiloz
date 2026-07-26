@@ -129,7 +129,7 @@ function descriptionLines(description?: string) {
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span>Profile</span>
+            <span>Profil</span>
           </div>
           <p class="text-[8.5pt] leading-[1.6] text-white/90 font-light px-1">
             {{ snapshot.summary }}
@@ -144,7 +144,7 @@ function descriptionLines(description?: string) {
               <line x1="2" y1="12" x2="22" y2="12"/>
               <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
             </svg>
-            <span>Languages</span>
+            <span>Langues</span>
           </div>
           <ul class="space-y-2 px-1">
             <li
@@ -245,7 +245,7 @@ function descriptionLines(description?: string) {
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
               <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
             </svg>
-            <h2 class="text-[9pt] font-black uppercase tracking-wider">Education</h2>
+            <h2 class="text-[9pt] font-black uppercase tracking-wider">Formation</h2>
           </div>
           <div class="space-y-4 pl-1">
             <div
@@ -280,7 +280,7 @@ function descriptionLines(description?: string) {
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
-            <h2 class="text-[9pt] font-black uppercase tracking-wider">Skills</h2>
+            <h2 class="text-[9pt] font-black uppercase tracking-wider">Compétences</h2>
           </div>
           <ul class="list-disc pl-4 space-y-1 text-[8.5pt] text-slate-600 leading-relaxed pl-5">
             <li v-for="(skill, i) in snapshot.skills" :key="i">

@@ -38,14 +38,14 @@ const {
         </section>
 
         <section v-if="hasEducations" class="border-t border-black pt-2">
-          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Education</h2>
+          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-xs">
             <EducationEntry :edu="edu" />
           </div>
         </section>
 
         <section v-if="hasSkills" class="border-t border-black pt-2">
-          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Skills</h2>
+          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Compétences</h2>
           <p class="text-xs text-slate-800">
             {{ snapshot.skills.map((s) => s.name).join(', ') }}
           </p>

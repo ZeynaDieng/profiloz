@@ -13,13 +13,13 @@ export class AiService {
     if (!text || !text.trim()) return text
     const apiKey = this.getApiKey()
 
-    const prompt = `You are an expert in professional English resume writing.
-Enhance this text to make it punchy, elegant, grammatically perfect, and extremely concise and factual.
-Do not lengthen the text unnecessarily and avoid corporate fluff or overly long sentences.
-${context ? `Context: ${context}` : ''}
-Text: "${text}"
+    const prompt = `Tu es un expert en rédaction professionnelle de CV en français.
+Améliore ce texte pour qu'il soit percutant, élégant, sans fautes et surtout extrêmement concis et factuel.
+Ne rallonge pas le texte inutilement et évite le remplissage ou les phrases trop longues.
+${context ? `Contexte : ${context}` : ''}
+Texte : "${text}"
 
-Respond ONLY with the final enhanced English text. No comments, no intro, no quotation marks.`
+Réponds UNIQUEMENT avec le texte final amélioré. Aucun commentaire, aucune intro, pas de guillemets.`
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -49,19 +49,19 @@ Respond ONLY with the final enhanced English text. No comments, no intro, no quo
     if (!jobTitle || !jobTitle.trim()) return []
     const apiKey = this.getApiKey()
 
-    const prompt = `For the position of "${jobTitle}", generate 5 punchy professional achievement and task bullet points in English for a resume.
-Strict style guidelines:
-- Be extremely concise, direct, and results-oriented.
-- Start each bullet point with a strong English action verb (e.g., "Managed", "Optimized", "Developed", "Designed", "Led", "Created").
-- Write short sentences (maximum 10 to 12 words per bullet point). Avoid unnecessary corporate fluff.
+    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations et tâches professionnelles percutantes en français pour un CV.
+Consignes strictes de style :
+- Sois très concis, direct et percutant.
+- Commence chaque puce par un verbe d'action fort (ex: "Gestion de", "Optimisation de", "Développement de", "Conception de").
+- Rédige des phrases courtes (maximum 10 à 12 mots par puce). Évite le remplissage corporatif inutile.
 
-Respond ONLY with a valid JSON array of strings:
+Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide :
 [
-  "Developed a new...",
-  "Managed a team of...",
-  "Optimized workflow by...",
-  "Designed and implemented...",
-  "Led the integration of..."
+  "Mise en place de...",
+  "Gestion de...",
+  "Optimisation de...",
+  "Développement de...",
+  "Suivi et analyse de..."
 ]`
 
     const res = await fetch(
@@ -102,17 +102,17 @@ Respond ONLY with a valid JSON array of strings:
   }): Promise<{ content: string; subject: string }> {
     const apiKey = this.getApiKey()
 
-    const prompt = `Write a captivating and highly targeted cover letter in English.
+    const prompt = `Rédige une lettre de motivation captivante et ciblée en français.
 
-Job Description/Offer: ${input.jobOfferText}
-${input.targetPosition ? `Target Position: ${input.targetPosition}` : ''}
-${input.targetCompany ? `Target Company: ${input.targetCompany}` : ''}
-${input.candidateInfo ? `Candidate Profile:\n${input.candidateInfo}` : ''}
+Offre d'emploi : ${input.jobOfferText}
+${input.targetPosition ? `Poste visé : ${input.targetPosition}` : ''}
+${input.targetCompany ? `Entreprise : ${input.targetCompany}` : ''}
+${input.candidateInfo ? `Profil du candidat :\n${input.candidateInfo}` : ''}
 
-Respond ONLY with a valid JSON object:
+Réponds UNIQUEMENT avec un objet JSON valide :
 {
-  "subject": "Subject of the cover letter (e.g., Application for [Position] at [Company])",
-  "content": "Full body of the cover letter in English (with \\n\\n line breaks between paragraphs)"
+  "subject": "Objet de la lettre",
+  "content": "Contenu intégral de la lettre (avec sauts de ligne \\n\\n entre paragraphes)"
 }`
 
     const res = await fetch(

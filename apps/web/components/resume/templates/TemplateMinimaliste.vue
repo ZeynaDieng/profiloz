@@ -25,7 +25,7 @@ const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, sho
     </header>
 
     <section v-if="hasExperiences" class="mb-8">
-      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Experience</h2>
+      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Expérience</h2>
       <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5">
         <ExperienceEntry
           :exp="exp"
@@ -35,14 +35,14 @@ const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, sho
     </section>
 
     <section v-if="hasEducations" class="mb-8">
-      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Education</h2>
+      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Formation</h2>
       <div v-for="(edu, i) in snapshot.educations" :key="i" class="text-sm mb-2">
         <EducationEntry :edu="edu" />
       </div>
     </section>
 
     <section v-if="hasSkills">
-      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Skills</h2>
+      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Compétences</h2>
       <p class="text-sm text-on-surface-variant">{{ snapshot.skills.map((s) => s.name).join(', ') }}</p>
     </section>
   </TemplatesTemplateShell>

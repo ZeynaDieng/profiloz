@@ -89,7 +89,7 @@ const {
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-4 flex items-center gap-2"
             :style="{ color: accent }"
           >
-            <span>Education</span>
+            <span>Formation</span>
             <span
               class="h-px flex-1 opacity-20"
               :style="{ backgroundColor: accent }"
@@ -136,7 +136,7 @@ const {
           <h2
             class="text-[7pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
             :style="{ color: accent, borderBottom: `1.5px solid ${accent}30` }"
-          >Languages</h2>
+          >Langues</h2>
           <ul class="space-y-3">
             <li
               v-for="(lang, i) in snapshot.languages"

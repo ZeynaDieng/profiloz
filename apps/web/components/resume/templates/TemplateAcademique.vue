@@ -30,14 +30,14 @@ const {
       <!-- Single Column Content -->
       <main class="space-y-6">
         <section v-if="hasExperiences">
-          <h2 class="text-sm font-sans font-bold uppercase tracking-widest text-slate-700 mb-4 border-b border-slate-300 pb-1">Experience</h2>
+          <h2 class="text-sm font-sans font-bold uppercase tracking-widest text-slate-700 mb-4 border-b border-slate-300 pb-1">Expérience</h2>
           <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5 font-serif text-sm">
             <ExperienceEntry :exp="exp" period-class="text-xs font-sans text-slate-500 font-semibold" />
           </div>
         </section>
 
         <section v-if="hasEducations">
-          <h2 class="text-sm font-sans font-bold uppercase tracking-widest text-slate-700 mb-4 border-b border-slate-300 pb-1">Education</h2>
+          <h2 class="text-sm font-sans font-bold uppercase tracking-widest text-slate-700 mb-4 border-b border-slate-300 pb-1">Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-4 text-sm font-serif">
             <EducationEntry :edu="edu" />
           </div>

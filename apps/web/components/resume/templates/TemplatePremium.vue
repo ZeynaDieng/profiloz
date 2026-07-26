@@ -80,7 +80,7 @@ const {
         <h2
           class="text-[7pt] font-bold uppercase tracking-[0.28em] mb-5 pb-2"
           :style="{ color: accent, borderBottom: `1px solid ${accent}25` }"
-        >Experience</h2>
+        >Expérience</h2>
         <div
           v-for="(exp, i) in snapshot.experiences"
           :key="i"
@@ -104,7 +104,7 @@ const {
           <h2
             class="text-[7pt] font-bold uppercase tracking-[0.28em] mb-4 pb-2"
             :style="{ color: accent, borderBottom: `1px solid ${accent}25` }"
-          >Education</h2>
+          >Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3">
             <EducationEntry :edu="edu" :accent="accent" />
           </div>
@@ -114,7 +114,7 @@ const {
           <h2
             class="text-[7pt] font-bold uppercase tracking-[0.28em] mb-4 pb-2"
             :style="{ color: accent, borderBottom: `1px solid ${accent}25` }"
-          >Skills</h2>
+          >Compétences</h2>
           <ul class="space-y-2">
             <li
               v-for="(skill, i) in snapshot.skills"

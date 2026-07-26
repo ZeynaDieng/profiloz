@@ -64,7 +64,7 @@ const {
           <div
             class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-4"
             :style="{ backgroundColor: accent }"
-          >Experience</div>
+          >Expérience</div>
           <div
             v-for="(exp, i) in snapshot.experiences"
             :key="i"
@@ -84,7 +84,7 @@ const {
           <div
             class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-4"
             :style="{ backgroundColor: accent }"
-          >Education</div>
+          >Formation</div>
           <div
             v-for="(edu, i) in snapshot.educations"
             :key="i"
@@ -100,7 +100,7 @@ const {
           <div
             class="inline-block text-[7pt] font-black uppercase tracking-[0.18em] text-white px-3 py-[5px] rounded-sm mb-3"
             :style="{ backgroundColor: `${accent}70` }"
-          >Interests</div>
+          >Centres d'intérêt</div>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="(interest, i) in snapshot.interests"
@@ -159,7 +159,7 @@ const {
           <div
             class="text-[7pt] font-black uppercase tracking-[0.18em] mb-2.5 pb-1.5"
             :style="{ color: accent, borderBottom: `2px solid ${accent}30` }"
-          >Skills</div>
+          >Compétences</div>
           <div class="flex flex-wrap gap-1.5">
             <span
               v-for="(skill, i) in snapshot.skills"

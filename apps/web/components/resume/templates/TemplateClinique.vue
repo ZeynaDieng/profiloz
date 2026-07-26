@@ -45,7 +45,7 @@ const {
       <div class="grid grid-cols-12 gap-6">
         <main class="col-span-8 space-y-6">
           <section v-if="hasExperiences">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-800 border-b border-teal-100 pb-1 mb-4">Experience</h2>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-800 border-b border-teal-100 pb-1 mb-4">Expérience</h2>
             <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5 text-sm">
               <ExperienceEntry :exp="exp" period-class="text-xs text-slate-500 font-semibold" />
             </div>
@@ -63,7 +63,7 @@ const {
           </section>
 
           <section v-if="hasSkills">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-800 border-b border-teal-100 pb-1 mb-4">Skills</h2>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-800 border-b border-teal-100 pb-1 mb-4">Compétences</h2>
             <ul class="space-y-1.5 text-xs text-slate-700">
               <li v-for="(skill, i) in snapshot.skills" :key="i" class="list-disc list-inside">
                 {{ skill.name }}

@@ -83,7 +83,7 @@ const {
           <h2
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
             style="color: rgba(255, 255, 255, 0.6)"
-          >Skills</h2>
+          >Compétences</h2>
           <ul class="space-y-2">
             <li
               v-for="(skill, i) in snapshot.skills"
@@ -109,7 +109,7 @@ const {
             <h2
               class="text-[7.5pt] font-black uppercase tracking-[0.18em] shrink-0"
               :style="{ color: accent }"
-            >Profile</h2>
+            >Profil</h2>
             <div
               class="h-px flex-1"
               :style="{ backgroundColor: `${accent}25` }"
@@ -128,7 +128,7 @@ const {
             <h2
               class="text-[7.5pt] font-black uppercase tracking-[0.18em] shrink-0"
               :style="{ color: accent }"
-            >Experience</h2>
+            >Expérience</h2>
             <div
               class="h-px flex-1"
               :style="{ backgroundColor: `${accent}25` }"
@@ -154,7 +154,7 @@ const {
             <h2
               class="text-[7.5pt] font-black uppercase tracking-[0.18em] shrink-0"
               :style="{ color: accent }"
-            >Education</h2>
+            >Formation</h2>
             <div
               class="h-px flex-1"
               :style="{ backgroundColor: `${accent}25` }"

@@ -56,14 +56,14 @@ const {
 
         <aside class="col-span-4 space-y-6">
           <section v-if="hasEducations">
-            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-[#0f1e36] border-b border-[#0f1e36] pb-1 mb-4">Education</h2>
+            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-[#0f1e36] border-b border-[#0f1e36] pb-1 mb-4">Formation</h2>
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-xs font-serif">
               <EducationEntry :edu="edu" />
             </div>
           </section>
 
           <section v-if="hasSkills">
-            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-[#0f1e36] border-b border-[#0f1e36] pb-1 mb-4">Skills</h2>
+            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-[#0f1e36] border-b border-[#0f1e36] pb-1 mb-4">Compétences</h2>
             <ul class="space-y-1.5 text-xs font-sans text-slate-700">
               <li v-for="(skill, i) in snapshot.skills" :key="i" class="list-disc list-inside">
                 {{ skill.name }}

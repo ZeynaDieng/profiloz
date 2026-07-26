@@ -102,7 +102,7 @@ const contactRows = computed(() =>
         </div>
 
         <section v-if="hasSummary" class="executif-sidebar-section">
-          <h2 class="executif-sidebar-title">Profile</h2>
+          <h2 class="executif-sidebar-title">Profil</h2>
           <div class="executif-sidebar-line" />
           <p class="executif-sidebar-text">{{ snapshot.summary }}</p>
         </section>
@@ -245,7 +245,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasEducations" class="executif-main-section">
-          <h2 class="executif-main-title">Education</h2>
+          <h2 class="executif-main-title">Formation</h2>
           <div class="executif-main-line" />
           <div class="executif-educations">
             <div
@@ -265,7 +265,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasSkills" class="executif-main-section">
-          <h2 class="executif-main-title">Skills</h2>
+          <h2 class="executif-main-title">Compétences</h2>
           <div class="executif-main-line" />
           <div class="executif-skills">
             <span
@@ -279,7 +279,7 @@ const contactRows = computed(() =>
         </section>
 
         <section v-if="hasLanguages" class="executif-main-section">
-          <h2 class="executif-main-title">Languages</h2>
+          <h2 class="executif-main-title">Langues</h2>
           <div class="executif-main-line" />
           <div class="executif-languages">
             <div

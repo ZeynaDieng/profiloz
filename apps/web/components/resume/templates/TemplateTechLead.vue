@@ -48,7 +48,7 @@ const {
 
         <!-- Skills -->
         <div v-if="hasSkills" class="space-y-2">
-          <h3 class="text-[7pt] font-mono font-bold uppercase tracking-wider text-slate-400">Technical Skills</h3>
+          <h3 class="text-[7pt] font-mono font-bold uppercase tracking-wider text-slate-400">Stack Technique</h3>
           <div class="flex flex-wrap gap-1.5">
             <code
               v-for="(skill, i) in snapshot.skills"
@@ -65,14 +65,14 @@ const {
       <!-- Contenu principal -->
       <main class="col-span-8 py-2">
         <section v-if="hasExperiences" class="mb-6">
-          <h2 class="text-xs font-mono font-bold uppercase tracking-wider mb-4 pb-1 border-b" :style="{ borderColor: `${accent}30` }">Experience</h2>
+          <h2 class="text-xs font-mono font-bold uppercase tracking-wider mb-4 pb-1 border-b" :style="{ borderColor: `${accent}30` }">Expérience</h2>
           <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-4">
             <ExperienceEntry :exp="exp" period-class="text-xs text-on-surface-variant/60 font-mono" />
           </div>
         </section>
 
         <section v-if="hasEducations" class="mb-6">
-          <h2 class="text-xs font-mono font-bold uppercase tracking-wider mb-4 pb-1 border-b" :style="{ borderColor: `${accent}30` }">Education</h2>
+          <h2 class="text-xs font-mono font-bold uppercase tracking-wider mb-4 pb-1 border-b" :style="{ borderColor: `${accent}30` }">Formation</h2>
           <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3">
             <EducationEntry :edu="edu" />
           </div>

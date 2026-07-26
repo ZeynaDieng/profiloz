@@ -45,7 +45,7 @@ const {
       <div class="grid grid-cols-12 gap-6">
         <main class="col-span-8 space-y-6">
           <section v-if="hasExperiences">
-            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-amber-800 border-b border-amber-900/10 pb-1 mb-4">Experience</h2>
+            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-amber-800 border-b border-amber-900/10 pb-1 mb-4">Expérience</h2>
             <div v-for="(exp, i) in snapshot.experiences" :key="i" class="mb-5 text-sm font-serif">
               <ExperienceEntry :exp="exp" period-class="text-xs font-sans text-amber-900/50" />
             </div>

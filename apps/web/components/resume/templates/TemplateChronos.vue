@@ -60,7 +60,7 @@ const {
 
         <aside class="col-span-4 space-y-6">
           <section v-if="hasSkills">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 border-b pb-1">Skills</h2>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 border-b pb-1">Compétences</h2>
             <div class="flex flex-wrap gap-1">
               <span
                 v-for="(skill, i) in snapshot.skills"
@@ -73,7 +73,7 @@ const {
           </section>
 
           <section v-if="hasEducations">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 border-b pb-1">Education</h2>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 border-b pb-1">Formation</h2>
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-xs">
               <EducationEntry :edu="edu" />
             </div>
