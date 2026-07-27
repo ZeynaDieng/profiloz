@@ -142,7 +142,10 @@ async function runAutoDownload() {
   autoDownloadStarted.value = true
   autoDownloadError.value = ''
   try {
-    await downloadFromReturnPath(returnTo.value, paymentRef.value)
+    const redirected = await downloadFromReturnPath(returnTo.value, paymentRef.value)
+    if (redirected) {
+      return
+    }
 
     // Nettoyer les paramètres d'URL (ref, returnTo) pour éviter le déclenchement en boucle
     const router = useRouter()
