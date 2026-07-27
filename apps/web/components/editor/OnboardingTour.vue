@@ -210,6 +210,14 @@ function handlePrev() {
 function handleClose() {
   emit('update:modelValue', false)
   localStorage.setItem('profiloz:onboarding-completed', 'true')
+
+  // Replier ou faire défiler vers le haut pour ramener l'utilisateur au début du formulaire (Informations personnelles)
+  nextTick(() => {
+    const firstField = document.querySelector('#tour-field-photo') || document.querySelector('[data-section-id="personal"]')
+    if (firstField) {
+      firstField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  })
 }
 
 // Relancer le recalcul des positions si la taille de la fenêtre change
