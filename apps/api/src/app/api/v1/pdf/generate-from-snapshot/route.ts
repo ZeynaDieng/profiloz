@@ -4,6 +4,7 @@ import { pdfService } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
+import { sendEmailTemplate } from '@/lib/email/mail.service'
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
@@ -27,6 +28,27 @@ export async function POST(request: Request) {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
     }, owner)
+
+    // Envoi de l'e-mail de téléchargement pour les invités
+    try {
+      const targetEmail = ctx.userId ? undefined : snapshot.personalInfo.email?.trim()
+      const targetFirstName = ctx.userId ? 'Client' : (snapshot.personalInfo.fullName?.trim() || 'Client')
+
+      if (targetEmail) {
+        const publicAppUrl = process.env.PUBLIC_APP_URL || 'https://profiloz.com'
+        const downloadUrl = `${publicAppUrl}/api/v1/pdf/download/${result.jobId}?filename=${encodeURIComponent(snapshot.title || 'CV')}.pdf`
+        const dashboardUrl = `${publicAppUrl}/creer`
+        
+        void sendEmailTemplate('document_download', targetEmail, {
+          firstName: targetFirstName,
+          documentType: 'CV',
+          downloadUrl,
+          dashboardUrl,
+        }).catch((err) => console.warn('[mail] document_download guest failed:', err))
+      }
+    } catch (mailErr) {
+      console.warn('[mail] document_download guest error:', mailErr)
+    }
 
     const response = jsonResponse({
       jobId: result.jobId,

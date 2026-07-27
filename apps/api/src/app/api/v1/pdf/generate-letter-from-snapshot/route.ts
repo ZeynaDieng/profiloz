@@ -5,6 +5,8 @@ import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/er
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
 
+import { sendEmailTemplate } from '@/lib/email/mail.service'
+
 const COVER_LETTER_TEMPLATE_SLUGS = ['CLASSIQUE', 'MODERNE', 'ACCENT', 'PROFESSIONNEL', 'CREATIF'] as const
 
 function normalizeCoverLetterTemplateSlug(value?: string): (typeof COVER_LETTER_TEMPLATE_SLUGS)[number] {
@@ -73,6 +75,27 @@ export async function POST(request: Request) {
       userId: ctx.userId,
       guestSessionDbId: ctx.guestSessionDbId,
     }, owner)
+
+    // Envoi de l'e-mail de téléchargement pour les invités
+    try {
+      const targetEmail = ctx.userId ? undefined : body.snapshot?.senderEmail?.trim()
+      const targetFirstName = ctx.userId ? 'Client' : (body.snapshot?.senderName?.trim() || 'Client')
+
+      if (targetEmail) {
+        const publicAppUrl = process.env.PUBLIC_APP_URL || 'https://profiloz.com'
+        const downloadUrl = `${publicAppUrl}/api/v1/pdf/download/${result.jobId}?filename=lettre_motivation_Profiloz.pdf`
+        const dashboardUrl = `${publicAppUrl}/creer`
+        
+        void sendEmailTemplate('document_download', targetEmail, {
+          firstName: targetFirstName,
+          documentType: 'Lettre de motivation',
+          downloadUrl,
+          dashboardUrl,
+        }).catch((err) => console.warn('[mail] document_download guest letter failed:', err))
+      }
+    } catch (mailErr) {
+      console.warn('[mail] document_download guest letter error:', mailErr)
+    }
 
     const response = jsonResponse(
       {

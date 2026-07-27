@@ -48,17 +48,32 @@ export async function POST(request: Request, { params }: Params) {
       const cacheKey = `mail_sent:resume:${id}`
       const alreadySent = await pdfCacheService.getRaw(cacheKey)
       if (!alreadySent) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { email: true, firstName: true },
-        })
-        if (user?.email) {
+        let targetEmail: string | undefined
+        let targetFirstName = 'Client'
+
+        if (userId) {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true, firstName: true },
+          })
+          if (user?.email) {
+            targetEmail = user.email
+            targetFirstName = user.firstName ?? user.email.split('@')[0] ?? 'Client'
+          }
+        }
+
+        if (!targetEmail && snapshot.personalInfo.email?.trim()) {
+          targetEmail = snapshot.personalInfo.email.trim()
+          targetFirstName = snapshot.personalInfo.fullName?.trim() || 'Client'
+        }
+
+        if (targetEmail) {
           const publicAppUrl = process.env.PUBLIC_APP_URL || 'https://profiloz.com'
           const downloadUrl = `${publicAppUrl}/api/v1/pdf/download/${result.jobId}?filename=${encodeURIComponent(snapshot.title || 'CV')}.pdf`
           const dashboardUrl = `${publicAppUrl}/creer`
           
-          void sendEmailTemplate('document_download', user.email, {
-            firstName: user.firstName ?? user.email.split('@')[0] ?? 'Client',
+          void sendEmailTemplate('document_download', targetEmail, {
+            firstName: targetFirstName,
             documentType: 'CV',
             downloadUrl,
             dashboardUrl,
