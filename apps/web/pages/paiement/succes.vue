@@ -14,7 +14,11 @@ import {
   peekPaymentGuestSession,
 } from '~/utils/payment-draft-backup'
 import { initGuestDossier, restorePaidGuestSession, loadGuestDossierState } from '~/utils/guest-dossier-state'
-import { alignGuestSessionFromStoredDrafts } from '~/utils/guest-draft-sync'
+import {
+  alignGuestSessionFromStoredDrafts,
+  findResumeSnapshotInStorage,
+  findCoverLetterDraftInStorage,
+} from '~/utils/guest-draft-sync'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import {
   accountGatePath,
@@ -79,6 +83,15 @@ const canAutoDownload = computed(() => {
   const dossier = loadGuestDossierState()
   if (dossier && (!dossier.cvDownloaded || !dossier.letterDownloaded)) {
     return true
+  }
+
+  // Règle de repli invité payant : s'il a acheté et a un brouillon local, on lance le téléchargement automatique
+  if (entitlements.value && hasDossierDownloadAccess(entitlements.value)) {
+    const hasResume = Boolean(findResumeSnapshotInStorage() || backup?.kind === 'resume')
+    const hasLetter = Boolean(findCoverLetterDraftInStorage() || backup?.kind === 'letter')
+    if (hasResume || hasLetter) {
+      return true
+    }
   }
 
   return false
