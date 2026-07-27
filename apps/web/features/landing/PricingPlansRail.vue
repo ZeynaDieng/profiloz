@@ -123,7 +123,30 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
     ]"
   >
     <div v-if="loading" class="pricing-rail pricing-rail--loading -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
-      <UiSkeleton v-for="i in 4" :key="i" variant="rect" height="22rem" class="rounded-2xl pricing-card-shell" />
+      <div v-for="i in 3" :key="i" class="pricing-card-shell">
+        <UiCard padding="lg" class="pricing-card flex flex-col h-full gap-4 border border-outline-variant/10 bg-white/50 backdrop-blur-sm">
+          <!-- Nom de l'offre -->
+          <UiSkeleton variant="rect" width="60%" height="1.5rem" class="rounded-md" />
+          <!-- Description ou crédit -->
+          <UiSkeleton variant="rect" width="80%" height="1rem" class="rounded-md" />
+          
+          <!-- Prix -->
+          <div class="mt-4 mb-2">
+            <UiSkeleton variant="rect" width="45%" height="2.25rem" class="rounded-md" />
+          </div>
+
+          <!-- Bouton de choix -->
+          <UiSkeleton variant="rect" width="100%" height="3rem" class="rounded-xl mt-auto" />
+
+          <!-- Liste des fonctionnalités incluses -->
+          <div class="space-y-3 mt-4 pt-4 border-t border-outline-variant/10">
+            <div v-for="j in 3" :key="j" class="flex items-center gap-2">
+              <UiSkeleton variant="circle" width="1.25rem" height="1.25rem" />
+              <UiSkeleton variant="rect" :width="j === 1 ? '75%' : j === 2 ? '60%' : '50%'" height="0.875rem" class="rounded-md" />
+            </div>
+          </div>
+        </UiCard>
+      </div>
     </div>
 
     <div v-else-if="plans.length > 0" class="pricing-rail-wrap md:contents" :class="swipeHintVisible && plans.length > 1 && 'pricing-rail-wrap--hint'">
