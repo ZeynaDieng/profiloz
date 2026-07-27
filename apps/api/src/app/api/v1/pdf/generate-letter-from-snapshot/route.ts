@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
     } else {
-      await paymentService.consumeSnapshotDownload(owner, letterId)
+      await paymentService.consumeSnapshotDownload(owner, 'letter')
     }
 
     const result = await pdfService.startCoverLetterPdfJob(letter, {
