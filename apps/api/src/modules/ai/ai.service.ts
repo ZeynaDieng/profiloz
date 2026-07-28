@@ -13,13 +13,16 @@ export class AiService {
     if (!text || !text.trim()) return text
     const apiKey = this.getApiKey()
 
-    const prompt = `Tu es un expert en rédaction professionnelle de CV en français.
-Améliore ce texte pour qu'il soit percutant, élégant, sans fautes et surtout extrêmement concis et factuel.
-Ne rallonge pas le texte inutilement et évite le remplissage ou les phrases trop longues.
+    const prompt = `Tu es un rédacteur professionnel et un coach de carrière humain.
+Améliore ce texte de CV pour qu'il soit percutant, élégant, sans fautes, mais surtout TRÈS HUMAIN et fluide.
+Consignes :
+- Évite absolument les expressions robotiques ou clichés corporate (ex: "facilitateur", "catalyseur", "synergie", "passionné par", "ayant à cœur de", "forte valeur ajoutée").
+- Privilégie un ton authentique, sincère, direct et simple. Raconte des faits réels.
+- Sois concis : pas de phrases à rallonge ou de jargon de remplissage.
 ${context ? `Contexte : ${context}` : ''}
-Texte : "${text}"
+Texte à améliorer : "${text}"
 
-Réponds UNIQUEMENT avec le texte final amélioré. Aucun commentaire, aucune intro, pas de guillemets.`
+Réponds UNIQUEMENT avec le texte final amélioré, prêt à être inséré. Aucune introduction, aucune conclusion, aucun commentaire, pas de guillemets autour.`
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -29,7 +32,7 @@ Réponds UNIQUEMENT avec le texte final amélioré. Aucun commentaire, aucune in
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0.6,
             maxOutputTokens: 512,
           },
         }),
@@ -49,19 +52,20 @@ Réponds UNIQUEMENT avec le texte final amélioré. Aucun commentaire, aucune in
     if (!jobTitle || !jobTitle.trim()) return []
     const apiKey = this.getApiKey()
 
-    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations et tâches professionnelles percutantes en français pour un CV.
-Consignes strictes de style :
-- Sois très concis, direct et percutant.
-- Commence chaque puce par un verbe d'action fort (ex: "Gestion de", "Optimisation de", "Développement de", "Conception de").
-- Rédige des phrases courtes (maximum 10 à 12 mots par puce). Évite le remplissage corporatif inutile.
+    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations professionnelles concrètes et variées pour un CV.
+Consignes strictes :
+- Sois TRÈS humain, moderne et réaliste. Évite les puces génériques et robotiques.
+- Chaque puce doit commencer par un verbe d'action différent (ex: "Coordonner", "Optimiser", "Négocier", "Piloter").
+- Rédige des phrases courtes (10 à 15 mots maximum par puce) qui décrivent un résultat tangible.
+- Propose des tâches spécifiques au secteur de "${jobTitle}" pour éviter les répétitions d'un métier à un autre.
 
-Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide :
+Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans texte autour :
 [
-  "Mise en place de...",
-  "Gestion de...",
-  "Optimisation de...",
-  "Développement de...",
-  "Suivi et analyse de..."
+  "Réalisation spécifique 1...",
+  "Réalisation spécifique 2...",
+  "Réalisation spécifique 3...",
+  "Réalisation spécifique 4...",
+  "Réalisation spécifique 5..."
 ]`
 
     const res = await fetch(
@@ -73,7 +77,7 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide :
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.3,
+            temperature: 0.7,
             maxOutputTokens: 512,
           },
         }),
@@ -102,17 +106,23 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide :
   }): Promise<{ content: string; subject: string }> {
     const apiKey = this.getApiKey()
 
-    const prompt = `Rédige une lettre de motivation captivante et ciblée en français.
+    const prompt = `Rédige une lettre de motivation captivante, directe et profondément HUMAINE en français.
 
 Offre d'emploi : ${input.jobOfferText}
 ${input.targetPosition ? `Poste visé : ${input.targetPosition}` : ''}
 ${input.targetCompany ? `Entreprise : ${input.targetCompany}` : ''}
 ${input.candidateInfo ? `Profil du candidat :\n${input.candidateInfo}` : ''}
 
+Consignes de style très strictes :
+- Bannis TOUTES les formules de politesse poussiéreuses et pompeuses du XIXe siècle (NE PAS utiliser : "Je me permets de poser ma candidature", "Je viens par la présente", "Daigner agréer", "Dans l'attente de votre réponse").
+- Écris comme un humain s'adresserait à un autre humain : avec clarté, respect, simplicité et dynamisme.
+- Fais court et percutant : maximum 3 paragraphes concis (Structure : Vous / Moi / Nous). Évite les longs discours bavards de remplissage.
+- Reste naturel et factuel.
+
 Réponds UNIQUEMENT avec un objet JSON valide :
 {
-  "subject": "Objet de la lettre",
-  "content": "Contenu intégral de la lettre (avec sauts de ligne \\n\\n entre paragraphes)"
+  "subject": "Objet de la lettre (court et professionnel)",
+  "content": "Corps de la lettre (avec sauts de ligne \\n\\n, formule de politesse finale simple et moderne incluse)"
 }`
 
     const res = await fetch(
@@ -124,7 +134,7 @@ Réponds UNIQUEMENT avec un objet JSON valide :
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.4,
+            temperature: 0.7,
             maxOutputTokens: 1024,
           },
         }),
