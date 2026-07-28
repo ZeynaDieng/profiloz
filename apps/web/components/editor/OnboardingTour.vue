@@ -60,8 +60,8 @@ const steps: TourStep[] = [
   },
   {
     target: '#tour-field-summary',
-    title: '✨ Accroche & Gemini IA',
-    content: 'Rédigez 2-3 phrases résumant votre profil, ou cliquez sur **"✨ Générer mon profil IA"** pour que Gemini s\'en charge automatiquement !',
+    title: '✨ Accroche & Assistant IA',
+    content: 'Rédigez 2-3 phrases résumant votre profil, ou cliquez sur **"✨ Générer mon profil IA"** pour que notre IA s\'en charge automatiquement !',
     section: 'summary',
   },
   {
