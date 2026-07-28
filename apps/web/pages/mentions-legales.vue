@@ -28,13 +28,6 @@ useSeoPage({
     </section>
 
     <section>
-      <h2>Hébergement</h2>
-      <p>
-        Le site profiloz.com est hébergé par la société Contabo GmbH, Aschauer Str. 32a, 81549 Munich, Allemagne (Téléphone : +49 89 35647170, Site web : contabo.com).
-      </p>
-    </section>
-
-    <section>
       <h2>Propriété intellectuelle</h2>
       <p>
         L'ensemble des éléments graphiques, textuels et logiciels composant Profilo'Z est protégé par le
