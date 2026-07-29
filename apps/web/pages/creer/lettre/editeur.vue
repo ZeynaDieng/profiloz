@@ -142,64 +142,67 @@ const pdfLoadingMessage = computed(() => {
 })
 
 onMounted(async () => {
-  clearPaymentDraftBackup()
-  authStore.loadFromStorage()
-  await syncGuestSessionForEditor()
-  await ensureSession().catch(() => {})
+  try {
+    clearPaymentDraftBackup()
+    authStore.loadFromStorage()
+    await syncGuestSessionForEditor().catch(() => {})
+    await ensureSession().catch(() => {})
 
-  resumeStore.rehydrateFromStorage()
-  coverLetterStore.rehydrateFromStorage()
-  coverLetterStore.initDraft()
+    resumeStore.rehydrateFromStorage()
+    coverLetterStore.rehydrateFromStorage()
+    coverLetterStore.initDraft()
 
-  const templateFromQuery =
-    typeof route.query.template === 'string' ? route.query.template : undefined
-  if (templateFromQuery) {
-    coverLetterStore.setTemplate(normalizeCoverLetterTemplateSlug(templateFromQuery))
-  }
-
-  const importDraft = consumeCoverLetterImportDraft()
-  if (importDraft) {
-    coverLetterStore.applyImport({
-      senderName: importDraft.senderName ?? '',
-      senderEmail: importDraft.senderEmail ?? '',
-      senderPhone: importDraft.senderPhone ?? '',
-      senderLocation: importDraft.senderLocation ?? '',
-      companyName: importDraft.companyName ?? '',
-      position: importDraft.position ?? '',
-      recruiterName: importDraft.recruiterName ?? '',
-      content: importDraft.content ?? '',
-      closingText: importDraft.closingText ?? DEFAULT_CLOSING_TEXT,
-    })
-  } else if (coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
-    // Ancien brouillon démo → formulaire vide (aperçu garde Aminata via merge)
-    coverLetterStore.startNewDraft()
+    const templateFromQuery =
+      typeof route.query.template === 'string' ? route.query.template : undefined
     if (templateFromQuery) {
       coverLetterStore.setTemplate(normalizeCoverLetterTemplateSlug(templateFromQuery))
     }
-  }
 
-  // Pré-remplissage automatique des coordonnées et du poste visé depuis le CV s'ils sont vides
-  const cvInfo = resumeStore.current?.personalInfo
-  if (cvInfo) {
-    if (!coverLetterStore.current?.senderName?.trim() && cvInfo.fullName) {
-      coverLetterStore.patchFields({ senderName: cvInfo.fullName })
+    const importDraft = consumeCoverLetterImportDraft()
+    if (importDraft) {
+      coverLetterStore.applyImport({
+        senderName: importDraft.senderName ?? '',
+        senderEmail: importDraft.senderEmail ?? '',
+        senderPhone: importDraft.senderPhone ?? '',
+        senderLocation: importDraft.senderLocation ?? '',
+        companyName: importDraft.companyName ?? '',
+        position: importDraft.position ?? '',
+        recruiterName: importDraft.recruiterName ?? '',
+        content: importDraft.content ?? '',
+        closingText: importDraft.closingText ?? DEFAULT_CLOSING_TEXT,
+      })
+    } else if (coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
+      coverLetterStore.startNewDraft()
+      if (templateFromQuery) {
+        coverLetterStore.setTemplate(normalizeCoverLetterTemplateSlug(templateFromQuery))
+      }
     }
-    if (!coverLetterStore.current?.senderEmail?.trim() && cvInfo.email) {
-      coverLetterStore.patchFields({ senderEmail: cvInfo.email })
-    }
-    if (!coverLetterStore.current?.senderPhone?.trim() && cvInfo.phone) {
-      coverLetterStore.patchFields({ senderPhone: cvInfo.phone })
-    }
-    if (!coverLetterStore.current?.senderLocation?.trim() && cvInfo.location) {
-      coverLetterStore.patchFields({ senderLocation: cvInfo.location })
-    }
-    if (!coverLetterStore.current?.position?.trim() && cvInfo.jobTitle) {
-      coverLetterStore.patchFields({ position: cvInfo.jobTitle })
-    }
-  }
 
-  loadRefsFromStore()
-  loading.value = false
+    const cvInfo = resumeStore.current?.personalInfo
+    if (cvInfo) {
+      if (!coverLetterStore.current?.senderName?.trim() && cvInfo.fullName) {
+        coverLetterStore.patchFields({ senderName: cvInfo.fullName })
+      }
+      if (!coverLetterStore.current?.senderEmail?.trim() && cvInfo.email) {
+        coverLetterStore.patchFields({ senderEmail: cvInfo.email })
+      }
+      if (!coverLetterStore.current?.senderPhone?.trim() && cvInfo.phone) {
+        coverLetterStore.patchFields({ senderPhone: cvInfo.phone })
+      }
+      if (!coverLetterStore.current?.senderLocation?.trim() && cvInfo.location) {
+        coverLetterStore.patchFields({ senderLocation: cvInfo.location })
+      }
+      if (!coverLetterStore.current?.position?.trim() && cvInfo.jobTitle) {
+        coverLetterStore.patchFields({ position: cvInfo.jobTitle })
+      }
+    }
+
+    loadRefsFromStore()
+  } catch (err) {
+    console.error('Error mounting letter editeur:', err)
+  } finally {
+    loading.value = false
+  }
 
   if (route.query.download === '1') {
     await nextTick()

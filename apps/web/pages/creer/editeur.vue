@@ -85,39 +85,43 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
 })
 
 onMounted(async () => {
-  clearPaymentDraftBackup()
-  authStore.loadFromStorage()
-  await syncGuestSessionForEditor()
-  await ensureSession().catch(() => {})
+  try {
+    clearPaymentDraftBackup()
+    authStore.loadFromStorage()
+    await syncGuestSessionForEditor().catch(() => {})
+    await ensureSession().catch(() => {})
 
-  const resumeId = resolvePersistableResumeId(route.query.id as string | undefined)
+    const resumeId = resolvePersistableResumeId(route.query.id as string | undefined)
 
-  if (resumeId) {
-    if (!authStore.isAuthenticated) {
-      await navigateTo('/connexion')
-      return
+    if (resumeId) {
+      if (!authStore.isAuthenticated) {
+        await navigateTo('/connexion')
+        return
+      }
+      try {
+        const snapshot = await resumeService.getById(resumeId)
+        resumeStore.loadSnapshot(snapshot)
+      } catch {
+        pageError.value = 'CV introuvable.'
+        return
+      }
+    } else {
+      resumeStore.initDraft()
+      const templateQuery = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
+      if (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug)) {
+        resumeStore.setTemplate(templateQuery as TemplateSlug)
+      }
     }
-    try {
-      const snapshot = await resumeService.getById(resumeId)
-      resumeStore.loadSnapshot(snapshot)
-    } catch {
-      pageError.value = 'CV introuvable.'
-      loading.value = false
-      return
-    }
-  } else {
-    resumeStore.initDraft()
-    const templateQuery = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
-    if (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug)) {
-      resumeStore.setTemplate(templateQuery as TemplateSlug)
-    }
+
+    accentColor.value = resolveCvAccentColor(
+      resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
+      resumeStore.current?.templateConfig?.accentColor,
+    )
+  } catch (err) {
+    console.error('Error mounting editeur:', err)
+  } finally {
+    loading.value = false
   }
-
-  accentColor.value = resolveCvAccentColor(
-    resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
-    resumeStore.current?.templateConfig.accentColor,
-  )
-  loading.value = false
 
   const autoOnboardingPref = localStorage.getItem('profiloz:settings:auto-onboarding')
   const isAutoOnboardingEnabled = autoOnboardingPref === null ? true : autoOnboardingPref === 'true'
