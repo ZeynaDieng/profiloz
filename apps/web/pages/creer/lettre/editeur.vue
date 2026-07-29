@@ -297,6 +297,9 @@ async function downloadPdf() {
 
   let stepTimer: number | undefined
   try {
+    pdfLoading.value = true
+    pdfLoadingStep.value = 0
+
     syncStoreFromRefs()
     restorePaidGuestSession()
     await syncGuestSessionForEditor()
@@ -304,8 +307,6 @@ async function downloadPdf() {
 
     if (!(await ensureDownloadAccess(route.fullPath))) return
 
-    pdfLoading.value = true
-    pdfLoadingStep.value = 0
     stepTimer = window.setInterval(() => {
       if (pdfLoadingStep.value < MSG.letterPdf.steps.length - 1) {
         pdfLoadingStep.value += 1
