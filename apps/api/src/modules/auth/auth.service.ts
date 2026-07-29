@@ -9,8 +9,8 @@ import { ensurePlatformOwnerRole } from '@/lib/platform-admin'
 import { sendEmailTemplate } from '@/lib/email/mail.service'
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m'
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '30d'
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '30d'
 
 export class AuthRepository {
   findByEmail(email: string) {
