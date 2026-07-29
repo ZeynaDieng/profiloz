@@ -552,9 +552,13 @@ export function detectSection(line: string): Section | null {
   if (/^competences?( techniques?)?$/.test(loose)) return 'skills'
   if (/^expertises?$/.test(loose)) return 'skills'
   if (/^stack$/.test(loose)) return 'skills'
-  if (/^langues?$/.test(loose)) return 'languages'
+  if (/^langues?( etrangeres?)?$/.test(loose)) return 'languages'
+  if (/^competences? linguistiques?$/.test(loose)) return 'languages'
+  if (/^langues? maitrisees?$/.test(loose)) return 'languages'
   if (/^loisirs$/.test(loose)) return 'interests'
-  if (/^centres? d interet$/.test(loose)) return 'interests'
+  if (/^hobbies$/.test(loose)) return 'interests'
+  if (/^centres? d? ?interets?$/.test(loose)) return 'interests'
+  if (/^centres? d activites?$/.test(loose)) return 'interests'
 
   return null
 }

@@ -142,6 +142,15 @@ watch(accentColor, (color) => {
 })
 
 watch(
+  () => resumeStore.current?.templateConfig?.accentColor,
+  (color) => {
+    if (color && color !== accentColor.value) {
+      accentColor.value = color
+    }
+  }
+)
+
+watch(
   () => resumeStore.current?.templateSlug,
   (slug) => {
     if (!slug) return
