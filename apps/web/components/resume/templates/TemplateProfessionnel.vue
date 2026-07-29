@@ -186,7 +186,7 @@ const {
             />
             <ExperienceEntry
               :exp="exp"
-              layout="date-left"
+              layout="inline-header"
               :accent="accent"
             />
           </div>
@@ -210,7 +210,11 @@ const {
             class="mb-3 pl-3"
             :style="{ borderLeft: `2px solid ${accent}20` }"
           >
-            <EducationEntry :edu="edu" />
+            <EducationEntry
+              :edu="edu"
+              layout="inline-header"
+              :accent="accent"
+            />
           </div>
         </section>
       </main>
