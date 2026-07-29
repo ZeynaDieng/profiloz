@@ -73,8 +73,8 @@ const showWalletDetail = computed(() => props.variant === 'wallet' && status.val
       v-if="showWalletDetail"
       class="rounded-xl border border-outline-variant/25 bg-white/70 px-3 py-2.5 text-sm"
     >
-      <p class="font-semibold text-on-surface">{{ status.title }}</p>
-      <p v-if="status.detail" class="text-on-surface-variant mt-0.5">{{ status.detail }}</p>
+      <p class="font-semibold text-on-surface">{{ status?.title }}</p>
+      <p v-if="status?.detail" class="text-on-surface-variant mt-0.5">{{ status?.detail }}</p>
     </div>
   </UiCard>
 </template>

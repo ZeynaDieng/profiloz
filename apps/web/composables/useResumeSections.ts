@@ -23,6 +23,12 @@ function parseDateString(dateStr?: string | null): Date {
   const clean = dateStr.trim().toLowerCase()
   if (!clean) return new Date(0)
 
+  // Mots-clés signifiant "poste actuel" → date future pour tri en tête
+  const currentKeywords = ['présent', 'present', 'actuel', 'actuelle', 'current', 'maintenant', 'now', 'à ce jour', 'a ce jour', 'en cours', 'ongoing']
+  if (currentKeywords.some((kw) => clean.includes(kw)) || clean.includes("aujourd'hui") || clean.includes("aujourd")) {
+    return new Date(Date.now() + 86400000) // demain → tri en premier
+  }
+
   // 1. Format YYYY
   if (/^\d{4}$/.test(clean)) {
     return new Date(parseInt(clean, 10), 0, 1)

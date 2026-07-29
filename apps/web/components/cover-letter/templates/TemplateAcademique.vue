@@ -18,7 +18,7 @@ const {
       <!-- Centered Header -->
       <div class="text-center mb-10 border-b-2 border-slate-900 pb-6">
         <h2 class="text-xl font-bold tracking-wide uppercase mb-2">
-          {{ senderLines[0] || letter.fullName }}
+          {{ senderLines[0] || letter.sender?.fullName || '' }}
         </h2>
         <div class="flex flex-wrap justify-center gap-x-4 gap-y-0.5 text-xs text-slate-500 font-sans">
           <span v-for="(line, i) in senderLines.slice(1)" :key="i">{{ line }}</span>
