@@ -187,3 +187,21 @@ export function formatDateRange(start?: string, end?: string, isCurrent?: boolea
   const endLabel = isCurrent ? 'Présent' : end ?? ''
   return start ? `${start} – ${endLabel}` : endLabel
 }
+
+const SKILL_LEVEL_LABELS: Record<string, string> = {
+  BEGINNER: 'Débutant',
+  INTERMEDIATE: 'Intermédiaire',
+  ADVANCED: 'Avancé',
+  EXPERT: 'Expert',
+  DEBUTANT: 'Débutant',
+  INTERMEDIAIRE: 'Intermédiaire',
+  AVANCE: 'Avancé',
+}
+
+export function formatSkillLevel(level?: string | null): string {
+  if (!level) return ''
+  const trimmed = level.trim()
+  if (!trimmed) return ''
+  const upper = trimmed.toUpperCase()
+  return SKILL_LEVEL_LABELS[upper] || trimmed
+}

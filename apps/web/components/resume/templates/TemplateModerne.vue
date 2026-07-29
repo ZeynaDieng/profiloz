@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from "@profiloz/shared";
+import { formatSkillLevel } from '~/composables/useResumeSections'
 
 const props = defineProps<{ resume: ResumeSnapshot }>();
 const {
@@ -90,14 +91,19 @@ const {
             <li
               v-for="(skill, i) in snapshot.skills"
               :key="i"
-              class="text-[8.5pt] flex items-start gap-2"
+              class="text-[8.5pt] flex items-center justify-between gap-1"
               style="color: rgba(255, 255, 255, 0.88)"
             >
-              <span
-                class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
-                style="background: rgba(255, 255, 255, 0.5)"
-              />
-              {{ skill.name }}
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="w-1.5 h-1.5 rounded-full shrink-0"
+                  style="background: rgba(255, 255, 255, 0.5)"
+                />
+                <span class="truncate">{{ skill.name }}</span>
+              </div>
+              <span v-if="formatSkillLevel(skill.level)" class="text-[7.5pt] shrink-0" style="color: rgba(255, 255, 255, 0.65)">
+                {{ formatSkillLevel(skill.level) }}
+              </span>
             </li>
           </ul>
         </div>

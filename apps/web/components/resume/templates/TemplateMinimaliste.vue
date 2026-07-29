@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { formatSkillLevel } from '~/composables/useResumeSections'
 
 const props = defineProps<{ resume: ResumeSnapshot }>()
 const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, hasLanguages, hasInterests, showPhotoBlock, initials, accent } =
@@ -43,7 +44,9 @@ const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, has
 
     <section v-if="hasSkills" class="mb-8">
       <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Compétences</h2>
-      <p class="text-sm text-on-surface-variant">{{ snapshot.skills.map((s) => s.name).join(', ') }}</p>
+      <p class="text-sm text-on-surface-variant">
+        {{ snapshot.skills.map((s) => formatSkillLevel(s.level) ? `${s.name} (${formatSkillLevel(s.level)})` : s.name).join(', ') }}
+      </p>
     </section>
 
     <section v-if="hasLanguages" class="mb-8">
