@@ -123,10 +123,46 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
       ? [...raw.educations]
       : [...raw.educations].sort(compareDates)
 
+    const languages = (raw.languages ?? [])
+      .map((item: any) => {
+        if (!item) return null
+        if (typeof item === 'string') {
+          const name = item.trim()
+          return name ? { name, level: undefined } : null
+        }
+        const name = String(item.name || item.language || item.label || item.value || '').trim()
+        if (!name) return null
+        const rawLevel = item.level ? String(item.level).trim() : ''
+        return {
+          ...item,
+          name,
+          level: rawLevel ? formatLanguageLevel(rawLevel) : undefined,
+        }
+      })
+      .filter((x): x is { id?: string; name: string; level?: string } => x !== null)
+
+    const interests = (raw.interests ?? [])
+      .map((item: any) => {
+        if (!item) return null
+        if (typeof item === 'string') {
+          const name = item.trim()
+          return name ? { name } : null
+        }
+        const name = String(item.name || item.label || item.title || item.interest || item.value || '').trim()
+        if (!name) return null
+        return {
+          ...item,
+          name,
+        }
+      })
+      .filter((x): x is { id?: string; name: string } => x !== null)
+
     return {
       ...raw,
       experiences,
       educations,
+      languages,
+      interests,
     }
   })
   const accent = computed(() =>
@@ -204,4 +240,27 @@ export function formatSkillLevel(level?: string | null): string {
   if (!trimmed) return ''
   const upper = trimmed.toUpperCase()
   return SKILL_LEVEL_LABELS[upper] || trimmed
+}
+
+const LANG_LEVEL_LABELS: Record<string, string> = {
+  NATIVE: 'Maternelle',
+  PROFESSIONAL: 'Courant',
+  CONVERSATIONAL: 'Intermédiaire',
+  BASIC: 'Notions',
+  native: 'Maternelle',
+  professional: 'Courant',
+  conversational: 'Intermédiaire',
+  basic: 'Notions',
+  BEGINNER: 'Notions',
+  INTERMEDIATE: 'Intermédiaire',
+  ADVANCED: 'Courant',
+  EXPERT: 'Maternelle',
+}
+
+export function formatLanguageLevel(level?: string | null): string {
+  if (!level) return ''
+  const trimmed = level.trim()
+  if (!trimmed) return ''
+  const upper = trimmed.toUpperCase()
+  return LANG_LEVEL_LABELS[upper] || trimmed
 }

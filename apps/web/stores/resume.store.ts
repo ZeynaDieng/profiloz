@@ -295,15 +295,41 @@ export const useResumeStore = defineStore('resume', {
           data.certifications,
           (item) => item.name.toLowerCase(),
         )
+        const incomingLanguages = (data.languages ?? [])
+          .map((item: any) => {
+            if (!item) return null
+            if (typeof item === 'string') {
+              const name = item.trim()
+              return name ? { name } : null
+            }
+            const name = String(item.name || item.language || item.label || item.value || '').trim()
+            if (!name) return null
+            return { ...item, name, level: item.level ? String(item.level).trim() : undefined }
+          })
+          .filter(Boolean)
+
+        const incomingInterests = (data.interests ?? [])
+          .map((item: any) => {
+            if (!item) return null
+            if (typeof item === 'string') {
+              const name = item.trim()
+              return name ? { name } : null
+            }
+            const name = String(item.name || item.label || item.title || item.interest || item.value || '').trim()
+            if (!name) return null
+            return { ...item, name }
+          })
+          .filter(Boolean)
+
         this.current.languages = appendUnique(
           this.current.languages,
-          data.languages,
-          (item) => item.name.toLowerCase(),
+          incomingLanguages,
+          (item) => String(item.name || '').toLowerCase(),
         )
         this.current.interests = appendUnique(
           this.current.interests,
-          data.interests,
-          (item) => item.name.toLowerCase(),
+          incomingInterests,
+          (item) => String(item.name || '').toLowerCase(),
         )
       }
 
