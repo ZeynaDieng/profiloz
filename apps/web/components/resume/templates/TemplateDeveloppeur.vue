@@ -10,6 +10,8 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  hasLanguages,
+  hasInterests,
   showPhotoBlock,
   initials,
 } = useResumeSections(() => props.resume);
@@ -164,7 +166,7 @@ const hasCertifications = computed(
     </section>
 
     <!-- Certifications -->
-    <section v-if="hasCertifications">
+    <section v-if="hasCertifications" class="mb-7">
       <h2
         class="font-mono text-[7.5pt] font-bold uppercase tracking-[0.18em] mb-3 flex items-center gap-2"
         :style="{ color: accent }"
@@ -191,6 +193,58 @@ const hasCertifications = computed(
           >
         </li>
       </ul>
+    </section>
+
+    <!-- Langues -->
+    <section v-if="hasLanguages" class="mb-7">
+      <h2
+        class="font-mono text-[7.5pt] font-bold uppercase tracking-[0.18em] mb-3 flex items-center gap-2"
+        :style="{ color: accent }"
+      >
+        <span>Langues</span>
+        <span
+          class="h-px flex-1 opacity-20"
+          :style="{ backgroundColor: accent }"
+        />
+      </h2>
+      <div class="flex flex-wrap gap-2">
+        <div
+          v-for="(lang, i) in snapshot.languages"
+          :key="i"
+          class="px-2.5 py-1 text-[8.5pt] font-mono rounded border flex items-center gap-1.5"
+          :style="{
+            color: '#1e293b',
+            borderColor: `${accent}35`,
+            backgroundColor: `${accent}05`,
+          }"
+        >
+          <span class="font-bold">{{ lang.name }}</span>
+          <span v-if="lang.level" class="text-[7.5pt] text-[#64748b]">({{ lang.level }})</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Centres d'intérêt -->
+    <section v-if="hasInterests">
+      <h2
+        class="font-mono text-[7.5pt] font-bold uppercase tracking-[0.18em] mb-3 flex items-center gap-2"
+        :style="{ color: accent }"
+      >
+        <span>Centres d'intérêt</span>
+        <span
+          class="h-px flex-1 opacity-20"
+          :style="{ backgroundColor: accent }"
+        />
+      </h2>
+      <div class="flex flex-wrap gap-1.5">
+        <span
+          v-for="(interest, i) in snapshot.interests"
+          :key="i"
+          class="px-2 py-[3px] text-[8.5pt] font-mono text-[#334155] bg-slate-100 rounded-sm"
+        >
+          {{ interest.name }}
+        </span>
+      </div>
     </section>
   </TemplatesTemplateShell>
 </template>

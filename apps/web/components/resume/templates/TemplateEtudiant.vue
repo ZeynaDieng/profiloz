@@ -10,6 +10,8 @@ const {
   hasEducations,
   hasSkills,
   hasExperiences,
+  hasLanguages,
+  hasInterests,
   showPhotoBlock,
   initials,
 } = useResumeSections(() => props.resume);
@@ -61,25 +63,67 @@ const {
 
     <!-- Corps : sidebar gauche + contenu principal -->
     <div class="grid grid-cols-[150px_1fr] gap-8">
-      <!-- Sidebar compétences -->
-      <aside v-if="hasSkills" class="space-y-1">
-        <h2
-          class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
-          :style="{ color: accent, borderBottom: `2px solid ${accent}` }"
-        >Compétences</h2>
-        <ul class="space-y-1.5">
-          <li
-            v-for="(skill, i) in snapshot.skills"
-            :key="i"
-            class="text-[9pt] text-[#374151] flex items-start gap-1.5"
-          >
-            <span
-              class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
-              :style="{ background: accent, opacity: '0.6' }"
-            />
-            {{ skill.name }}
-          </li>
-        </ul>
+      <!-- Sidebar compétences / langues / intérêts -->
+      <aside v-if="hasSkills || hasLanguages || hasInterests" class="space-y-6">
+        <!-- Compétences -->
+        <div v-if="hasSkills">
+          <h2
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}` }"
+          >Compétences</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(skill, i) in snapshot.skills"
+              :key="i"
+              class="text-[9pt] text-[#374151] flex items-start gap-1.5"
+            >
+              <span
+                class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
+                :style="{ background: accent, opacity: '0.6' }"
+              />
+              {{ skill.name }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Langues -->
+        <div v-if="hasLanguages">
+          <h2
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}` }"
+          >Langues</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(lang, i) in snapshot.languages"
+              :key="i"
+              class="text-[8.5pt] text-[#374151] flex flex-col"
+            >
+              <span class="font-semibold">{{ lang.name }}</span>
+              <span v-if="lang.level" class="text-[7.5pt] text-[#64748b]">{{ lang.level }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Centres d'intérêt -->
+        <div v-if="hasInterests">
+          <h2
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}` }"
+          >Centres d'intérêt</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(interest, i) in snapshot.interests"
+              :key="i"
+              class="text-[8.5pt] text-[#374151] flex items-start gap-1.5"
+            >
+              <span
+                class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
+                :style="{ background: accent, opacity: '0.6' }"
+              />
+              {{ interest.name }}
+            </li>
+          </ul>
+        </div>
       </aside>
 
       <!-- Contenu principal -->

@@ -11,6 +11,8 @@ const {
   hasExperiences,
   hasEducations,
   hasSkills,
+  hasLanguages,
+  hasInterests,
   showPhotoBlock,
   initials,
 } = useResumeSections(() => props.resume);
@@ -88,6 +90,45 @@ const {
                 :style="{ backgroundColor: accent }"
               />
               {{ skill.name }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Langues -->
+        <div v-if="hasLanguages">
+          <h2
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-3 pb-1"
+            :style="{ color: accent, borderBottom: `1.5px solid ${accent}` }"
+          >Langues</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(lang, i) in snapshot.languages"
+              :key="i"
+              class="text-[8.5pt] text-[#374151] flex items-center justify-between gap-1"
+            >
+              <span class="font-semibold">{{ lang.name }}</span>
+              <span v-if="lang.level" class="text-[7.5pt] text-[#64748b]">{{ lang.level }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Centres d'intérêt -->
+        <div v-if="hasInterests">
+          <h2
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-3 pb-1"
+            :style="{ color: accent, borderBottom: `1.5px solid ${accent}` }"
+          >Centres d'intérêt</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(interest, i) in snapshot.interests"
+              :key="i"
+              class="text-[8.5pt] text-[#374151] flex items-start gap-2"
+            >
+              <span
+                class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
+                :style="{ backgroundColor: accent }"
+              />
+              {{ interest.name }}
             </li>
           </ul>
         </div>

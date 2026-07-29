@@ -9,6 +9,8 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  hasLanguages,
+  hasInterests,
 } = useResumeSections(() => props.resume)
 </script>
 
@@ -48,6 +50,20 @@ const {
           <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Compétences</h2>
           <p class="text-xs text-slate-800">
             {{ snapshot.skills.map((s) => s.name).join(', ') }}
+          </p>
+        </section>
+
+        <section v-if="hasLanguages" class="border-t border-black pt-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Langues</h2>
+          <p class="text-xs text-slate-800">
+            {{ snapshot.languages.map((l) => l.level ? `${l.name} (${l.level})` : l.name).join(', ') }}
+          </p>
+        </section>
+
+        <section v-if="hasInterests" class="border-t border-black pt-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider mb-3">Centres d'intérêt</h2>
+          <p class="text-xs text-slate-800">
+            {{ snapshot.interests.map((i) => i.name).join(', ') }}
           </p>
         </section>
       </main>

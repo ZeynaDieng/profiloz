@@ -9,6 +9,7 @@ const {
   snapshot,
   hasExperiences,
   hasLanguages,
+  hasInterests,
   hasEducations,
   showPhotoBlock,
   initials,
@@ -175,6 +176,27 @@ const {
                   }"
                 />
               </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Centres d'intérêt -->
+        <div
+          v-if="hasInterests"
+          class="rounded-lg p-4"
+          :style="{ backgroundColor: `${accent}08` }"
+        >
+          <h2
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-3 pb-1.5"
+            :style="{ color: accent, borderBottom: `1.5px solid ${accent}30` }"
+          >Centres d'intérêt</h2>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(interest, i) in snapshot.interests"
+              :key="i"
+              class="text-[8pt] text-[#475569]"
+            >
+              {{ interest.name }}
             </li>
           </ul>
         </div>

@@ -2,7 +2,7 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
 
 const props = defineProps<{ resume: ResumeSnapshot }>()
-const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, showPhotoBlock, initials, accent } =
+const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, hasLanguages, hasInterests, showPhotoBlock, initials, accent } =
   useResumeSections(() => props.resume)
 </script>
 
@@ -41,9 +41,21 @@ const { p, contactItems, snapshot, hasExperiences, hasEducations, hasSkills, sho
       </div>
     </section>
 
-    <section v-if="hasSkills">
+    <section v-if="hasSkills" class="mb-8">
       <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Compétences</h2>
       <p class="text-sm text-on-surface-variant">{{ snapshot.skills.map((s) => s.name).join(', ') }}</p>
+    </section>
+
+    <section v-if="hasLanguages" class="mb-8">
+      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Langues</h2>
+      <p class="text-sm text-on-surface-variant">
+        {{ snapshot.languages.map((l) => l.level ? `${l.name} (${l.level})` : l.name).join(', ') }}
+      </p>
+    </section>
+
+    <section v-if="hasInterests">
+      <h2 class="text-[10px] uppercase tracking-[0.3em] text-on-surface-variant/50 mb-4">Centres d'intérêt</h2>
+      <p class="text-sm text-on-surface-variant">{{ snapshot.interests.map((i) => i.name).join(', ') }}</p>
     </section>
   </TemplatesTemplateShell>
 </template>

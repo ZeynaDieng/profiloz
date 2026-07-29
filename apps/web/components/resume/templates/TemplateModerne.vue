@@ -11,6 +11,8 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  hasLanguages,
+  hasInterests,
   showPhotoBlock,
   initials,
 } = useResumeSections(() => props.resume);
@@ -78,7 +80,7 @@ const {
         </div>
 
         <!-- Compétences -->
-        <div v-if="hasSkills" class="relative px-6 pt-1 pb-8 mt-auto">
+        <div v-if="hasSkills" class="relative px-6 pt-1 pb-4">
           <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
           <h2
             class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
@@ -96,6 +98,49 @@ const {
                 style="background: rgba(255, 255, 255, 0.5)"
               />
               {{ skill.name }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Langues -->
+        <div v-if="hasLanguages" class="relative px-6 pt-1 pb-4">
+          <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
+          <h2
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
+            style="color: rgba(255, 255, 255, 0.6)"
+          >Langues</h2>
+          <ul class="space-y-2">
+            <li
+              v-for="(lang, i) in snapshot.languages"
+              :key="i"
+              class="text-[8.5pt] flex items-center justify-between gap-1"
+              style="color: rgba(255, 255, 255, 0.88)"
+            >
+              <span class="font-semibold">{{ lang.name }}</span>
+              <span v-if="lang.level" class="text-[7.5pt]" style="color: rgba(255, 255, 255, 0.65)">{{ lang.level }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Centres d'intérêt -->
+        <div v-if="hasInterests" class="relative px-6 pt-1 pb-6 mt-auto">
+          <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
+          <h2
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
+            style="color: rgba(255, 255, 255, 0.6)"
+          >Centres d'intérêt</h2>
+          <ul class="space-y-2">
+            <li
+              v-for="(interest, i) in snapshot.interests"
+              :key="i"
+              class="text-[8.5pt] flex items-start gap-2"
+              style="color: rgba(255, 255, 255, 0.88)"
+            >
+              <span
+                class="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
+                style="background: rgba(255, 255, 255, 0.5)"
+              />
+              {{ interest.name }}
             </li>
           </ul>
         </div>

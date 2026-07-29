@@ -9,6 +9,7 @@ const {
   snapshot,
   hasExperiences,
   hasSkills,
+  hasLanguages,
   hasInterests,
   hasEducations,
   showPhotoBlock,
@@ -173,6 +174,24 @@ const {
               {{ skill.name }}
             </span>
           </div>
+        </div>
+
+        <!-- Langues -->
+        <div v-if="hasLanguages">
+          <div
+            class="text-[7pt] font-black uppercase tracking-[0.18em] mb-2.5 pb-1.5"
+            :style="{ color: accent, borderBottom: `2px solid ${accent}30` }"
+          >Langues</div>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(lang, i) in snapshot.languages"
+              :key="i"
+              class="text-[8pt] text-[#475569] flex justify-between items-center"
+            >
+              <span class="font-medium">{{ lang.name }}</span>
+              <span v-if="lang.level" class="text-[7.5pt] text-[#94a3b8]">{{ lang.level }}</span>
+            </li>
+          </ul>
         </div>
       </aside>
     </div>
