@@ -29,7 +29,7 @@ const previewStyle = computed(() =>
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full h-full absolute inset-0 overflow-hidden preview-canvas-bg--landing" :style="previewStyle">
+  <div ref="containerRef" class="w-full h-full relative overflow-hidden preview-canvas-bg--landing" :style="previewStyle">
     <div
       class="absolute top-0 left-1/2 pointer-events-none letter-a4-preview-fit"
       :style="{
