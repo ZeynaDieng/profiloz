@@ -8,9 +8,9 @@ const { state, accept, reject } = useConfirm()
     :title="state.title"
     :description="state.message"
     :ui="{
-      content: 'max-w-sm w-[calc(100%-2rem)] mx-auto rounded-2xl',
-      footer: 'flex flex-col-reverse sm:flex-row gap-2 w-full',
-      overlay: 'bg-black/35',
+      content: 'max-w-sm w-[calc(100%-2rem)] mx-auto rounded-2xl bg-surface border border-outline-variant/30 p-5 shadow-2xl',
+      footer: 'flex flex-col-reverse sm:flex-row gap-2 w-full mt-4',
+      overlay: 'bg-black/40 backdrop-blur-[2px]',
     }"
   >
     <template #footer>
