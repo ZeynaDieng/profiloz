@@ -113,12 +113,19 @@ onMounted(async () => {
       }
     }
 
+    if (!resumeStore.current) {
+      resumeStore.initDraft()
+    }
+
     accentColor.value = resolveCvAccentColor(
       resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
       resumeStore.current?.templateConfig?.accentColor,
     )
   } catch (err) {
     console.error('Error mounting editeur:', err)
+    if (!resumeStore.current) {
+      resumeStore.initDraft()
+    }
   } finally {
     loading.value = false
   }
@@ -339,7 +346,7 @@ async function downloadPdf() {
     </NuxtLink>
   </div>
 
-  <div v-else-if="resume && previewResume" class="h-screen flex flex-col overflow-hidden bg-background">
+  <div v-else class="h-screen flex flex-col overflow-hidden bg-background">
     <!-- Header compact mobile-first -->
     <header class="grid grid-cols-[minmax(0,1fr)_auto] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
       <div class="flex items-center gap-2 min-w-0">
