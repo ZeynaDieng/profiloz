@@ -18,7 +18,7 @@ const FRENCH_MONTHS: Record<string, number> = {
   decembre: 11, décembre: 11, dec: 11, déc: 11
 }
 
-function parseDateString(dateStr?: string | null): Date {
+function parseDateString(dateStr?: string | null, preferLastYear = false): Date {
   if (!dateStr) return new Date(0)
   const clean = dateStr.trim().toLowerCase()
   if (!clean) return new Date(0)
@@ -34,9 +34,9 @@ function parseDateString(dateStr?: string | null): Date {
     return new Date(parseInt(clean, 10), 0, 1)
   }
 
-  // 2. Format YYYY-MM
-  if (/^\d{4}-\d{2}/.test(clean)) {
-    return new Date(clean)
+  // 2. Format YYYY-MM ou YYYY/MM
+  if (/^\d{4}[-/]\d{2}/.test(clean)) {
+    return new Date(clean.replace(/\//g, '-'))
   }
 
   // 3. Format MM/YYYY
@@ -47,13 +47,14 @@ function parseDateString(dateStr?: string | null): Date {
     return new Date(year, month, 1)
   }
 
-  // 4. Format avec mois textuels en français, ex: "Juin 2024" ou "Oct. 2022" ou "Janvier 23"
-  const yearMatch = clean.match(/\b(\d{4}|\d{2})\b/)
-  if (yearMatch) {
-    let year = parseInt(yearMatch[1], 10)
-    if (year < 100) year += 2000 // Gestion des années sur 2 chiffres (ex: 24 -> 2024)
-    
-    // Chercher le mois
+  // 4. Extraction de toutes les années (4 chiffres ou 2 chiffres)
+  const yearMatches = [...clean.matchAll(/\b(\d{4}|\d{2})\b/g)]
+  if (yearMatches.length > 0) {
+    // Si preferLastYear (ex: pour endDate) et qu'il y a plusieurs années dans la chaîne (ex: "2019-2022"), on prend la dernière
+    const selectedMatch = preferLastYear && yearMatches.length > 1 ? yearMatches[yearMatches.length - 1] : yearMatches[0]
+    let year = parseInt(selectedMatch[1], 10)
+    if (year < 100) year += 2000
+
     let month = 0
     for (const [key, value] of Object.entries(FRENCH_MONTHS)) {
       if (clean.includes(key)) {
@@ -70,22 +71,43 @@ function parseDateString(dateStr?: string | null): Date {
   return new Date(0)
 }
 
+function getItemEndDate(item: { startDate?: string; endDate?: string; isCurrent?: boolean }): Date {
+  if (item.isCurrent) {
+    return new Date(Date.now() + 86400000) // poste actuel -> trier tout en haut
+  }
+  if (item.endDate?.trim()) {
+    const parsed = parseDateString(item.endDate, true)
+    if (parsed.getTime() > 0) return parsed
+  }
+  // Si pas de endDate valide, utiliser la startDate comme date de fin de repli
+  if (item.startDate?.trim()) {
+    return parseDateString(item.startDate, false)
+  }
+  return new Date(0)
+}
+
+function getItemStartDate(item: { startDate?: string; endDate?: string; isCurrent?: boolean }): Date {
+  if (item.startDate?.trim()) {
+    return parseDateString(item.startDate, false)
+  }
+  return new Date(0)
+}
+
 function compareDates(
   a: { startDate?: string; endDate?: string; isCurrent?: boolean },
   b: { startDate?: string; endDate?: string; isCurrent?: boolean }
 ): number {
-  if (a.isCurrent && !b.isCurrent) return -1
-  if (!a.isCurrent && b.isCurrent) return 1
+  const aEnd = getItemEndDate(a)
+  const bEnd = getItemEndDate(b)
 
-  const aEnd = parseDateString(a.endDate)
-  const bEnd = parseDateString(b.endDate)
   if (aEnd.getTime() !== bEnd.getTime()) {
-    return bEnd.getTime() - aEnd.getTime()
+    return bEnd.getTime() - aEnd.getTime() // Plus récent en premier
   }
 
-  const aStart = parseDateString(a.startDate)
-  const bStart = parseDateString(b.startDate)
-  return bStart.getTime() - aStart.getTime()
+  const aStart = getItemStartDate(a)
+  const bStart = getItemStartDate(b)
+
+  return bStart.getTime() - aStart.getTime() // Plus récent en premier
 }
 
 export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
