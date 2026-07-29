@@ -20,6 +20,7 @@ const { confirm } = useConfirm()
 
 const documents = ref<DocumentItem[]>([])
 const loading = ref(true)
+const isLocked = ref(false)
 const error = ref('')
 const deletingId = ref<string | null>(null)
 
@@ -46,14 +47,13 @@ onMounted(async () => {
   try {
     const entitlements = await paymentService.getEntitlements()
     if (!entitlements.features.historique) {
-      await navigateTo({
-        path: '/tarifs',
-        query: { reason: 'historique', returnTo: '/tableau-de-bord/documents' },
-      })
+      isLocked.value = true
+      loading.value = false
       return
     }
   } catch {
-    await navigateTo('/tarifs')
+    isLocked.value = true
+    loading.value = false
     return
   }
 
@@ -102,7 +102,7 @@ const importLinks = [
       <p class="text-on-surface-variant mt-1">Historique de vos imports et fichiers analysés.</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md mb-stack-lg">
+    <div v-if="!isLocked" class="grid grid-cols-1 md:grid-cols-2 gap-stack-md mb-stack-lg">
       <NuxtLink
         v-for="link in importLinks"
         :key="link.to"
@@ -122,6 +122,47 @@ const importLinks = [
     <!-- Skeleton loaders -->
     <div v-if="loading" class="space-y-stack-md">
       <UiSkeleton v-for="i in 3" :key="i" variant="rect" height="5.5rem" />
+    </div>
+
+    <!-- État Verrouillé (Paywall / Historique Premium) -->
+    <div v-else-if="isLocked" class="mt-4 animate-zoom-in">
+      <UiCard variant="glass" padding="lg" class="text-center max-w-xl mx-auto py-12 px-6 shadow-md border border-outline-variant/30 relative overflow-hidden bg-white/40">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-secondary/5 rounded-full blur-2xl" />
+        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+        
+        <div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary mb-5 mx-auto">
+          <UiPzIcon name="lock" class="text-[32px]" />
+        </div>
+        
+        <h2 class="text-xl sm:text-2xl font-extrabold text-on-surface mb-3">
+          Coffre-fort numérique
+        </h2>
+        
+        <p class="text-on-surface-variant text-sm sm:text-base leading-relaxed mb-6">
+          Conservez tous vos documents importés, scans OCR, CV et lettres de motivation à vie pour pouvoir les modifier à tout moment, depuis n'importe quel appareil.
+        </p>
+
+        <ul class="text-left space-y-3 max-w-md mx-auto mb-8 bg-surface-container-lowest/60 rounded-xl p-4 border border-outline-variant/20">
+          <li class="flex items-start gap-2.5 text-sm text-on-surface">
+            <UiPzIcon name="check_circle" class="text-secondary shrink-0 mt-0.5 text-[18px]" />
+            <span>Historique illimité de vos scans et fichiers analysés.</span>
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-on-surface">
+            <UiPzIcon name="check_circle" class="text-secondary shrink-0 mt-0.5 text-[18px]" />
+            <span>Modification en 1 clic de vos anciens documents.</span>
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-on-surface">
+            <UiPzIcon name="check_circle" class="text-secondary shrink-0 mt-0.5 text-[18px]" />
+            <span>Sauvegarde sécurisée à vie dans votre espace client.</span>
+          </li>
+        </ul>
+        
+        <NuxtLink :to="{ path: '/tarifs', query: { reason: 'historique', returnTo: '/tableau-de-bord/documents' } }">
+          <UiButton variant="secondary" icon="workspace_premium" size="lg">
+            Débloquer mon historique
+          </UiButton>
+        </NuxtLink>
+      </UiCard>
     </div>
 
     <UiMessageBanner v-else-if="error" variant="error" :message="error" class="mb-4" />
