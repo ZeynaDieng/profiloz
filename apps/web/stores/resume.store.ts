@@ -95,10 +95,6 @@ export const useResumeStore = defineStore('resume', {
     },
     ensureDemoPersonaIfEmpty() {
       this.rehydrateFromStorage()
-      if (!this.current?.personalInfo.fullName?.trim()) {
-        this.loadDemoPersona()
-        return
-      }
       this.initDraft()
     },
     rehydrateFromStorage() {

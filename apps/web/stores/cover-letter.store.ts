@@ -67,13 +67,8 @@ export const useCoverLetterStore = defineStore('coverLetter', {
       this.current = coverLetterDraftFromResume(resume)
       this.isDirty = false
     },
-    ensureDemoPersonaIfEmpty(resume?: ResumeSnapshot | null) {
+    ensureDemoPersonaIfEmpty(_resume?: ResumeSnapshot | null) {
       this.rehydrateFromStorage()
-      const hasContent = Boolean(this.current?.senderName?.trim() || this.current?.content?.trim())
-      if (!hasContent) {
-        this.loadDemoPersona(resume)
-        return
-      }
       this.initDraft()
     },
     rehydrateFromStorage() {
