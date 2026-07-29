@@ -35,7 +35,7 @@ const previewCanvasStyle = computed(() => ({
     "
     @click="$emit('select', slug)"
   >
-    <div class="aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewCanvasStyle">
+    <div class="relative aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewCanvasStyle">
       <FeatureTemplatesA4PreviewFit :resume="previewResume" />
     </div>
     <div class="p-4 flex justify-between items-center bg-surface-container-lowest">
