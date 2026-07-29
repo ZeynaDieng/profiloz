@@ -3,23 +3,58 @@ import type { ResumeSnapshot } from '@profiloz/shared'
 import { resolveShowPhoto } from '@profiloz/shared'
 import { resolveCvAccentColor } from '~/utils/template-accent-colors'
 
+const FRENCH_MONTHS: Record<string, number> = {
+  janvier: 0, jan: 0,
+  fevrier: 1, février: 1, fev: 1, fév: 1,
+  mars: 2, mar: 2,
+  avril: 3, avr: 3,
+  mai: 4,
+  juin: 5, jui: 5,
+  juillet: 6, juil: 6,
+  aout: 7, août: 7, aou: 7,
+  septembre: 8, sept: 8, sep: 8,
+  octobre: 9, oct: 9,
+  novembre: 10, nov: 10,
+  decembre: 11, décembre: 11, dec: 11, déc: 11
+}
+
 function parseDateString(dateStr?: string | null): Date {
   if (!dateStr) return new Date(0)
-  const clean = dateStr.trim()
+  const clean = dateStr.trim().toLowerCase()
   if (!clean) return new Date(0)
 
+  // 1. Format YYYY
   if (/^\d{4}$/.test(clean)) {
     return new Date(parseInt(clean, 10), 0, 1)
   }
 
+  // 2. Format YYYY-MM
   if (/^\d{4}-\d{2}/.test(clean)) {
     return new Date(clean)
   }
 
+  // 3. Format MM/YYYY
   const slashMatch = clean.match(/^(\d{1,2})\/(\d{4})$/)
   if (slashMatch) {
     const month = parseInt(slashMatch[1], 10) - 1
     const year = parseInt(slashMatch[2], 10)
+    return new Date(year, month, 1)
+  }
+
+  // 4. Format avec mois textuels en français, ex: "Juin 2024" ou "Oct. 2022" ou "Janvier 23"
+  const yearMatch = clean.match(/\b(\d{4}|\d{2})\b/)
+  if (yearMatch) {
+    let year = parseInt(yearMatch[1], 10)
+    if (year < 100) year += 2000 // Gestion des années sur 2 chiffres (ex: 24 -> 2024)
+    
+    // Chercher le mois
+    let month = 0
+    for (const [key, value] of Object.entries(FRENCH_MONTHS)) {
+      if (clean.includes(key)) {
+        month = value
+        break
+      }
+    }
     return new Date(year, month, 1)
   }
 
