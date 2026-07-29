@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     logout() {
+      const oldUserId = this.user?.id
       this.user = null
       this.accessToken = null
       this.isAuthenticated = false
@@ -70,9 +71,21 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('profiloz:access-token')
         localStorage.removeItem('profiloz:user')
         localStorage.removeItem('profiloz:admin-backup')
-        localStorage.removeItem('profiloz:guest-session')
-        clearLegacyResumeDraft()
-        localStorage.setItem('profiloz:guest-session', createRandomId())
+
+        let guestId = localStorage.getItem('profiloz:guest-session')
+        if (!guestId) {
+          guestId = createRandomId()
+          localStorage.setItem('profiloz:guest-session', guestId)
+        }
+
+        if (oldUserId) {
+          const userKey = `profiloz:resume:draft:user:${oldUserId}`
+          const userDraft = localStorage.getItem(userKey)
+          if (userDraft) {
+            localStorage.setItem(`profiloz:resume:draft:guest:${guestId}`, userDraft)
+            localStorage.setItem('profiloz:resume:draft', userDraft)
+          }
+        }
         useResumeStore().rehydrateFromStorage()
       }
     },

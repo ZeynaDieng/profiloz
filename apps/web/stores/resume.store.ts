@@ -60,6 +60,9 @@ export const useResumeStore = defineStore('resume', {
   actions: {
     initDraft() {
       if (!this.current) {
+        this.rehydrateFromStorage()
+      }
+      if (!this.current) {
         this.current = createEmptyResume()
         this.savedResumeId = null
         this.isDirty = true
