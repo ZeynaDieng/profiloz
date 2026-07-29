@@ -775,6 +775,11 @@ export class PaymentService {
       unlimitedUntil,
       subscriptionPlanSlug,
     })
+    
+    // Tout utilisateur inscrit a accès à son historique et à l'import/scan de documents
+    resolved.features.historique = true
+    resolved.features.importScan = true
+
     const canDownloadSnapshot = await isUserSnapshotDossierUnlocked(userId)
     return { ...resolved, canDownloadSnapshot }
   }
