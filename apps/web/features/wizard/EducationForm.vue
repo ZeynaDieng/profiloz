@@ -31,6 +31,7 @@ function moveUp(index: number) {
   const item = model.value[index]
   model.value.splice(index, 1)
   model.value.splice(index - 1, 0, item)
+  useResumeStore().setTemplateConfig({ customOrder: true })
 }
 
 function moveDown(index: number) {
@@ -38,6 +39,7 @@ function moveDown(index: number) {
   const item = model.value[index]
   model.value.splice(index, 1)
   model.value.splice(index + 1, 0, item)
+  useResumeStore().setTemplateConfig({ customOrder: true })
 }
 
 const draggedIndex = ref<number | null>(null)
@@ -58,6 +60,7 @@ function dropItem(event: DragEvent, toIndex: number) {
   model.value.splice(fromIndex, 1)
   model.value.splice(toIndex, 0, item)
   draggedIndex.value = null
+  useResumeStore().setTemplateConfig({ customOrder: true })
 }
 
 function dragEnd() {

@@ -85,8 +85,16 @@ function compareDates(
 export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
   const snapshot = computed(() => {
     const raw = toValue(resume)
-    const experiences = [...raw.experiences]
-    const educations = [...raw.educations]
+    const isCustomOrder = (raw.templateConfig as any)?.customOrder ?? false
+
+    const experiences = isCustomOrder
+      ? [...raw.experiences]
+      : [...raw.experiences].sort(compareDates)
+
+    const educations = isCustomOrder
+      ? [...raw.educations]
+      : [...raw.educations].sort(compareDates)
+
     return {
       ...raw,
       experiences,

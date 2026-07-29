@@ -481,13 +481,33 @@ provideResumeEditorValidation({
           </template>
 
           <template v-else-if="section.id === 'parcours'">
-            <div id="tour-field-experience">
+            <div id="tour-field-experience" class="space-y-3">
+              <div v-if="(resumeStore.current?.templateConfig as any)?.customOrder" class="flex justify-end">
+                <button
+                  type="button"
+                  class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95 shrink-0"
+                  @click="resumeStore.setTemplateConfig({ customOrder: false })"
+                >
+                  <UiPzIcon name="sort" class="text-xs" />
+                  <span>🔄 Réactiver le tri automatique par date</span>
+                </button>
+              </div>
               <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
             </div>
           </template>
 
           <template v-else-if="section.id === 'qualifications'">
             <div class="space-y-6">
+              <div v-if="(resumeStore.current?.templateConfig as any)?.customOrder" class="flex justify-end mb-1">
+                <button
+                  type="button"
+                  class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95 shrink-0"
+                  @click="resumeStore.setTemplateConfig({ customOrder: false })"
+                >
+                  <UiPzIcon name="sort" class="text-xs" />
+                  <span>🔄 Réactiver le tri automatique par date</span>
+                </button>
+              </div>
               <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />
               <div class="border-t border-outline-variant/30 pt-4 space-y-2">
                 <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
