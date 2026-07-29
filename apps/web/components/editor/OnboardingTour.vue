@@ -102,6 +102,7 @@ const steps: TourStep[] = [
 const activeStep = ref(0)
 const spotlightStyle = ref<Record<string, string>>({ display: 'none' })
 const tooltipStyle = ref<Record<string, string>>({ display: 'none' })
+const isTooltipTop = ref(false)
 
 const openSectionState = useState<string>('active-editor-section')
 
@@ -111,6 +112,7 @@ function updatePosition() {
   if (!props.modelValue || activeStep.value >= steps.length) {
     spotlightStyle.value = { display: 'none' }
     tooltipStyle.value = { display: 'none' }
+    isTooltipTop.value = false
     return
   }
 
@@ -153,6 +155,7 @@ function updatePosition() {
 
     if (isMobile) {
       // Sur mobile, on fixe la carte en bas de l'écran pour une ergonomie optimale
+      isTooltipTop.value = false
       tooltipStyle.value = {
         display: 'block',
         position: 'fixed',
@@ -166,11 +169,14 @@ function updatePosition() {
       // Sur desktop, on la positionne intelligemment à côté ou sous l'élément ciblé
       let top = rect.bottom + tooltipPadding
       let left = rect.left + rect.width / 2
+      let isTop = false
 
       // Si l'élément est trop bas sur l'écran, on affiche l'infobulle au-dessus
       if (rect.bottom > window.innerHeight - 250) {
         top = rect.top - tooltipPadding - 180 // hauteur estimée
+        isTop = true
       }
+      isTooltipTop.value = isTop
 
       // Si l'élément cible est sur la droite de l'écran (ex: aperçu ou téléchargement)
       if (rect.left > window.innerWidth - 350) {
@@ -251,7 +257,7 @@ watch(openSectionState, () => {
 <template>
   <div v-if="modelValue" class="onboarding-tour-root">
     <!-- Voile d'ombrage transparent bloquant les clics en dehors de l'élément actif -->
-    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-[1px] z-[9999]" @click="handleClose" />
+    <div class="fixed inset-0 bg-slate-950/20 z-[9999]" @click="handleClose" />
 
     <!-- Projecteur animé en surbrillance autour de la cible -->
     <div
@@ -262,6 +268,7 @@ watch(openSectionState, () => {
     <!-- Carte d'aide / Infobulle -->
     <div
       class="tooltip-card rounded-2xl bg-surface/90 border border-outline-variant/60 shadow-2xl p-5 flex flex-col gap-3 transition-all duration-300"
+      :class="{ 'tooltip-card--top': isTooltipTop }"
       :style="tooltipStyle"
     >
       <!-- En-tête -->
@@ -313,11 +320,11 @@ watch(openSectionState, () => {
 @keyframes spotlight-pulse {
   0%, 100% {
     border-color: rgba(0, 81, 213, 0.85);
-    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65), 0 0 12px rgba(0, 81, 213, 0.4);
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 12px rgba(0, 81, 213, 0.4);
   }
   50% {
     border-color: rgba(113, 248, 228, 0.95);
-    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65), 0 0 20px rgba(113, 248, 228, 0.7);
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 20px rgba(113, 248, 228, 0.7);
   }
 }
 
@@ -327,7 +334,7 @@ watch(openSectionState, () => {
   border-radius: 12px;
   pointer-events: none;
   border: 2.5px solid #0051d5;
-  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.25);
   animation: spotlight-pulse 2s infinite ease-in-out;
   transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -339,5 +346,24 @@ watch(openSectionState, () => {
   z-index: 10001;
   backdrop-filter: blur(16px);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* Flèche d'infobulle pointant vers l'élément */
+.tooltip-card::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 32px;
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent rgba(255, 255, 255, 0.95) transparent;
+  transition: all 0.3s ease;
+}
+
+.tooltip-card--top::after {
+  top: auto;
+  bottom: -8px;
+  border-width: 8px 8px 0 8px;
+  border-color: rgba(255, 255, 255, 0.95) transparent transparent transparent;
 }
 </style>
