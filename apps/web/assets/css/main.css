@@ -416,3 +416,10 @@ h1, h2, h3, h4 {
 .preview-canvas-bg--landing {
   background: var(--preview-canvas, var(--color-surface-dim));
 }
+
+@media (max-width: 767.98px) {
+  .has-mobile-nav footer.fixed.bottom-0 {
+    bottom: calc(var(--spacing-bottom-nav) + var(--spacing-safe-bottom)) !important;
+    padding-bottom: 0 !important;
+  }
+}
