@@ -21,11 +21,11 @@ function exitImpersonation() {
         </p>
         <UiButton variant="ghost" size="sm" @click="exitImpersonation">Quitter l’impersonation</UiButton>
       </div>
-      <div class="flex-1 has-mobile-nav md:pb-0">
+      <div class="flex-1">
         <slot />
       </div>
     </main>
-    <LayoutAppMobileNav class="md:hidden" />
+
     <LayoutAppDrawer />
   </div>
 </template>

@@ -101,7 +101,6 @@ onMounted(() => {
           to="/creer"
           class="text-sm font-semibold text-secondary hover:underline min-h-11 inline-flex items-center px-1 sm:px-0"
         >
-          <span class="sm:hidden">Nouveau</span>
           <span class="hidden sm:inline">Nouveau dossier</span>
         </NuxtLink>
       </div>
