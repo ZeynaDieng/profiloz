@@ -9,7 +9,7 @@ const props = defineProps<{
   locationClass?: string
   periodClass?: string
   descriptionClass?: string
-  layout?: 'stacked' | 'inline-header'
+  layout?: 'stacked' | 'inline-header' | 'date-left'
 }>()
 
 const period = computed(() => formatDateRange(props.exp.startDate, props.exp.endDate, props.exp.isCurrent))
@@ -20,7 +20,17 @@ const locationLine = computed(() =>
 
 <template>
   <div class="experience-entry">
-    <template v-if="layout === 'inline-header'">
+    <template v-if="layout === 'date-left'">
+      <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+        <span v-if="period" :class="periodClass ?? 'text-xs font-bold text-on-surface-variant shrink-0'">{{ period }}</span>
+        <span v-if="period" class="text-xs text-on-surface-variant/40 shrink-0">•</span>
+        <span class="font-bold text-on-surface">
+          {{ exp.position }}<span v-if="exp.company" class="font-semibold text-on-surface-variant"> — {{ exp.company }}</span>
+        </span>
+      </div>
+      <p v-if="locationLine" :class="locationClass ?? 'text-xs text-on-surface-variant mt-0.5'">{{ locationLine }}</p>
+    </template>
+    <template v-else-if="layout === 'inline-header'">
       <div class="flex justify-between text-sm font-bold gap-4">
         <span>{{ exp.position }}<span v-if="exp.company"> — {{ exp.company }}</span></span>
         <span v-if="period" :class="periodClass ?? 'text-on-surface-variant font-normal shrink-0'">{{ period }}</span>

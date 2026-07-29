@@ -186,7 +186,7 @@ const {
             />
             <ExperienceEntry
               :exp="exp"
-              layout="inline-header"
+              layout="date-left"
               :accent="accent"
             />
           </div>
