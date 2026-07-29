@@ -25,6 +25,44 @@ function addItem() {
 function removeItem(index: number) {
   model.value.splice(index, 1)
 }
+
+function moveUp(index: number) {
+  if (index <= 0) return
+  const item = model.value[index]
+  model.value.splice(index, 1)
+  model.value.splice(index - 1, 0, item)
+}
+
+function moveDown(index: number) {
+  if (index >= model.value.length - 1) return
+  const item = model.value[index]
+  model.value.splice(index, 1)
+  model.value.splice(index + 1, 0, item)
+}
+
+const draggedIndex = ref<number | null>(null)
+
+function dragStart(event: DragEvent, index: number) {
+  draggedIndex.value = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', index.toString())
+  }
+}
+
+function dropItem(event: DragEvent, toIndex: number) {
+  const fromIndex = draggedIndex.value
+  if (fromIndex === null || fromIndex === toIndex) return
+
+  const item = model.value[fromIndex]
+  model.value.splice(fromIndex, 1)
+  model.value.splice(toIndex, 0, item)
+  draggedIndex.value = null
+}
+
+function dragEnd() {
+  draggedIndex.value = null
+}
 </script>
 
 <template>
@@ -32,12 +70,49 @@ function removeItem(index: number) {
     <div
       v-for="(item, index) in model"
       :key="index"
-      class="p-stack-md rounded-xl border border-outline-variant bg-surface-container-lowest space-y-4"
-      :class="{ 'border-error/40': Object.keys(fieldErrors ?? {}).some((key) => key.startsWith(`edu-${index}-`)) }"
+      class="p-stack-md rounded-xl border border-outline-variant bg-surface-container-lowest space-y-4 transition-all duration-200"
+      :class="{ 
+        'border-error/40': Object.keys(fieldErrors ?? {}).some((key) => key.startsWith(`edu-${index}-`)),
+        'opacity-50 border-primary scale-[0.98]': draggedIndex === index
+      }"
+      draggable="true"
+      @dragstart="dragStart($event, index)"
+      @dragover.prevent
+      @drop="dropItem($event, index)"
+      @dragend="dragEnd"
     >
-      <div class="flex justify-between items-center">
-        <span class="font-label-sm font-bold text-on-surface">Formation {{ index + 1 }}</span>
-        <button type="button" class="text-error text-label-sm" @click="removeItem(index)">Supprimer</button>
+      <div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+        <div class="flex items-center gap-2">
+          <!-- Poignée de glissement -->
+          <UiPzIcon name="drag_indicator" class="text-on-surface-variant cursor-grab active:cursor-grabbing text-base" />
+          <span class="font-label-sm font-bold text-on-surface">Formation {{ index + 1 }}</span>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <!-- Boutons de réorganisation rapides -->
+          <div class="flex items-center gap-1">
+            <button 
+              type="button" 
+              class="p-1 rounded hover:bg-surface-container text-on-surface-variant disabled:opacity-30 disabled:hover:bg-transparent"
+              :disabled="index === 0"
+              title="Monter"
+              @click="moveUp(index)"
+            >
+              <UiPzIcon name="expand_less" class="text-base" />
+            </button>
+            <button 
+              type="button" 
+              class="p-1 rounded hover:bg-surface-container text-on-surface-variant disabled:opacity-30 disabled:hover:bg-transparent"
+              :disabled="index === model.length - 1"
+              title="Descendre"
+              @click="moveDown(index)"
+            >
+              <UiPzIcon name="expand_more" class="text-base" />
+            </button>
+          </div>
+          
+          <button type="button" class="text-error text-label-sm font-bold hover:underline" @click="removeItem(index)">Supprimer</button>
+        </div>
       </div>
       <UiFormField label="Établissement" required :error="fieldError(index, 'institution')" tooltip="Le nom de l'école ou de l'université (ex: HEC, Université Cheikh Anta Diop).">
         <input v-model="item.institution" type="text" class="form-input w-full" placeholder="Université Cheikh Anta Diop" />
