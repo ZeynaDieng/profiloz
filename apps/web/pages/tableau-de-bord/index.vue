@@ -45,6 +45,9 @@ const attachingId = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
 
 const greetingName = computed(() => {
+  if (authStore.user?.firstName?.trim()) {
+    return authStore.user.firstName.trim()
+  }
   const email = authStore.user?.email
   if (!email) return ''
   const local = email.split('@')[0] ?? ''
@@ -161,7 +164,7 @@ function formatDate(iso: string) {
         class="mb-4"
       />
       <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">
-        Bonjour<span v-if="greetingName"> {{ greetingName }}</span> 👋
+        Bonjour {{ greetingName || 'vous' }} 👋
       </h1>
       <p class="text-on-surface-variant mt-1">{{ MSG.guide.dashboardPrompt }}</p>
       <div class="mt-4 max-w-md">

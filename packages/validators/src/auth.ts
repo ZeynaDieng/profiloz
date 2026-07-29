@@ -15,6 +15,8 @@ export const registerSchema = z.object({
     .min(8, MSG.validation.passwordMin)
     .regex(/[A-Z]/, MSG.validation.passwordUppercase)
     .regex(/[0-9]/, MSG.validation.passwordDigit),
+  firstName: z.preprocess(emptyToUndefined, z.string().min(1, "Le prénom est requis").optional()),
+  lastName: z.preprocess(emptyToUndefined, z.string().min(1, "Le nom est requis").optional()),
   guestSessionId: z.preprocess(emptyToUndefined, z.string().uuid(MSG.validation.invalidData).optional()),
   resumeSnapshot: z.record(z.unknown()).optional(),
 })

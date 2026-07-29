@@ -16,6 +16,8 @@ const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 
 const email = ref('')
+const firstName = ref('')
+const lastName = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
@@ -35,6 +37,19 @@ const loginLink = computed(() => ({
 async function onSubmit() {
   clearAll()
 
+  if (!firstName.value.trim()) {
+    setFieldError('firstName', 'Le prénom est requis')
+    formError.value = 'Veuillez remplir tous les champs obligatoires'
+    scrollToFirstError()
+    return
+  }
+  if (!lastName.value.trim()) {
+    setFieldError('lastName', 'Le nom est requis')
+    formError.value = 'Veuillez remplir tous les champs obligatoires'
+    scrollToFirstError()
+    return
+  }
+
   if (password.value !== confirmPassword.value) {
     setFieldError('confirmPassword', MSG.validation.passwordMismatch)
     formError.value = MSG.validation.passwordMismatch
@@ -45,6 +60,8 @@ async function onSubmit() {
   const validation = registerSchema.safeParse({
     email: email.value,
     password: password.value,
+    firstName: firstName.value,
+    lastName: lastName.value,
   })
   if (!validation.success) {
     setFromZod(validation.error, MSG.validation.invalidData)
@@ -57,7 +74,13 @@ async function onSubmit() {
     const draft = resumeStore.current
     const resumeSnapshot =
       draft?.personalInfo.fullName ? draft : undefined
-    const result = await authStore.register(email.value, password.value, resumeSnapshot)
+    const result = await authStore.register(
+      email.value,
+      password.value,
+      firstName.value,
+      lastName.value,
+      resumeSnapshot
+    )
     success.value = true
     const destination = result.migratedResumeId
       ? `/tableau-de-bord/dossiers/${result.migratedResumeId}`
@@ -89,11 +112,33 @@ onMounted(() => {
       <form class="flex flex-col gap-stack-md" @submit.prevent="onSubmit">
         <Transition name="form-field__error">
           <UiMessageBanner
-            v-if="formError && !fieldError('email') && !fieldError('password') && !fieldError('confirmPassword')"
+            v-if="formError && !fieldError('email') && !fieldError('password') && !fieldError('confirmPassword') && !fieldError('firstName') && !fieldError('lastName')"
             variant="error"
             :message="formError"
           />
         </Transition>
+
+        <div class="grid grid-cols-2 gap-3">
+          <UiFormField label="Prénom" :error="fieldError('firstName')">
+            <input
+              v-model="firstName"
+              type="text"
+              autocomplete="given-name"
+              class="form-input form-input--white w-full"
+              placeholder="Jean"
+            >
+          </UiFormField>
+          <UiFormField label="Nom" :error="fieldError('lastName')">
+            <input
+              v-model="lastName"
+              type="text"
+              autocomplete="family-name"
+              class="form-input form-input--white w-full"
+              placeholder="Dupont"
+            >
+          </UiFormField>
+        </div>
+
         <UiFormField label="E-mail" :error="fieldError('email')">
           <input
             v-model="email"

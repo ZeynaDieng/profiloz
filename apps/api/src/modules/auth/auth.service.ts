@@ -24,7 +24,7 @@ export class AuthRepository {
     })
   }
 
-  createUser(data: { email: string; passwordHash: string }) {
+  createUser(data: { email: string; passwordHash: string; firstName?: string; lastName?: string }) {
     return prisma.user.create({ data })
   }
 
@@ -64,7 +64,12 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12)
-    const user = await authRepository.createUser({ email: input.email, passwordHash })
+    const user = await authRepository.createUser({
+      email: input.email,
+      passwordHash,
+      firstName: input.firstName,
+      lastName: input.lastName,
+    })
     await ensurePlatformOwnerRole(user.id, user.email)
     const refreshed = await authRepository.findById(user.id)
 
@@ -96,7 +101,7 @@ export class AuthService {
 
     void sendEmailTemplate('welcome', user.email, {
       email: user.email,
-      firstName: user.email.split('@')[0] ?? 'Utilisateur',
+      firstName: user.firstName ?? user.email.split('@')[0] ?? 'Utilisateur',
     }).catch((error) => console.warn('[mail] welcome failed:', error))
 
     return {
@@ -104,6 +109,8 @@ export class AuthService {
         id: refreshed?.id ?? user.id,
         email: refreshed?.email ?? user.email,
         role: refreshed?.role ?? user.role,
+        firstName: refreshed?.firstName ?? user.firstName,
+        lastName: refreshed?.lastName ?? user.lastName,
       },
       accessToken,
       refreshToken,

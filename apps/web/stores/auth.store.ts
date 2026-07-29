@@ -87,7 +87,7 @@ export const useAuthStore = defineStore('auth', {
       this.setSession({ ...result.user, role: result.user.role ?? 'USER' }, result.accessToken)
       return result
     },
-    async register(email: string, password: string, resumeSnapshot?: unknown) {
+    async register(email: string, password: string, firstName?: string, lastName?: string, resumeSnapshot?: unknown) {
       const { post } = useApiClient()
       const guestSessionId = import.meta.client ? localStorage.getItem('profiloz:guest-session') : null
       const result = await post<{ user: AuthUser; accessToken: string; migratedResumeId?: string }>(
@@ -95,6 +95,8 @@ export const useAuthStore = defineStore('auth', {
         {
           email,
           password,
+          firstName: firstName?.trim() || undefined,
+          lastName: lastName?.trim() || undefined,
           guestSessionId: guestSessionId ?? undefined,
           resumeSnapshot,
         },
