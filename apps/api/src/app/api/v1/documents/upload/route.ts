@@ -6,8 +6,8 @@ import { requireGuestOrAuth } from '@/lib/request-context'
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
-    const ctx = await requireGuestOrAuth(request)
     const formData = await request.formData()
+    const ctx = await requireGuestOrAuth(request)
     const file = formData.get('file')
     const type = formData.get('type')
 
