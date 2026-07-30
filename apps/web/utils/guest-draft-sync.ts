@@ -58,11 +58,21 @@ function maybeSetGuestSessionId(guestId: string): void {
   localStorage.setItem(GUEST_SESSION_KEY, guestId)
 }
 
-/** Repointe profiloz:guest-session vers le brouillon le plus récent en localStorage. */
+/** Repointe profiloz:guest-session vers le brouillon le plus récent en localStorage uniquement si la session actuelle est vide. */
 export function alignGuestSessionFromStoredDrafts(): string | null {
   if (typeof localStorage === 'undefined') return null
   if (isPaidGuestDossierActive()) {
     return pinPaidGuestSession()
+  }
+
+  // Si le brouillon master actuel contient déjà un CV valide, ne pas écraser la session !
+  const currentMaster = localStorage.getItem('profiloz:resume:draft')
+  if (currentMaster) {
+    const activeDraft = parseResumeDraft(currentMaster)
+    if (activeDraft) {
+      const activeSession = localStorage.getItem(GUEST_SESSION_KEY)
+      if (activeSession) return activeSession
+    }
   }
 
   let bestGuestId: string | null = null
