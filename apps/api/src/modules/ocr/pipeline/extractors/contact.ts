@@ -31,25 +31,25 @@ function findWebsite(rawText: string): string | undefined {
 /** Extrait une localisation depuis une ligne d'adresse non libellée. */
 function parseAddressLine(line: string): string | undefined {
   const c = line.trim()
-  if (!c || c.length < 4 || c.length > 120) return undefined
-  if (EMAIL_RE.test(c) || PHONE_RE.test(c) || URL_RE.test(c)) return undefined
-  if (/^[\d\s().+-]+$/.test(c)) return undefined
+  if (!c || c.length < 4 || c.length > 200) return undefined
 
-  const segments = c.split(/[,|]/).map((part) => part.trim()).filter(Boolean)
+  const cleaned = c
+    .replace(EMAIL_RE, '')
+    .replace(PHONE_RE, '')
+    .replace(LINKEDIN_RE, '')
+    .replace(GITHUB_RE, '')
+    .trim()
+  if (!cleaned) return undefined
+
+  const segments = cleaned.split(/[,|]/).map((part) => part.trim()).filter(Boolean)
   for (const segment of segments) {
-    if (CITY_RE.test(segment)) {
-      const city = segment.match(CITY_RE)?.[0]
-      if (city) return city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()
+    if (CITY_RE.test(segment) || /sénégal|senegal/i.test(segment)) {
+      return segment.replace(/^[📍🗺️📌✉️☎️\s|,-]+|[📍🗺️📌✉️☎️\s|,-]+$/gu, '').trim()
     }
   }
 
-  const commaMatch = c.match(/^[^,]{2,40},\s*([A-Za-zÀ-ÿ'’ -]{2,35})(?:\s*[-–—]\s*[A-Za-zÀ-ÿ'’ -]{2,25})?$/)
+  const commaMatch = cleaned.match(/^[^,]{2,40},\s*([A-Za-zÀ-ÿ'’ -]{2,35})(?:\s*[-–—]\s*[A-Za-zÀ-ÿ'’ -]{2,25})?$/)
   if (commaMatch?.[1]) return commaMatch[1].trim()
-
-  if (CITY_RE.test(c)) {
-    const city = c.match(CITY_RE)?.[0]
-    if (city) return city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()
-  }
 
   return undefined
 }
