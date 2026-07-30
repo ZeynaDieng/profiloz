@@ -10,6 +10,8 @@ const {
   hasExperiences,
   hasSkills,
   hasEducations,
+  hasLanguages,
+  hasInterests,
   showPhotoBlock,
   initials,
 } = useResumeSections(() => props.resume)
@@ -75,6 +77,27 @@ const {
             <div v-for="(edu, i) in snapshot.educations" :key="i" class="mb-3 text-xs font-serif">
               <EducationEntry :edu="edu" />
             </div>
+          </section>
+
+          <section v-if="hasLanguages">
+            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-amber-800 border-b border-amber-900/10 pb-1 mb-4">
+              Langues
+            </h2>
+            <ul class="space-y-1 text-xs font-sans text-amber-950">
+              <li v-for="(lang, i) in snapshot.languages" :key="i" class="flex justify-between">
+                <span>{{ lang.name }}</span>
+                <span v-if="lang.level" class="text-amber-900/60">{{ lang.level }}</span>
+              </li>
+            </ul>
+          </section>
+
+          <section v-if="hasInterests">
+            <h2 class="text-xs font-sans font-bold uppercase tracking-wider text-amber-800 border-b border-amber-900/10 pb-1 mb-4">
+              Centres d'intérêt
+            </h2>
+            <p class="text-xs font-sans text-amber-950">
+              {{ snapshot.interests.map((i) => i.name).join(', ') }}
+            </p>
           </section>
         </aside>
       </div>
