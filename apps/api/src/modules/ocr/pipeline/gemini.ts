@@ -109,21 +109,30 @@ Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par
 
       parts.push({ text: prompt })
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.1,
-              maxOutputTokens: 2048,
-            },
-          }),
-        },
-      )
+      const controller = new AbortController()
+      const geminiTimeout = setTimeout(() => controller.abort(), 15000)
+
+      let response: Response
+      try {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts }],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,
+                maxOutputTokens: 2048,
+              },
+            }),
+            signal: controller.signal,
+          },
+        )
+      } finally {
+        clearTimeout(geminiTimeout)
+      }
 
       if (!response.ok) {
         console.warn('Gemini API call failed:', await response.text())

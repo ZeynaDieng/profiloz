@@ -33,12 +33,11 @@ export function useImportFlow(documentType: DocumentType) {
     progress.value = 5
     stage.value = 0
     progressTimer = setInterval(() => {
-      if (progress.value < 92) {
-        progress.value = Math.min(92, progress.value + 2)
+      if (progress.value < 78) {
+        progress.value = Math.min(78, progress.value + 2)
         if (progress.value >= 20) stage.value = 1
         if (progress.value >= 40) stage.value = 2
         if (progress.value >= 60) stage.value = 3
-        if (progress.value >= 80) stage.value = 4
       }
     }, 450)
   }
