@@ -30,9 +30,10 @@ function isAppError(error: unknown): error is AppError {
   )
 }
 
-export function problemResponse(error: AppError | ZodError | Error, status = 500) {
+export function problemResponse(error: AppError | ZodError | Error, status = 500, origin?: string | null) {
+  let response: NextResponse
   if (error instanceof ZodError) {
-    return NextResponse.json(
+    response = NextResponse.json(
       {
         type: problemType('validation'),
         title: 'Validation Error',
@@ -45,10 +46,8 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
       },
       { status: 422 },
     )
-  }
-
-  if (isAppError(error)) {
-    return NextResponse.json(
+  } else if (isAppError(error)) {
+    response = NextResponse.json(
       {
         type: problemType(error.status),
         title: error.title,
@@ -58,21 +57,23 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
       },
       { status: error.status },
     )
+  } else {
+    console.error(error)
+    response = NextResponse.json(
+      {
+        type: problemType('internal'),
+        title: 'Internal Server Error',
+        status,
+        detail:
+          process.env.NODE_ENV === 'development'
+            ? error.message
+            : 'Une erreur inattendue est survenue. Réessayez dans quelques instants.',
+      },
+      { status },
+    )
   }
 
-  console.error(error)
-  return NextResponse.json(
-    {
-      type: problemType('internal'),
-      title: 'Internal Server Error',
-      status,
-      detail:
-        process.env.NODE_ENV === 'development'
-          ? error.message
-          : 'Une erreur inattendue est survenue. Réessayez dans quelques instants.',
-    },
-    { status },
-  )
+  return applyCorsHeaders(response, origin)
 }
 
 export function jsonResponse<T>(data: T, status = 200) {
