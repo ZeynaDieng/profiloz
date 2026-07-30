@@ -9,8 +9,7 @@ export function middleware(request: NextRequest) {
     return applyCorsHeaders(new NextResponse(null, { status: 204 }), origin)
   }
 
-  const response = NextResponse.next()
-  return applyCorsHeaders(response, origin)
+  return NextResponse.next()
 }
 
 export const config = {

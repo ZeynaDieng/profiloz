@@ -3,6 +3,8 @@ import { documentTypeSchema } from '@profiloz/validators'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { requireGuestOrAuth } from '@/lib/request-context'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
