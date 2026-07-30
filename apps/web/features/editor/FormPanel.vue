@@ -107,29 +107,28 @@ function loadFromStore() {
 
   isHydratingFromStore.value = true
   Object.assign(personalForm, {
-    fullName: '',
-    email: '',
-    phone: '',
-    jobTitle: '',
-    location: '',
-    linkedinUrl: '',
-    photoUrl: undefined as string | undefined,
-    ...r.personalInfo,
+    fullName: r.personalInfo?.fullName ?? '',
+    email: r.personalInfo?.email ?? '',
+    phone: r.personalInfo?.phone ?? '',
+    jobTitle: r.personalInfo?.jobTitle ?? '',
+    location: r.personalInfo?.location ?? '',
+    linkedinUrl: r.personalInfo?.linkedinUrl ?? '',
+    photoUrl: r.personalInfo?.photoUrl ?? undefined,
   })
   if (r.personalInfo?.location || r.personalInfo?.linkedinUrl) {
     showExtraContactFields.value = true
   }
   summary.value = r.summary ?? ''
-  educations.value = r.educations.length
-    ? [...r.educations]
+  educations.value = r.educations?.length
+    ? r.educations.map((e) => ({ ...e }))
     : [{ institution: '', degree: '', field: '', startDate: '', endDate: '' }]
-  experiences.value = r.experiences.length
-    ? [...r.experiences]
+  experiences.value = r.experiences?.length
+    ? r.experiences.map((e) => ({ ...e }))
     : [{ company: '', position: '', location: '', startDate: '', endDate: '', isCurrent: false, description: '' }]
-  skills.value = [...r.skills]
-  languages.value = [...(r.languages || [])]
-  certifications.value = [...r.certifications]
-  interests.value = [...r.interests]
+  skills.value = r.skills ? r.skills.map((s) => ({ ...s })) : []
+  languages.value = r.languages ? r.languages.map((l) => ({ ...l })) : []
+  certifications.value = r.certifications ? r.certifications.map((c) => ({ ...c })) : []
+  interests.value = r.interests ? r.interests.map((i) => ({ ...i })) : []
   nextTick(() => {
     isHydratingFromStore.value = false
   })
@@ -140,9 +139,11 @@ onMounted(() => {
 })
 
 watch(
-  () => resumeStore.current?.id,
-  (id, previousId) => {
-    if (id && id !== previousId) loadFromStore()
+  () => [resumeStore.current?.id, resumeStore.current?.updatedAt],
+  () => {
+    if (!isHydratingFromStore.value) {
+      loadFromStore()
+    }
   },
 )
 
