@@ -246,26 +246,133 @@ export const useResumeStore = defineStore('resume', {
 
       if (!this.current) return
 
+      const rawPi = data.personalInfo ?? {}
+      const normalizedPi = {
+        fullName: String(rawPi.fullName || rawPi.name || '').trim() || undefined,
+        jobTitle: String(rawPi.jobTitle || rawPi.title || '').trim() || undefined,
+        email: String(rawPi.email || '').trim() || undefined,
+        phone: String(rawPi.phone || '').trim() || undefined,
+        location: String(rawPi.location || rawPi.address || '').trim() || undefined,
+        linkedinUrl: String(rawPi.linkedinUrl || rawPi.linkedin || '').trim() || undefined,
+        websiteUrl: String(rawPi.websiteUrl || rawPi.website || '').trim() || undefined,
+        photoUrl: rawPi.photoUrl?.trim() || undefined,
+      }
+
+      const normalizedExp = (data.experiences ?? [])
+        .map((exp: any) => {
+          if (!exp || typeof exp !== 'object') return null
+          const position = String(exp.position || exp.title || exp.jobTitle || '').trim()
+          const company = String(exp.company || exp.employer || exp.organization || '').trim()
+          if (!position && !company) return null
+          return {
+            ...exp,
+            position: position || 'Poste',
+            company: company || 'Entreprise',
+            location: String(exp.location || normalizedPi.location || '').trim(),
+            startDate: exp.startDate ? String(exp.startDate).trim() : undefined,
+            endDate: exp.endDate ? String(exp.endDate).trim() : undefined,
+            isCurrent: Boolean(exp.isCurrent),
+            description: exp.description ? String(exp.description).trim() : undefined,
+          }
+        })
+        .filter(Boolean)
+
+      const normalizedEdu = (data.educations ?? [])
+        .map((edu: any) => {
+          if (!edu || typeof edu !== 'object') return null
+          const degree = String(edu.degree || edu.diploma || edu.title || '').trim()
+          const institution = String(edu.institution || edu.school || edu.university || '').trim()
+          if (!degree && !institution) return null
+          return {
+            ...edu,
+            degree: degree || 'Diplôme',
+            institution: institution || 'Établissement',
+            location: edu.location ? String(edu.location).trim() : undefined,
+            startDate: edu.startDate ? String(edu.startDate).trim() : undefined,
+            endDate: edu.endDate ? String(edu.endDate).trim() : undefined,
+            field: edu.field ? String(edu.field).trim() : undefined,
+          }
+        })
+        .filter(Boolean)
+
+      const normalizedSkills = (data.skills ?? [])
+        .map((item: any) => {
+          if (!item) return null
+          if (typeof item === 'string') {
+            const name = item.trim()
+            return name ? { name } : null
+          }
+          const name = String(item.name || item.skill || item.label || item.value || '').trim()
+          if (!name) return null
+          return {
+            ...item,
+            name,
+            level: item.level ? String(item.level).trim() : undefined,
+          }
+        })
+        .filter(Boolean)
+
+      const normalizedCerts = (data.certifications ?? [])
+        .map((item: any) => {
+          if (!item) return null
+          if (typeof item === 'string') {
+            const name = item.trim()
+            return name ? { name } : null
+          }
+          const name = String(item.name || item.title || item.label || '').trim()
+          if (!name) return null
+          return {
+            ...item,
+            name,
+            issuer: item.issuer ? String(item.issuer).trim() : undefined,
+            date: item.date ? String(item.date).trim() : undefined,
+          }
+        })
+        .filter(Boolean)
+
+      const normalizedLangs = (data.languages ?? [])
+        .map((item: any) => {
+          if (!item) return null
+          if (typeof item === 'string') {
+            const name = item.trim()
+            return name ? { name } : null
+          }
+          const name = String(item.name || item.language || item.label || item.value || '').trim()
+          if (!name) return null
+          return { ...item, name, level: item.level ? String(item.level).trim() : undefined }
+        })
+        .filter(Boolean)
+
+      const normalizedInterests = (data.interests ?? [])
+        .map((item: any) => {
+          if (!item) return null
+          if (typeof item === 'string') {
+            const name = item.trim()
+            return name ? { name } : null
+          }
+          const name = String(item.name || item.label || item.title || item.interest || item.value || '').trim()
+          if (!name) return null
+          return { ...item, name }
+        })
+        .filter(Boolean)
+
       if (replace) {
-        this.current.personalInfo = { ...(data.personalInfo ?? {}) }
-        if (data.personalInfo?.photoUrl?.trim()) {
+        this.current.personalInfo = normalizedPi
+        if (normalizedPi.photoUrl) {
           this.current.templateConfig.showPhoto = true
         }
         this.current.summary = data.summary?.trim() || undefined
         this.current.title = data.title?.trim() || this.current.title
-        this.current.experiences = (data.experiences ?? []).map((exp) => ({
-          ...exp,
-          location: exp.location?.trim() || data.personalInfo?.location?.trim() || '',
-        }))
-        this.current.educations = data.educations ?? []
-        this.current.skills = data.skills ?? []
-        this.current.certifications = data.certifications ?? []
-        this.current.languages = data.languages ?? []
-        this.current.interests = data.interests ?? []
+        this.current.experiences = normalizedExp
+        this.current.educations = normalizedEdu
+        this.current.skills = normalizedSkills
+        this.current.certifications = normalizedCerts
+        this.current.languages = normalizedLangs
+        this.current.interests = normalizedInterests
       } else {
         if (data.personalInfo) {
           const merged = { ...this.current.personalInfo }
-          for (const [key, value] of Object.entries(data.personalInfo)) {
+          for (const [key, value] of Object.entries(normalizedPi)) {
             if (value !== undefined && value !== null && String(value).trim() !== '') {
               merged[key as keyof typeof merged] = value as never
             }
@@ -273,62 +380,40 @@ export const useResumeStore = defineStore('resume', {
           this.current.personalInfo = merged
         }
 
-        const appendUnique = <T>(current: T[], incoming: T[] | undefined, key: (item: T) => string) => {
-          if (!incoming?.length) return current
+        const appendUnique = <T>(current: T[], incoming: T[], key: (item: T) => string) => {
+          if (!incoming.length) return current
           const seen = new Set(current.map(key))
           return [...current, ...incoming.filter((item) => !seen.has(key(item)))]
         }
 
         this.current.experiences = appendUnique(
           this.current.experiences,
-          data.experiences,
+          normalizedExp,
           (item) => `${item.company}|${item.position}`.toLowerCase(),
         )
         this.current.educations = appendUnique(
           this.current.educations,
-          data.educations,
+          normalizedEdu,
           (item) => `${item.institution}|${item.degree}`.toLowerCase(),
         )
-        this.current.skills = appendUnique(this.current.skills, data.skills, (item) => item.name.toLowerCase())
-        this.current.certifications = appendUnique(
-          this.current.certifications,
-          data.certifications,
+        this.current.skills = appendUnique(
+          this.current.skills,
+          normalizedSkills,
           (item) => item.name.toLowerCase(),
         )
-        const incomingLanguages = (data.languages ?? [])
-          .map((item: any) => {
-            if (!item) return null
-            if (typeof item === 'string') {
-              const name = item.trim()
-              return name ? { name } : null
-            }
-            const name = String(item.name || item.language || item.label || item.value || '').trim()
-            if (!name) return null
-            return { ...item, name, level: item.level ? String(item.level).trim() : undefined }
-          })
-          .filter(Boolean)
-
-        const incomingInterests = (data.interests ?? [])
-          .map((item: any) => {
-            if (!item) return null
-            if (typeof item === 'string') {
-              const name = item.trim()
-              return name ? { name } : null
-            }
-            const name = String(item.name || item.label || item.title || item.interest || item.value || '').trim()
-            if (!name) return null
-            return { ...item, name }
-          })
-          .filter(Boolean)
-
+        this.current.certifications = appendUnique(
+          this.current.certifications,
+          normalizedCerts,
+          (item) => item.name.toLowerCase(),
+        )
         this.current.languages = appendUnique(
           this.current.languages,
-          incomingLanguages,
+          normalizedLangs,
           (item) => String(item.name || '').toLowerCase(),
         )
         this.current.interests = appendUnique(
           this.current.interests,
-          incomingInterests,
+          normalizedInterests,
           (item) => String(item.name || '').toLowerCase(),
         )
       }
