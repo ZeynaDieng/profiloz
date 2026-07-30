@@ -47,27 +47,34 @@ function onConfirm(data: Partial<ResumeSnapshot>) {
   const template =
     typeof route.query.template === 'string' ? route.query.template.toUpperCase() : resumeStore.current?.templateSlug
 
-  void documentService
-    .submitImportFeedback({
-      documentId: documentId.value || undefined,
-      fileName: fileName.value || undefined,
-      mimeType: mimeType.value || undefined,
-      templateSlug: template || undefined,
-      overallConfidence: machineParsed.value._extraction?.confidence?.overall,
-      originalParsed: machineParsed.value,
-      correctedData: data,
-    })
-    .catch(() => {
-      /* Ne jamais bloquer le parcours utilisateur */
-    })
+  setTimeout(() => {
+    void documentService
+      .submitImportFeedback({
+        documentId: documentId.value || undefined,
+        fileName: fileName.value || undefined,
+        mimeType: mimeType.value || undefined,
+        templateSlug: template || undefined,
+        overallConfidence: machineParsed.value._extraction?.confidence?.overall,
+        originalParsed: machineParsed.value,
+        correctedData: data,
+      })
+      .catch(() => {
+        /* Ne jamais bloquer le parcours utilisateur */
+      })
+  }, 0)
 
   resumeStore.mergeImportedData(data, { documentType: meta.value.type })
+
+  const targetPath = TEMPLATE_SLUGS.includes(template as TemplateSlug)
+    ? '/creer/editeur'
+    : '/creer/modele?flow=import'
+
   if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
     resumeStore.setTemplate(template as TemplateSlug)
-    navigateTo('/creer/editeur')
-    return
   }
-  navigateTo('/creer/modele?flow=import')
+
+  console.log('🚀 [Profilo’Z Import] Navigation instantanée vers :', targetPath)
+  navigateTo(targetPath)
 }
 
 function onReset() {

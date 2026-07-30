@@ -88,8 +88,10 @@ onMounted(async () => {
   try {
     clearPaymentDraftBackup()
     authStore.loadFromStorage()
-    await syncGuestSessionForEditor().catch(() => {})
-    await ensureSession().catch(() => {})
+
+    // Lancement asynchrone non bloquant des vérifications réseau
+    void syncGuestSessionForEditor().catch(() => {})
+    void ensureSession().catch(() => {})
 
     const resumeId = resolvePersistableResumeId(route.query.id as string | undefined)
 
