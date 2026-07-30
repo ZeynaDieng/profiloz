@@ -43,6 +43,7 @@ onMounted(() => {
 })
 
 function onConfirm(data: Partial<ResumeSnapshot>) {
+  console.log('🔄 [Profilo’Z Import] Fusion dans le store Pinia :', data)
   const template =
     typeof route.query.template === 'string' ? route.query.template.toUpperCase() : resumeStore.current?.templateSlug
 

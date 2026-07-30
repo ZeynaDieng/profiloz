@@ -129,6 +129,13 @@ function loadFromStore() {
   languages.value = r.languages ? r.languages.map((l) => ({ ...l })) : []
   certifications.value = r.certifications ? r.certifications.map((c) => ({ ...c })) : []
   interests.value = r.interests ? r.interests.map((i) => ({ ...i })) : []
+  console.log('✏️ [Profilo’Z FormPanel] Formulaire prérempli depuis le store :', {
+    fullName: personalForm.fullName,
+    jobTitle: personalForm.jobTitle,
+    experiencesCount: experiences.value.length,
+    educationsCount: educations.value.length,
+    skillsCount: skills.value.length,
+  })
   nextTick(() => {
     isHydratingFromStore.value = false
   })

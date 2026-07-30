@@ -451,6 +451,7 @@ export const useResumeStore = defineStore('resume', {
           // ignore
         }
       }
+      console.log('💾 [Profilo’Z Store] État du store après fusion :', this.current)
     },
   },
   persist: {

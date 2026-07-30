@@ -106,6 +106,7 @@ export function useImportFlow(documentType: DocumentType) {
       progress.value = 100
       extractedData.value = result.parsedData ?? {}
       machineParsed.value = structuredClone(result.parsedData ?? {})
+      console.log('📥 [Profilo’Z Import] Données extraites par l’IA :', result.parsedData)
       state.value = 'preview'
     } catch (error) {
       stopProgressAnimation()
