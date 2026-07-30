@@ -106,6 +106,9 @@ onMounted(async () => {
         return
       }
     } else {
+      if (!resumeStore.current) {
+        resumeStore.rehydrateFromStorage()
+      }
       resumeStore.initDraft()
       const templateQuery = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
       if (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug)) {

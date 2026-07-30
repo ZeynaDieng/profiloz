@@ -16,7 +16,7 @@ const toast = useAppToast()
 const returnPath = computed(() => resolveTemplatePickerReturn(route))
 
 onMounted(() => {
-  if (!resumeStore.current?.personalInfo.fullName) {
+  if (!resumeStore.current) {
     resumeStore.rehydrateFromStorage()
   }
   resumeStore.initDraft()

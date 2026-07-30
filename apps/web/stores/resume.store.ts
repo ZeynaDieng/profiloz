@@ -246,19 +246,40 @@ export const useResumeStore = defineStore('resume', {
 
       if (!this.current) return
 
-      const rawPi = data.personalInfo ?? {}
+      const rawAny = data as any
+      const rawPi = data.personalInfo ?? rawAny.contact ?? rawAny.info ?? {}
+      const fullName = String(rawPi.fullName || rawPi.name || rawAny.fullName || rawAny.name || '').trim()
+      const jobTitle = String(rawPi.jobTitle || rawPi.title || rawAny.jobTitle || rawAny.title || '').trim()
+      const email = String(rawPi.email || rawAny.email || '').trim()
+      const phone = String(rawPi.phone || rawPi.phoneNumber || rawAny.phone || rawAny.phoneNumber || '').trim()
+      const location = String(rawPi.location || rawPi.address || rawAny.location || rawAny.address || '').trim()
+      const linkedinUrl = String(rawPi.linkedinUrl || rawPi.linkedin || rawAny.linkedinUrl || rawAny.linkedin || '').trim()
+      const websiteUrl = String(rawPi.websiteUrl || rawPi.website || rawAny.websiteUrl || rawAny.website || '').trim()
+      const photoUrl = (rawPi.photoUrl || rawAny.photoUrl)?.trim() || undefined
+
       const normalizedPi = {
-        fullName: String(rawPi.fullName || rawPi.name || '').trim() || undefined,
-        jobTitle: String(rawPi.jobTitle || rawPi.title || '').trim() || undefined,
-        email: String(rawPi.email || '').trim() || undefined,
-        phone: String(rawPi.phone || '').trim() || undefined,
-        location: String(rawPi.location || rawPi.address || '').trim() || undefined,
-        linkedinUrl: String(rawPi.linkedinUrl || rawPi.linkedin || '').trim() || undefined,
-        websiteUrl: String(rawPi.websiteUrl || rawPi.website || '').trim() || undefined,
-        photoUrl: rawPi.photoUrl?.trim() || undefined,
+        fullName: fullName || undefined,
+        jobTitle: jobTitle || undefined,
+        email: email || undefined,
+        phone: phone || undefined,
+        location: location || undefined,
+        linkedinUrl: linkedinUrl || undefined,
+        websiteUrl: websiteUrl || undefined,
+        photoUrl: photoUrl || undefined,
       }
 
-      const normalizedExp = (data.experiences ?? [])
+      const summaryText = String(
+        data.summary || rawPi.summary || rawAny.profile || rawAny.about || rawAny.objective || rawAny.overview || '',
+      ).trim()
+
+      const rawExp = data.experiences ?? rawAny.workExperience ?? rawAny.experience ?? rawAny.history ?? rawAny.parcours ?? []
+      const rawEdu = data.educations ?? rawAny.education ?? rawAny.formation ?? rawAny.formations ?? rawAny.studies ?? []
+      const rawSkills = data.skills ?? rawAny.competences ?? rawAny.skillList ?? rawAny.expertise ?? []
+      const rawCerts = data.certifications ?? rawAny.certifs ?? rawAny.certificationList ?? []
+      const rawLangs = data.languages ?? rawAny.langues ?? rawAny.languageList ?? []
+      const rawInterests = data.interests ?? rawAny.centresDInteret ?? rawAny.hobbies ?? rawAny.interestList ?? []
+
+      const normalizedExp = rawExp
         .map((exp: any) => {
           if (!exp || typeof exp !== 'object') return null
           const position = String(exp.position || exp.title || exp.jobTitle || '').trim()
@@ -277,7 +298,7 @@ export const useResumeStore = defineStore('resume', {
         })
         .filter(Boolean)
 
-      const normalizedEdu = (data.educations ?? [])
+      const normalizedEdu = rawEdu
         .map((edu: any) => {
           if (!edu || typeof edu !== 'object') return null
           const degree = String(edu.degree || edu.diploma || edu.title || '').trim()
@@ -295,7 +316,7 @@ export const useResumeStore = defineStore('resume', {
         })
         .filter(Boolean)
 
-      const normalizedSkills = (data.skills ?? [])
+      const normalizedSkills = rawSkills
         .map((item: any) => {
           if (!item) return null
           if (typeof item === 'string') {
@@ -312,7 +333,7 @@ export const useResumeStore = defineStore('resume', {
         })
         .filter(Boolean)
 
-      const normalizedCerts = (data.certifications ?? [])
+      const normalizedCerts = rawCerts
         .map((item: any) => {
           if (!item) return null
           if (typeof item === 'string') {
@@ -330,7 +351,7 @@ export const useResumeStore = defineStore('resume', {
         })
         .filter(Boolean)
 
-      const normalizedLangs = (data.languages ?? [])
+      const normalizedLangs = rawLangs
         .map((item: any) => {
           if (!item) return null
           if (typeof item === 'string') {
@@ -343,7 +364,7 @@ export const useResumeStore = defineStore('resume', {
         })
         .filter(Boolean)
 
-      const normalizedInterests = (data.interests ?? [])
+      const normalizedInterests = rawInterests
         .map((item: any) => {
           if (!item) return null
           if (typeof item === 'string') {
@@ -361,8 +382,8 @@ export const useResumeStore = defineStore('resume', {
         if (normalizedPi.photoUrl) {
           this.current.templateConfig.showPhoto = true
         }
-        this.current.summary = data.summary?.trim() || undefined
-        this.current.title = data.title?.trim() || this.current.title
+        this.current.summary = summaryText || undefined
+        this.current.title = data.title?.trim() || (normalizedPi.fullName ? `CV — ${normalizedPi.fullName}` : this.current.title)
         this.current.experiences = normalizedExp
         this.current.educations = normalizedEdu
         this.current.skills = normalizedSkills
@@ -370,7 +391,7 @@ export const useResumeStore = defineStore('resume', {
         this.current.languages = normalizedLangs
         this.current.interests = normalizedInterests
       } else {
-        if (data.personalInfo) {
+        if (data.personalInfo || rawAny.contact || rawAny.info) {
           const merged = { ...this.current.personalInfo }
           for (const [key, value] of Object.entries(normalizedPi)) {
             if (value !== undefined && value !== null && String(value).trim() !== '') {
@@ -421,6 +442,15 @@ export const useResumeStore = defineStore('resume', {
       this.current.metadata.source = 'import'
       touch(this.current)
       this.isDirty = true
+
+      if (import.meta.client && this.current) {
+        try {
+          const raw = JSON.stringify({ current: this.current, savedResumeId: this.savedResumeId })
+          createScopedResumeDraftStorage().setItem('profiloz:resume:draft', raw)
+        } catch {
+          // ignore
+        }
+      }
     },
   },
   persist: {
