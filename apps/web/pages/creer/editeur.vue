@@ -282,7 +282,8 @@ async function downloadPdf() {
 </script>
 
 <template>
-  <div class="editor-page-root min-h-screen">
+  <ClientOnly>
+    <div class="editor-page-root min-h-screen">
     <!-- Skeleton Loader de l'éditeur de CV -->
     <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
     <!-- Topbar skeleton -->
@@ -540,6 +541,7 @@ async function downloadPdf() {
         <UiSkeleton variant="text" width="100%" class="mt-4" />
       </UiCard>
     </div>
+    </div>
   </div>
-</div>
+  </ClientOnly>
 </template>
