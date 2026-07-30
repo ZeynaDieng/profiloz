@@ -60,6 +60,9 @@ export function useImportFlow(documentType: DocumentType) {
       if (token) headers.Authorization = `Bearer ${token}`
     }
 
+    console.log(`⚡ [Profilo’Z OCR] Envoi de la requête d'analyse IA pour le document ID: ${id}...`)
+    const startTime = Date.now()
+
     try {
       const response = await fetch(`${config.public.apiBaseUrl}/documents/${id}/process`, {
         method: 'POST',
@@ -67,18 +70,25 @@ export function useImportFlow(documentType: DocumentType) {
         signal: controller.signal,
       })
 
+      const elapsed = Date.now() - startTime
+      console.log(`⏱️ [Profilo’Z OCR] Réponse HTTP du serveur reçue en ${elapsed}ms (Statut: ${response.status})`)
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({}))
+        console.error('❌ [Profilo’Z OCR] Le serveur a renvoyé une erreur HTTP:', response.status, error)
         throw error
       }
 
-      return (await response.json()) as { parsedData: Partial<ResumeSnapshot>; confidence?: number }
+      const json = await response.json()
+      console.log('✅ [Profilo’Z OCR] Données JSON extraites avec succès !', json)
+      return json as { parsedData: Partial<ResumeSnapshot>; confidence?: number }
     } catch (error) {
+      const elapsed = Date.now() - startTime
       if (error instanceof DOMException && error.name === 'AbortError') {
-        throw {
-          detail: MSG.network.timeout,
-        }
+        console.error(`💥 [Profilo’Z OCR] TIMEOUT ABANDON après ${elapsed}ms d'attente !`)
+        throw { detail: MSG.network.timeout }
       }
+      console.error(`❌ [Profilo’Z OCR] Échec de la requête après ${elapsed}ms :`, error)
       throw error
     } finally {
       clearTimeout(timer)
@@ -86,32 +96,44 @@ export function useImportFlow(documentType: DocumentType) {
   }
 
   async function processFile(file: File) {
+    console.group(`📄 [Profilo’Z Import] Début de l'analyse du fichier : ${file.name} (${(file.size / 1024).toFixed(1)} Ko)`)
     fileName.value = file.name
     state.value = 'processing'
     errorMessage.value = ''
     startProgressAnimation()
 
     try {
+      console.log('1️⃣ [Profilo’Z Import] Vérification de la session utilisateur/invité...')
       await ensureSession()
+
+      console.log('2️⃣ [Profilo’Z Import] Téléversement du fichier sur le serveur...')
       stage.value = 0
       progress.value = Math.max(progress.value, 12)
 
       const uploaded = await documentService.uploadDocument(file, documentType)
+      console.log('✔ Fichier téléversé avec succès. Document ID:', uploaded.id)
+
       documentId.value = uploaded.id
       mimeType.value = file.type
       stage.value = 1
       progress.value = Math.max(progress.value, 28)
 
+      console.log('3️⃣ [Profilo’Z Import] Démarrage du pipeline de lecture OCR et structuration IA...')
       const result = await processDocumentWithTimeout(uploaded.id)
+
       stopProgressAnimation()
       stage.value = 4
       progress.value = 100
       extractedData.value = result.parsedData ?? {}
       machineParsed.value = structuredClone(result.parsedData ?? {})
-      console.log('📥 [Profilo’Z Import] Données extraites par l’IA :', result.parsedData)
+
+      console.log('4️⃣ [Profilo’Z Import] Analyse terminée à 100% ! Redirection vers l’étape suivante...')
+      console.groupEnd()
       state.value = 'preview'
     } catch (error) {
       stopProgressAnimation()
+      console.error('💥 [Profilo’Z Import] Erreur globale lors du traitement du fichier :', error)
+      console.groupEnd()
       errorMessage.value = parseApiAuthError(error, MSG.upload.ocrError)
       state.value = 'error'
     }
