@@ -7,9 +7,15 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
+  console.log('📥 [API upload route] Reçu une requête POST sur /api/v1/documents/upload')
   try {
+    console.log('⏳ [API upload route] Extraction de request.formData()...')
     const formData = await request.formData()
+    console.log('✅ [API upload route] request.formData() extrait avec succès.')
+
     const ctx = await requireGuestOrAuth(request)
+    console.log('✅ [API upload route] Context utilisateur/invité:', ctx)
+
     const file = formData.get('file')
     const type = formData.get('type')
 
@@ -18,7 +24,10 @@ export async function POST(request: Request) {
     }
 
     const docType = documentTypeSchema.parse(String(type))
+    console.log(`⚡ [API upload route] Appel à documentService.upload pour ${file.name}...`)
     const document = await documentService.upload(file, docType, ctx)
+    console.log('✅ [API upload route] documentService.upload réusssi, ID:', document.id)
+
     const response = jsonResponse(
       {
         id: document.id,
