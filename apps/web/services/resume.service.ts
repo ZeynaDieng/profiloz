@@ -23,46 +23,48 @@ export type SaveResumePayload = {
 export function toSavePayload(snapshot: ResumeSnapshot): SaveResumePayload {
   return {
     title: snapshot.title?.trim() || 'Mon CV',
-    templateSlug: snapshot.templateSlug,
-    templateConfig: snapshot.templateConfig,
+    templateSlug: snapshot.templateSlug ?? 'PROFESSIONNEL',
+    templateConfig: snapshot.templateConfig ?? {},
     personalInfo: {
       ...snapshot.personalInfo,
-      photoUrl: stripLegacyBase64Photo(snapshot.personalInfo.photoUrl),
+      photoUrl: stripLegacyBase64Photo(snapshot.personalInfo?.photoUrl),
     },
-    summary: snapshot.summary,
-    experiences: filterCompleteExperiences(snapshot.experiences).map(
-      ({ company, position, location, startDate, endDate, isCurrent, description }) => ({
-      company: company.trim(),
-      position: position.trim(),
-      location: location!.trim(),
-      startDate: startDate!.trim(),
-      endDate: isCurrent ? undefined : endDate?.trim(),
-      isCurrent,
-      description: description?.trim() || undefined,
-    })),
-    educations: filterCompleteEducations(snapshot.educations).map(
-      ({ institution, degree, field, location, startDate, endDate, description }) => ({
-      institution: institution.trim(),
-      degree: degree.trim(),
-      field: field!.trim(),
-      location,
-      startDate: startDate!.trim(),
-      endDate: endDate!.trim(),
-      description,
-    })),
-    skills: snapshot.skills
+    summary: snapshot.summary?.trim() || undefined,
+    experiences: (snapshot.experiences || [])
+      .filter((exp) => Boolean(exp.company?.trim() || exp.position?.trim()))
+      .map(({ company, position, location, startDate, endDate, isCurrent, description }) => ({
+        company: company?.trim() || 'Entreprise',
+        position: position?.trim() || 'Poste',
+        location: location?.trim() || undefined,
+        startDate: startDate?.trim() || undefined,
+        endDate: isCurrent ? undefined : endDate?.trim() || undefined,
+        isCurrent: Boolean(isCurrent),
+        description: description?.trim() || undefined,
+      })),
+    educations: (snapshot.educations || [])
+      .filter((edu) => Boolean(edu.institution?.trim() || edu.degree?.trim()))
+      .map(({ institution, degree, field, location, startDate, endDate, description }) => ({
+        institution: institution?.trim() || 'Établissement',
+        degree: degree?.trim() || 'Diplôme',
+        field: field?.trim() || undefined,
+        location: location?.trim() || undefined,
+        startDate: startDate?.trim() || undefined,
+        endDate: endDate?.trim() || undefined,
+        description: description?.trim() || undefined,
+      })),
+    skills: (snapshot.skills || [])
       .filter((item) => hasText(item.name))
       .map(({ name, level, category }) => ({ name: name.trim(), level, category })),
-    certifications: snapshot.certifications
+    certifications: (snapshot.certifications || [])
       .filter((item) => hasText(item.name))
       .map(({ name, issuer, issueDate, expiryDate, credentialId }) => ({
-      name: name.trim(),
-      issuer,
-      issueDate,
-      expiryDate,
-      credentialId,
-    })),
-    interests: snapshot.interests
+        name: name.trim(),
+        issuer: issuer?.trim() || undefined,
+        issueDate: issueDate?.trim() || undefined,
+        expiryDate: expiryDate?.trim() || undefined,
+        credentialId: credentialId?.trim() || undefined,
+      })),
+    interests: (snapshot.interests || [])
       .filter((item) => hasText(item.name))
       .map(({ name }) => ({ name: name.trim() })),
     languages: snapshot.languages
