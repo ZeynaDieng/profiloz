@@ -92,7 +92,7 @@ export default defineNuxtConfig({
     apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL || '',
     public: {
       apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL || '',
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api/v1',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1',
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://profiloz.com',
       /** Hero A/B : "transform" (défaut) ou "start" */
