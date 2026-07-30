@@ -113,6 +113,27 @@ export const mergeImportSchema = z.object({
 
 const snapshotDateSchema = z.string().max(50).optional()
 
+const optionalTrimmedString = (max: number) =>
+  z.preprocess(emptyToUndefined, z.string().trim().max(max).optional())
+
+const skillLevelSchema = z.preprocess((val) => {
+  if (typeof val !== 'string') return undefined
+  const upper = val.toUpperCase().trim()
+  if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'].includes(upper)) return upper
+  return undefined
+}, z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']).optional())
+
+const languageLevelSchema = z.preprocess((val) => {
+  if (typeof val !== 'string') return undefined
+  const upper = val.toUpperCase().trim()
+  if (['BASIC', 'CONVERSATIONAL', 'PROFESSIONAL', 'NATIVE'].includes(upper)) return upper
+  if (upper.includes('MERE') || upper.includes('MATERN') || upper.includes('BILING')) return 'NATIVE'
+  if (upper.includes('COUR') || upper.includes('AVANC') || upper.includes('PROF')) return 'PROFESSIONAL'
+  if (upper.includes('INTER') || upper.includes('MOYEN') || upper.includes('CONV')) return 'CONVERSATIONAL'
+  if (upper.includes('DEBUT') || upper.includes('BAS')) return 'BASIC'
+  return undefined
+}, z.enum(['BASIC', 'CONVERSATIONAL', 'PROFESSIONAL', 'NATIVE']).optional())
+
 export const saveResumeSnapshotSchema = z.object({
   title: z.string().trim().min(1, 'Titre requis').max(200),
   templateSlug: templateSlugSchema,
@@ -130,10 +151,10 @@ export const saveResumeSnapshotSchema = z.object({
   experiences: z
     .array(
       z.object({
-        company: requiredString(200),
-        position: requiredString(200),
-        location: z.string().max(200).optional(),
-        country: z.string().max(100).optional(),
+        company: z.string().trim().max(200).optional().default(''),
+        position: z.string().trim().max(200).optional().default(''),
+        location: optionalTrimmedString(200),
+        country: optionalTrimmedString(100),
         startDate: snapshotDateSchema,
         endDate: snapshotDateSchema,
         isCurrent: z.boolean().optional(),
@@ -145,10 +166,10 @@ export const saveResumeSnapshotSchema = z.object({
   educations: z
     .array(
       z.object({
-        institution: requiredString(200),
-        degree: requiredString(200),
-        field: z.string().max(200).optional(),
-        location: z.string().max(200).optional(),
+        institution: z.string().trim().max(200).optional().default(''),
+        degree: z.string().trim().max(200).optional().default(''),
+        field: optionalTrimmedString(200),
+        location: optionalTrimmedString(200),
         startDate: snapshotDateSchema,
         endDate: snapshotDateSchema,
         description: z.string().max(2000).optional(),
@@ -158,8 +179,8 @@ export const saveResumeSnapshotSchema = z.object({
   skills: z
     .array(
       z.object({
-        name: requiredString(100),
-        level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']).optional(),
+        name: z.string().trim().max(100).optional().default(''),
+        level: skillLevelSchema,
         category: z.string().max(100).optional(),
       }),
     )
@@ -167,20 +188,26 @@ export const saveResumeSnapshotSchema = z.object({
   certifications: z
     .array(
       z.object({
-        name: requiredString(200),
-        issuer: z.string().max(200).optional(),
+        name: z.string().trim().max(200).optional().default(''),
+        issuer: optionalTrimmedString(200),
         issueDate: snapshotDateSchema,
         expiryDate: snapshotDateSchema,
-        credentialId: z.string().max(200).optional(),
+        credentialId: optionalTrimmedString(200),
       }),
     )
     .default([]),
-  interests: z.array(z.object({ name: requiredString(100) })).default([]),
+  interests: z
+    .array(
+      z.object({
+        name: z.string().trim().max(100).optional().default(''),
+      }),
+    )
+    .default([]),
   languages: z
     .array(
       z.object({
-        name: requiredString(100),
-        level: z.enum(['BASIC', 'CONVERSATIONAL', 'PROFESSIONAL', 'NATIVE']).optional(),
+        name: z.string().trim().max(100).optional().default(''),
+        level: languageLevelSchema,
       }),
     )
     .default([]),
