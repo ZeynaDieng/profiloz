@@ -38,13 +38,16 @@ function emptyTextMessage(mimeType: string, documentType: DocumentType): string 
 
 export class DocumentService {
   async upload(file: File, typeRaw: string, ctx: RequestContext) {
+    console.log(`📦 [API documentService] Debut upload pour fichier "${file.name}" (${file.size} octets, mime: ${file.type})`)
     const type = documentTypeSchema.parse(typeRaw)
 
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      console.error('❌ [API documentService] Fichier trop volumineux !')
       throw new AppError(413, 'Payload Too Large', 'Fichier trop volumineux (max 10 Mo)')
     }
 
     if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
+      console.error('❌ [API documentService] Format non supporte :', file.type)
       throw new AppError(
         422,
         'Validation Error',
@@ -54,10 +57,13 @@ export class DocumentService {
 
     const ext = path.extname(file.name) || '.bin'
     const storageKey = `uploads/${ctx.userId ?? ctx.guestSessionDbId ?? 'anon'}/${randomUUID()}${ext}`
+    console.log(`📦 [API documentService] Extraction du Buffer et écriture sur storage (key: ${storageKey})...`)
     const buffer = Buffer.from(await file.arrayBuffer())
     await storageProvider.upload(buffer, storageKey, file.type)
+    console.log('✅ [API documentService] Fichier ecrit sur le disque/storage avec succes !')
 
-    return documentRepository.create({
+    console.log('📦 [API documentService] Creation de l\'entree dans la base de donnees via documentRepository...')
+    const docRecord = await documentRepository.create({
       type,
       originalName: file.name,
       mimeType: file.type,
@@ -66,6 +72,8 @@ export class DocumentService {
       userId: ctx.userId,
       guestSessionId: ctx.guestSessionDbId,
     })
+    console.log('✅ [API documentService] Enregistrement en BDD cree avec succes ! ID:', docRecord.id)
+    return docRecord
   }
 
   async process(documentId: string, options?: { force?: boolean }) {

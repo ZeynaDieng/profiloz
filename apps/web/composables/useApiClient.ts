@@ -48,22 +48,40 @@ export function useApiClient() {
     }
     if (isFormData) delete headers['Content-Type']
 
-    const response = await fetch(`${config.public.apiBaseUrl}${path}`, {
-      ...options,
-      headers,
-    })
+    const method = options.method || 'GET'
+    const fullUrl = `${config.public.apiBaseUrl}${path}`
+    console.log(`🌐 [useApiClient] ${method} -> ${fullUrl}`, { isFormData, headers })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      handleUnauthorized(error)
-      throw error
+    const start = Date.now()
+    try {
+      const response = await fetch(fullUrl, {
+        ...options,
+        headers,
+      })
+
+      const elapsed = Date.now() - start
+      console.log(`🌐 [useApiClient] ${method} <- ${fullUrl} [Statut ${response.status}] en ${elapsed}ms`)
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        console.error(`❌ [useApiClient] Erreur HTTP ${response.status} sur ${fullUrl}:`, error)
+        handleUnauthorized(error)
+        throw error
+      }
+
+      if (response.status === 204) return undefined as T
+      const json = await response.json()
+      console.log(`✅ [useApiClient] Reponse OK de ${fullUrl}:`, json)
+      return json as T
+    } catch (err) {
+      const elapsed = Date.now() - start
+      console.error(`💥 [useApiClient] Echec reseau de ${method} ${fullUrl} après ${elapsed}ms:`, err)
+      throw err
     }
-
-    if (response.status === 204) return undefined as T
-    return response.json() as Promise<T>
   }
 
   async function upload<T>(path: string, formData: FormData): Promise<T> {
+    console.log(`📤 [useApiClient.upload] Lancement de l'upload vers ${path}...`)
     return request<T>(path, { method: 'POST', body: formData })
   }
 
