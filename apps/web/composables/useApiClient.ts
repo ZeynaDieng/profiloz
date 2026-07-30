@@ -9,11 +9,24 @@ export function useApiClient() {
       const guestSessionId = localStorage.getItem('profiloz:guest-session')
       if (guestSessionId) headers['X-Guest-Session-Id'] = guestSessionId
 
-      const authStore = useAuthStore()
-      authStore.syncSession()
-
       const token = getStoredAccessToken()
-      if (token) headers.Authorization = `Bearer ${token}`
+      if (token) {
+        try {
+          const parts = token.split('.')
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]))
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+              localStorage.removeItem('profiloz:access-token')
+            } else {
+              headers.Authorization = `Bearer ${token}`
+            }
+          } else {
+            headers.Authorization = `Bearer ${token}`
+          }
+        } catch {
+          headers.Authorization = `Bearer ${token}`
+        }
+      }
     }
 
     return headers
@@ -24,10 +37,7 @@ export function useApiClient() {
     const problem = error as { status?: number; detail?: string }
     if (problem.status !== 401) return
 
-    const authStore = useAuthStore()
-    if (authStore.isAuthenticated) {
-      authStore.logout()
-    }
+    localStorage.removeItem('profiloz:access-token')
   }
 
   async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
