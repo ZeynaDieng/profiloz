@@ -5,23 +5,30 @@ import { resolveCoverLetterTemplateComponent } from '~/features/cover-letter-tem
 import { letterPreviewWrapperStyle } from '~/utils/template-accent-colors'
 
 const props = defineProps<{
-  letter: CoverLetterSnapshot
+  letter?: CoverLetterSnapshot | null
 }>()
 
-const snapshot = computed(() => ({
-  ...props.letter,
-  templateSlug: normalizeCoverLetterTemplateSlug(props.letter.templateSlug),
-}))
+const snapshot = computed(() => {
+  if (!props.letter) return null
+  return {
+    ...props.letter,
+    templateSlug: normalizeCoverLetterTemplateSlug(props.letter.templateSlug),
+  }
+})
 
-const TemplateComponent = computed(() => resolveCoverLetterTemplateComponent(snapshot.value.templateSlug))
+const TemplateComponent = computed(() =>
+  snapshot.value ? resolveCoverLetterTemplateComponent(snapshot.value.templateSlug) : null,
+)
 
 const wrapperStyle = computed(() =>
-  letterPreviewWrapperStyle(snapshot.value.templateSlug, snapshot.value.accentColor),
+  snapshot.value
+    ? letterPreviewWrapperStyle(snapshot.value.templateSlug, snapshot.value.accentColor)
+    : {},
 )
 </script>
 
 <template>
-  <div :style="wrapperStyle">
+  <div v-if="snapshot" :style="wrapperStyle">
     <component :is="TemplateComponent" :letter="snapshot" />
   </div>
 </template>

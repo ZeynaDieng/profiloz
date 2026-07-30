@@ -3,7 +3,7 @@ import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { useResizeObserver } from '@vueuse/core'
 import { letterPreviewWrapperStyle } from '~/utils/template-accent-colors'
 
-const props = defineProps<{ letter: CoverLetterSnapshot }>()
+const props = defineProps<{ letter?: CoverLetterSnapshot | null }>()
 
 const containerRef = ref<HTMLElement | null>(null)
 const scale = ref(0.3)
@@ -24,7 +24,10 @@ onMounted(() => nextTick(updateScale))
 useResizeObserver(containerRef, () => nextTick(updateScale))
 
 const previewStyle = computed(() =>
-  letterPreviewWrapperStyle(props.letter.templateSlug, props.letter.accentColor),
+  letterPreviewWrapperStyle(
+    props.letter?.templateSlug ?? 'CLASSIQUE',
+    props.letter?.accentColor,
+  ),
 )
 </script>
 
