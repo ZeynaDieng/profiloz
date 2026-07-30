@@ -29,15 +29,22 @@ export function createScopedResumeDraftStorage(): Pick<Storage, 'getItem' | 'set
   return {
     getItem(_key: string) {
       if (typeof localStorage === 'undefined') return null
-      return localStorage.getItem(getResumeDraftStorageKey())
+      const scopedKey = getResumeDraftStorageKey()
+      const val = localStorage.getItem(scopedKey)
+      if (val) return val
+      return localStorage.getItem(LEGACY_DRAFT_KEY)
     },
     setItem(_key: string, value: string) {
       if (typeof localStorage === 'undefined') return
-      localStorage.setItem(getResumeDraftStorageKey(), value)
+      const scopedKey = getResumeDraftStorageKey()
+      localStorage.setItem(scopedKey, value)
+      localStorage.setItem(LEGACY_DRAFT_KEY, value)
     },
     removeItem(_key: string) {
       if (typeof localStorage === 'undefined') return
-      localStorage.removeItem(getResumeDraftStorageKey())
+      const scopedKey = getResumeDraftStorageKey()
+      localStorage.removeItem(scopedKey)
+      localStorage.removeItem(LEGACY_DRAFT_KEY)
     },
   }
 }
