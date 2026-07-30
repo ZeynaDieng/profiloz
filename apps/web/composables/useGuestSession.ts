@@ -29,6 +29,11 @@ export function useGuestSession() {
       const resumeData = localStorage.getItem(oldKey) || localStorage.getItem('profiloz:resume:draft')
       if (resumeData) localStorage.setItem(newKey, resumeData)
     }
+    const targetKey = `profiloz:resume:draft:guest:${trimmed}`
+    const masterDraft = localStorage.getItem('profiloz:resume:draft')
+    if (masterDraft && !localStorage.getItem(targetKey)) {
+      localStorage.setItem(targetKey, masterDraft)
+    }
     localStorage.setItem('profiloz:guest-session', trimmed)
     guestSessionId.value = trimmed
     if (lastSyncedSessionId !== trimmed) {
