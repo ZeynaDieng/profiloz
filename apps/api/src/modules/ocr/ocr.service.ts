@@ -7,7 +7,7 @@ import { repairSpacedOutText, scoreExtractedPdfText, measureSpacedOutScore } fro
 import { preprocessImageForOcr } from './image-preprocess'
 import type { OcrExtractDetails } from './ocr.types'
 
-const OCR_TIMEOUT_MS = 90_000
+const OCR_TIMEOUT_MS = 10_000
 export const MIN_NATIVE_PDF_TEXT = 80
 /** Score minimal du texte PDF natif pour éviter l'OCR (sinon scan mal lu). */
 export const MIN_NATIVE_PDF_SCORE = 0.75
@@ -509,7 +509,7 @@ export class OcrService {
         }
 
         const nativeText = await extractPdfNativeText(buffer)
-        if (!shouldFallbackToPdfOcr(nativeText)) {
+        if (nativeText.trim().length > 20 || !shouldFallbackToPdfOcr(nativeText)) {
           const nativeScore = scoreExtractedPdfText(nativeText)
           return emptyDetails({
             rawText: nativeText,
