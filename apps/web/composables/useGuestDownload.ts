@@ -53,7 +53,7 @@ export function useGuestDownload() {
     }
 
     resumeStore.rehydrateFromStorage()
-    if (!resumeStore.current?.personalInfo.fullName?.trim()) return null
+    if (!resumeStore.current) return null
     return {
       ...resumeStore.current,
       templateConfig: { ...resumeStore.current.templateConfig },

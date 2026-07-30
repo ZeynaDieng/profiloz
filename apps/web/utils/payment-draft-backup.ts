@@ -49,7 +49,7 @@ function resolveResumeSnapshotForBackup(): ResumeSnapshot | null {
   if (import.meta.client) {
     try {
       const resumeStore = useResumeStore()
-      if (resumeStore.current?.personalInfo.fullName?.trim()) {
+      if (resumeStore.current) {
         return {
           ...resumeStore.current,
           templateConfig: { ...resumeStore.current.templateConfig },

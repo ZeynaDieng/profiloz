@@ -47,6 +47,24 @@ export function isPaidGuestDossierActive(): boolean {
 export function pinPaidGuestSession(guestSessionId?: string | null): string | null {
   const id = guestSessionId ?? readStorage()?.guestSessionId
   if (!id || typeof localStorage === 'undefined') return null
+
+  const currentGuestId = localStorage.getItem(GUEST_SESSION_KEY)
+  if (currentGuestId && currentGuestId !== id) {
+    const oldResumeKey = `profiloz:resume:draft:guest:${currentGuestId}`
+    const newResumeKey = `profiloz:resume:draft:guest:${id}`
+    const resumeData = localStorage.getItem(oldResumeKey) || localStorage.getItem('profiloz:resume:draft')
+    if (resumeData) {
+      localStorage.setItem(newResumeKey, resumeData)
+    }
+
+    const oldLetterKey = `profiloz:cover-letter:draft:guest:${currentGuestId}`
+    const newLetterKey = `profiloz:cover-letter:draft:guest:${id}`
+    const letterData = localStorage.getItem(oldLetterKey) || localStorage.getItem('profiloz:cover-letter:draft')
+    if (letterData) {
+      localStorage.setItem(newLetterKey, letterData)
+    }
+  }
+
   localStorage.setItem(GUEST_SESSION_KEY, id)
   return id
 }

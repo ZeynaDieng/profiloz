@@ -22,6 +22,13 @@ export function useGuestSession() {
   function applyGuestSessionId(id: string) {
     if (import.meta.server || !id.trim()) return
     const trimmed = id.trim()
+    const currentId = localStorage.getItem('profiloz:guest-session')
+    if (currentId && currentId !== trimmed) {
+      const oldKey = `profiloz:resume:draft:guest:${currentId}`
+      const newKey = `profiloz:resume:draft:guest:${trimmed}`
+      const resumeData = localStorage.getItem(oldKey) || localStorage.getItem('profiloz:resume:draft')
+      if (resumeData) localStorage.setItem(newKey, resumeData)
+    }
     localStorage.setItem('profiloz:guest-session', trimmed)
     guestSessionId.value = trimmed
     if (lastSyncedSessionId !== trimmed) {
@@ -39,6 +46,12 @@ export function useGuestSession() {
 
       // Toujours privilégier la session liée au paiement (évite session brouillon ≠ session payée).
       if (paidId && id !== paidId) {
+        if (id) {
+          const oldKey = `profiloz:resume:draft:guest:${id}`
+          const newKey = `profiloz:resume:draft:guest:${paidId}`
+          const resumeData = localStorage.getItem(oldKey) || localStorage.getItem('profiloz:resume:draft')
+          if (resumeData) localStorage.setItem(newKey, resumeData)
+        }
         id = paidId
         localStorage.setItem('profiloz:guest-session', id)
         lastSyncedSessionId = null
