@@ -123,6 +123,7 @@ function asSubscriptionPlanSlug(value: string | null | undefined): SubscriptionP
 type EntitlementsWithSnapshot = ResolvedEntitlements & {
   canDownloadSnapshot: boolean
   downloadedDocIds?: string[]
+  paidDraftSnapshot?: unknown
 }
 
 function mergeEntitlementResults(
@@ -146,6 +147,7 @@ function mergeEntitlementResults(
     ...merged,
     canDownloadSnapshot: primary.canDownloadSnapshot || secondary.canDownloadSnapshot,
     downloadedDocIds: primary.downloadedDocIds || secondary.downloadedDocIds,
+    paidDraftSnapshot: primary.paidDraftSnapshot || secondary.paidDraftSnapshot,
   }
 }
 
@@ -158,6 +160,7 @@ function serializeEntitlementsForClient(result: EntitlementsWithSnapshot) {
     features: result.features,
     canDownloadSnapshot: result.canDownloadSnapshot,
     downloadedDocIds: result.downloadedDocIds,
+    paidDraftSnapshot: result.paidDraftSnapshot,
   }
 }
 
@@ -658,6 +661,7 @@ export class PaymentService {
     returnTo?: string,
     requestOrigin?: string | null,
     guestSessionClientId?: string | null,
+    draftSnapshot?: unknown,
   ) {
     requireOwner(owner)
     const plan = await getResolvedPlan(planSlug)
@@ -665,6 +669,24 @@ export class PaymentService {
 
     const refCommand = `pz_${randomUUID().replace(/-/g, '')}`
     const credits = Number.isFinite(plan.credits) ? plan.credits : 0
+
+    if (owner.guestSessionDbId && draftSnapshot) {
+      try {
+        const guest = await prisma.guestSession.findUnique({ where: { id: owner.guestSessionDbId }, select: { data: true } })
+        const currentData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
+        await prisma.guestSession.update({
+          where: { id: owner.guestSessionDbId },
+          data: {
+            data: {
+              ...currentData,
+              draftSnapshot: JSON.parse(JSON.stringify(draftSnapshot)),
+            },
+          },
+        })
+      } catch {
+        // ignore
+      }
+    }
 
     const payment = await prisma.payment.create({
       data: {
@@ -796,7 +818,10 @@ export class PaymentService {
     })
     const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
     const meta = readGuestSessionMeta(guest?.data)
-    return { ...resolved, canDownloadSnapshot, downloadedDocIds: meta.downloadedDocIds }
+    const rawData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
+    const paidDraftSnapshot = canDownloadSnapshot ? rawData.draftSnapshot : undefined
+
+    return { ...resolved, canDownloadSnapshot, downloadedDocIds: meta.downloadedDocIds, paidDraftSnapshot }
   }
 
   /**

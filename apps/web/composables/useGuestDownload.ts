@@ -37,9 +37,18 @@ export function useGuestDownload() {
     if (!hasDossierDownloadAccess(entitlements)) {
       throw new Error('payment-required')
     }
+    return entitlements
   }
 
-  function loadResumeSnapshot() {
+  function loadResumeSnapshot(serverDraft?: unknown) {
+    if (serverDraft && typeof serverDraft === 'object') {
+      const snap = serverDraft as any
+      if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
+        resumeStore.loadSnapshot(snap)
+        return snap
+      }
+    }
+
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'resume') {
       resumeStore.loadSnapshot(backup.snapshot)
@@ -60,7 +69,15 @@ export function useGuestDownload() {
     }
   }
 
-  function loadLetterSnapshot() {
+  function loadLetterSnapshot(serverDraft?: unknown) {
+    if (serverDraft && typeof serverDraft === 'object') {
+      const draft = serverDraft as any
+      if (draft?.content || draft?.senderName) {
+        coverLetterStore.current = { ...draft }
+        return coverLetterStore.toSnapshot()
+      }
+    }
+
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'letter') {
       coverLetterStore.current = { ...backup.draft }
@@ -83,12 +100,13 @@ export function useGuestDownload() {
     lastFilename.value = ''
 
     try {
-      await preparePaidSession()
+      const entitlements = await preparePaidSession()
+      const serverDraft = entitlements?.paidDraftSnapshot
 
       if (authStore.isAuthenticated && kind === 'cv') {
         resumeStore.rehydrateFromStorage()
         const resumeId = resolvePersistableResumeId(resumeStore.savedResumeId)
-        const snapshot = loadResumeSnapshot()
+        const snapshot = loadResumeSnapshot(serverDraft)
         if (resumeId && snapshot) {
           const { filename } = await pdfService.downloadResumeCv(resumeId, snapshot)
           lastFilename.value = filename
@@ -110,7 +128,7 @@ export function useGuestDownload() {
       }
 
       if (kind === 'letter') {
-        const snapshot = loadLetterSnapshot()
+        const snapshot = loadLetterSnapshot(serverDraft)
         if (!snapshot?.content?.trim()) throw new Error('missing-letter')
         ensurePaidGuestDossier('letter')
         resumeStore.rehydrateFromStorage()
@@ -125,8 +143,8 @@ export function useGuestDownload() {
         return filename
       }
 
-      const snapshot = loadResumeSnapshot()
-      if (!snapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
+      const snapshot = loadResumeSnapshot(serverDraft)
+      if (!snapshot?.personalInfo || !snapshot.id) throw new Error('missing-resume')
       ensurePaidGuestDossier('cv')
       const { filename } = await pdfService.generateAndDownload(snapshot)
       markGuestDossierDownload('cv', snapshot.id)

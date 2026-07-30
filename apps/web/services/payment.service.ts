@@ -20,6 +20,7 @@ export interface Entitlements {
   features: PlanFeatures
   canDownloadSnapshot?: boolean
   downloadedDocIds?: string[]
+  paidDraftSnapshot?: any
 }
 
 export interface PurchasedPlanSummary {
@@ -53,7 +54,24 @@ export function usePaymentService() {
 
   /** Démarre un paiement et renvoie l'URL de redirection PayTech. */
   async function checkout(planSlug: PlanSlug, returnTo?: string) {
-    return post<{ ref: string; redirectUrl: string }>('/payments/checkout', { planSlug, returnTo })
+    let draftSnapshot: unknown = undefined
+    try {
+      if (returnTo?.includes('lettre')) {
+        const coverLetterStore = useCoverLetterStore()
+        draftSnapshot = coverLetterStore.current ? { ...coverLetterStore.current } : undefined
+      } else {
+        const resumeStore = useResumeStore()
+        draftSnapshot = resumeStore.current ? { ...resumeStore.current } : undefined
+      }
+    } catch {
+      // ignore Pinia store resolution if unavailable
+    }
+
+    return post<{ ref: string; redirectUrl: string }>('/payments/checkout', {
+      planSlug,
+      returnTo,
+      draftSnapshot,
+    })
   }
 
   /** Confirme le paiement au retour PayTech (fallback si IPN absent ou lent). */

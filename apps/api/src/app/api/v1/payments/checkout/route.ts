@@ -6,15 +6,17 @@ export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
     const ctx = await requireGuestOrAuth(request)
-    const body = (await request.json().catch(() => ({}))) as { planSlug?: string; returnTo?: string }
+    const body = (await request.json().catch(() => ({}))) as { planSlug?: string; returnTo?: string; draftSnapshot?: unknown }
     const planSlug = String(body.planSlug ?? '')
     const returnTo = typeof body.returnTo === 'string' ? body.returnTo : undefined
+    const draftSnapshot = body.draftSnapshot ? body.draftSnapshot : undefined
     const result = await paymentService.createCheckout(
       { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId },
       planSlug,
       returnTo,
       origin,
       ctx.guestSessionId,
+      draftSnapshot,
     )
     return withCors(jsonResponse(result), origin)
   } catch (error) {
