@@ -13,8 +13,16 @@ export interface RequestContext {
 export async function getRequestContext(request: Request): Promise<RequestContext> {
   const ctx: RequestContext = {}
   const guestHeader = request.headers.get('x-guest-session-id')
-  if (guestHeader) {
-    const guest = await guestSessionRepository.findBySessionId(guestHeader)
+  if (guestHeader?.trim()) {
+    const rawId = guestHeader.trim()
+    let guest = await guestSessionRepository.findBySessionId(rawId)
+    if (!guest) {
+      try {
+        guest = await guestSessionRepository.create(rawId)
+      } catch {
+        guest = await guestSessionRepository.findBySessionId(rawId)
+      }
+    }
     if (guest) {
       ctx.guestSessionDbId = guest.id
       ctx.guestSessionId = guest.sessionId
@@ -53,7 +61,9 @@ export async function requireAuth(request: Request): Promise<string> {
 export async function requireGuestOrAuth(request: Request): Promise<RequestContext> {
   const ctx = await getRequestContext(request)
   if (!ctx.userId && !ctx.guestSessionDbId) {
-    throw new AppError(401, 'Unauthorized', 'Session invité ou authentification requise')
+    const newGuest = await guestSessionRepository.create(`anon-${crypto.randomUUID()}`)
+    ctx.guestSessionDbId = newGuest.id
+    ctx.guestSessionId = newGuest.sessionId
   }
   return ctx
 }
