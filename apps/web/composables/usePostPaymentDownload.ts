@@ -128,8 +128,16 @@ export function usePostPaymentDownload() {
     throw new Error('payment-not-confirmed')
   }
 
-  function loadResumeForDownload(): ResumeSnapshot | null {
+  function loadResumeForDownload(serverDraft?: unknown): ResumeSnapshot | null {
     restorePaidGuestSession()
+
+    if (serverDraft && typeof serverDraft === 'object') {
+      const snap = serverDraft as any
+      if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
+        resumeStore.loadSnapshot(snap)
+        return snap
+      }
+    }
 
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'resume') {
@@ -145,7 +153,7 @@ export function usePostPaymentDownload() {
     }
 
     resumeStore.rehydrateFromStorage()
-    if (resumeStore.current?.personalInfo.fullName?.trim()) {
+    if (resumeStore.current) {
       return {
         ...resumeStore.current,
         templateConfig: { ...resumeStore.current.templateConfig },
@@ -155,8 +163,16 @@ export function usePostPaymentDownload() {
     return null
   }
 
-  function loadLetterForDownload() {
+  function loadLetterForDownload(serverDraft?: unknown) {
     restorePaidGuestSession()
+
+    if (serverDraft && typeof serverDraft === 'object') {
+      const draft = serverDraft as any
+      if (draft?.content || draft?.senderName) {
+        coverLetterStore.current = { ...draft }
+        return coverLetterStore.toSnapshot()
+      }
+    }
 
     const backup = loadPaymentDraftBackup()
     if (backup?.kind === 'letter') {
@@ -185,7 +201,8 @@ export function usePostPaymentDownload() {
       restorePaidGuestSession()
     }
 
-    await waitForEntitlements(paymentRef)
+    const entitlements = await waitForEntitlements(paymentRef)
+    const serverDraft = entitlements?.paidDraftSnapshot
 
     phase.value = 'downloading'
     message.value = isLetterReturnPath(returnTo)
@@ -193,7 +210,7 @@ export function usePostPaymentDownload() {
       : 'Génération de votre PDF…'
 
     if (isLetterReturnPath(returnTo)) {
-      const letterSnapshot = loadLetterForDownload()
+      const letterSnapshot = loadLetterForDownload(serverDraft)
       await ensureSession()
       if (!letterSnapshot?.content?.trim()) throw new Error('missing-letter')
       ensurePaidGuestDossier('letter')
@@ -217,9 +234,9 @@ export function usePostPaymentDownload() {
       return true
     }
 
-    const resumeSnapshot = loadResumeForDownload()
+    const resumeSnapshot = loadResumeForDownload(serverDraft)
     await ensureSession()
-    if (!resumeSnapshot?.personalInfo.fullName?.trim()) throw new Error('missing-resume')
+    if (!resumeSnapshot?.personalInfo || !resumeSnapshot.id) throw new Error('missing-resume')
 
     ensurePaidGuestDossier('cv')
     const filename = buildResumePdfFilename(resumeSnapshot)
