@@ -37,42 +37,42 @@ const {
           style="background: rgba(255, 255, 255, 0.04)"
         />
 
-        <div class="relative px-6 pt-8 pb-6">
+        <div class="relative px-6 pt-6 pb-4">
           <!-- Avatar -->
-          <div v-if="showPhotoBlock" class="mb-5">
-            <div class="w-20 h-20 rounded-full border-[3px] border-white/30 overflow-hidden">
+          <div v-if="showPhotoBlock" class="mb-4">
+            <div class="w-16 h-16 rounded-full border-[3px] border-white/30 overflow-hidden">
               <ResumePhotoAvatar
                 :photo-url="p.photoUrl"
                 :initials="initials"
                 accent="#ffffff"
                 shape="circle"
                 size-class="w-full h-full"
-                fallback-class="text-2xl font-bold"
+                fallback-class="text-xl font-bold"
                 :fallback-style="{ background: 'rgba(255, 255, 255, 0.15)' }"
               />
             </div>
           </div>
 
           <!-- Identité -->
-          <h1 class="text-[14pt] font-bold leading-tight tracking-tight">
+          <h1 class="text-[13pt] font-bold leading-tight tracking-tight">
             {{ p.fullName || "Votre nom" }}
           </h1>
           <p
-            class="text-[9.5pt] mt-1 font-medium"
+            class="text-[9pt] mt-0.5 font-medium"
             style="color: rgba(255, 255, 255, 0.75)"
           >
             {{ p.jobTitle || "Votre poste" }}
           </p>
 
           <!-- Séparateur -->
-          <div class="mt-5 h-px" style="background: rgba(255, 255, 255, 0.2)" />
+          <div class="mt-4 h-px" style="background: rgba(255, 255, 255, 0.2)" />
 
           <!-- Contact -->
-          <ul class="mt-4 space-y-[5px]">
+          <ul class="mt-3 space-y-1">
             <li
               v-for="item in contactItems"
               :key="item"
-              class="text-[8.5pt] leading-snug break-all"
+              class="text-[8pt] leading-snug break-all"
               style="color: rgba(255, 255, 255, 0.82)"
             >
               {{ item }}
@@ -81,27 +81,27 @@ const {
         </div>
 
         <!-- Compétences -->
-        <div v-if="hasSkills" class="relative px-6 pt-1 pb-4">
-          <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
+        <div v-if="hasSkills" class="relative px-6 pt-1 pb-3">
+          <div class="h-px mb-3" style="background: rgba(255, 255, 255, 0.2)" />
           <h2
-            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-2"
             style="color: rgba(255, 255, 255, 0.6)"
           >Compétences</h2>
-          <ul class="space-y-2">
+          <ul class="space-y-1.5">
             <li
               v-for="(skill, i) in snapshot.skills"
               :key="i"
-              class="text-[8.5pt] flex items-center justify-between gap-1"
+              class="text-[8pt] flex items-center justify-between gap-1"
               style="color: rgba(255, 255, 255, 0.88)"
             >
-              <div class="flex items-center gap-2 min-w-0">
+              <div class="flex items-center gap-1.5 min-w-0">
                 <span
                   class="w-1.5 h-1.5 rounded-full shrink-0"
                   style="background: rgba(255, 255, 255, 0.5)"
                 />
                 <span class="truncate">{{ skill.name }}</span>
               </div>
-              <span v-if="formatSkillLevel(skill.level)" class="text-[7.5pt] shrink-0" style="color: rgba(255, 255, 255, 0.65)">
+              <span v-if="formatSkillLevel(skill.level)" class="text-[7pt] shrink-0" style="color: rgba(255, 255, 255, 0.65)">
                 {{ formatSkillLevel(skill.level) }}
               </span>
             </li>
@@ -109,37 +109,37 @@ const {
         </div>
 
         <!-- Langues -->
-        <div v-if="hasLanguages" class="relative px-6 pt-1 pb-4">
-          <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
+        <div v-if="hasLanguages" class="relative px-6 pt-1 pb-3">
+          <div class="h-px mb-3" style="background: rgba(255, 255, 255, 0.2)" />
           <h2
-            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-2"
             style="color: rgba(255, 255, 255, 0.6)"
           >Langues</h2>
-          <ul class="space-y-2">
+          <ul class="space-y-1.5">
             <li
               v-for="(lang, i) in snapshot.languages"
               :key="i"
-              class="text-[8.5pt] flex items-center justify-between gap-1"
+              class="text-[8pt] flex items-center justify-between gap-1"
               style="color: rgba(255, 255, 255, 0.88)"
             >
               <span class="font-semibold">{{ lang.name }}</span>
-              <span v-if="lang.level" class="text-[7.5pt]" style="color: rgba(255, 255, 255, 0.65)">{{ lang.level }}</span>
+              <span v-if="lang.level" class="text-[7pt]" style="color: rgba(255, 255, 255, 0.65)">{{ lang.level }}</span>
             </li>
           </ul>
         </div>
 
         <!-- Centres d'intérêt -->
-        <div v-if="hasInterests" class="relative px-6 pt-1 pb-6 mt-auto">
-          <div class="h-px mb-5" style="background: rgba(255, 255, 255, 0.2)" />
+        <div v-if="hasInterests" class="relative px-6 pt-1 pb-4">
+          <div class="h-px mb-3" style="background: rgba(255, 255, 255, 0.2)" />
           <h2
-            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-3"
+            class="text-[7.5pt] font-black uppercase tracking-[0.18em] mb-2"
             style="color: rgba(255, 255, 255, 0.6)"
           >Centres d'intérêt</h2>
-          <ul class="space-y-2">
+          <ul class="space-y-1.5">
             <li
               v-for="(interest, i) in snapshot.interests"
               :key="i"
-              class="text-[8.5pt] flex items-start gap-2"
+              class="text-[8pt] flex items-start gap-1.5"
               style="color: rgba(255, 255, 255, 0.88)"
             >
               <span
@@ -195,7 +195,7 @@ const {
               class="absolute -left-[5px] top-[6px] w-2 h-2 rounded-full bg-white border-2 shrink-0"
               :style="{ borderColor: accent }"
             />
-            <ExperienceEntry :exp="exp" :accent="accent" />
+            <ExperienceEntry :exp="exp" layout="inline-header" :accent="accent" />
           </div>
         </section>
 
@@ -217,7 +217,7 @@ const {
             class="mb-3 pl-4"
             :style="{ borderLeft: `2px solid ${accent}20` }"
           >
-            <EducationEntry :edu="edu" :accent="accent" />
+            <EducationEntry :edu="edu" layout="inline-header" :accent="accent" />
           </div>
         </section>
       </main>
@@ -228,6 +228,5 @@ const {
 <style scoped>
 :deep(.resume-a4) {
   padding: 0;
-  overflow: hidden;
 }
 </style>
