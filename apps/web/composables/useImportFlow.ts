@@ -104,7 +104,9 @@ export function useImportFlow(documentType: DocumentType) {
 
     try {
       console.log('1️⃣ [Profilo’Z Import] Vérification de la session utilisateur/invité...')
-      await ensureSession()
+      const sessionTimeout = new Promise<string | null>((resolve) => setTimeout(() => resolve(null), 2000))
+      await Promise.race([ensureSession(), sessionTimeout])
+      console.log('✔ Session prête.')
 
       console.log('2️⃣ [Profilo’Z Import] Téléversement du fichier sur le serveur...')
       stage.value = 0

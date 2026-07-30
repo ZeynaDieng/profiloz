@@ -80,8 +80,13 @@ export function useGuestSession() {
 
       const { post } = useApiClient()
       try {
-        await post('/guest/session', { sessionId: id })
-        lastSyncedSessionId = id
+        const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000))
+        await Promise.race([
+          post('/guest/session', { sessionId: id }).then(() => {
+            lastSyncedSessionId = id
+          }),
+          timeoutPromise,
+        ])
       } catch {
         // Conserver la session locale même si l'API est temporairement indisponible.
       }
