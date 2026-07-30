@@ -58,7 +58,10 @@ export class DocumentService {
     const ext = path.extname(file.name) || '.bin'
     const storageKey = `uploads/${ctx.userId ?? ctx.guestSessionDbId ?? 'anon'}/${randomUUID()}${ext}`
     console.log(`📦 [API documentService] Extraction du Buffer et écriture sur storage (key: ${storageKey})...`)
-    const buffer = Buffer.from(await file.arrayBuffer())
+    const rawBytes = typeof (file as { bytes?: () => Promise<Uint8Array> }).bytes === 'function'
+      ? await (file as { bytes: () => Promise<Uint8Array> }).bytes()
+      : new Uint8Array(await file.arrayBuffer())
+    const buffer = Buffer.from(rawBytes)
     await storageProvider.upload(buffer, storageKey, file.type)
     console.log('✅ [API documentService] Fichier ecrit sur le disque/storage avec succes !')
 
