@@ -26,10 +26,20 @@ const loadingMessage = computed(() => steps[activeStage.value] ?? steps[0])
     </div>
     <div class="space-y-4 w-full">
       <h2 class="text-xl font-bold text-on-surface">{{ loadingMessage }}</h2>
-      <p class="text-on-surface-variant text-sm">Quelques instants suffisent.</p>
+      <p class="text-on-surface-variant text-sm">
+        <template v-if="(progress ?? 0) >= 60 && (progress ?? 0) < 100">
+          L’IA extrait la structure de votre CV (~5-10 sec)…
+        </template>
+        <template v-else-if="(progress ?? 0) >= 100">
+          Redirection immédiate…
+        </template>
+        <template v-else>
+          Quelques instants suffisent.
+        </template>
+      </p>
       <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
         <div
-          class="h-full bg-secondary transition-all duration-700"
+          class="h-full bg-secondary transition-all duration-300 ease-out"
           :style="{ width: `${progress ?? 0}%` }"
         />
       </div>

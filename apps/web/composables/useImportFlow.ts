@@ -33,13 +33,16 @@ export function useImportFlow(documentType: DocumentType) {
     progress.value = 5
     stage.value = 0
     progressTimer = setInterval(() => {
-      if (progress.value < 78) {
-        progress.value = Math.min(78, progress.value + 2)
-        if (progress.value >= 20) stage.value = 1
-        if (progress.value >= 40) stage.value = 2
-        if (progress.value >= 60) stage.value = 3
+      if (progress.value < 96) {
+        // Déplacement rapide au début, puis ralenti fluide pendant le traitement serveur
+        const step = progress.value < 60 ? 3 : progress.value < 85 ? 1.5 : 0.5
+        progress.value = Math.min(96, Number((progress.value + step).toFixed(1)))
+
+        if (progress.value >= 20 && progress.value < 45) stage.value = 1
+        else if (progress.value >= 45 && progress.value < 70) stage.value = 2
+        else if (progress.value >= 70) stage.value = 3
       }
-    }, 450)
+    }, 350)
   }
 
   async function processDocumentWithTimeout(id: string) {
