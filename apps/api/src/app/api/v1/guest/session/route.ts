@@ -8,10 +8,18 @@ export async function POST(request: Request) {
     let sessionId = request.headers.get('x-guest-session-id')?.trim() || ''
 
     if (!sessionId) {
-      const body = await request.json().catch(() => ({}))
-      if (typeof body.sessionId === 'string' && body.sessionId.trim()) {
-        sessionId = body.sessionId.trim()
-      } else {
+      const rawText = await request.text().catch(() => '')
+      if (rawText.trim()) {
+        try {
+          const body = JSON.parse(rawText)
+          if (typeof body.sessionId === 'string' && body.sessionId.trim()) {
+            sessionId = body.sessionId.trim()
+          }
+        } catch {
+          /* ignore JSON parse errors */
+        }
+      }
+      if (!sessionId) {
         sessionId = randomUUID()
       }
     }
