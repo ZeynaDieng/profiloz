@@ -4,10 +4,13 @@ export function useDocumentService() {
   const { upload, post, get } = useApiClient()
 
   async function uploadDocument(file: File, type: DocumentType) {
+    console.log(`📤 [Profilo’Z Upload] Envoi du fichier ${file.name} (${file.size} octets, type: ${type}) vers /documents/upload...`)
     const formData = new FormData()
     formData.append('file', file)
     formData.append('type', type)
-    return upload<{ id: string; status: string; originalName: string }>('/documents/upload', formData)
+    const result = await upload<{ id: string; status: string; originalName: string }>('/documents/upload', formData)
+    console.log('✅ [Profilo’Z Upload] Téléversement réussi, Document créé:', result)
+    return result
   }
 
   async function processDocument(id: string) {
