@@ -21,7 +21,17 @@ function extractGuestId(key: string, prefix: string): string | null {
 function parseResumeDraft(raw: string): ResumeSnapshot | null {
   try {
     const persisted = JSON.parse(raw) as { current?: ResumeSnapshot | null }
-    if (persisted.current?.personalInfo?.fullName?.trim()) return persisted.current
+    const c = persisted.current
+    if (
+      c?.personalInfo?.fullName?.trim() ||
+      c?.personalInfo?.jobTitle?.trim() ||
+      c?.summary?.trim() ||
+      (c?.experiences && c.experiences.length > 0) ||
+      (c?.educations && c.educations.length > 0) ||
+      (c?.skills && c.skills.length > 0)
+    ) {
+      return c
+    }
   } catch {
     // ignore
   }
