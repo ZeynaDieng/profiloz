@@ -37,9 +37,15 @@ export class DocumentRepository {
   }
 
   saveOcrResult(documentId: string, data: { rawText: string; parsedData: object; confidence?: number }) {
-    return prisma.ocrResult.create({
-      data: {
+    return prisma.ocrResult.upsert({
+      where: { documentId },
+      create: {
         documentId,
+        rawText: data.rawText,
+        parsedData: data.parsedData,
+        confidence: data.confidence,
+      },
+      update: {
         rawText: data.rawText,
         parsedData: data.parsedData,
         confidence: data.confidence,
