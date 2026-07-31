@@ -104,19 +104,7 @@ const {
       <p class="mt-10 mb-12 text-[10.5pt]">{{ closing }}</p>
 
       <!-- Signature -->
-      <div class="flex justify-between items-end">
-        <div v-if="letter.senderName">
-          <!-- Ligne pointillée pour le paraphe -->
-          <div class="w-40 mb-3" style="border-top: 1px dashed #9ca3af" />
-          <p
-            class="text-[9.5pt] font-bold uppercase tracking-[0.06em] text-[#0a0a0a]"
-          >
-            {{ letter.senderName }}
-          </p>
-          <p v-if="letter.position" class="text-[8.5pt] text-[#6b7280] mt-0.5">
-            Candidat — {{ letter.position }}
-          </p>
-        </div>
+      <CoverLetterSignature :letter="letter" align="left" />
 
         <!-- Tampon décoratif -->
         <div class="text-right opacity-10 select-none" aria-hidden="true">
@@ -131,6 +119,5 @@ const {
           </div>
         </div>
       </div>
-    </div>
-  </CoverLetterShell>
-</template>
+    </CoverLetterShell>
+  </template>

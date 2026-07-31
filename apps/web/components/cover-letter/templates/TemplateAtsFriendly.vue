@@ -43,8 +43,8 @@ const {
         <p class="font-bold">{{ greeting }}</p>
         <p v-for="(para, i) in paragraphs" :key="i" class="leading-relaxed">{{ para }}</p>
         <div class="pt-4 border-t border-slate-200 mt-6">
-          <p class="italic mb-6 text-slate-600">{{ closing }}</p>
-          <p class="font-bold text-lg text-black">{{ letter.fullName }}</p>
+          <p class="italic mb-4 text-slate-600">{{ closing }}</p>
+          <CoverLetterSignature :letter="letter" align="left" />
         </div>
       </div>
     </div>

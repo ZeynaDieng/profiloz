@@ -117,19 +117,7 @@ const {
       <p class="mt-10 mb-8 text-[10pt] text-[#475569]">{{ closing }}</p>
 
       <!-- Signature -->
-      <div v-if="letter.senderName" class="flex items-center gap-4">
-        <div class="flex flex-col gap-1">
-          <p
-            class="font-bold text-[11pt] text-[#0f172a] tracking-tight leading-none"
-          >
-            {{ letter.senderName }}
-          </p>
-          <div
-            class="h-[2px] w-full rounded-full"
-            style="background: var(--color-secondary)"
-          />
-        </div>
-      </div>
+      <CoverLetterSignature :letter="letter" align="left" />
     </div>
   </CoverLetterShell>
 </template>

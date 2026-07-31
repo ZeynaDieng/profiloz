@@ -176,25 +176,7 @@ const {
       <p class="mt-10 text-[10pt] text-[#475569] italic">{{ closing }}</p>
 
       <!-- Signature stylisée -->
-      <div class="mt-6 flex items-end gap-4">
-        <div
-          class="h-[3px] w-12 rounded-full mb-1"
-          style="
-            background: linear-gradient(
-              to right,
-              var(--color-secondary),
-              var(--color-primary)
-            );
-          "
-        />
-        <p
-          v-if="letter.senderName"
-          class="font-bold text-[13pt] tracking-tight leading-none"
-          style="color: var(--color-secondary)"
-        >
-          {{ letter.senderName }}
-        </p>
-      </div>
+      <CoverLetterSignature :letter="letter" align="left" />
     </div>
   </CoverLetterShell>
 </template>

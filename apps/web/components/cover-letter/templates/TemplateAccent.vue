@@ -148,9 +148,10 @@ const initials = computed(() => {
         </p>
       </div>
 
-      <!-- Formule de politesse -->
+      <!-- Formule de politesse & Signature -->
       <div class="mt-10 pt-6 border-t border-[#e2e8f0]">
         <p class="text-[10pt] text-[#334155]">{{ closing }}</p>
+        <CoverLetterSignature :letter="letter" align="left" />
       </div>
     </div>
   </CoverLetterShell>

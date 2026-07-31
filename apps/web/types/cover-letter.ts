@@ -30,6 +30,7 @@ export interface CoverLetterSnapshot {
   content: string
   closingText?: string
   accentColor?: string
+  signatureUrl?: string
 }
 
 export const DEFAULT_CLOSING_TEXT =
