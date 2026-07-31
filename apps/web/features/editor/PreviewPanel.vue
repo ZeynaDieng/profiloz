@@ -13,17 +13,30 @@ const { zoom, setZoom, zoomIn, zoomOut, scaleStyle, previewWrapperStyle, contain
 
 const isOverflowing = ref(false)
 let observer: ResizeObserver | null = null
+let overflowTimer: ReturnType<typeof setTimeout> | null = null
 
 function checkOverflow() {
-  const el = document.querySelector('.resume-a4') as HTMLElement | null
-  if (!el) {
-    isOverflowing.value = false
-    return
-  }
-  // Un A4 a un ratio hauteur / largeur de 297 / 210 = 1.414285...
-  const expectedHeight = el.clientWidth * 1.414
-  // Marge de tolérance de 12px pour éviter les faux positifs d'arrondi
-  isOverflowing.value = el.clientHeight > expectedHeight + 12
+  if (overflowTimer) clearTimeout(overflowTimer)
+  overflowTimer = setTimeout(async () => {
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      try {
+        await document.fonts.ready
+      } catch (_) {}
+    }
+
+    const el = document.querySelector('.resume-a4') as HTMLElement | null
+    if (!el) {
+      isOverflowing.value = false
+      return
+    }
+
+    // Ratio A4 exact: 297mm / 210mm = 1.4142857...
+    const expectedHeight = el.clientWidth * (297 / 210)
+    // scrollHeight donne la hauteur réelle occupée par le contenu
+    const actualHeight = Math.max(el.scrollHeight, el.clientHeight)
+    // Marge de tolérance de 35px pour éviter tout faux positif lié aux arrondis sous-pixels et au chargement des polices
+    isOverflowing.value = actualHeight > expectedHeight + 35
+  }, 100)
 }
 
 onMounted(() => {
@@ -31,19 +44,32 @@ onMounted(() => {
     const el = document.querySelector('.resume-a4')
     if (el) {
       checkOverflow()
-      observer = new ResizeObserver(checkOverflow)
+      observer = new ResizeObserver(() => checkOverflow())
       observer.observe(el)
     }
   })
 })
 
 onUnmounted(() => {
+  if (overflowTimer) clearTimeout(overflowTimer)
   observer?.disconnect()
 })
 
-watch(() => props.resume, () => {
-  nextTick(checkOverflow)
-}, { deep: true })
+watch(
+  () => [props.resume.templateSlug, props.resume.accentColor],
+  () => {
+    if (overflowTimer) clearTimeout(overflowTimer)
+    overflowTimer = setTimeout(checkOverflow, 200)
+  },
+)
+
+watch(
+  () => props.resume,
+  () => {
+    checkOverflow()
+  },
+  { deep: true },
+)
 </script>
 
 <template>
