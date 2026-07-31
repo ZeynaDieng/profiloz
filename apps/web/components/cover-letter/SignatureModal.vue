@@ -184,7 +184,7 @@ watch(
         <div class="px-6 py-4 border-b border-outline-variant/60 flex items-center justify-between">
           <div>
             <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
-              <LucidePenTool class="w-5 h-5 text-primary" />
+              <UiPzIcon name="edit" class="text-primary text-xl" />
               Signature Électronique
             </h3>
             <p class="text-xs text-on-surface-variant mt-0.5">
@@ -196,7 +196,7 @@ watch(
             class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors"
             @click="closeModal"
           >
-            <LucideX class="w-5 h-5" />
+            <UiPzIcon name="close" class="text-lg" />
           </button>
         </div>
 
@@ -215,7 +215,7 @@ watch(
               initCanvas()
             "
           >
-            <LucideEdit3 class="w-3.5 h-3.5" />
+            <UiPzIcon name="draw" class="text-sm" />
             Dessiner
           </button>
           <button
@@ -228,7 +228,7 @@ watch(
             "
             @click="activeTab = 'upload'"
           >
-            <LucideUploadCloud class="w-3.5 h-3.5" />
+            <UiPzIcon name="cloud_upload" class="text-sm" />
             Importer image
           </button>
           <button
@@ -241,7 +241,7 @@ watch(
             "
             @click="activeTab = 'type'"
           >
-            <LucideType class="w-3.5 h-3.5" />
+            <UiPzIcon name="text_fields" class="text-sm" />
             Calligraphie
           </button>
         </div>
@@ -272,7 +272,7 @@ watch(
                 class="text-xs text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1"
                 @click="clearCanvas"
               >
-                <LucideRotateCcw class="w-3.5 h-3.5" />
+                <UiPzIcon name="restart_alt" class="text-sm" />
                 Effacer
               </button>
               <div class="flex gap-2">
@@ -301,7 +301,7 @@ watch(
               class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100/80 transition-colors p-4"
             >
               <div v-if="!uploadedDataUrl" class="flex flex-col items-center justify-center space-y-2 text-center">
-                <LucideImagePlus class="w-8 h-8 text-primary/70" />
+                <UiPzIcon name="add_photo_alternate" class="text-3xl text-primary/70" />
                 <p class="text-xs font-semibold text-slate-700">Cliquez pour importer votre signature</p>
                 <p class="text-[11px] text-slate-500">Formats acceptés: PNG, JPG, WEBP (fond transparent recommandé)</p>
               </div>

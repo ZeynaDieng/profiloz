@@ -28,7 +28,8 @@ export async function POST(request: Request) {
     const response = jsonResponse(session, 201)
     return withCors(response, origin)
   } catch (error) {
-    const response = problemResponse(error as Error)
+    const status = (error as { status?: number }).status || 500
+    const response = problemResponse(error as Error, status)
     return withCors(response, origin)
   }
 }
