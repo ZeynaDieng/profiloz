@@ -41,6 +41,7 @@ export function buildCoverLetterPreviewSnapshot(
     recruiterName: pickText(user.recruiterName, base.recruiterName),
     content: !userContent || isGenericDefault ? (base.content ?? '') : user.content!,
     closingText: pickText(user.closingText, base.closingText),
+    signatureUrl: user.signatureUrl ?? undefined,
   }
 }
 

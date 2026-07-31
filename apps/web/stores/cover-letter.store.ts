@@ -21,6 +21,7 @@ export interface CoverLetterDraft {
   content: string
   closingText: string
   accentColor: string
+  signatureUrl?: string
   lastModified: string
 }
 
@@ -39,6 +40,7 @@ function createEmptyDraft(): CoverLetterDraft {
     content: '',
     closingText: DEFAULT_CLOSING_TEXT,
     accentColor: defaultLetterAccentColor('CLASSIQUE'),
+    signatureUrl: '',
     lastModified: new Date().toISOString(),
   }
 }
@@ -128,6 +130,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
       if (data.closingText) this.current.closingText = data.closingText
       if (data.templateSlug) this.current.templateSlug = data.templateSlug
       if (data.accentColor) this.current.accentColor = data.accentColor
+      if (data.signatureUrl !== undefined) this.current.signatureUrl = data.signatureUrl
       touch(this.current)
       this.isDirty = true
     },
@@ -147,6 +150,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
         content: this.current.content,
         closingText: this.current.closingText || undefined,
         accentColor: this.current.accentColor || undefined,
+        signatureUrl: this.current.signatureUrl || undefined,
       }
     },
   },

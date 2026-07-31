@@ -46,6 +46,7 @@ const position = ref('')
 const recruiterName = ref('')
 const content = ref('')
 const closingText = ref(DEFAULT_CLOSING_TEXT)
+const signatureUrl = ref('')
 
 const accentColors = computed(() => getLetterAccentPalette(templateId.value))
 
@@ -63,6 +64,7 @@ const previewLetter = computed(() =>
       recruiterName: recruiterName.value,
       content: content.value,
       closingText: closingText.value,
+      signatureUrl: signatureUrl.value,
     },
     accentColor.value,
   ),
@@ -82,6 +84,7 @@ function syncStoreFromRefs() {
     recruiterName: recruiterName.value,
     content: content.value,
     closingText: closingText.value,
+    signatureUrl: signatureUrl.value,
   })
 }
 
@@ -100,6 +103,7 @@ function loadRefsFromStore() {
   recruiterName.value = draft.recruiterName
   content.value = draft.content
   closingText.value = draft.closingText
+  signatureUrl.value = draft.signatureUrl || ''
 }
 
 watch(
@@ -116,6 +120,7 @@ watch(
     recruiterName,
     content,
     closingText,
+    signatureUrl,
   ],
   () => {
     if (loading.value) return
@@ -459,6 +464,7 @@ async function downloadPdf() {
             v-model:recruiter-name="recruiterName"
             v-model:content="content"
             v-model:closing-text="closingText"
+            v-model:signature-url="signatureUrl"
             :accent-colors="accentColors"
             :show-template-picker="true"
             :field-errors="fieldErrors"
