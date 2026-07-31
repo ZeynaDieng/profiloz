@@ -91,17 +91,17 @@ const {
             <li
               v-for="(skill, i) in snapshot.skills"
               :key="i"
-              class="text-[8pt] flex items-center justify-between gap-1"
+              class="text-[8pt] flex items-start justify-between gap-2"
               style="color: rgba(255, 255, 255, 0.88)"
             >
-              <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-start gap-1.5 min-w-0 flex-1">
                 <span
-                  class="w-1.5 h-1.5 rounded-full shrink-0"
+                  class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5"
                   style="background: rgba(255, 255, 255, 0.5)"
                 />
-                <span class="truncate">{{ skill.name }}</span>
+                <span class="break-words leading-tight">{{ skill.name }}</span>
               </div>
-              <span v-if="formatSkillLevel(skill.level)" class="text-[7pt] shrink-0" style="color: rgba(255, 255, 255, 0.65)">
+              <span v-if="formatSkillLevel(skill.level)" class="text-[7pt] shrink-0 mt-0.5" style="color: rgba(255, 255, 255, 0.65)">
                 {{ formatSkillLevel(skill.level) }}
               </span>
             </li>
