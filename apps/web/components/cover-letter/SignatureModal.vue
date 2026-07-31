@@ -123,8 +123,14 @@ watch(
   },
 )
 
-function saveTypedSignature() {
+async function saveTypedSignature() {
   if (!typedText.value.trim()) return
+
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    try {
+      await document.fonts.ready
+    } catch (_) {}
+  }
 
   // Créer un canvas virtuel pour convertir la police calligraphique en image PNG Data URL
   const offscreen = document.createElement('canvas')
