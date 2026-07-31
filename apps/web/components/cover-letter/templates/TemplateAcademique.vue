@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
+import CoverLetterSignature from '../CoverLetterSignature.vue'
 
 const props = defineProps<{ letter: CoverLetterSnapshot }>()
 const {

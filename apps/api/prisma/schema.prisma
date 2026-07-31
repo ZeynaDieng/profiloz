@@ -493,6 +493,7 @@ model CoverLetter {
   closingText     String?  @db.Text
   templateId      String   @default("CLASSIQUE")
   accentColor     String?
+  signatureUrl    String?  @db.Text
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

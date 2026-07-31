@@ -33,6 +33,7 @@ const coverLetterFields = {
   closingText: optionalText(500),
   templateId: templateIdSchema,
   accentColor: accentColorSchema,
+  signatureUrl: z.string().nullish(),
 }
 
 export const createCoverLetterSchema = z.object(coverLetterFields)

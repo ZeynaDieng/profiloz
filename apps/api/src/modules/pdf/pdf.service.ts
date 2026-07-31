@@ -235,6 +235,7 @@ export interface CoverLetterPdfInput {
   content: string
   closingText?: string | null
   accentColor?: string | null
+  signatureUrl?: string | null
 }
 
 /** @deprecated Utiliser generateCoverLetterPdf avec la page /imprimer/lettre */

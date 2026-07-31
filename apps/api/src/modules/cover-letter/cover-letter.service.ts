@@ -22,6 +22,7 @@ function toDto(letter: {
   closingText: string | null
   templateId: string
   accentColor: string | null
+  signatureUrl: string | null
   resumeId: string | null
   createdAt: Date
   updatedAt: Date
@@ -41,6 +42,7 @@ function toDto(letter: {
     closingText: letter.closingText,
     templateId: letter.templateId,
     accentColor: letter.accentColor,
+    signatureUrl: letter.signatureUrl,
     resumeId: letter.resumeId,
     createdAt: letter.createdAt.toISOString(),
     updatedAt: letter.updatedAt.toISOString(),
@@ -74,6 +76,7 @@ export class CoverLetterService {
       closingText: input.closingText ?? null,
       templateId: input.templateId,
       accentColor: input.accentColor ?? null,
+      signatureUrl: input.signatureUrl ?? null,
       ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
     })
     return toDto(letter)
@@ -103,6 +106,7 @@ export class CoverLetterService {
       closingText: input.closingText ?? null,
       templateId: input.templateId,
       accentColor: input.accentColor ?? null,
+      signatureUrl: input.signatureUrl !== undefined ? (input.signatureUrl || null) : undefined,
       ...(input.resumeId !== undefined
         ? input.resumeId
           ? { resume: { connect: { id: input.resumeId } } }
@@ -135,6 +139,7 @@ export class CoverLetterService {
       content: letter.content,
       closingText: letter.closingText,
       accentColor: letter.accentColor,
+      signatureUrl: letter.signatureUrl,
     }))
   }
 
@@ -168,6 +173,7 @@ export class CoverLetterService {
         content: letter.content,
         closingText: letter.closingText,
         accentColor: letter.accentColor,
+        signatureUrl: letter.signatureUrl,
       },
       { userId: owner.userId },
     )

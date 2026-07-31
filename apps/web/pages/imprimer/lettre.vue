@@ -51,6 +51,7 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
     content: String(raw.value.content ?? ''),
     closingText: raw.value.closingText as string | undefined,
     accentColor: raw.value.accentColor as string | undefined,
+    signatureUrl: raw.value.signatureUrl as string | undefined,
   })
 })
 

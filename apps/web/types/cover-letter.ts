@@ -74,6 +74,7 @@ export function toCoverLetterSnapshot(data: {
   content: string
   closingText?: string | null
   accentColor?: string | null
+  signatureUrl?: string | null
 }): CoverLetterSnapshot {
   return {
     id: data.id ?? undefined,
@@ -90,5 +91,6 @@ export function toCoverLetterSnapshot(data: {
     content: data.content,
     closingText: data.closingText ?? undefined,
     accentColor: data.accentColor ?? undefined,
+    signatureUrl: data.signatureUrl ?? undefined,
   }
 }

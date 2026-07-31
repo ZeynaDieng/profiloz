@@ -48,6 +48,7 @@ function toPdfInput(snapshot: Record<string, unknown>): CoverLetterPdfInput {
     content,
     closingText: typeof snapshot.closingText === 'string' ? snapshot.closingText : null,
     accentColor: parseAccentColor(snapshot.accentColor),
+    signatureUrl: typeof snapshot.signatureUrl === 'string' ? snapshot.signatureUrl : null,
   }
 }
 
