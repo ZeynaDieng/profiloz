@@ -49,11 +49,8 @@ export function useApiClient() {
     if (isFormData) delete headers['Content-Type']
 
     const method = options.method || 'GET'
-    let baseUrl = config.public.apiBaseUrl || ''
-    if (import.meta.client && typeof window !== 'undefined' && window.location.hostname === 'localhost' && baseUrl.includes('127.0.0.1')) {
-      baseUrl = baseUrl.replace('127.0.0.1', 'localhost')
-    }
-    const fullUrl = `${baseUrl}${path}`
+    let baseUrl = config.public.apiBaseUrl || '/api/v1'
+    const fullUrl = path.startsWith('http') ? path : `${baseUrl}${path}`
     console.log(`🌐 [useApiClient] ${method} -> ${fullUrl}`, { isFormData, headers })
 
     const start = Date.now()
