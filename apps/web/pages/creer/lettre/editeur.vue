@@ -364,164 +364,166 @@ async function downloadPdf() {
 </script>
 
 <template>
-  <!-- Skeleton Loader de l'éditeur de lettre -->
-  <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
-    <!-- Topbar skeleton -->
-    <header class="flex items-center justify-between px-margin-mobile py-2 bg-surface border-b border-outline-variant/30 shrink-0 min-h-[3.25rem]">
-      <div class="flex items-center gap-2">
-        <UiSkeleton variant="circle" width="2rem" height="2rem" />
-        <UiSkeleton variant="rect" width="10rem" height="1.25rem" class="rounded animate-pulse" />
-      </div>
-      <div class="flex items-center gap-2">
-        <UiSkeleton variant="rect" width="8rem" height="2.25rem" class="rounded-xl animate-pulse" />
-      </div>
-    </header>
-
-    <!-- Content skeleton -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-      <!-- Form column -->
-      <div class="flex flex-col overflow-y-auto p-4 md:p-6 border-r border-outline-variant/30 space-y-6">
-        <div class="space-y-4">
-          <UiSkeleton variant="rect" width="40%" height="1.25rem" class="rounded animate-pulse" />
-          <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
-          <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
+  <div class="w-full">
+    <!-- Skeleton Loader de l'éditeur de lettre -->
+    <div v-if="loading" class="h-screen flex flex-col overflow-hidden bg-background">
+      <!-- Topbar skeleton -->
+      <header class="flex items-center justify-between px-margin-mobile py-2 bg-surface border-b border-outline-variant/30 shrink-0 min-h-[3.25rem]">
+        <div class="flex items-center gap-2">
+          <UiSkeleton variant="circle" width="2rem" height="2rem" />
+          <UiSkeleton variant="rect" width="10rem" height="1.25rem" class="rounded animate-pulse" />
         </div>
-        <div class="space-y-4">
-          <UiSkeleton variant="rect" width="30%" height="1.25rem" class="rounded animate-pulse" />
-          <UiSkeleton variant="rect" height="12rem" class="rounded-xl animate-pulse" />
+        <div class="flex items-center gap-2">
+          <UiSkeleton variant="rect" width="8rem" height="2.25rem" class="rounded-xl animate-pulse" />
         </div>
-      </div>
+      </header>
 
-      <!-- Preview column (Hidden on mobile) -->
-      <div class="hidden lg:flex flex-col items-center justify-center p-8 bg-surface-container-lowest overflow-y-auto">
-        <div class="w-full max-w-[21cm] aspect-[1/1.414] bg-white rounded-xl shadow-lg border border-outline-variant/30 p-12 space-y-6">
-          <div class="space-y-2">
-            <UiSkeleton variant="rect" width="30%" height="1.5rem" class="rounded animate-pulse" />
-            <UiSkeleton variant="rect" width="25%" height="1rem" class="rounded animate-pulse" />
-          </div>
-          <div class="space-y-2 text-right self-end ml-auto flex flex-col items-end">
+      <!-- Content skeleton -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+        <!-- Form column -->
+        <div class="flex flex-col overflow-y-auto p-4 md:p-6 border-r border-outline-variant/30 space-y-6">
+          <div class="space-y-4">
             <UiSkeleton variant="rect" width="40%" height="1.25rem" class="rounded animate-pulse" />
-            <UiSkeleton variant="rect" width="35%" height="1rem" class="rounded animate-pulse" />
+            <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
+            <UiSkeleton variant="rect" height="3.5rem" class="rounded-xl animate-pulse" />
           </div>
-          <div class="mt-12 space-y-4">
-            <UiSkeleton variant="rect" width="45%" height="1.25rem" class="rounded animate-pulse" />
-            <UiSkeleton variant="text" :lines="6" class="animate-pulse" />
-            <UiSkeleton variant="rect" width="30%" height="1.25rem" class="rounded animate-pulse" style="margin-top: 2rem;" />
+          <div class="space-y-4">
+            <UiSkeleton variant="rect" width="30%" height="1.25rem" class="rounded animate-pulse" />
+            <UiSkeleton variant="rect" height="12rem" class="rounded-xl animate-pulse" />
+          </div>
+        </div>
+
+        <!-- Preview column (Hidden on mobile) -->
+        <div class="hidden lg:flex flex-col items-center justify-center p-8 bg-surface-container-lowest overflow-y-auto">
+          <div class="w-full max-w-[21cm] aspect-[1/1.414] bg-white rounded-xl shadow-lg border border-outline-variant/30 p-12 space-y-6">
+            <div class="space-y-2">
+              <UiSkeleton variant="rect" width="30%" height="1.5rem" class="rounded animate-pulse" />
+              <UiSkeleton variant="rect" width="25%" height="1rem" class="rounded animate-pulse" />
+            </div>
+            <div class="space-y-2 text-right self-end ml-auto flex flex-col items-end">
+              <UiSkeleton variant="rect" width="40%" height="1.25rem" class="rounded animate-pulse" />
+              <UiSkeleton variant="rect" width="35%" height="1rem" class="rounded animate-pulse" />
+            </div>
+            <div class="mt-12 space-y-4">
+              <UiSkeleton variant="rect" width="45%" height="1.25rem" class="rounded animate-pulse" />
+              <UiSkeleton variant="text" :lines="6" class="animate-pulse" />
+              <UiSkeleton variant="rect" width="30%" height="1.25rem" class="rounded animate-pulse" style="margin-top: 2rem;" />
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div v-else class="min-h-screen flex flex-col bg-background">
-    <header class="flex items-center justify-between gap-3 px-margin-mobile py-2.5 border-b border-outline-variant/30 bg-surface/90 backdrop-blur-sm shrink-0">
-      <div class="flex items-center gap-2 min-w-0">
-        <NuxtLink to="/creer/lettre/modele" class="text-secondary shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center">
-          <UiPzIcon name="arrow_back" />
-        </NuxtLink>
-        <div class="min-w-0">
-          <p class="text-xs text-on-surface-variant truncate">{{ autoSaveLabel }}</p>
-          <h1 class="font-bold text-on-surface truncate">Ma lettre de motivation</h1>
+    <div v-else class="min-h-screen flex flex-col bg-background">
+      <header class="flex items-center justify-between gap-3 px-margin-mobile py-2.5 border-b border-outline-variant/30 bg-surface/90 backdrop-blur-sm shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <NuxtLink to="/creer/lettre/modele" class="text-secondary shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center">
+            <UiPzIcon name="arrow_back" />
+          </NuxtLink>
+          <div class="min-w-0">
+            <p class="text-xs text-on-surface-variant truncate">{{ autoSaveLabel }}</p>
+            <h1 class="font-bold text-on-surface truncate">Ma lettre de motivation</h1>
+          </div>
         </div>
-      </div>
-      <div class="flex items-center gap-1 shrink-0">
-        <button
-          type="button"
-          class="sm:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
-          aria-label="Menu"
-          @click="openMenu($event.currentTarget as HTMLElement)"
-        >
-          <UiPzIcon name="menu" />
-        </button>
-        <LayoutAuthStatus icon-only class="sm:hidden" />
-        <LayoutAuthStatus compact class="hidden sm:flex" />
-      </div>
-    </header>
+        <div class="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            class="sm:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container"
+            aria-label="Menu"
+            @click="openMenu($event.currentTarget as HTMLElement)"
+          >
+            <UiPzIcon name="menu" />
+          </button>
+          <LayoutAuthStatus icon-only class="sm:hidden" />
+          <LayoutAuthStatus compact class="hidden sm:flex" />
+        </div>
+      </header>
 
-    <LayoutAppMarketingDrawer />
+      <LayoutAppMarketingDrawer />
 
-    <main class="flex-1 page-container pb-28 xl:pb-6">
-      <div class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter mt-4">
-        <UiCard variant="glass" padding="lg">
-          <Transition name="form-field__error">
-            <UiMessageBanner
-              v-if="formError"
-              variant="error"
-              :message="formError"
-              class="mb-4"
+      <main class="flex-1 page-container pb-28 xl:pb-6">
+        <div class="flex flex-col xl:grid xl:grid-cols-2 gap-gutter mt-4">
+          <UiCard variant="glass" padding="lg">
+            <Transition name="form-field__error">
+              <UiMessageBanner
+                v-if="formError"
+                variant="error"
+                :message="formError"
+                class="mb-4"
+              />
+            </Transition>
+            <FeatureCoverLetterForm
+              v-model:template-id="templateId"
+              v-model:accent-color="accentColor"
+              v-model:sender-name="senderName"
+              v-model:sender-email="senderEmail"
+              v-model:sender-phone="senderPhone"
+              v-model:sender-location="senderLocation"
+              v-model:company-name="companyName"
+              v-model:company-address="companyAddress"
+              v-model:position="position"
+              v-model:recruiter-name="recruiterName"
+              v-model:content="content"
+              v-model:closing-text="closingText"
+              v-model:signature-url="signatureUrl"
+              :accent-colors="accentColors"
+              :show-template-picker="true"
+              :field-errors="fieldErrors"
             />
-          </Transition>
-          <FeatureCoverLetterForm
-            v-model:template-id="templateId"
-            v-model:accent-color="accentColor"
-            v-model:sender-name="senderName"
-            v-model:sender-email="senderEmail"
-            v-model:sender-phone="senderPhone"
-            v-model:sender-location="senderLocation"
-            v-model:company-name="companyName"
-            v-model:company-address="companyAddress"
-            v-model:position="position"
-            v-model:recruiter-name="recruiterName"
-            v-model:content="content"
-            v-model:closing-text="closingText"
-            v-model:signature-url="signatureUrl"
-            :accent-colors="accentColors"
-            :show-template-picker="true"
-            :field-errors="fieldErrors"
-          />
-          <UiMessageBanner v-if="pdfError" variant="error" :message="pdfError" class="mt-4" />
-          <div class="hidden md:flex justify-end mt-stack-lg">
-            <UiButton variant="secondary" icon="download" :loading="pdfLoading" @click="downloadPdf">
-              {{ MSG.buttons.downloadPdf }}
-            </UiButton>
-          </div>
+            <UiMessageBanner v-if="pdfError" variant="error" :message="pdfError" class="mt-4" />
+            <div class="hidden md:flex justify-end mt-stack-lg">
+              <UiButton variant="secondary" icon="download" :loading="pdfLoading" @click="downloadPdf">
+                {{ MSG.buttons.downloadPdf }}
+              </UiButton>
+            </div>
+          </UiCard>
+
+          <UiCard v-if="isDesktop" variant="glass" padding="sm" class="overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-4 py-3 border-b border-outline-variant/30">
+              Aperçu A4
+            </p>
+            <div class="h-[min(70vh,720px)]">
+              <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+            </div>
+          </UiCard>
+        </div>
+      </main>
+
+      <UiStickyActionBar class="md:hidden">
+        <div class="grid grid-cols-2 gap-2">
+          <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
+            Aperçu
+          </UiButton>
+          <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
+            {{ MSG.buttons.downloadPdf }}
+          </UiButton>
+        </div>
+      </UiStickyActionBar>
+
+      <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4">
+        <div class="h-full min-h-[70vh] bg-surface-container-low">
+          <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+        </div>
+        <template #footer>
+          <UiButton variant="secondary" block @click="previewOpen = false">
+            Retour au formulaire
+          </UiButton>
+        </template>
+      </UiFullScreenSheet>
+
+      <div
+        v-if="pdfLoading"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-margin-mobile"
+        role="status"
+        aria-live="polite"
+      >
+        <UiCard variant="glass" padding="lg" class="w-full max-w-sm text-center shadow-lg">
+          <UiPzIcon name="picture_as_pdf" class="text-4xl text-secondary mb-4 animate-pulse" />
+          <p class="font-bold text-on-surface mb-2">{{ pdfLoadingMessage }}</p>
+          <p class="text-sm text-on-surface-variant">Quelques instants suffisent.</p>
+          <UiSkeleton variant="text" width="100%" class="mt-4" />
         </UiCard>
-
-        <UiCard v-if="isDesktop" variant="glass" padding="sm" class="overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
-          <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-4 py-3 border-b border-outline-variant/30">
-            Aperçu A4
-          </p>
-          <div class="h-[min(70vh,720px)]">
-            <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
-          </div>
-        </UiCard>
       </div>
-    </main>
-
-    <UiStickyActionBar class="md:hidden">
-      <div class="grid grid-cols-2 gap-2">
-        <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
-          Aperçu
-        </UiButton>
-        <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
-          {{ MSG.buttons.downloadPdf }}
-        </UiButton>
-      </div>
-    </UiStickyActionBar>
-
-    <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4">
-      <div class="h-full min-h-[70vh] bg-surface-container-low">
-        <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
-      </div>
-      <template #footer>
-        <UiButton variant="secondary" block @click="previewOpen = false">
-          Retour au formulaire
-        </UiButton>
-      </template>
-    </UiFullScreenSheet>
-
-    <div
-      v-if="pdfLoading"
-      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-margin-mobile"
-      role="status"
-      aria-live="polite"
-    >
-      <UiCard variant="glass" padding="lg" class="w-full max-w-sm text-center shadow-lg">
-        <UiPzIcon name="picture_as_pdf" class="text-4xl text-secondary mb-4 animate-pulse" />
-        <p class="font-bold text-on-surface mb-2">{{ pdfLoadingMessage }}</p>
-        <p class="text-sm text-on-surface-variant">Quelques instants suffisent.</p>
-        <UiSkeleton variant="text" width="100%" class="mt-4" />
-      </UiCard>
     </div>
   </div>
 </template>

@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       origin,
     )
   } catch (error) {
-    return withCors(problemResponse(error as Error), origin)
+    const status = (error as { status?: number }).status || 500
+    return withCors(problemResponse(error as Error, status), origin)
   }
 }
 
