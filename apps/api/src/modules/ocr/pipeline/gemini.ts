@@ -56,7 +56,7 @@ CONSIGNES STRICTES :
 1. "summary" (Profil / À propos / Résumé professionnel) : S'il y a un texte d'accroche, un paragraphe de présentation ou de profil en haut du CV, extrait-le INTÉGRALEMENT dans le champ "summary". N'omets aucun mot du profil.
 2. "photo" (Photo de portrait du candidat) : Si le document contient une photo de portrait du candidat, indique "present": true et donne sa bounding box [ymin, xmin, ymax, xmax] (normalisée 0 à 1000). ATTENTION : Recadre ÉTROITEMENT et UNIQUEMENT sur le visage et le haut des épaules du candidat. EXCLUS impérativement tous les éléments extérieurs : contours, cadres, bordures circulaires, anneaux colorés ou motifs graphiques du modèle de CV d'origine.
 3. Expériences professionnelles : Extrait TOUTES les expériences sans omission, avec l'entreprise, le poste, les dates et TOUTES les descriptions de tâches intégrales.
-4. Formations, Compétences et Langues : Extrait tout fidèlement.
+4. Formations, Compétences, Langues et Centres d'intérêt (Loisirs, Hobbies) : Extrait tout fidèlement.
 
 Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure :
 {
@@ -102,6 +102,9 @@ Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure
   ],
   "languages": [
     { "language": "Langue", "level": "Niveau" }
+  ],
+  "interests": [
+    { "name": "Nom du centre d'intérêt ou loisir" }
   ]
 }
 
@@ -208,6 +211,15 @@ Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par
           Array.isArray(parsed.languages) && parsed.languages.length > 0
             ? parsed.languages
             : input.data.languages,
+        interests:
+          Array.isArray(parsed.interests) && parsed.interests.length > 0
+            ? (parsed.interests
+                .map((i: any) => {
+                  const name = typeof i === 'string' ? i.trim() : String(i.name || i.title || i.label || '').trim()
+                  return name ? { name } : null
+                })
+                .filter(Boolean) as ResumeSnapshot['interests'])
+            : input.data.interests,
       }
 
       return {

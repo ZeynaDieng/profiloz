@@ -1087,13 +1087,17 @@ function parseLanguageLine(line: string): ResumeSnapshot['languages'][number] | 
   return null
 }
 
-function parseInterestLine(line: string): ResumeSnapshot['interests'][number] | null {
+function parseInterestLine(line: string): ResumeSnapshot['interests'] {
   const cleaned = stripBullet(line).replace(/^✓\s*/, '').trim()
-  if (!cleaned || cleaned.length > 80) return null
+  if (!cleaned) return []
   if (/^sport\s*[:：]\s*/i.test(cleaned)) {
-    return { name: `Sport — ${cleaned.replace(/^sport\s*[:：]\s*/i, '').trim()}` }
+    return [{ name: `Sport — ${cleaned.replace(/^sport\s*[:：]\s*/i, '').trim()}` }]
   }
-  return { name: cleaned }
+  const items = cleaned.split(/\s*[,;•|/]\s*/).map((s) => s.trim()).filter((s) => s.length >= 2 && s.length <= 80)
+  if (items.length > 1) {
+    return items.map((name) => ({ name }))
+  }
+  return [{ name: cleaned }]
 }
 
 function parseCertificationLine(line: string): ResumeSnapshot['certifications'][number] | null {
@@ -1816,8 +1820,8 @@ function parseStructuredSections(lines: string[]) {
     }
 
     if (section === 'interests') {
-      const parsed = parseInterestLine(rawLine)
-      if (parsed) interests.push(parsed)
+      const parsedItems = parseInterestLine(rawLine)
+      interests.push(...parsedItems)
     }
   }
 
