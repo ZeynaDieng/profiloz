@@ -99,11 +99,10 @@ export const useResumeStore = defineStore('resume', {
     },
     rehydrateFromStorage() {
       if (!import.meta.client) return
+      if (this.current) return
 
       const raw = createScopedResumeDraftStorage().getItem('profiloz:resume:draft')
       if (!raw) return
-
-      this.$reset()
 
       try {
         const persisted = JSON.parse(raw) as Partial<{
@@ -111,7 +110,7 @@ export const useResumeStore = defineStore('resume', {
           isDirty: boolean
           savedResumeId: string | null
         }>
-        if (persisted.current !== undefined) this.current = persisted.current
+        if (persisted.current) this.current = persisted.current
         if (persisted.isDirty !== undefined) this.isDirty = persisted.isDirty
         if (persisted.savedResumeId !== undefined) {
           this.savedResumeId = isLocalDemoResumeId(persisted.savedResumeId)
