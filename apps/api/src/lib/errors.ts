@@ -46,15 +46,16 @@ export function problemResponse(error: AppError | ZodError | Error, status = 500
       { status: 422 },
     )
   } else if (isAppError(error)) {
+    const errorStatus = typeof error.status === 'number' ? error.status : 500
     response = NextResponse.json(
       {
-        type: problemType(error.status),
-        title: error.title,
-        status: error.status,
+        type: problemType(errorStatus),
+        title: error.title || 'Error',
+        status: errorStatus,
         detail: error.detail ?? error.message,
         errors: error.errors,
       },
-      { status: error.status },
+      { status: errorStatus },
     )
   } else {
     console.error(error)
