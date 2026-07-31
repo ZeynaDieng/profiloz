@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { applyCorsHeaders } from '@/lib/cors'
+import { applyCorsHeaders, createCorsHeaders } from '@/lib/cors'
 
 export function middleware(request: NextRequest) {
   const origin = request.headers.get('origin')
 
-  // Preflight OPTIONS : répondre immédiatement 204 avec en-têtes CORS
+  // Preflight OPTIONS : répondre immédiatement 204 avec en-têtes CORS transmis directement
   if (request.method === 'OPTIONS') {
-    const preflightRes = new NextResponse(null, { status: 204 })
-    return applyCorsHeaders(preflightRes, origin)
+    return new NextResponse(null, {
+      status: 204,
+      headers: createCorsHeaders(origin),
+    })
   }
 
   const response = NextResponse.next()

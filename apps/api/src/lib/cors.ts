@@ -25,6 +25,20 @@ export function resolveCorsOrigin(origin: string | null | undefined): string {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://profiloz.com'
 }
 
+export function createCorsHeaders(origin: string | null | undefined): Headers {
+  const allowedOrigin = resolveCorsOrigin(origin)
+  const headers = new Headers()
+  headers.set('Access-Control-Allow-Origin', allowedOrigin)
+  headers.set('Access-Control-Allow-Credentials', 'true')
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
+  headers.set(
+    'Access-Control-Allow-Headers',
+    '*, Content-Type, Authorization, X-Guest-Session-Id, x-guest-session-id, X-Requested-With',
+  )
+  headers.set('Access-Control-Max-Age', '86400')
+  return headers
+}
+
 export function applyCorsHeaders(response: Response, origin: string | null | undefined): Response {
   const allowedOrigin = resolveCorsOrigin(origin)
 
