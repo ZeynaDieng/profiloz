@@ -17,9 +17,18 @@ export class ImportFeedbackService {
     const corrected = stripExtractionMeta(input.correctedData) as Partial<ResumeSnapshot>
     const fieldDiffs = computeImportFieldDiffs(original, corrected)
 
+    let validDocId: string | undefined = undefined
+    if (input.documentId) {
+      const docExists = await prisma.document.findUnique({
+        where: { id: input.documentId },
+        select: { id: true },
+      })
+      if (docExists) validDocId = docExists.id
+    }
+
     return prisma.importFeedback.create({
       data: {
-        documentId: input.documentId,
+        documentId: validDocId,
         userId: ctx.userId,
         guestSessionId: ctx.guestSessionDbId,
         fileName: input.fileName,

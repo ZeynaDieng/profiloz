@@ -6,11 +6,12 @@ export async function POST(request: Request) {
   const origin = request.headers.get('origin')
   try {
     const ctx = await requireGuestOrAuth(request)
-    const body = await request.json()
+    const body = await request.json().catch(() => ({}))
     const feedback = await importFeedbackService.record(body, ctx)
-    return withCors(jsonResponse({ id: feedback.id, recorded: true }, 201), origin)
+    return withCors(jsonResponse({ id: feedback?.id, recorded: true }, 201), origin)
   } catch (error) {
-    return withCors(problemResponse(error as Error), origin)
+    console.warn('⚠️ [import-feedback] Échec d’enregistrement du feedback:', error instanceof Error ? error.message : error)
+    return withCors(jsonResponse({ recorded: false, error: 'Feedback non enregistré' }, 200), origin)
   }
 }
 
