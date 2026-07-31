@@ -5,15 +5,16 @@ import { applyCorsHeaders } from '@/lib/cors'
 export function middleware(request: NextRequest) {
   const origin = request.headers.get('origin')
 
+  // Preflight OPTIONS : répondre immédiatement 204 avec en-têtes CORS
   if (request.method === 'OPTIONS') {
-    return applyCorsHeaders(new NextResponse(null, { status: 204 }), origin)
+    const preflightRes = new NextResponse(null, { status: 204 })
+    return applyCorsHeaders(preflightRes, origin)
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+  return applyCorsHeaders(response, origin)
 }
 
 export const config = {
-  matcher: [
-    '/api/v1/((?!documents/upload|avatars/upload).*)',
-  ],
+  matcher: '/api/v1/:path*',
 }
