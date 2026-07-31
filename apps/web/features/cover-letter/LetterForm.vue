@@ -317,12 +317,12 @@ async function handleGenerateFromJobOffer() {
           />
         </UiFormField>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <UiFormField label="Nom du recruteur (optionnel)">
+          <UiFormField label="Nom du recruteur ou civilite (optionnel)">
             <input
               v-model="recruiterName"
               type="text"
               class="form-input form-input--white w-full"
-              placeholder="Ex: Mme Ndiaye, Responsable RH"
+              placeholder="Ex: Mme Ndiaye, Monsieur le Directeur, M. Jean Dupont..."
             />
           </UiFormField>
           <UiFormField label="Adresse entreprise (optionnel)">
