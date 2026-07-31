@@ -18,7 +18,8 @@ export async function POST(request: Request, { params }: Params) {
     }, 202)
     return withCors(response, origin)
   } catch (error) {
-    const response = problemResponse(error as Error)
+    console.error('❌ [/api/v1/documents/:id/process Error]:', error)
+    const response = problemResponse(error as Error, 422)
     return withCors(response, origin)
   }
 }

@@ -167,8 +167,17 @@ export class DocumentService {
       return ocrResult
     } catch (error) {
       await documentRepository.updateStatus(documentId, 'FAILED')
-      if (error instanceof AppError) throw error
-      throw new AppError(422, 'Unprocessable Entity', 'Impossible d’analyser ce document. Réessayez avec un autre fichier.')
+      if (
+        error instanceof AppError ||
+        (typeof error === 'object' && error !== null && typeof (error as Record<string, unknown>).status === 'number')
+      ) {
+        throw error
+      }
+      throw new AppError(
+        422,
+        'Unprocessable Entity',
+        error instanceof Error ? error.message : 'Impossible d’analyser ce document. Réessayez avec un autre fichier.',
+      )
     }
   }
 
