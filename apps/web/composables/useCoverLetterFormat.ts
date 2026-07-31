@@ -11,8 +11,10 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
   const greeting = computed(() => {
     const name = snapshot.value.recruiterName?.trim()
     if (name) {
-      const title = /^m\.?\s/i.test(name) ? '' : 'Madame '
-      return `${title}${name},`
+      if (/^(mme|madame|m\.|monsieur)\b/i.test(name)) {
+        return `${name},`
+      }
+      return `${name},`
     }
     return 'Madame, Monsieur,'
   })
@@ -37,6 +39,7 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
 
   const recipientLines = computed(() => {
     const lines: string[] = []
+    if (snapshot.value.recruiterName) lines.push(snapshot.value.recruiterName)
     if (snapshot.value.companyName) lines.push(snapshot.value.companyName)
     if (snapshot.value.companyAddress) lines.push(snapshot.value.companyAddress)
     return lines

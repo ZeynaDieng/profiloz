@@ -262,6 +262,7 @@ async function saveLetterToServer(): Promise<string | null> {
     closingText: draft.closingText || undefined,
     templateId: draft.templateSlug,
     accentColor: draft.accentColor || undefined,
+    signatureUrl: draft.signatureUrl || undefined,
     resumeId,
   }
 
@@ -271,8 +272,15 @@ async function saveLetterToServer(): Promise<string | null> {
       : null
 
   if (existingId) {
-    await coverLetterService.update(existingId, payload)
-    return existingId
+    try {
+      await coverLetterService.update(existingId, payload)
+      return existingId
+    } catch (err) {
+      const problem = err as { status?: number; statusCode?: number }
+      const status = problem.status ?? problem.statusCode
+      if (status !== 404) throw err
+      // En cas de 404 (lettre introuvable), on bascule sur la création d'une nouvelle lettre
+    }
   }
 
   const created = await coverLetterService.create(payload)

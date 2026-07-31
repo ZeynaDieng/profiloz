@@ -52,6 +52,7 @@ const position = ref('')
 const recruiterName = ref('')
 const content = ref('')
 const closingText = ref(DEFAULT_CLOSING_TEXT)
+const signatureUrl = ref('')
 
 const previewLetter = computed(() => {
   if (!letter.value) return null
@@ -67,6 +68,7 @@ const previewLetter = computed(() => {
     recruiterName: recruiterName.value,
     content: content.value,
     closingText: closingText.value,
+    signatureUrl: signatureUrl.value,
   })
 })
 
@@ -91,6 +93,7 @@ onMounted(async () => {
     recruiterName.value = data.recruiterName ?? ''
     content.value = data.content
     closingText.value = data.closingText ?? DEFAULT_CLOSING_TEXT
+    signatureUrl.value = data.signatureUrl ?? ''
   } catch {
     pageError.value = 'Lettre introuvable.'
   } finally {
@@ -117,6 +120,7 @@ async function onSave() {
       recruiterName: recruiterName.value || null,
       content: content.value,
       closingText: closingText.value || null,
+      signatureUrl: signatureUrl.value || null,
     })
   } catch (err) {
     const problem = err as { detail?: string; title?: string }
@@ -193,6 +197,7 @@ async function onDelete() {
           v-model:recruiter-name="recruiterName"
           v-model:content="content"
           v-model:closing-text="closingText"
+          v-model:signature-url="signatureUrl"
           :field-errors="fieldErrors"
         />
 

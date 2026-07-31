@@ -40,6 +40,7 @@ const position = ref('')
 const recruiterName = ref('')
 const content = ref(DEFAULT_LETTER_CONTENT)
 const closingText = ref(DEFAULT_CLOSING_TEXT)
+const signatureUrl = ref('')
 
 const loading = ref(false)
 const apiError = ref('')
@@ -79,6 +80,7 @@ const previewLetter = computed(() =>
     recruiterName: recruiterName.value,
     content: content.value,
     closingText: closingText.value,
+    signatureUrl: signatureUrl.value,
   }),
 )
 
@@ -140,6 +142,7 @@ async function onSubmit() {
       recruiterName: recruiterName.value || undefined,
       content: content.value,
       closingText: closingText.value || undefined,
+      signatureUrl: signatureUrl.value || undefined,
       resumeId: linkedResumeId.value ?? undefined,
     })
     await navigateTo(`/tableau-de-bord/lettres/${letter.id}`)
@@ -193,6 +196,7 @@ async function onSubmit() {
           v-model:recruiter-name="recruiterName"
           v-model:content="content"
           v-model:closing-text="closingText"
+          v-model:signature-url="signatureUrl"
           :field-errors="fieldErrors"
         />
         <UiMessageBanner v-if="apiError" variant="error" :message="apiError" class="mt-4" />
