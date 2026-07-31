@@ -24,9 +24,8 @@ function isAppError(error: unknown): error is AppError {
     error instanceof AppError ||
     (typeof error === 'object' &&
       error !== null &&
-      'status' in error &&
-      'title' in error &&
-      typeof (error as AppError).status === 'number')
+      typeof (error as Record<string, unknown>).status === 'number' &&
+      (typeof (error as Record<string, unknown>).title === 'string' || typeof (error as Record<string, unknown>).message === 'string'))
   )
 }
 

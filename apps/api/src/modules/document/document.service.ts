@@ -87,7 +87,16 @@ export class DocumentService {
     await documentRepository.updateStatus(documentId, 'PROCESSING')
 
     try {
-      const buffer = await storageProvider.read(doc.storageKey)
+      let buffer: Buffer
+      try {
+        buffer = await storageProvider.read(doc.storageKey)
+      } catch {
+        throw new AppError(
+          404,
+          'File Not Found',
+          'Le fichier physique de ce document est introuvable. Veuillez re-téléverser votre CV.',
+        )
+      }
       let rawText = ''
       let confidence = 0
       const warnings: string[] = []
