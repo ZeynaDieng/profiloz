@@ -3,8 +3,8 @@ set -e
 
 cd /app
 
-echo "Running database migrations..."
-pnpm --filter @profiloz/api exec prisma migrate deploy
+echo "Syncing database schema with Prisma..."
+pnpm --filter @profiloz/api exec prisma db push --accept-data-loss
 
 if [ "$RUN_SEED" = "true" ]; then
   echo "Seeding database..."

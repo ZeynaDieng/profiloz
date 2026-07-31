@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { buildCoverLetterTitle } from '@profiloz/shared'
 import { createCoverLetterSchema, updateCoverLetterSchema } from '@profiloz/validators'
 import { AppError } from '@/lib/errors'
@@ -62,24 +63,49 @@ export class CoverLetterService {
 
   async create(userId: string, body: unknown) {
     const input = createCoverLetterSchema.parse(body)
-    const letter = await coverLetterRepository.create(userId, {
-      title: buildCoverLetterTitle(input.senderName),
-      senderName: input.senderName ?? null,
-      senderEmail: input.senderEmail || null,
-      senderPhone: input.senderPhone ?? null,
-      senderLocation: input.senderLocation ?? null,
-      companyName: input.companyName ?? null,
-      companyAddress: input.companyAddress ?? null,
-      position: input.position ?? null,
-      recruiterName: input.recruiterName ?? null,
-      content: input.content,
-      closingText: input.closingText ?? null,
-      templateId: input.templateId,
-      accentColor: input.accentColor ?? null,
-      signatureUrl: input.signatureUrl ?? null,
-      ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
-    })
-    return toDto(letter)
+    try {
+      const letter = await coverLetterRepository.create(userId, {
+        title: buildCoverLetterTitle(input.senderName),
+        senderName: input.senderName ?? null,
+        senderEmail: input.senderEmail || null,
+        senderPhone: input.senderPhone ?? null,
+        senderLocation: input.senderLocation ?? null,
+        companyName: input.companyName ?? null,
+        companyAddress: input.companyAddress ?? null,
+        position: input.position ?? null,
+        recruiterName: input.recruiterName ?? null,
+        content: input.content,
+        closingText: input.closingText ?? null,
+        templateId: input.templateId,
+        accentColor: input.accentColor ?? null,
+        signatureUrl: input.signatureUrl ?? null,
+        ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
+      })
+      return toDto(letter)
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2021' || error.code === 'P2022') {
+          const letter = await coverLetterRepository.create(userId, {
+            title: buildCoverLetterTitle(input.senderName),
+            senderName: input.senderName ?? null,
+            senderEmail: input.senderEmail || null,
+            senderPhone: input.senderPhone ?? null,
+            senderLocation: input.senderLocation ?? null,
+            companyName: input.companyName ?? null,
+            companyAddress: input.companyAddress ?? null,
+            position: input.position ?? null,
+            recruiterName: input.recruiterName ?? null,
+            content: input.content,
+            closingText: input.closingText ?? null,
+            templateId: input.templateId,
+            accentColor: input.accentColor ?? null,
+            ...(input.resumeId ? { resume: { connect: { id: input.resumeId } } } : {}),
+          })
+          return toDto(letter)
+        }
+      }
+      throw error
+    }
   }
 
   async update(id: string, userId: string, body: unknown) {
@@ -92,27 +118,58 @@ export class CoverLetterService {
         ? buildCoverLetterTitle(input.senderName)
         : input.title ?? existing.title
 
-    await coverLetterRepository.update(id, userId, {
-      title,
-      senderName: input.senderName ?? null,
-      senderEmail: input.senderEmail || null,
-      senderPhone: input.senderPhone ?? null,
-      senderLocation: input.senderLocation ?? null,
-      companyName: input.companyName ?? null,
-      companyAddress: input.companyAddress ?? null,
-      position: input.position ?? null,
-      recruiterName: input.recruiterName ?? null,
-      content: input.content,
-      closingText: input.closingText ?? null,
-      templateId: input.templateId,
-      accentColor: input.accentColor ?? null,
-      signatureUrl: input.signatureUrl !== undefined ? (input.signatureUrl || null) : undefined,
-      ...(input.resumeId !== undefined
-        ? input.resumeId
-          ? { resume: { connect: { id: input.resumeId } } }
-          : { resume: { disconnect: true } }
-        : {}),
-    })
+    try {
+      await coverLetterRepository.update(id, userId, {
+        title,
+        senderName: input.senderName ?? null,
+        senderEmail: input.senderEmail || null,
+        senderPhone: input.senderPhone ?? null,
+        senderLocation: input.senderLocation ?? null,
+        companyName: input.companyName ?? null,
+        companyAddress: input.companyAddress ?? null,
+        position: input.position ?? null,
+        recruiterName: input.recruiterName ?? null,
+        content: input.content,
+        closingText: input.closingText ?? null,
+        templateId: input.templateId,
+        accentColor: input.accentColor ?? null,
+        signatureUrl: input.signatureUrl !== undefined ? (input.signatureUrl || null) : undefined,
+        ...(input.resumeId !== undefined
+          ? input.resumeId
+            ? { resume: { connect: { id: input.resumeId } } }
+            : { resume: { disconnect: true } }
+          : {}),
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2021' || error.code === 'P2022') {
+          await coverLetterRepository.update(id, userId, {
+            title,
+            senderName: input.senderName ?? null,
+            senderEmail: input.senderEmail || null,
+            senderPhone: input.senderPhone ?? null,
+            senderLocation: input.senderLocation ?? null,
+            companyName: input.companyName ?? null,
+            companyAddress: input.companyAddress ?? null,
+            position: input.position ?? null,
+            recruiterName: input.recruiterName ?? null,
+            content: input.content,
+            closingText: input.closingText ?? null,
+            templateId: input.templateId,
+            accentColor: input.accentColor ?? null,
+            ...(input.resumeId !== undefined
+              ? input.resumeId
+                ? { resume: { connect: { id: input.resumeId } } }
+                : { resume: { disconnect: true } }
+              : {}),
+          })
+        } else {
+          throw error
+        }
+      } else {
+        throw error
+      }
+    }
 
     return this.get(id, userId)
   }
