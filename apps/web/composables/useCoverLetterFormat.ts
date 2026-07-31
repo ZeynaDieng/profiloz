@@ -39,7 +39,15 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
 
   const recipientLines = computed(() => {
     const lines: string[] = []
-    if (snapshot.value.recruiterName) lines.push(snapshot.value.recruiterName)
+    const raw = snapshot.value.recruiterName?.trim()
+    if (raw) {
+      // Si la valeur est juste une civilité simple ("Monsieur", "Madame", "M.", "Mme"),
+      // on ne l'ajoute pas dans l'en-tête d'adresse au-dessus de l'entreprise (pour éviter "Monsieur" au-dessus de l'entreprise + "Monsieur," en salutation).
+      const isSimpleCivility = /^(m\.|mme|monsieur|madame|madame,\s*monsieur)$/i.test(raw)
+      if (!isSimpleCivility) {
+        lines.push(raw)
+      }
+    }
     if (snapshot.value.companyName) lines.push(snapshot.value.companyName)
     if (snapshot.value.companyAddress) lines.push(snapshot.value.companyAddress)
     return lines
