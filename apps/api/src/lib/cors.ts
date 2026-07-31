@@ -19,35 +19,21 @@ export function getAllowedOrigins(): string[] {
 }
 
 export function resolveCorsOrigin(origin: string | null | undefined): string {
-  if (origin) {
-    const allowed = getAllowedOrigins()
-    if (allowed.includes(origin)) return origin
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        const url = new URL(origin)
-        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-          return origin
-        }
-      } catch {
-        // ignore invalid origin
-      }
-    }
+  if (origin && origin !== '*') {
     return origin
   }
-  return '*'
+  return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://profiloz.com'
 }
 
 export function applyCorsHeaders(response: Response, origin: string | null | undefined): Response {
   const allowedOrigin = resolveCorsOrigin(origin)
 
   response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
-  if (allowedOrigin !== '*') {
-    response.headers.set('Access-Control-Allow-Credentials', 'true')
-  }
+  response.headers.set('Access-Control-Allow-Credentials', 'true')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
   response.headers.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Guest-Session-Id, X-Requested-With',
+    '*, Content-Type, Authorization, X-Guest-Session-Id, x-guest-session-id, X-Requested-With',
   )
   response.headers.set('Access-Control-Max-Age', '86400')
   return response
