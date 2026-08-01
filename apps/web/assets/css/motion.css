@@ -171,8 +171,7 @@
 /* ── Entrée de page (transitions Nuxt + conteneurs) ── */
 
 .page-enter {
-  opacity: 0;
-  animation: pz-fade-up var(--pz-duration-reveal) var(--pz-ease-out) forwards;
+  animation: pz-fade-up var(--pz-duration-reveal) var(--pz-ease-out);
 }
 
 .page-enter-delay-1 { animation-delay: 80ms; }

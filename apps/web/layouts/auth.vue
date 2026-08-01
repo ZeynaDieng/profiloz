@@ -6,7 +6,7 @@
       <LayoutAuthStatus compact class="hidden sm:flex" />
     </header>
     <main class="flex-1 flex flex-col items-stretch sm:items-center justify-start sm:justify-center px-margin-mobile md:px-margin-tablet pb-8 sm:pb-12">
-      <div class="w-full max-w-md page-enter">
+      <div class="w-full max-w-md">
         <slot />
       </div>
     </main>
