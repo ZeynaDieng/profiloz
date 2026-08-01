@@ -106,23 +106,26 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
   }): Promise<{ content: string; subject: string }> {
     const apiKey = this.getApiKey()
 
-    const prompt = `Rédige une lettre de motivation captivante, directe et profondément HUMAINE en français.
+    const prompt = `Rédige le corps d'une lettre de motivation captivante, directe et profondément HUMAINE en français.
 
 Offre d'emploi : ${input.jobOfferText}
 ${input.targetPosition ? `Poste visé : ${input.targetPosition}` : ''}
 ${input.targetCompany ? `Entreprise : ${input.targetCompany}` : ''}
 ${input.candidateInfo ? `Profil du candidat :\n${input.candidateInfo}` : ''}
 
-Consignes de style très strictes :
-- Bannis TOUTES les formules de politesse poussiéreuses et pompeuses du XIXe siècle (NE PAS utiliser : "Je me permets de poser ma candidature", "Je viens par la présente", "Daigner agréer", "Dans l'attente de votre réponse").
-- Écris comme un humain s'adresserait à un autre humain : avec clarté, respect, simplicité et dynamisme.
-- Fais court et percutant : maximum 3 paragraphes concis (Structure : Vous / Moi / Nous). Évite les longs discours bavards de remplissage.
-- Reste naturel et factuel.
+Consignes de structure et de style STRICTES :
+- Ne génère QUE les 3 paragraphes centraux du corps du message (Vous / Moi / Nous).
+- NE réponds PAS avec les en-têtes (pas d'adresse expéditeur/destinataire, pas de "À l'attention de...").
+- NE réponds PAS avec la ligne d'objet ("Objet : ...") car elle est affichée séparément par le modèle.
+- NE réponds PAS avec la formule d'appel ("Madame, Monsieur," ou "Mme Ndiaye,").
+- NE réponds PAS avec la formule de politesse de fin ("Veuillez agréer...", "Je vous prie d'agréer...") ni avec la signature finale.
+- Bannis TOUTES les formules de politesse poussiéreuses du XIXe siècle.
+- Écris de manière synthétique, fluide et moderne (maximum 3 paragraphes courts séparés par des sauts de ligne).
 
 Réponds UNIQUEMENT avec un objet JSON valide :
 {
-  "subject": "Objet de la lettre (court et professionnel)",
-  "content": "Corps de la lettre (avec sauts de ligne \\n\\n, formule de politesse finale simple et moderne incluse)"
+  "subject": "Intitulé exact du poste visé (ex: Assistant Administratif)",
+  "content": "Uniquement les paragraphes du corps du texte (séparés par des sauts de ligne \\n\\n)"
 }`
 
     const res = await fetch(

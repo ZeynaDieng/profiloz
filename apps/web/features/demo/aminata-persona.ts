@@ -163,11 +163,29 @@ export function createAminataCoverLetterDraft() {
   }
 }
 
-/** Préremplit la lettre à partir du CV Aminata (ou du brouillon CV en cours). */
+/** Préremplit la lettre à partir du CV de l'utilisateur (ou fallback demo si aucun CV). */
 export function coverLetterDraftFromResume(resume: ResumeSnapshot | null | undefined) {
-  const base = createAminataCoverLetterDraft()
   const personal = resume?.personalInfo
-  if (!personal?.fullName?.trim()) return base
+  if (!personal?.fullName?.trim()) {
+    return createAminataCoverLetterDraft()
+  }
+
+  const base: ReturnType<typeof createAminataCoverLetterDraft> = {
+    id: createRandomId(),
+    templateSlug: 'CLASSIQUE',
+    senderName: personal.fullName || '',
+    senderEmail: personal.email || '',
+    senderPhone: personal.phone || '',
+    senderLocation: personal.location || '',
+    companyName: '',
+    companyAddress: '',
+    position: personal.jobTitle || '',
+    recruiterName: '',
+    content: '',
+    closingText: DEFAULT_CLOSING_TEXT,
+    accentColor: defaultLetterAccentColor('CLASSIQUE'),
+    lastModified: new Date().toISOString(),
+  }
 
   if (resume?.templateSlug) {
     base.accentColor = resolveCvAccentColor(
@@ -176,18 +194,14 @@ export function coverLetterDraftFromResume(resume: ResumeSnapshot | null | undef
     )
   }
 
-  base.senderName = personal.fullName
-  base.senderEmail = personal.email ?? base.senderEmail
-  base.senderPhone = personal.phone ?? base.senderPhone
-  base.senderLocation = personal.location ?? base.senderLocation
-
   const latestJob = resume?.experiences?.[0]
+  const targetPos = personal.jobTitle || latestJob?.position || ''
   if (latestJob?.company && latestJob.position) {
-    base.content = `Fort(e) de mon expérience en tant que ${latestJob.position} chez ${latestJob.company}, je me permets de vous adresser ma candidature pour le poste de ${AMINATA_PERSONA.targetPosition} au sein de ${AMINATA_PERSONA.companyName}.
+    base.content = `Fort(e) de mon expérience en tant que ${latestJob.position} chez ${latestJob.company}, je souhaite vous adresser ma candidature pour le poste de ${targetPos || 'votre équipe'}.
 
-Au cours de ces dernières années, j'ai piloté des campagnes multicanales, coordonné des équipes créatives et optimisé les parcours clients avec des résultats mesurables. Mon Master Marketing obtenu à l'UCAD m'a dotée d'une solide base en stratégie de marque et en analyse de performance.
+Au cours de mes expériences précédentes, j'ai développé des compétences solides en organisation, suivi d'activités et travail en équipe. Mon parcours m'a permis d'acquérir une bonne maîtrise des méthodes de travail et une forte capacité d'adaptation.
 
-Rigoureuse, orientée résultats et passionnée par l'innovation digitale, je serais ravie de mettre mes compétences au service de vos ambitions commerciales. Je reste à votre disposition pour un entretien afin d'échanger sur ma candidature.`
+Motivé(e) et rigoureux(se), je serais ravi(e) de mettre mes compétences et mon enthousiasme au service de vos projets.`
   }
 
   base.lastModified = new Date().toISOString()

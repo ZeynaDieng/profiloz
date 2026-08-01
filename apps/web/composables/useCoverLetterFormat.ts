@@ -19,12 +19,36 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     return 'Madame, Monsieur,'
   })
 
-  const paragraphs = computed(() =>
-    snapshot.value.content
-      .split(/\n{2,}/)
+  const cleanPosition = computed(() => {
+    const raw = snapshot.value.position?.trim() || ''
+    return raw.replace(/^candidature\s*(:|-|·|—)?\s*(au\s+poste\s+de\s+|pour\s+le\s+poste\s+de\s+|au\s+poste\s+d['’]|pour\s+le\s+poste\s+d['’])?/i, '').trim()
+  })
+
+  const paragraphs = computed(() => {
+    const rawBlocks = snapshot.value.content
+      .split(/\n+/)
       .map((p) => p.trim())
-      .filter(Boolean),
-  )
+      .filter(Boolean)
+
+    const cleaned: string[] = []
+
+    for (const block of rawBlocks) {
+      // 1. Filtrer les lignes d'en-tête (ex: "À l'attention de...", "Objet :...")
+      if (/^(à l'attention de|a l'attention de|destinataire\s*:)/i.test(block)) continue
+      if (/^objet\s*:/i.test(block)) continue
+
+      // 2. Filtrer les formules de salutation dupliquées (ex: "Madame, Monsieur,", "Chère Mme...", etc.)
+      if (/^(madame,\s*monsieur|monsieur,\s*madame|madame,|monsieur,|chère?\s+)/i.test(block) && block.length < 60) continue
+
+      // 3. Filtrer les formules de politesse finales dupliquées en fin de texte
+      if (/^(veuillez|je vous|dans l'attente|espérant|en vous remerciant).*salutations/i.test(block)) continue
+      if (/^(veuillez agréer|je vous prie d'agréer)/i.test(block)) continue
+
+      cleaned.push(block)
+    }
+
+    return cleaned
+  })
 
   const closing = computed(() => snapshot.value.closingText?.trim() || DEFAULT_CLOSING_TEXT)
 
@@ -56,6 +80,7 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
   return {
     formattedDate,
     greeting,
+    cleanPosition,
     paragraphs,
     closing,
     senderLines,
