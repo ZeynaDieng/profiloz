@@ -47,7 +47,7 @@ services:
       REDIS_URL: redis://redis:6379
       REDIS_CACHE_TTL: ${REDIS_CACHE_TTL:-3600}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30d}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       STORAGE_PROVIDER: local
       STORAGE_LOCAL_PATH: /app/storage/persistent
