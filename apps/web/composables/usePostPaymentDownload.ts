@@ -33,6 +33,21 @@ function applyPaidGuestSession(guestSessionId: string | null | undefined) {
   pinPaidGuestSession(guestSessionId)
 }
 
+function isResumeSnapshotValid(snap: any): boolean {
+  if (!snap || typeof snap !== 'object') return false
+  const p = snap.personalInfo || {}
+  const hasName = Boolean((p.firstName || p.lastName || p.fullName)?.trim())
+  const hasExp = Boolean(snap.experiences?.length)
+  const hasSkills = Boolean(snap.skills?.length)
+  const hasSummary = Boolean(snap.summary?.trim())
+  return hasName || hasExp || hasSkills || hasSummary
+}
+
+function isLetterSnapshotValid(draft: any): boolean {
+  if (!draft || typeof draft !== 'object') return false
+  return Boolean(draft.content?.trim() || draft.senderName?.trim() || draft.recipientName?.trim())
+}
+
 export function usePostPaymentDownload() {
   const paymentService = usePaymentService()
   const pdfService = usePdfService()
@@ -131,37 +146,35 @@ export function usePostPaymentDownload() {
   function loadResumeForDownload(serverDraft?: unknown): ResumeSnapshot | null {
     restorePaidGuestSession()
 
-    if (serverDraft && typeof serverDraft === 'object') {
+    if (isResumeSnapshotValid(serverDraft)) {
       const snap = serverDraft as any
-      if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
-        resumeStore.loadSnapshot(snap)
-        if (import.meta.client) {
-          try {
-            localStorage.setItem('pz_resume_draft_v1', JSON.stringify(snap))
-          } catch {}
-        }
-        return snap
+      resumeStore.loadSnapshot(snap)
+      if (import.meta.client) {
+        try {
+          localStorage.setItem('pz_resume_draft_v1', JSON.stringify(snap))
+        } catch {}
       }
+      return snap
     }
 
     const backup = loadPaymentDraftBackup()
-    if (backup?.kind === 'resume') {
+    if (backup?.kind === 'resume' && isResumeSnapshotValid(backup.snapshot)) {
       applyPaidGuestSession(backup.guestSessionId)
       resumeStore.loadSnapshot(backup.snapshot)
       return backup.snapshot
     }
 
     const snapshot = findResumeSnapshotInStorage()
-    if (snapshot) {
-      resumeStore.loadSnapshot(snapshot)
-      return snapshot
+    if (isResumeSnapshotValid(snapshot)) {
+      resumeStore.loadSnapshot(snapshot!)
+      return snapshot!
     }
 
     resumeStore.rehydrateFromStorage()
-    if (resumeStore.current) {
+    if (isResumeSnapshotValid(resumeStore.current)) {
       return {
-        ...resumeStore.current,
-        templateConfig: { ...resumeStore.current.templateConfig },
+        ...resumeStore.current!,
+        templateConfig: { ...resumeStore.current!.templateConfig },
       }
     }
 
@@ -171,34 +184,36 @@ export function usePostPaymentDownload() {
   function loadLetterForDownload(serverDraft?: unknown) {
     restorePaidGuestSession()
 
-    if (serverDraft && typeof serverDraft === 'object') {
+    if (isLetterSnapshotValid(serverDraft)) {
       const draft = serverDraft as any
-      if (draft?.content || draft?.senderName) {
-        coverLetterStore.current = { ...draft }
-        if (import.meta.client) {
-          try {
-            localStorage.setItem('pz_cover_letter_draft_v1', JSON.stringify(draft))
-          } catch {}
-        }
-        return coverLetterStore.toSnapshot()
+      coverLetterStore.current = { ...draft }
+      if (import.meta.client) {
+        try {
+          localStorage.setItem('pz_cover_letter_draft_v1', JSON.stringify(draft))
+        } catch {}
       }
+      return coverLetterStore.toSnapshot()
     }
 
     const backup = loadPaymentDraftBackup()
-    if (backup?.kind === 'letter') {
+    if (backup?.kind === 'letter' && isLetterSnapshotValid(backup.draft)) {
       applyPaidGuestSession(backup.guestSessionId)
       coverLetterStore.current = { ...backup.draft }
       return coverLetterStore.toSnapshot()
     }
 
     const draft = findCoverLetterDraftInStorage()
-    if (draft) {
-      coverLetterStore.current = { ...draft }
+    if (isLetterSnapshotValid(draft)) {
+      coverLetterStore.current = { ...draft! }
       return coverLetterStore.toSnapshot()
     }
 
     coverLetterStore.rehydrateFromStorage()
-    return coverLetterStore.toSnapshot()
+    if (isLetterSnapshotValid(coverLetterStore.current)) {
+      return coverLetterStore.toSnapshot()
+    }
+
+    return null
   }
 
   async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
