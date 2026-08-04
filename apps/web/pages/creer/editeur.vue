@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { TemplateSlug } from '@profiloz/shared'
+import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
 import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
-import { clearPaymentDraftBackup } from '~/utils/payment-draft-backup'
+import { clearPaymentDraftBackup, loadPaymentDraftBackup } from '~/utils/payment-draft-backup'
+import { findResumeSnapshotInStorage } from '~/utils/guest-draft-sync'
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 
 definePageMeta({ layout: false })
@@ -31,6 +32,32 @@ const pdfError = ref('')
 const previewOpen = ref(false)
 const actionsOpen = ref(false)
 const tourActive = ref(false)
+
+const previousSavedDraft = ref<ResumeSnapshot | null>(null)
+
+const previousDraftName = computed(() => {
+  const snap = previousSavedDraft.value
+  if (!snap) return ''
+  const p = snap.personalInfo
+  const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
+  return name || (snap.experiences?.length ? 'Dernier CV rédigé' : '')
+})
+
+function restorePreviousDraft() {
+  if (previousSavedDraft.value) {
+    resumeStore.loadSnapshot(previousSavedDraft.value)
+    useAppToast().success(`Brouillon "${previousDraftName.value}" chargé dans l'éditeur !`)
+  }
+}
+
+function handleResetToBlank() {
+  if (import.meta.client && confirm('Voulez-vous effacer le formulaire pour repartir d\'un CV vierge ?')) {
+    resumeStore.startNewDraft()
+    clearPaymentDraftBackup()
+    clearGuestDossierState()
+    useAppToast().success('Formulaire réinitialisé à zéro !')
+  }
+}
 
 const accentColors = computed(() =>
   getCvAccentPalette(resumeStore.current?.templateSlug ?? 'PROFESSIONNEL'),
@@ -84,18 +111,8 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
   },
 })
 
-function handleNewCv() {
-  if (import.meta.client && confirm('Voulez-vous réinitialiser le formulaire pour rédiger un nouveau CV vierge ?')) {
-    resumeStore.startNewDraft()
-    clearPaymentDraftBackup()
-    clearGuestDossierState()
-    useAppToast().success('Formulaire réinitialisé pour un nouveau CV !')
-  }
-}
-
 onMounted(async () => {
   try {
-    clearPaymentDraftBackup()
     authStore.loadFromStorage()
 
     // Lancement asynchrone non bloquant des vérifications réseau
@@ -117,16 +134,27 @@ onMounted(async () => {
         return
       }
     } else {
-      if (route.query.new === '1' || route.query.fresh === '1') {
-        resumeStore.startNewDraft()
-        clearPaymentDraftBackup()
-      } else if (!resumeStore.current) {
-        resumeStore.rehydrateFromStorage()
-      }
-      resumeStore.initDraft()
       const templateQuery = typeof route.query.template === 'string' ? route.query.template.toUpperCase() : ''
-      if (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug)) {
-        resumeStore.setTemplate(templateQuery as TemplateSlug)
+      const requestedSlug = (templateQuery && TEMPLATE_SLUGS.includes(templateQuery as TemplateSlug))
+        ? (templateQuery as TemplateSlug)
+        : (resumeStore.current?.templateSlug ?? 'PROFESSIONNEL')
+
+      // Recherche du dernier brouillon rédigé dans le localStorage
+      if (import.meta.client) {
+        const backup = loadPaymentDraftBackup()
+        if (backup?.kind === 'resume' && backup.snapshot) {
+          previousSavedDraft.value = backup.snapshot
+        } else {
+          previousSavedDraft.value = findResumeSnapshotInStorage()
+        }
+      }
+
+      // Par défaut à la création, démarrer TOUJOURS un CV vierge (sauf si restore===1)
+      if (route.query.restore === '1' && previousSavedDraft.value) {
+        resumeStore.loadSnapshot(previousSavedDraft.value)
+      } else {
+        resumeStore.startNewDraft()
+        resumeStore.setTemplate(requestedSlug)
       }
     }
 
@@ -403,14 +431,28 @@ async function downloadPdf() {
           Guide
         </button>
 
+        <!-- Bouton Reprendre le dernier brouillon rédigé -->
         <button
+          v-if="previousSavedDraft && previousDraftName"
           type="button"
-          class="hidden sm:inline-flex text-sm text-blue-600 hover:text-blue-700 font-bold px-2 min-h-11 items-center gap-1 mr-2 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200/60"
-          title="Effacer le formulaire pour créer un nouveau CV vierge"
-          @click="handleNewCv"
+          class="hidden sm:inline-flex text-xs font-extrabold text-[#2F5BFF] hover:text-blue-700 px-3 py-1.5 min-h-9 items-center gap-1.5 mr-2 bg-[#EEF4FF] hover:bg-blue-100 rounded-xl transition-all border border-[#2F5BFF]/30 cursor-pointer shadow-sm"
+          :title="`Charger le brouillon de ${previousDraftName}`"
+          @click="restorePreviousDraft"
         >
-          <UiPzIcon name="add" class="text-[18px]" />
-          <span>Nouveau CV</span>
+          <UiPzIcon name="restore" class="text-[16px]" />
+          <span>Reprendre : {{ previousDraftName }}</span>
+        </button>
+
+        <!-- Bouton Vider/Réinitialiser si le formulaire contient déjà du texte -->
+        <button
+          v-else-if="resumeStore.current?.personalInfo?.fullName?.trim() || resumeStore.current?.experiences?.length"
+          type="button"
+          class="hidden sm:inline-flex text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1 min-h-9 items-center gap-1 mr-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/60 cursor-pointer"
+          title="Réinitialiser à zéro"
+          @click="handleResetToBlank"
+        >
+          <UiPzIcon name="delete_sweep" class="text-[16px]" />
+          <span>Effacer</span>
         </button>
 
         <NuxtLink
@@ -512,12 +554,23 @@ async function downloadPdf() {
         </button>
 
         <button
+          v-if="previousSavedDraft && previousDraftName"
           type="button"
-          class="w-full flex items-center min-h-11 px-3 rounded-xl text-sm text-blue-600 font-extrabold hover:bg-blue-50 text-left"
-          @click="actionsOpen = false; handleNewCv()"
+          class="w-full flex items-center min-h-11 px-3 rounded-xl text-sm text-[#2F5BFF] font-extrabold hover:bg-blue-50 text-left"
+          @click="actionsOpen = false; restorePreviousDraft()"
         >
-          <UiPzIcon name="add" class="mr-3 text-blue-600" />
-          Nouveau CV (Réinitialiser vierge)
+          <UiPzIcon name="restore" class="mr-3 text-[#2F5BFF]" />
+          Reprendre : {{ previousDraftName }}
+        </button>
+
+        <button
+          v-else-if="resumeStore.current?.personalInfo?.fullName?.trim() || resumeStore.current?.experiences?.length"
+          type="button"
+          class="w-full flex items-center min-h-11 px-3 rounded-xl text-sm text-slate-700 font-semibold hover:bg-slate-100 text-left"
+          @click="actionsOpen = false; handleResetToBlank()"
+        >
+          <UiPzIcon name="delete_sweep" class="mr-3 text-slate-500" />
+          Effacer et recommencer à zéro
         </button>
 
         <div class="px-3 py-4 border-t border-outline-variant/30 mt-2">
