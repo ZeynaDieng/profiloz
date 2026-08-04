@@ -45,54 +45,67 @@ const purchaseAudience = computed(() =>
 )
 const isWalletPurchase = computed(() => isWalletOffer(purchaseAudience.value))
 
+function isResumeSnapshotValid(snap: any): boolean {
+  if (!snap || typeof snap !== 'object') return false
+  const p = snap.personalInfo || {}
+  const hasName = Boolean((p.firstName || p.lastName || p.fullName)?.trim())
+  const hasExp = Boolean(snap.experiences?.length)
+  const hasSkills = Boolean(snap.skills?.length)
+  const hasSummary = Boolean(snap.summary?.trim())
+  return hasName || hasExp || hasSkills || hasSummary
+}
+
+function isLetterSnapshotValid(draft: any): boolean {
+  if (!draft || typeof draft !== 'object') return false
+  return Boolean(draft.content?.trim() || draft.senderName?.trim() || draft.recipientName?.trim())
+}
+
 const currentResumeSnapshot = computed(() => {
-  if (resumeStore.current) {
+  if (isResumeSnapshotValid(resumeStore.current)) {
     return {
-      ...resumeStore.current,
-      templateConfig: { ...resumeStore.current.templateConfig },
+      ...resumeStore.current!,
+      templateConfig: { ...resumeStore.current!.templateConfig },
     }
   }
   const serverDraft = entitlements.value?.paidDraftSnapshot
-  if (serverDraft && typeof serverDraft === 'object') {
-    const snap = serverDraft as any
-    if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
-      return snap
-    }
+  if (isResumeSnapshotValid(serverDraft)) {
+    try { resumeStore.loadSnapshot(serverDraft as any) } catch {}
+    return serverDraft as any
   }
   const backup = loadPaymentDraftBackup()
-  if (backup?.kind === 'resume' && backup.snapshot) {
+  if (backup?.kind === 'resume' && isResumeSnapshotValid(backup.snapshot)) {
+    try { resumeStore.loadSnapshot(backup.snapshot) } catch {}
     return backup.snapshot
   }
   const fromStorage = findResumeSnapshotInStorage()
-  if (fromStorage) {
+  if (isResumeSnapshotValid(fromStorage)) {
+    try { resumeStore.loadSnapshot(fromStorage!) } catch {}
     return fromStorage
   }
-  return null
+  return resumeStore.current ? { ...resumeStore.current, templateConfig: { ...resumeStore.current.templateConfig } } : null
 })
 
 const currentLetterSnapshot = computed(() => {
-  if (coverLetterStore.current) {
+  if (isLetterSnapshotValid(coverLetterStore.current)) {
     return coverLetterStore.toSnapshot()
   }
   const serverDraft = entitlements.value?.paidDraftSnapshot
-  if (serverDraft && typeof serverDraft === 'object') {
+  if (isLetterSnapshotValid(serverDraft)) {
     const draft = serverDraft as any
-    if (draft?.content || draft?.senderName) {
-      return {
-        id: draft.id || 'letter-1',
-        templateSlug: draft.templateSlug || 'CLASSIQUE',
-        senderName: draft.senderName || '',
-        recipientName: draft.recipientName || '',
-        jobTitle: draft.jobTitle || '',
-        companyName: draft.companyName || '',
-        content: draft.content || '',
-        accentColor: draft.accentColor,
-        fontSize: draft.fontSize || 'medium',
-      }
+    return {
+      id: draft.id || 'letter-1',
+      templateSlug: draft.templateSlug || 'CLASSIQUE',
+      senderName: draft.senderName || '',
+      recipientName: draft.recipientName || '',
+      jobTitle: draft.jobTitle || '',
+      companyName: draft.companyName || '',
+      content: draft.content || '',
+      accentColor: draft.accentColor,
+      fontSize: draft.fontSize || 'medium',
     }
   }
   const backup = loadPaymentDraftBackup()
-  if (backup?.kind === 'letter' && backup.draft) {
+  if (backup?.kind === 'letter' && isLetterSnapshotValid(backup.draft)) {
     return {
       id: backup.draft.id || 'letter-1',
       templateSlug: backup.draft.templateSlug || 'CLASSIQUE',
@@ -106,20 +119,20 @@ const currentLetterSnapshot = computed(() => {
     }
   }
   const fromStorage = findCoverLetterDraftInStorage()
-  if (fromStorage) {
+  if (isLetterSnapshotValid(fromStorage)) {
     return {
-      id: fromStorage.id || 'letter-1',
-      templateSlug: fromStorage.templateSlug || 'CLASSIQUE',
-      senderName: fromStorage.senderName || '',
-      recipientName: fromStorage.recipientName || '',
-      jobTitle: fromStorage.jobTitle || '',
-      companyName: fromStorage.companyName || '',
-      content: fromStorage.content || '',
-      accentColor: fromStorage.accentColor,
-      fontSize: fromStorage.fontSize || 'medium',
+      id: fromStorage!.id || 'letter-1',
+      templateSlug: fromStorage!.templateSlug || 'CLASSIQUE',
+      senderName: fromStorage!.senderName || '',
+      recipientName: fromStorage!.recipientName || '',
+      jobTitle: fromStorage!.jobTitle || '',
+      companyName: fromStorage!.companyName || '',
+      content: fromStorage!.content || '',
+      accentColor: fromStorage!.accentColor,
+      fontSize: fromStorage!.fontSize || 'medium',
     }
   }
-  return null
+  return coverLetterStore.current ? coverLetterStore.toSnapshot() : null
 })
 
 const downloadedFilename = computed(() => {
