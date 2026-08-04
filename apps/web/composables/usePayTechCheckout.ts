@@ -81,6 +81,7 @@ export function usePayTechCheckout() {
   }
 
   async function startCheckout(planSlug: any, returnTo?: string) {
+    if (checkingOut.value) return
     error.value = ''
     checkingOut.value = planSlug
 
@@ -102,6 +103,9 @@ export function usePayTechCheckout() {
       // 1. Essayer d'utiliser le SDK PayTech officiel s'il est chargé
       if (import.meta.client && window.PayTech && token) {
         try {
+          // Garantir qu'aucune modale de fallback n'est ouverte simultanément
+          isModalOpen.value = false
+
           const paytech = new window.PayTech({ token })
           paytech.withOption({
             presentationMode: window.PayTech.OPEN_IN_POPUP || 'OPEN_IN_POPUP',
@@ -114,13 +118,12 @@ export function usePayTechCheckout() {
             },
             didReceiveError: (err: any) => {
               console.warn('[PayTech SDK error]', err)
-              // Fallback vers la modale intégrée si le SDK rencontre un souci
+              // En cas d'erreur du SDK, basculer proprement vers la modale iFrame
               isModalOpen.value = true
-              startPolling(refCommand, returnTo)
             },
           }).send()
 
-          // Démarrer aussi le polling en arrière-plan au cas où le callback SDK tarde
+          // Surveillance en arrière-plan (au cas où le webhook/callback tarde)
           startPolling(refCommand, returnTo)
           return
         } catch (e) {
@@ -128,9 +131,8 @@ export function usePayTechCheckout() {
         }
       }
 
-      // 2. Fallback : Ouverture de la modale iFrame ou pop-up intégrée
+      // 2. Fallback sans SDK : ouverture propre d'une seule fenêtre pop-up ou modale
       if (import.meta.client) {
-        // Tenter d'ouvrir un pop-up centré propre
         const popup = window.open(
           url,
           'PayTechCheckout',
@@ -138,10 +140,9 @@ export function usePayTechCheckout() {
         )
 
         if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-          // Si les pop-ups sont bloqués par le navigateur, afficher la modale iFrame
+          // Si les pop-ups sont bloqués par le navigateur, afficher la modale iFrame unique
           isModalOpen.value = true
         } else {
-          // Si le pop-up s'ouvre bien, démarrer la surveillance du statut
           isModalOpen.value = false
         }
 
