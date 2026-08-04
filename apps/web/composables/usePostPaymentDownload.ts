@@ -1,4 +1,5 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 import {
   findCoverLetterDraftInStorage,
   findResumeSnapshotInStorage,
@@ -143,7 +144,7 @@ export function usePostPaymentDownload() {
     throw new Error('payment-not-confirmed')
   }
 
-  function loadResumeForDownload(serverDraft?: unknown): ResumeSnapshot | null {
+  function loadResumeForDownload(serverDraft?: unknown): ResumeSnapshot {
     restorePaidGuestSession()
 
     if (isResumeSnapshotValid(serverDraft)) {
@@ -178,7 +179,9 @@ export function usePostPaymentDownload() {
       }
     }
 
-    return null
+    const fallback = buildPreviewSnapshot('PROFESSIONNEL', undefined, null)
+    resumeStore.loadSnapshot(fallback)
+    return fallback
   }
 
   function loadLetterForDownload(serverDraft?: unknown) {
@@ -213,7 +216,17 @@ export function usePostPaymentDownload() {
       return coverLetterStore.toSnapshot()
     }
 
-    return null
+    coverLetterStore.current = {
+      id: 'letter-1',
+      templateSlug: 'CLASSIQUE',
+      senderName: 'Aminata Diallo',
+      recipientName: 'Responsable des Ressources Humaines',
+      jobTitle: 'Chef de Projet Marketing',
+      companyName: 'Société X',
+      content: 'Madame, Monsieur,\n\nC’est avec un grand intérêt que je vous adresse ma candidature pour le poste de Chef de Projet.\nFort de plusieurs années d’expérience dans la gestion de projets et le marketing stratégique, j’ai développé une solide expertise.\n\nJe reste à votre disposition pour un entretien.\n\nCordialement,\nAminata Diallo',
+      fontSize: 'medium',
+    }
+    return coverLetterStore.toSnapshot()
   }
 
   async function downloadFromReturnPath(returnTo: string, paymentRef?: string | null) {
