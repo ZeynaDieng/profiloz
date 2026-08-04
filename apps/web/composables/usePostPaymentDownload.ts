@@ -96,16 +96,13 @@ export function usePostPaymentDownload() {
     message.value = 'Confirmation de votre paiement…'
 
     if (paymentRef) {
-      const [currentResult, confirmResult] = await Promise.allSettled([
-        paymentService.getEntitlements(),
-        confirmPaymentOnce(paymentRef),
-      ])
-
-      if (currentResult.status === 'fulfilled' && hasDossierDownloadAccess(currentResult.value)) {
-        return currentResult.value
-      }
-      if (confirmResult.status === 'fulfilled' && confirmResult.value) {
-        return confirmResult.value
+      try {
+        const confirmed = await confirmPaymentOnce(paymentRef)
+        if (confirmed) {
+          return confirmed
+        }
+      } catch {
+        // fallback au polling ci-dessous
       }
     } else {
       try {
