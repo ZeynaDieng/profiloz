@@ -819,7 +819,9 @@ export class PaymentService {
     const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
     const meta = readGuestSessionMeta(guest?.data)
     const rawData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
-    const paidDraftSnapshot = canDownloadSnapshot ? rawData.draftSnapshot : undefined
+    const paidDraftSnapshot = (canDownloadSnapshot || (guest?.creditsBalance ?? 0) > 0 || isUnlimitedActive(guest?.unlimitedUntil))
+      ? rawData.draftSnapshot
+      : undefined
 
     return { ...resolved, canDownloadSnapshot, downloadedDocIds: meta.downloadedDocIds, paidDraftSnapshot }
   }

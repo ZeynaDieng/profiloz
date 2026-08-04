@@ -135,6 +135,11 @@ export function usePostPaymentDownload() {
       const snap = serverDraft as any
       if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
         resumeStore.loadSnapshot(snap)
+        if (import.meta.client) {
+          try {
+            localStorage.setItem('pz_resume_draft_v1', JSON.stringify(snap))
+          } catch {}
+        }
         return snap
       }
     }
@@ -170,6 +175,11 @@ export function usePostPaymentDownload() {
       const draft = serverDraft as any
       if (draft?.content || draft?.senderName) {
         coverLetterStore.current = { ...draft }
+        if (import.meta.client) {
+          try {
+            localStorage.setItem('pz_cover_letter_draft_v1', JSON.stringify(draft))
+          } catch {}
+        }
         return coverLetterStore.toSnapshot()
       }
     }

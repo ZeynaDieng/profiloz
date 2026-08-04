@@ -58,10 +58,17 @@ export function usePaymentService() {
     try {
       if (returnTo?.includes('lettre')) {
         const coverLetterStore = useCoverLetterStore()
-        draftSnapshot = coverLetterStore.current ? { ...coverLetterStore.current } : undefined
+        coverLetterStore.rehydrateFromStorage()
+        draftSnapshot = coverLetterStore.current
+          ? coverLetterStore.toSnapshot()
+          : findCoverLetterDraftInStorage()
       } else {
         const resumeStore = useResumeStore()
-        draftSnapshot = resumeStore.current ? { ...resumeStore.current } : undefined
+        resumeStore.rehydrateFromStorage()
+        const current = resumeStore.current
+        draftSnapshot = current
+          ? { ...current, templateConfig: { ...current.templateConfig } }
+          : findResumeSnapshotInStorage()
       }
     } catch {
       // ignore Pinia store resolution if unavailable
