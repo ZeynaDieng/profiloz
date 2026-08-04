@@ -15,8 +15,8 @@ function updateScale() {
   const el = containerRef.value
   if (!el) return
   const rect = el.getBoundingClientRect()
-  const w = rect.width
-  const h = rect.height
+  const w = rect.width || el.clientWidth || 280
+  const h = rect.height || el.clientHeight || 390
   if (!w || !h) return
 
   // Utiliser une marge de sécurité de 95% pour garantir un aperçu complet sans débordement

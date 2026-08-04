@@ -52,12 +52,72 @@ const currentResumeSnapshot = computed(() => {
       templateConfig: { ...resumeStore.current.templateConfig },
     }
   }
+  const serverDraft = entitlements.value?.paidDraftSnapshot
+  if (serverDraft && typeof serverDraft === 'object') {
+    const snap = serverDraft as any
+    if (snap?.personalInfo || snap?.experiences?.length || snap?.skills?.length) {
+      return snap
+    }
+  }
+  const backup = loadPaymentDraftBackup()
+  if (backup?.kind === 'resume' && backup.snapshot) {
+    return backup.snapshot
+  }
+  const fromStorage = findResumeSnapshotInStorage()
+  if (fromStorage) {
+    return fromStorage
+  }
   return null
 })
 
 const currentLetterSnapshot = computed(() => {
   if (coverLetterStore.current) {
     return coverLetterStore.toSnapshot()
+  }
+  const serverDraft = entitlements.value?.paidDraftSnapshot
+  if (serverDraft && typeof serverDraft === 'object') {
+    const draft = serverDraft as any
+    if (draft?.content || draft?.senderName) {
+      return {
+        id: draft.id || 'letter-1',
+        templateSlug: draft.templateSlug || 'CLASSIQUE',
+        senderName: draft.senderName || '',
+        recipientName: draft.recipientName || '',
+        jobTitle: draft.jobTitle || '',
+        companyName: draft.companyName || '',
+        content: draft.content || '',
+        accentColor: draft.accentColor,
+        fontSize: draft.fontSize || 'medium',
+      }
+    }
+  }
+  const backup = loadPaymentDraftBackup()
+  if (backup?.kind === 'letter' && backup.draft) {
+    return {
+      id: backup.draft.id || 'letter-1',
+      templateSlug: backup.draft.templateSlug || 'CLASSIQUE',
+      senderName: backup.draft.senderName || '',
+      recipientName: backup.draft.recipientName || '',
+      jobTitle: backup.draft.jobTitle || '',
+      companyName: backup.draft.companyName || '',
+      content: backup.draft.content || '',
+      accentColor: backup.draft.accentColor,
+      fontSize: backup.draft.fontSize || 'medium',
+    }
+  }
+  const fromStorage = findCoverLetterDraftInStorage()
+  if (fromStorage) {
+    return {
+      id: fromStorage.id || 'letter-1',
+      templateSlug: fromStorage.templateSlug || 'CLASSIQUE',
+      senderName: fromStorage.senderName || '',
+      recipientName: fromStorage.recipientName || '',
+      jobTitle: fromStorage.jobTitle || '',
+      companyName: fromStorage.companyName || '',
+      content: fromStorage.content || '',
+      accentColor: fromStorage.accentColor,
+      fontSize: fromStorage.fontSize || 'medium',
+    }
   }
   return null
 })
@@ -284,7 +344,7 @@ onMounted(async () => {
 
         <!-- Aperçu Vignette Document (Carte interactive) -->
         <div class="relative group my-2 w-full max-w-sm flex flex-col items-center">
-          <div class="relative w-full aspect-[210/297] max-w-[280px] bg-slate-100 rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-transform duration-300 group-hover:scale-[1.02]">
+          <div class="relative w-[260px] h-[368px] min-h-[350px] bg-slate-100 rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-transform duration-300 group-hover:scale-[1.02]">
             <FeaturesTemplatesA4PreviewFit
               v-if="!isLetter && currentResumeSnapshot"
               :resume="currentResumeSnapshot"
