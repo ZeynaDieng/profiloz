@@ -26,7 +26,6 @@ const { fetchEntitlements } = usePaymentEntitlements()
 const plans = ref<PlanDto[]>([])
 const entitlements = ref<import('~/services/payment.service').Entitlements | null>(null)
 const loading = ref(true)
-const checkingOut = ref<string | null>(null)
 const error = ref('')
 const activePlanIndex = ref(0)
 
