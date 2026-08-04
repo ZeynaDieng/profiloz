@@ -96,7 +96,12 @@ function onContinue() {
     navigateTo(back)
     return
   }
-  navigateTo('/creer/editeur')
+  const isImport = route.query.flow === 'import' || route.query.imported === '1'
+  if (isImport) {
+    navigateTo('/creer/editeur?imported=1')
+  } else {
+    navigateTo('/creer/editeur?new=1')
+  }
 }
 
 useWizardStep(computed(() => ({

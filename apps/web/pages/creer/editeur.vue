@@ -149,9 +149,27 @@ onMounted(async () => {
         }
       }
 
-      // Par défaut à la création, démarrer TOUJOURS un CV vierge (sauf si restore===1)
-      if (route.query.restore === '1' && previousSavedDraft.value) {
+      function isResumeSnapshotValid(snap: any): boolean {
+        if (!snap || typeof snap !== 'object') return false
+        const p = snap.personalInfo || {}
+        const hasName = Boolean((p.firstName || p.lastName || p.fullName)?.trim())
+        const hasExp = Boolean(snap.experiences?.length)
+        const hasSkills = Boolean(snap.skills?.length)
+        const hasSummary = Boolean(snap.summary?.trim())
+        return hasName || hasExp || hasSkills || hasSummary
+      }
+
+      // Déterminer la provenance : Import de fichier, Restauration explicite, ou Création vierge par défaut
+      const isImport = route.query.imported === '1' || route.query.flow === 'import' || isResumeSnapshotValid(resumeStore.current)
+      const isExplicitRestore = route.query.restore === '1'
+
+      if (isExplicitRestore && previousSavedDraft.value) {
         resumeStore.loadSnapshot(previousSavedDraft.value)
+      } else if (isImport || isResumeSnapshotValid(resumeStore.current)) {
+        // En cas d'importation de document : ON CONSERVE IMPÉRATIVEMENT LES DONNÉES PARSÉES DANS LE FORMULAIRE !
+        if (requestedSlug) {
+          resumeStore.setTemplate(requestedSlug)
+        }
       } else {
         resumeStore.startNewDraft()
         resumeStore.setTemplate(requestedSlug)

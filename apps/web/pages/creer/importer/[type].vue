@@ -66,7 +66,7 @@ function onConfirm(data: Partial<ResumeSnapshot>) {
   resumeStore.mergeImportedData(data, { documentType: meta.value.type })
 
   const targetPath = TEMPLATE_SLUGS.includes(template as TemplateSlug)
-    ? '/creer/editeur'
+    ? '/creer/editeur?imported=1'
     : '/creer/modele?flow=import'
 
   if (TEMPLATE_SLUGS.includes(template as TemplateSlug)) {
