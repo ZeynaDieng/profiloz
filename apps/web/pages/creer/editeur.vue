@@ -88,6 +88,7 @@ function handleNewCv() {
   if (import.meta.client && confirm('Voulez-vous réinitialiser le formulaire pour rédiger un nouveau CV vierge ?')) {
     resumeStore.startNewDraft()
     clearPaymentDraftBackup()
+    clearGuestDossierState()
     useAppToast().success('Formulaire réinitialisé pour un nouveau CV !')
   }
 }

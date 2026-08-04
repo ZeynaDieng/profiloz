@@ -321,4 +321,5 @@ export function syncGuestDossierFromEntitlements(entitlements: any) {
 export function clearGuestDossierState() {
   if (typeof localStorage === 'undefined') return
   localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(GUEST_SESSION_KEY)
 }

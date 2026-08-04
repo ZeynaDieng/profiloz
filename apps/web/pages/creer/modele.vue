@@ -66,6 +66,7 @@ const activeDraftName = computed(() => {
 function startFreshDraft() {
   resumeStore.startNewDraft()
   clearPaymentDraftBackup()
+  clearGuestDossierState()
   toast.success('Nouveau CV vierge réinitialisé !')
 }
 
