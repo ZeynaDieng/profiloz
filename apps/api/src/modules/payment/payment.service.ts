@@ -374,9 +374,7 @@ export class PaymentService {
           planPayment,
         )
       }
-      if (payment.status !== 'PENDING') {
-        throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
-      }
+      throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
     }
 
     // Invité : la ref PayTech suffit — créditer la session liée au paiement même si le navigateur a basculé.
