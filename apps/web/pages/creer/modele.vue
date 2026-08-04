@@ -16,7 +16,10 @@ const toast = useAppToast()
 const returnPath = computed(() => resolveTemplatePickerReturn(route))
 
 onMounted(() => {
-  if (!resumeStore.current) {
+  if (route.query.new === '1' || route.query.fresh === '1') {
+    resumeStore.startNewDraft()
+    clearPaymentDraftBackup()
+  } else if (!resumeStore.current) {
     resumeStore.rehydrateFromStorage()
   }
   resumeStore.initDraft()
@@ -39,6 +42,20 @@ const activeFilter = ref('all')
 const selectedSlug = ref<TemplateSlug | null>(
   (route.query.select as TemplateSlug) ?? resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
 )
+
+const activeDraftName = computed(() => {
+  const p = resumeStore.current?.personalInfo
+  const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
+  if (name) return name
+  if (resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length) return 'CV en cours'
+  return ''
+})
+
+function startFreshDraft() {
+  resumeStore.startNewDraft()
+  clearPaymentDraftBackup()
+  toast.success('Nouveau CV vierge réinitialisé !')
+}
 
 const filteredTemplates = computed(() => {
   if (activeFilter.value === 'all') return TEMPLATE_REGISTRY
@@ -103,6 +120,32 @@ useWizardStep(computed(() => ({
         />
       </Transition>
     </header>
+
+    <!-- Bandeau de brouillon en cours -->
+    <div
+      v-if="activeDraftName"
+      class="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+          <UiPzIcon name="description" class="text-lg" />
+        </div>
+        <div>
+          <p class="text-[11px] font-extrabold text-blue-900 uppercase tracking-wider">Données actuelles sur les modèles</p>
+          <p class="text-sm font-bold text-slate-800">
+            {{ activeDraftName }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="w-full sm:w-auto px-4 py-2 rounded-xl bg-white border border-slate-300 hover:border-blue-500 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+        @click="startFreshDraft"
+      >
+        <UiPzIcon name="add" class="text-sm" />
+        <span>Créer un nouveau CV vierge</span>
+      </button>
+    </div>
 
     <div class="flex gap-2 mb-stack-lg overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
       <button
