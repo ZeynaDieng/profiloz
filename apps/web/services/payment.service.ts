@@ -41,6 +41,21 @@ export interface ConfirmReturnResult {
   guestSessionClientId?: string
 }
 
+function isResumeSnapshotValid(snap: any): boolean {
+  if (!snap || typeof snap !== 'object') return false
+  const p = snap.personalInfo || {}
+  const hasName = Boolean((p.firstName || p.lastName || p.fullName)?.trim())
+  const hasExp = Boolean(snap.experiences?.length)
+  const hasSkills = Boolean(snap.skills?.length)
+  const hasSummary = Boolean(snap.summary?.trim())
+  return hasName || hasExp || hasSkills || hasSummary
+}
+
+function isLetterSnapshotValid(draft: any): boolean {
+  if (!draft || typeof draft !== 'object') return false
+  return Boolean(draft.content?.trim() || draft.senderName?.trim() || draft.recipientName?.trim())
+}
+
 export function usePaymentService() {
   const { get, post } = useApiClient()
 
@@ -59,16 +74,23 @@ export function usePaymentService() {
       if (returnTo?.includes('lettre')) {
         const coverLetterStore = useCoverLetterStore()
         coverLetterStore.rehydrateFromStorage()
-        draftSnapshot = coverLetterStore.current
-          ? coverLetterStore.toSnapshot()
-          : findCoverLetterDraftInStorage()
+        const snap = coverLetterStore.current ? coverLetterStore.toSnapshot() : null
+        draftSnapshot = isLetterSnapshotValid(snap) ? snap : findCoverLetterDraftInStorage()
       } else {
         const resumeStore = useResumeStore()
         resumeStore.rehydrateFromStorage()
         const current = resumeStore.current
-        draftSnapshot = current
-          ? { ...current, templateConfig: { ...current.templateConfig } }
-          : findResumeSnapshotInStorage()
+        const snap = current ? { ...current, templateConfig: { ...current.templateConfig } } : null
+        if (isResumeSnapshotValid(snap)) {
+          draftSnapshot = snap
+        } else {
+          const backup = loadPaymentDraftBackup()
+          if (backup?.kind === 'resume' && isResumeSnapshotValid(backup.snapshot)) {
+            draftSnapshot = backup.snapshot
+          } else {
+            draftSnapshot = findResumeSnapshotInStorage()
+          }
+        }
       }
     } catch {
       // ignore Pinia store resolution if unavailable

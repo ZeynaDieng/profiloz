@@ -674,7 +674,18 @@ export class PaymentService {
     const refCommand = `pz_${randomUUID().replace(/-/g, '')}`
     const credits = Number.isFinite(plan.credits) ? plan.credits : 0
 
-    if (owner.guestSessionDbId && draftSnapshot) {
+function isDraftSnapshotValid(snap: any): boolean {
+  if (!snap || typeof snap !== 'object') return false
+  const p = snap.personalInfo || {}
+  const hasName = Boolean((p.firstName || p.lastName || p.fullName)?.trim())
+  const hasExp = Boolean(snap.experiences?.length)
+  const hasSkills = Boolean(snap.skills?.length)
+  const hasSummary = Boolean(snap.summary?.trim())
+  const hasLetter = Boolean(snap.content?.trim() || snap.senderName?.trim())
+  return hasName || hasExp || hasSkills || hasSummary || hasLetter
+}
+
+    if (owner.guestSessionDbId && isDraftSnapshotValid(draftSnapshot)) {
       try {
         const guest = await prisma.guestSession.findUnique({ where: { id: owner.guestSessionDbId }, select: { data: true } })
         const currentData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
