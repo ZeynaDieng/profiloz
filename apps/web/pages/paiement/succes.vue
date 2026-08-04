@@ -85,10 +85,11 @@ const canAutoDownload = computed(() => {
     return true
   }
 
-  // Règle de repli invité payant : s'il a acheté et a un brouillon local, on lance le téléchargement automatique
+  // Règle de repli invité payant : s'il a acheté et a un brouillon local ou sauvegardé en base, on lance le téléchargement automatique
   if (entitlements.value && hasDossierDownloadAccess(entitlements.value)) {
-    const hasResume = Boolean(findResumeSnapshotInStorage() || backup?.kind === 'resume')
-    const hasLetter = Boolean(findCoverLetterDraftInStorage() || backup?.kind === 'letter')
+    const hasServerDraft = Boolean(entitlements.value.paidDraftSnapshot)
+    const hasResume = Boolean(findResumeSnapshotInStorage() || backup?.kind === 'resume' || hasServerDraft)
+    const hasLetter = Boolean(findCoverLetterDraftInStorage() || backup?.kind === 'letter' || hasServerDraft)
     if (hasResume || hasLetter) {
       return true
     }

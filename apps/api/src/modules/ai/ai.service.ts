@@ -9,8 +9,10 @@ export class AiService {
     return apiKey
   }
 
-  async enhanceText(text: string, context?: string): Promise<string> {
-    if (!text || !text.trim()) return text
+  async enhanceText(rawText: string, rawContext?: string): Promise<string> {
+    if (!rawText || !rawText.trim()) return rawText
+    const text = rawText.trim().slice(0, 1000)
+    const context = rawContext ? rawContext.trim().slice(0, 500) : ''
     const apiKey = this.getApiKey()
 
     const prompt = `Tu es un rédacteur professionnel et un coach de carrière humain.
@@ -48,8 +50,9 @@ Réponds UNIQUEMENT avec le texte final amélioré, prêt à être inséré. Auc
     return output || text
   }
 
-  async suggestBullets(jobTitle: string): Promise<string[]> {
-    if (!jobTitle || !jobTitle.trim()) return []
+  async suggestBullets(rawJobTitle: string): Promise<string[]> {
+    if (!rawJobTitle || !rawJobTitle.trim()) return []
+    const jobTitle = rawJobTitle.trim().slice(0, 100)
     const apiKey = this.getApiKey()
 
     const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations professionnelles concrètes et variées pour un CV.
@@ -66,7 +69,8 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
   "Réalisation spécifique 3...",
   "Réalisation spécifique 4...",
   "Réalisation spécifique 5..."
-]`
+] release`
+      .replace(' release', '')
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -105,13 +109,18 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
     targetPosition?: string
   }): Promise<{ content: string; subject: string }> {
     const apiKey = this.getApiKey()
+    const jobOfferText = (input.jobOfferText || '').trim().slice(0, 3000)
+    const candidateInfo = input.candidateInfo ? input.candidateInfo.trim().slice(0, 1000) : ''
+    const targetCompany = input.targetCompany ? input.targetCompany.trim().slice(0, 100) : ''
+    const targetPosition = input.targetPosition ? input.targetPosition.trim().slice(0, 100) : ''
 
     const prompt = `Rédige le corps d'une lettre de motivation captivante, directe et profondément HUMAINE en français.
 
-Offre d'emploi : ${input.jobOfferText}
-${input.targetPosition ? `Poste visé : ${input.targetPosition}` : ''}
-${input.targetCompany ? `Entreprise : ${input.targetCompany}` : ''}
-${input.candidateInfo ? `Profil du candidat :\n${input.candidateInfo}` : ''}
+Offre d'emploi : ${jobOfferText}
+${targetPosition ? `Poste visé : ${targetPosition}` : ''}
+${targetCompany ? `Entreprise : ${targetCompany}` : ''}
+${candidateInfo ? `Profil du candidat :\n${candidateInfo}` : ''}`
+
 
 Consignes de structure et de style STRICTES :
 - Ne génère QUE les 3 paragraphes centraux du corps du message (Vous / Moi / Nous).

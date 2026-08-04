@@ -67,7 +67,7 @@ export function usePaymentService() {
       // ignore Pinia store resolution if unavailable
     }
 
-    return post<{ ref: string; redirectUrl: string }>('/payments/checkout', {
+    return post<{ ref: string; token?: string; redirectUrl: string }>('/payments/checkout', {
       planSlug,
       returnTo,
       draftSnapshot,

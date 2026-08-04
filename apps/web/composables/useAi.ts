@@ -6,6 +6,15 @@ export function useAi() {
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBaseUrl || '/api/v1'
 
+  async function parseErrorMessage(res: Response, fallback: string): Promise<string> {
+    try {
+      const data = await res.json()
+      return data.detail || data.message || data.error || fallback
+    } catch {
+      return fallback
+    }
+  }
+
   async function enhanceText(text: string, context?: string): Promise<string | null> {
     if (!text || !text.trim()) return text
     loading.value = true
@@ -17,7 +26,8 @@ export function useAi() {
         body: JSON.stringify({ text, context }),
       })
       if (!res.ok) {
-        throw new Error('Erreur lors de l’amélioration du texte par l’IA')
+        const msg = await parseErrorMessage(res, 'Erreur lors de l’amélioration du texte par l’IA')
+        throw new Error(msg)
       }
       const data = await res.json()
       return data.enhancedText || text
@@ -40,7 +50,8 @@ export function useAi() {
         body: JSON.stringify({ jobTitle }),
       })
       if (!res.ok) {
-        throw new Error('Erreur lors de la suggestion de puces par l’IA')
+        const msg = await parseErrorMessage(res, 'Erreur lors de la suggestion de puces par l’IA')
+        throw new Error(msg)
       }
       const data = await res.json()
       return Array.isArray(data.bullets) ? data.bullets : []
@@ -67,7 +78,8 @@ export function useAi() {
         body: JSON.stringify(input),
       })
       if (!res.ok) {
-        throw new Error('Erreur lors de la génération de la lettre de motivation')
+        const msg = await parseErrorMessage(res, 'Erreur lors de la génération de la lettre de motivation')
+        throw new Error(msg)
       }
       return await res.json()
     } catch (err: any) {

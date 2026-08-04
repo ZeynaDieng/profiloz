@@ -161,6 +161,9 @@ export default defineNuxtConfig({
 
   // ─── Route Rules (indexation + cache + performance) ──────────────
   routeRules: {
+    // Redirection propre des anciennes requêtes index.html vers l'accueil /
+    '/index.html': { redirect: { to: '/', statusCode: 301 } },
+
     // Puppeteer n'a besoin que du HTML SSR (pas d'hydratation client).
     '/imprimer/**': { ssr: true, noScripts: true, robots: 'noindex, nofollow' },
 
@@ -255,6 +258,9 @@ export default defineNuxtConfig({
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap',
         },
+      ],
+      script: [
+        { src: 'https://paytech.sn/assets/js/paytech.js', defer: true },
       ],
     },
   },

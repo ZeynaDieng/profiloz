@@ -8,6 +8,15 @@ import { savePaymentRef } from '~/utils/payment-return'
 
 const paymentService = usePaymentService()
 const { ensureSession } = useGuestSession()
+const {
+  startCheckout,
+  checkingOut,
+  error: checkoutError,
+  isModalOpen,
+  redirectUrl: paytechUrl,
+  activeRef,
+  closeModal,
+} = usePayTechCheckout()
 
 const fallbackPlans: PlanDto[] = PLANS.map((plan) => ({
   slug: plan.slug,
@@ -23,7 +32,6 @@ const fallbackPlans: PlanDto[] = PLANS.map((plan) => ({
 
 const plans = ref<PlanDto[]>([])
 const loading = ref(true)
-const checkingOut = ref<string | null>(null)
 const error = ref('')
 const usedFallback = ref(false)
 const activePlanIndex = ref(0)
@@ -46,21 +54,7 @@ onMounted(async () => {
 
 async function onChoose(plan: PlanDto) {
   error.value = ''
-  checkingOut.value = plan.slug
-  try {
-    await ensureSession()
-    savePaymentDraftBackup(null)
-    savePaymentPlanSlug(plan.slug)
-    savePaymentGuestSession(
-      import.meta.client ? localStorage.getItem('profiloz:guest-session') : null,
-    )
-    const { ref, redirectUrl } = await paymentService.checkout(plan.slug)
-    savePaymentRef(ref)
-    window.location.href = redirectUrl
-  } catch (err) {
-    error.value = parseApiAuthError(err, MSG.payment.error)
-    checkingOut.value = null
-  }
+  await startCheckout(plan.slug)
 }
 </script>
 
@@ -70,6 +64,12 @@ async function onChoose(plan: PlanDto) {
     class="landing-section bg-white border-t border-outline-variant/30"
     aria-labelledby="pricing-title"
   >
+    <UiPayTechModal
+      v-model="isModalOpen"
+      :redirect-url="paytechUrl"
+      :ref-command="activeRef"
+      @cancel="closeModal"
+    />
     <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop overflow-x-clip pb-8 md:pb-4">
       <div class="landing-section-header landing-section-header--left">
         <p class="landing-eyebrow">Tarifs</p>

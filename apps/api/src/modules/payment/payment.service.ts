@@ -721,7 +721,7 @@ export class PaymentService {
 
     await prisma.payment.update({ where: { id: payment.id }, data: { providerToken: token } })
 
-    return { ref: refCommand, redirectUrl }
+    return { ref: refCommand, token, redirectUrl }
   }
 
   /** Traite une notification IPN PayTech (idempotent) : crédite l'utilisateur ou l'invité. */

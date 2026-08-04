@@ -30,6 +30,16 @@ const checkingOut = ref<string | null>(null)
 const error = ref('')
 const activePlanIndex = ref(0)
 
+const {
+  startCheckout,
+  checkingOut,
+  error: checkoutError,
+  isModalOpen,
+  redirectUrl: paytechUrl,
+  activeRef,
+  closeModal,
+} = usePayTechCheckout()
+
 const resumeId = computed(() =>
   typeof route.query.resumeId === 'string' && route.query.resumeId ? route.query.resumeId : null,
 )
@@ -88,22 +98,7 @@ onMounted(async () => {
 
 async function onChoose(plan: PlanDto) {
   error.value = ''
-  checkingOut.value = plan.slug
-  try {
-    await ensureSession()
-    if (returnTo.value) savePaymentReturnTo(returnTo.value)
-    savePaymentPlanSlug(plan.slug)
-    savePaymentDraftBackup(returnTo.value)
-    savePaymentGuestSession(
-      import.meta.client ? localStorage.getItem('profiloz:guest-session') : null,
-    )
-    const { ref, redirectUrl } = await paymentService.checkout(plan.slug, returnTo.value ?? undefined)
-    savePaymentRef(ref)
-    window.location.href = redirectUrl
-  } catch (err) {
-    error.value = parseApiAuthError(err, MSG.payment.error)
-    checkingOut.value = null
-  }
+  await startCheckout(plan.slug, returnTo.value ?? undefined)
 }
 </script>
 
@@ -112,6 +107,12 @@ async function onChoose(plan: PlanDto) {
     class="page-container max-w-6xl mx-auto pb-28 md:pb-12"
     :class="fromPaywall && 'tarifs-page--paywall'"
   >
+    <UiPayTechModal
+      v-model="isModalOpen"
+      :redirect-url="paytechUrl"
+      :ref-command="activeRef"
+      @cancel="closeModal"
+    />
     <!-- Lien de retour à l'éditeur si returnTo est présent -->
     <div
       v-if="returnTo"
