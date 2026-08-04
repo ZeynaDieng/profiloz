@@ -69,8 +69,7 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
   "Réalisation spécifique 3...",
   "Réalisation spécifique 4...",
   "Réalisation spécifique 5..."
-] release`
-      .replace(' release', '')
+]`
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -119,8 +118,7 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
 Offre d'emploi : ${jobOfferText}
 ${targetPosition ? `Poste visé : ${targetPosition}` : ''}
 ${targetCompany ? `Entreprise : ${targetCompany}` : ''}
-${candidateInfo ? `Profil du candidat :\n${candidateInfo}` : ''}`
-
+${candidateInfo ? `Profil du candidat :\n${candidateInfo}` : ''}
 
 Consignes de structure et de style STRICTES :
 - Ne génère QUE les 3 paragraphes centraux du corps du message (Vous / Moi / Nous).
