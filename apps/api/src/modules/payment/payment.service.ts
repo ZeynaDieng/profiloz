@@ -367,15 +367,16 @@ export class PaymentService {
           planPayment,
         )
       }
+      if (payment.status === 'PENDING') {
+        return this.buildConfirmReturnResponse(
+          'pending',
+          await this.getEntitlements(owner),
+          planPayment,
+        )
+      }
       if (payment.status !== 'PENDING') {
         throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
       }
-      await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
-      return this.buildConfirmReturnResponse(
-        'paid',
-        await this.getEntitlements(owner),
-        planPayment,
-      )
     }
 
     // Invité : la ref PayTech suffit — créditer la session liée au paiement même si le navigateur a basculé.
@@ -383,6 +384,13 @@ export class PaymentService {
       if (payment.status === 'PAID') {
         return this.buildConfirmReturnResponse(
           'already_paid',
+          await this.getEntitlements(owner),
+          planPayment,
+        )
+      }
+      if (payment.status === 'PENDING') {
+        return this.buildConfirmReturnResponse(
+          'pending',
           await this.getEntitlements(owner),
           planPayment,
         )
@@ -422,17 +430,15 @@ export class PaymentService {
         guestSessionClientId,
       )
     }
-    if (payment.status !== 'PENDING') {
-      throw new AppError(400, 'Bad Request', 'Cette commande ne peut pas être confirmée')
-    }
 
-    await this.creditPaidPayment(payment, { paymentMethod: 'paytech_return' })
-    return this.buildConfirmReturnResponse(
-      'paid',
-      await this.getEntitlements(paymentGuestOwner),
-      planPayment,
-      guestSessionClientId,
-    )
+    if (payment.status === 'PENDING') {
+      return this.buildConfirmReturnResponse(
+        'pending',
+        await this.getEntitlements(paymentGuestOwner),
+        planPayment,
+        guestSessionClientId,
+      )
+    }
   }
 
   /**

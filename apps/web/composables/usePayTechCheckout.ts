@@ -100,7 +100,16 @@ export function usePayTechCheckout() {
       activeRef.value = refCommand
       redirectUrl.value = url
 
-      // 1. Essayer d'utiliser le SDK PayTech officiel s'il est chargé
+      if (import.meta.client) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
+        if (isMobile) {
+          // Sur mobile, redirection directe vers PayTech (pas de pop-up)
+          window.location.href = url
+          return
+        }
+      }
+
+      // 1. Essayer d'utiliser le SDK PayTech officiel sur desktop s'il est chargé
       if (import.meta.client && window.PayTech && token) {
         try {
           // Garantir qu'aucune modale de fallback n'est ouverte simultanément
