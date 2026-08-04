@@ -84,6 +84,14 @@ const { statusLabel: autoSaveLabel } = useAutoSave({
   },
 })
 
+function handleNewCv() {
+  if (import.meta.client && confirm('Voulez-vous réinitialiser le formulaire pour rédiger un nouveau CV vierge ?')) {
+    resumeStore.startNewDraft()
+    clearPaymentDraftBackup()
+    useAppToast().success('Formulaire réinitialisé pour un nouveau CV !')
+  }
+}
+
 onMounted(async () => {
   try {
     clearPaymentDraftBackup()
@@ -108,7 +116,10 @@ onMounted(async () => {
         return
       }
     } else {
-      if (!resumeStore.current) {
+      if (route.query.new === '1' || route.query.fresh === '1') {
+        resumeStore.startNewDraft()
+        clearPaymentDraftBackup()
+      } else if (!resumeStore.current) {
         resumeStore.rehydrateFromStorage()
       }
       resumeStore.initDraft()
@@ -384,11 +395,21 @@ async function downloadPdf() {
 
         <button
           type="button"
-          class="hidden sm:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center gap-1 mr-1"
+          class="hidden sm:inline-flex text-sm text-on-surface-variant hover:text-secondary px-2 min-h-11 items-center gap-1 mr-1 font-semibold"
           @click="tourActive = true"
         >
           <UiPzIcon name="help_outline" class="text-[18px]" />
           Guide
+        </button>
+
+        <button
+          type="button"
+          class="hidden sm:inline-flex text-sm text-blue-600 hover:text-blue-700 font-bold px-2 min-h-11 items-center gap-1 mr-2 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200/60"
+          title="Effacer le formulaire pour créer un nouveau CV vierge"
+          @click="handleNewCv"
+        >
+          <UiPzIcon name="add" class="text-[18px]" />
+          <span>Nouveau CV</span>
         </button>
 
         <NuxtLink
@@ -487,6 +508,15 @@ async function downloadPdf() {
         >
           <UiPzIcon name="help_outline" class="mr-3 text-secondary" />
           Guide interactif
+        </button>
+
+        <button
+          type="button"
+          class="w-full flex items-center min-h-11 px-3 rounded-xl text-sm text-blue-600 font-extrabold hover:bg-blue-50 text-left"
+          @click="actionsOpen = false; handleNewCv()"
+        >
+          <UiPzIcon name="add" class="mr-3 text-blue-600" />
+          Nouveau CV (Réinitialiser vierge)
         </button>
 
         <div class="px-3 py-4 border-t border-outline-variant/30 mt-2">
