@@ -186,7 +186,7 @@ export class PaymentService {
   }
 
   private async buildConfirmReturnResponse(
-    status: 'paid' | 'already_paid',
+    status: 'paid' | 'already_paid' | 'pending',
     entitlements: EntitlementsWithSnapshot,
     payment: { planSlug: string; credits: number; amountXof: number },
     guestSessionClientId?: string,
