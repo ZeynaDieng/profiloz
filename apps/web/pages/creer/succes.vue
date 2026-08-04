@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { MSG } from '@profiloz/shared'
+import { MSG, type TemplateSlug } from '@profiloz/shared'
+import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { summarizeEntitlements } from '~/utils/entitlements-summary'
 import {
@@ -61,78 +62,72 @@ function isLetterSnapshotValid(draft: any): boolean {
 }
 
 const currentResumeSnapshot = computed(() => {
+  let snap: ResumeSnapshot | null = null
+
   if (isResumeSnapshotValid(resumeStore.current)) {
-    return {
+    snap = {
       ...resumeStore.current!,
       templateConfig: { ...resumeStore.current!.templateConfig },
     }
+  } else {
+    const serverDraft = entitlements.value?.paidDraftSnapshot
+    if (isResumeSnapshotValid(serverDraft)) {
+      snap = serverDraft as any
+      try { resumeStore.loadSnapshot(serverDraft as any) } catch {}
+    } else {
+      const backup = loadPaymentDraftBackup()
+      if (backup?.kind === 'resume' && isResumeSnapshotValid(backup.snapshot)) {
+        snap = backup.snapshot
+        try { resumeStore.loadSnapshot(backup.snapshot) } catch {}
+      } else {
+        const fromStorage = findResumeSnapshotInStorage()
+        if (isResumeSnapshotValid(fromStorage)) {
+          snap = fromStorage
+          try { resumeStore.loadSnapshot(fromStorage!) } catch {}
+        }
+      }
+    }
   }
-  const serverDraft = entitlements.value?.paidDraftSnapshot
-  if (isResumeSnapshotValid(serverDraft)) {
-    try { resumeStore.loadSnapshot(serverDraft as any) } catch {}
-    return serverDraft as any
-  }
-  const backup = loadPaymentDraftBackup()
-  if (backup?.kind === 'resume' && isResumeSnapshotValid(backup.snapshot)) {
-    try { resumeStore.loadSnapshot(backup.snapshot) } catch {}
-    return backup.snapshot
-  }
-  const fromStorage = findResumeSnapshotInStorage()
-  if (isResumeSnapshotValid(fromStorage)) {
-    try { resumeStore.loadSnapshot(fromStorage!) } catch {}
-    return fromStorage
-  }
-  return resumeStore.current ? { ...resumeStore.current, templateConfig: { ...resumeStore.current.templateConfig } } : null
+
+  const slug = (snap?.templateSlug ?? resumeStore.current?.templateSlug ?? 'PROFESSIONNEL') as TemplateSlug
+  const accent = snap?.templateConfig?.accentColor ?? cvTemplateAccentColors(slug).accent
+
+  return buildPreviewSnapshot(slug, accent, snap)
 })
 
 const currentLetterSnapshot = computed(() => {
+  let draft: any = null
+
   if (isLetterSnapshotValid(coverLetterStore.current)) {
-    return coverLetterStore.toSnapshot()
-  }
-  const serverDraft = entitlements.value?.paidDraftSnapshot
-  if (isLetterSnapshotValid(serverDraft)) {
-    const draft = serverDraft as any
-    return {
-      id: draft.id || 'letter-1',
-      templateSlug: draft.templateSlug || 'CLASSIQUE',
-      senderName: draft.senderName || '',
-      recipientName: draft.recipientName || '',
-      jobTitle: draft.jobTitle || '',
-      companyName: draft.companyName || '',
-      content: draft.content || '',
-      accentColor: draft.accentColor,
-      fontSize: draft.fontSize || 'medium',
+    draft = coverLetterStore.toSnapshot()
+  } else {
+    const serverDraft = entitlements.value?.paidDraftSnapshot
+    if (isLetterSnapshotValid(serverDraft)) {
+      draft = serverDraft
+    } else {
+      const backup = loadPaymentDraftBackup()
+      if (backup?.kind === 'letter' && isLetterSnapshotValid(backup.draft)) {
+        draft = backup.draft
+      } else {
+        const fromStorage = findCoverLetterDraftInStorage()
+        if (isLetterSnapshotValid(fromStorage)) {
+          draft = fromStorage
+        }
+      }
     }
   }
-  const backup = loadPaymentDraftBackup()
-  if (backup?.kind === 'letter' && isLetterSnapshotValid(backup.draft)) {
-    return {
-      id: backup.draft.id || 'letter-1',
-      templateSlug: backup.draft.templateSlug || 'CLASSIQUE',
-      senderName: backup.draft.senderName || '',
-      recipientName: backup.draft.recipientName || '',
-      jobTitle: backup.draft.jobTitle || '',
-      companyName: backup.draft.companyName || '',
-      content: backup.draft.content || '',
-      accentColor: backup.draft.accentColor,
-      fontSize: backup.draft.fontSize || 'medium',
-    }
+
+  return {
+    id: draft?.id || 'letter-1',
+    templateSlug: draft?.templateSlug || 'CLASSIQUE',
+    senderName: draft?.senderName || 'Aminata Diallo',
+    recipientName: draft?.recipientName || 'Responsable des Ressources Humaines',
+    jobTitle: draft?.jobTitle || 'Chef de Projet Marketing & Communication',
+    companyName: draft?.companyName || 'Société X',
+    content: draft?.content || 'Madame, Monsieur,\n\nC’est avec un grand intérêt que je vous adresse ma candidature pour le poste de Chef de Projet.\nFort de plusieurs années d’expérience dans la gestion de projets et le marketing stratégique, j’ai développé une solide expertise qui me permet d’apporter une valeur ajoutée immédiate à votre équipe.\n\nJe reste à votre disposition pour un entretien.\n\nCordialement,\nAminata Diallo',
+    accentColor: draft?.accentColor || '#316bf3',
+    fontSize: draft?.fontSize || 'medium',
   }
-  const fromStorage = findCoverLetterDraftInStorage()
-  if (isLetterSnapshotValid(fromStorage)) {
-    return {
-      id: fromStorage!.id || 'letter-1',
-      templateSlug: fromStorage!.templateSlug || 'CLASSIQUE',
-      senderName: fromStorage!.senderName || '',
-      recipientName: fromStorage!.recipientName || '',
-      jobTitle: fromStorage!.jobTitle || '',
-      companyName: fromStorage!.companyName || '',
-      content: fromStorage!.content || '',
-      accentColor: fromStorage!.accentColor,
-      fontSize: fromStorage!.fontSize || 'medium',
-    }
-  }
-  return coverLetterStore.current ? coverLetterStore.toSnapshot() : null
 })
 
 const downloadedFilename = computed(() => {
