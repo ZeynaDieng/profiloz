@@ -562,7 +562,7 @@ onMounted(async () => {
               </button>
             </div>
             <div class="flex-1 p-4 overflow-auto bg-slate-200/60 flex items-center justify-center min-h-[500px]">
-              <div class="w-full max-w-xl aspect-[210/297] bg-white rounded-xl shadow-2xl overflow-hidden">
+              <div class="w-[420px] h-[594px] max-w-full bg-white rounded-xl shadow-2xl overflow-hidden relative">
                 <FeaturesTemplatesA4PreviewFit
                   v-if="!isLetter && currentResumeSnapshot"
                   :resume="currentResumeSnapshot"
@@ -577,7 +577,7 @@ onMounted(async () => {
               <button
                 type="button"
                 class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700"
-                @click="triggerDownload; isPreviewModalOpen = false"
+                @click="triggerDownload(); isPreviewModalOpen = false"
               >
                 Télécharger ce document PDF
               </button>
