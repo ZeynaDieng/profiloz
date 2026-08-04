@@ -43,7 +43,19 @@ const selectedSlug = ref<TemplateSlug | null>(
   (route.query.select as TemplateSlug) ?? resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
 )
 
+const authStore = useAuthStore()
+
+// Pour les utilisateurs invités (sans compte), afficher TOUJOURS le fallback démo Aminata Diallo.
+// Seuls les utilisateurs connectés à un compte peuvent prévisualiser leurs propres données sur les cartes.
+const userSnapshotForPreview = computed(() => {
+  if (!authStore.isAuthenticated) {
+    return null
+  }
+  return resumeStore.current
+})
+
 const activeDraftName = computed(() => {
+  if (!authStore.isAuthenticated) return ''
   const p = resumeStore.current?.personalInfo
   const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
   if (name) return name
@@ -170,7 +182,7 @@ useWizardStep(computed(() => ({
         :key="template.slug"
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
-        :user-snapshot="resumeStore.current"
+        :user-snapshot="userSnapshotForPreview"
         class=""
         @select="selectTemplate"
       >
