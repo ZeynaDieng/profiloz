@@ -30,71 +30,83 @@ const steps: TourStep[] = [
   },
   {
     target: '#tour-field-photo',
-    title: '📸 Photo de profil',
+    title: 'Photo de profil',
+    icon: 'add_a_photo',
     content: 'Téléchargez une photo professionnelle. Utilisez l\'interrupteur d\'activation pour l\'afficher ou la masquer sur votre CV.',
     section: 'personal',
   },
   {
     target: '#tour-field-fullname',
-    title: '👤 Nom complet',
+    title: 'Nom complet',
+    icon: 'person',
     content: 'Saisissez vos prénoms et nom. C\'est ce qui apparaîtra en grand format tout en haut du document.',
     section: 'personal',
   },
   {
     target: '#tour-field-job',
-    title: '💼 Poste visé',
+    title: 'Poste visé',
+    icon: 'badge',
     content: 'Renseignez l\'intitulé exact de l\'emploi recherché. Cela permet au recruteur de comprendre immédiatement votre cible.',
     section: 'personal',
   },
   {
     target: '#tour-field-contact',
-    title: '📧 Contact (E-mail & Tél)',
+    title: 'Contact (E-mail & Tél)',
+    icon: 'mail',
     content: 'Entrez une adresse e-mail professionnelle et votre numéro de téléphone (avec l\'indicatif international +221 si nécessaire).',
     section: 'personal',
   },
   {
     target: '[data-section-id="summary"]',
-    title: '💡 Votre profil professionnel',
+    title: 'Votre profil professionnel',
+    icon: 'lightbulb',
     content: 'Ouvrez cette section pour rédiger l\'accroche de votre CV.',
     section: 'summary',
   },
   {
     target: '#tour-field-summary',
-    title: '✨ Accroche & Assistant IA',
-    content: 'Rédigez 2-3 phrases résumant votre profil, ou cliquez sur **"✨ Générer mon profil IA"** pour que notre IA s\'en charge automatiquement !',
+    title: 'Accroche & Assistant IA',
+    icon: 'auto_awesome',
+    content: 'Rédigez 2-3 phrases résumant votre profil, ou cliquez sur **"Générer mon profil IA"** pour que notre IA s\'en charge automatiquement !',
     section: 'summary',
   },
   {
     target: '[data-section-id="parcours"]',
-    title: '💼 Expériences professionnelles',
+    title: 'Expériences professionnelles',
+    icon: 'work',
     content: 'Ouvrez cette section pour détailler votre parcours en entreprise.',
     section: 'parcours',
   },
   {
     target: '#tour-field-experience',
-    title: '🛠️ Détail des postes & Missions',
+    title: 'Détail des postes & Missions',
+    icon: 'construction',
     content: 'Décrivez vos postes passés. **Astuce :** Utilisez des verbes d\'action pour vos puces de tâches, ou demandez à l\'IA d\'embellir votre texte en un clic.',
     section: 'parcours',
   },
   {
     target: '[data-section-id="qualifications"]',
-    title: '🎓 Compétences & Formations',
+    title: 'Compétences & Formations',
+    icon: 'school',
     content: 'Ouvrez cette section pour renseigner vos diplômes, certifications, langues parlées et compétences clés.',
     section: 'qualifications',
   },
   {
     target: '#tour-color-picker',
-    title: '🎨 Couleurs du modèle',
+    title: 'Couleurs du modèle',
+    icon: 'palette',
     content: 'Personnalisez la couleur d\'accentuation de votre modèle de CV en cliquant sur l\'une de ces pastilles colorées.',
   },
   {
     target: '#tour-preview-panel',
-    title: '👁️ Aperçu temps réel',
+    title: 'Aperçu temps réel',
+    icon: 'visibility',
     content: 'Votre CV se construit en direct sous vos yeux à droite de l\'écran au fil de votre saisie.',
   },
   {
     target: '#tour-download-btn',
-    title: '🚀 Téléchargement PDF',
+    title: 'Téléchargement PDF',
+    icon: 'download',
     content: 'Une fois satisfait, cliquez ici pour télécharger votre CV PDF finalisé et prêt à l\'envoi !',
   },
 ]
@@ -274,7 +286,8 @@ watch(openSectionState, () => {
       <!-- En-tête -->
       <div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
         <h4 class="text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-          {{ currentStep?.title }}
+          <UiPzIcon v-if="(currentStep as any)?.icon" :name="(currentStep as any).icon" class="text-base text-primary shrink-0" />
+          <span>{{ currentStep?.title }}</span>
         </h4>
         <span class="text-[10px] font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10 select-none">
           Étape {{ activeStep + 1 }} sur {{ steps.length }}

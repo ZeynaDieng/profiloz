@@ -309,7 +309,8 @@ provideResumeEditorValidation({
       <div class="p-3.5 rounded-xl bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/10 border border-primary/25 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="space-y-0.5">
           <h3 class="text-xs sm:text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-            <span>✨ Booster mon CV avec l'IA en 1 clic</span>
+            <UiPzIcon name="auto_awesome" class="text-sm text-primary" />
+            <span>Booster mon CV avec l'IA en 1 clic</span>
           </h3>
           <p class="text-[11px] text-on-surface-variant leading-relaxed">
             L'IA rédige votre profil, suggère des puces d'expérience et corrige les fautes.
@@ -476,7 +477,8 @@ provideResumeEditorValidation({
                   :disabled="aiLoading"
                   @click="handleEnhanceSummary"
                 >
-                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? '✨ Reformuler avec l’IA' : '✨ Générer mon profil IA') }}</span>
+                  <UiPzIcon name="auto_awesome" class="text-xs" />
+                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? 'Reformuler avec l’IA' : 'Générer mon profil IA') }}</span>
                 </button>
               </div>
               <textarea

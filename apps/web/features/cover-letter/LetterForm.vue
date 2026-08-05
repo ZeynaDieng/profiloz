@@ -130,7 +130,8 @@ async function handleGenerateFromJobOffer() {
           class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs sm:text-sm hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
           @click="aiModalOpen = true"
         >
-          <span>✨ Rédiger ma lettre avec l'IA</span>
+          <UiPzIcon name="auto_awesome" class="text-sm" />
+          <span>Rédiger ma lettre avec l'IA</span>
         </button>
       </div>
     </div>
@@ -189,14 +190,15 @@ async function handleGenerateFromJobOffer() {
                 :disabled="aiLoading"
                 @click="handleEnhanceContent"
               >
-                <span>{{ aiLoading ? 'Génération IA...' : '✨ Reformuler avec l’IA' }}</span>
+                <UiPzIcon name="auto_awesome" class="text-xs" />
+                <span>{{ aiLoading ? 'Génération IA...' : 'Reformuler avec l’IA' }}</span>
               </button>
             </div>
             <textarea
               v-model="content"
               rows="9"
               class="form-input form-input--white w-full resize-y text-sm leading-relaxed"
-              placeholder="Rédigez votre lettre ou cliquez sur le bouton « ✨ Reformuler avec l’IA » ci-dessus..."
+              placeholder="Rédigez votre lettre ou cliquez sur le bouton « Reformuler avec l’IA » ci-dessus..."
             />
           </div>
         </UiFormField>
@@ -560,7 +562,8 @@ async function handleGenerateFromJobOffer() {
               :disabled="aiLoading || !jobOfferInput.trim()"
               @click="handleGenerateFromJobOffer"
             >
-              <span>{{ aiLoading ? 'Génération...' : '✨ Rédiger la lettre' }}</span>
+              <UiPzIcon name="auto_awesome" class="text-sm" />
+              <span>{{ aiLoading ? 'Génération...' : 'Rédiger la lettre' }}</span>
             </button>
           </div>
         </div>

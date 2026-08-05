@@ -219,7 +219,8 @@ async function handleSuggestBullets(index: number) {
             :disabled="aiLoading"
             @click="handleEnhanceExperience(index)"
           >
-            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Génération...' : (item.description?.trim() ? '✨ Embellir' : '✨ Générer avec l’IA') }}</span>
+            <UiPzIcon name="auto_awesome" class="text-xs" />
+            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Génération...' : (item.description?.trim() ? 'Embellir' : 'Générer avec l’IA') }}</span>
           </button>
         </div>
         <textarea

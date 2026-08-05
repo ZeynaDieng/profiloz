@@ -8,7 +8,8 @@
     <div class="space-y-3 px-2">
       <!-- Pill Badge -->
       <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#EEF4FF] text-[#2F5BFF] text-xs font-bold tracking-wide border border-[#2F5BFF]/15">
-        <span>✨ IA • Simple • Rapide</span>
+        <UiPzIcon name="auto_awesome" class="text-xs text-[#2F5BFF]" />
+        <span>IA • Simple • Rapide</span>
       </div>
 
       <!-- Title -->
