@@ -15,7 +15,7 @@ const selectedTemplate = computed(() => {
 })
 
 const createLink = computed(() =>
-  selectedTemplate.value ? `/creer/editeur?template=${selectedTemplate.value}` : '/creer/modele',
+  selectedTemplate.value ? `/creer/editeur?new=1&template=${selectedTemplate.value}` : '/creer/modele?flow=new',
 )
 const importLink = computed(() =>
   selectedTemplate.value ? cvImportLink(selectedTemplate.value) : '/creer/importer/cv',

@@ -159,18 +159,28 @@ onMounted(async () => {
         return hasName || hasExp || hasSkills || hasSummary
       }
 
-      // Déterminer la provenance : Import de fichier, Restauration explicite, ou Création vierge par défaut
-      const isImport = route.query.imported === '1' || route.query.flow === 'import' || isResumeSnapshotValid(resumeStore.current)
+      // Déterminer intelligemment le mode d'ouverture :
+      // 1. Clic explicite pour Créer un NOUVEAU CV vierge (new=1 / flow=new)
+      const isExplicitNew = route.query.new === '1' || route.query.fresh === '1' || route.query.flow === 'new'
+      // 2. Importation de document PDF/Word (imported=1 / flow=import)
+      const isImport = (route.query.imported === '1' || route.query.flow === 'import') && !isExplicitNew
+      // 3. Restauration du dernier brouillon (restore=1)
       const isExplicitRestore = route.query.restore === '1'
 
       if (isExplicitRestore && previousSavedDraft.value) {
+        // Restauration explicite du brouillon précédent
         resumeStore.loadSnapshot(previousSavedDraft.value)
-      } else if (isImport || isResumeSnapshotValid(resumeStore.current)) {
-        // En cas d'importation de document : ON CONSERVE IMPÉRATIVEMENT LES DONNÉES PARSÉES DANS LE FORMULAIRE !
+      } else if (isExplicitNew) {
+        // Clic sur "Créer mon CV" de zéro -> OUVRIR UN FORMULAIRE 100% VIERGE SANS ANCIENNES DONNÉES
+        resumeStore.startNewDraft()
+        resumeStore.setTemplate(requestedSlug)
+      } else if (isImport || (resumeStore.current && isResumeSnapshotValid(resumeStore.current))) {
+        // Importation de document -> CONSERVER ET PRÉ-REMPLIR TOUTES LES DONNÉES EXTRAITES !
         if (requestedSlug) {
           resumeStore.setTemplate(requestedSlug)
         }
       } else {
+        // Par défaut, nouveau formulaire vierge
         resumeStore.startNewDraft()
         resumeStore.setTemplate(requestedSlug)
       }
