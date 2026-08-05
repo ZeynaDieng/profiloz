@@ -515,7 +515,7 @@ onMounted(async () => {
             <UiPzIcon
               name="expand_more"
               class="text-lg text-slate-500 transition-transform duration-200"
-              :class="isHelpOpen && 'rotate-180'"
+              :class="isHelpOpen ? 'rotate-180' : ''"
             />
           </button>
 

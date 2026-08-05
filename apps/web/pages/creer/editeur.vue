@@ -536,7 +536,7 @@ async function downloadPdf() {
       </div>
 
       <div id="tour-preview-panel" v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">
-        <FeatureEditorPreviewPanel :resume="previewResume" />
+        <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" />
       </div>
     </main>
 
@@ -560,7 +560,7 @@ async function downloadPdf() {
 
     <!-- Mobile : aperçu plein écran -->
     <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu du CV">
-      <FeatureEditorPreviewPanel :resume="previewResume" />
+      <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" />
       <template #footer>
         <UiButton variant="secondary" block @click="previewOpen = false">
           Retour à l'édition
