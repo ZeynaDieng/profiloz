@@ -81,13 +81,15 @@ watch(
           v-if="isOverflowing"
           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/25 animate-pulse shrink-0"
         >
-          ⚠️ Dépasse 1 page
+          <UiPzIcon name="warning" class="text-[12px]" />
+          Dépasse 1 page
         </span>
         <span
           v-else
           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/25 shrink-0"
         >
-          ✅ Tient sur 1 page
+          <UiPzIcon name="check_circle" class="text-[12px]" />
+          Tient sur 1 page
         </span>
       </div>
 

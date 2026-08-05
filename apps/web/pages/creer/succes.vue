@@ -337,7 +337,9 @@ onMounted(async () => {
       <div class="w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 md:p-10 flex flex-col items-center text-center">
         
         <!-- En-tête Félicitations -->
-        <div class="text-5xl mb-3 animate-bounce">🎉</div>
+        <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 animate-bounce shadow-sm">
+          <UiPzIcon name="celebration" class="text-3xl" />
+        </div>
         <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
           {{ docTitle }}
         </h1>
@@ -420,7 +422,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-xl mt-8 pt-6 border-t border-slate-100">
           <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
             <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              ⚡
+              <UiPzIcon name="bolt" class="text-xl text-emerald-600" />
             </div>
             <div class="text-left md:text-center">
               <div class="text-xs font-bold text-slate-800">Téléchargement instantané</div>
@@ -430,7 +432,7 @@ onMounted(async () => {
 
           <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
             <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              🛡️
+              <UiPzIcon name="verified_user" class="text-xl text-emerald-600" />
             </div>
             <div class="text-left md:text-center">
               <div class="text-xs font-bold text-slate-800">Optimisé pour les recruteurs</div>
@@ -440,7 +442,7 @@ onMounted(async () => {
 
           <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
             <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              📱
+              <UiPzIcon name="smartphone" class="text-xl text-emerald-600" />
             </div>
             <div class="text-left md:text-center">
               <div class="text-xs font-bold text-slate-800">Compatible partout</div>
@@ -455,7 +457,7 @@ onMounted(async () => {
           class="w-full max-w-xl mt-6 p-4 md:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-left"
         >
           <div class="flex items-start gap-3 min-w-0">
-            <div class="text-3xl shrink-0">🎁</div>
+            <UiPzIcon name="card_giftcard" class="text-3xl text-emerald-600 shrink-0" />
             <div class="min-w-0">
               <div class="text-sm font-extrabold text-emerald-950 flex items-center gap-2">
                 {{ crossSellTitle }}
@@ -472,7 +474,7 @@ onMounted(async () => {
               class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-300 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span>{{ crossSellCta }}</span>
-              <span>→</span>
+              <UiPzIcon name="arrow_forward" class="text-sm" />
             </button>
           </NuxtLink>
         </div>
@@ -489,8 +491,8 @@ onMounted(async () => {
             class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold shrink-0 transition-colors flex items-center gap-1.5"
             @click="copyFilename"
           >
-            <span>{{ copiedName ? 'Copié ! ✓' : 'Copier le nom' }}</span>
-            <UiPzIcon name="content_copy" class="text-sm text-slate-400" />
+            <span>{{ copiedName ? 'Copié !' : 'Copier le nom' }}</span>
+            <UiPzIcon :name="copiedName ? 'check' : 'content_copy'" class="text-sm" :class="copiedName ? 'text-emerald-600' : 'text-slate-400'" />
           </button>
         </div>
 
@@ -518,16 +520,19 @@ onMounted(async () => {
           </button>
 
           <div v-if="isHelpOpen" class="px-4 pb-4 pt-1 text-xs text-slate-600 border-t border-blue-100/60 space-y-2.5">
-            <div class="flex items-start gap-2">
-              <span class="font-bold text-slate-800 shrink-0">📱 iPhone :</span>
+            <div class="flex items-center gap-2">
+              <UiPzIcon name="phone_iphone" class="text-base text-slate-700 shrink-0" />
+              <span class="font-bold text-slate-800 shrink-0">iPhone :</span>
               <span>Ouvrez l'application <strong>Fichiers</strong> ➔ <em>Téléchargements</em> (ou touchez l'icône <span class="text-blue-600">↓</span> dans la barre d'adresse de Safari).</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="font-bold text-slate-800 shrink-0">🤖 Android :</span>
+            <div class="flex items-center gap-2">
+              <UiPzIcon name="android" class="text-base text-slate-700 shrink-0" />
+              <span class="font-bold text-slate-800 shrink-0">Android :</span>
               <span>Glissez le panneau de notifications vers le bas ou ouvrez l'application <strong>Mes Fichiers</strong> ➔ <em>Téléchargements</em>.</span>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="font-bold text-slate-800 shrink-0">💻 Ordi :</span>
+            <div class="flex items-center gap-2">
+              <UiPzIcon name="computer" class="text-base text-slate-700 shrink-0" />
+              <span class="font-bold text-slate-800 shrink-0">Ordi :</span>
               <span>Vérifiez le dossier <strong>Téléchargements</strong> de votre navigateur (raccourci `Ctrl + J` sur Windows ou `Cmd + Option + L` sur Mac).</span>
             </div>
           </div>
@@ -539,7 +544,7 @@ onMounted(async () => {
             to="/"
             class="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 hover:underline"
           >
-            <span>🏠</span>
+            <UiPzIcon name="home" class="text-base" />
             <span>Retourner à l'accueil</span>
           </NuxtLink>
           <span class="text-xs text-slate-400">Explorer les autres modèles & services du site</span>
