@@ -34,20 +34,26 @@ function checkOverflow() {
       return
     }
 
+    const aside = el.querySelector('aside') as HTMLElement | null
+    const main = el.querySelector('main') as HTMLElement | null
     const child = (el.firstElementChild || el) as HTMLElement
-    const expectedPageHeight = el.clientWidth * (297 / 210)
-    const actualHeight = Math.max(
-      child.scrollHeight,
-      child.offsetHeight,
-      el.scrollHeight,
-      el.clientHeight
-    )
 
-    const count = Math.max(1, Math.ceil((actualHeight - 15) / expectedPageHeight))
+    // Unscaled A4 width = 210mm (~793.7px) -> expected A4 page height ~1122.5px
+    const unscaledWidth = el.offsetWidth || 793.7
+    const expectedPageHeight = unscaledWidth * (297 / 210)
+
+    const asideHeight = aside ? Math.max(aside.scrollHeight, aside.offsetHeight) : 0
+    const mainHeight = main ? Math.max(main.scrollHeight, main.offsetHeight) : 0
+    const childHeight = child ? Math.max(child.scrollHeight, child.offsetHeight) : 0
+    const elHeight = Math.max(el.scrollHeight, el.offsetHeight)
+
+    const actualHeight = Math.max(asideHeight, mainHeight, childHeight, elHeight)
+
+    const count = Math.max(1, Math.ceil((actualHeight - 20) / expectedPageHeight))
     pageCount.value = count
     isOverflowing.value = count > 1
     setOverflow(count, count > 1)
-  }, 100)
+  }, 50)
 }
 
 onMounted(() => {
@@ -57,9 +63,11 @@ onMounted(() => {
       checkOverflow()
       observer = new ResizeObserver(() => checkOverflow())
       observer.observe(el)
-      if (el.firstElementChild) {
-        observer.observe(el.firstElementChild)
-      }
+      const aside = el.querySelector('aside')
+      const main = el.querySelector('main')
+      if (aside) observer.observe(aside)
+      if (main) observer.observe(main)
+      if (el.firstElementChild) observer.observe(el.firstElementChild)
     }
   })
 })

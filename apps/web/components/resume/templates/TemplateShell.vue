@@ -9,7 +9,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="resume-a4 bg-white text-on-surface shadow-xl mx-auto">
+  <div class="resume-a4 bg-white text-on-surface shadow-xl mx-auto relative transition-all duration-300">
     <slot />
   </div>
 </template>
@@ -18,6 +18,9 @@ defineProps<{
 .resume-a4 {
   width: 210mm;
   min-height: 297mm;
+  height: auto;
   padding: 20mm;
+  box-sizing: border-box;
+  overflow: visible !important;
 }
 </style>

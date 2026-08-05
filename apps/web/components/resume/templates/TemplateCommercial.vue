@@ -312,7 +312,7 @@ function descriptionLines(description?: string) {
 <style scoped>
 :deep(.resume-a4) {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 </style>

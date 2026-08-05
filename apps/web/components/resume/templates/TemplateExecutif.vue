@@ -309,7 +309,7 @@ const contactRows = computed(() =>
 
 :deep(.resume-a4) {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: #fafafa;
 }
