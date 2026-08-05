@@ -34,25 +34,36 @@ function checkOverflow() {
       return
     }
 
-    const aside = el.querySelector('aside') as HTMLElement | null
-    const main = el.querySelector('main') as HTMLElement | null
-    const child = (el.firstElementChild || el) as HTMLElement
-
-    // Unscaled A4 width = 210mm (~793.7px) -> expected A4 page height ~1122.5px
+    const elRect = el.getBoundingClientRect()
+    const currentScale = el.offsetWidth > 0 ? elRect.width / el.offsetWidth : 1
     const unscaledWidth = el.offsetWidth || 793.7
     const expectedPageHeight = unscaledWidth * (297 / 210)
 
-    const asideHeight = aside ? Math.max(aside.scrollHeight, aside.offsetHeight) : 0
-    const mainHeight = main ? Math.max(main.scrollHeight, main.offsetHeight) : 0
-    const childHeight = child ? Math.max(child.scrollHeight, child.offsetHeight) : 0
-    const elHeight = Math.max(el.scrollHeight, el.offsetHeight)
+    let maxBottomOffset = 0
+    const children = el.querySelectorAll('aside, main, section, div, p, li')
+    children.forEach((node) => {
+      const r = (node as HTMLElement).getBoundingClientRect()
+      if (r.height > 0) {
+        const bottomOffset = r.bottom - elRect.top
+        if (bottomOffset > maxBottomOffset) {
+          maxBottomOffset = bottomOffset
+        }
+      }
+    })
 
-    const actualHeight = Math.max(asideHeight, mainHeight, childHeight, elHeight)
+    const unscaledActualHeight = currentScale > 0 ? maxBottomOffset / currentScale : maxBottomOffset
+    const count = Math.max(1, Math.ceil((unscaledActualHeight - 15) / expectedPageHeight))
 
-    const count = Math.max(1, Math.ceil((actualHeight - 20) / expectedPageHeight))
     pageCount.value = count
     isOverflowing.value = count > 1
     setOverflow(count, count > 1)
+
+    // Ajuster dynamiquement la hauteur du papier A4 pour couvrir toutes les pages
+    if (count > 1) {
+      el.style.minHeight = `${count * 297}mm`
+    } else {
+      el.style.minHeight = '297mm'
+    }
   }, 50)
 }
 
