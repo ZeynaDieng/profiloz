@@ -171,29 +171,29 @@ watch(
           <div :style="scaleStyle" class="relative">
             <ResumePreviewA4 :resume="resume" />
 
-            <!-- Ligne rouge de délimitation visuelle de la Page 1 (A4) -->
-            <div
-              v-if="isOverflowing"
-              class="absolute left-0 right-0 border-b-2 border-dashed border-red-500 z-50 pointer-events-none flex items-center justify-center"
-              style="top: 297mm;"
-            >
-              <span class="bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-lg transform -translate-y-1/2 tracking-wider flex items-center gap-1.5">
-                <UiPzIcon name="content_cut" class="text-xs" />
-                Fin de la Page 1 (297 mm) — Début Page 2
-              </span>
-            </div>
+            <!-- Séparateurs visuels de pages A4 (découpage en feuilles séparées comme Word / Google Docs) -->
+            <template v-if="isOverflowing">
+              <div
+                v-for="pageIdx in (pageCount - 1)"
+                :key="pageIdx"
+                class="absolute left-[-24px] right-[-24px] z-50 pointer-events-none flex items-center justify-center"
+                :style="{ top: `calc(${pageIdx * 297}mm - 14px)`, height: '28px' }"
+              >
+                <!-- Fond d'espacement gris séparant physiquement les 2 feuilles A4 avec ombre 3D -->
+                <div class="absolute inset-0 bg-[#F1F5F9] border-y border-slate-300 shadow-[inset_0_3px_6px_rgba(0,0,0,0.08),inset_0_-3px_6px_rgba(0,0,0,0.08)]" />
 
-            <!-- Ligne de délimitation pour la Page 2 si pageCount > 2 -->
-            <div
-              v-if="pageCount > 2"
-              class="absolute left-0 right-0 border-b-2 border-dashed border-red-500 z-50 pointer-events-none flex items-center justify-center"
-              style="top: 594mm;"
-            >
-              <span class="bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-lg transform -translate-y-1/2 tracking-wider flex items-center gap-1.5">
-                <UiPzIcon name="content_cut" class="text-xs" />
-                Fin de la Page 2 (594 mm) — Début Page 3
-              </span>
-            </div>
+                <!-- Ligne pointillée centrale d'indication de coupure -->
+                <div class="absolute inset-x-0 top-1/2 border-b border-dashed border-red-500/60" />
+
+                <!-- Badge central élégant de séparation de page -->
+                <div class="relative z-10 flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold shadow-lg border border-slate-700 select-none">
+                  <UiPzIcon name="content_cut" class="text-xs text-amber-400" />
+                  <span>Page {{ pageIdx }} / {{ pageCount }}</span>
+                  <span class="text-slate-500">•</span>
+                  <span class="text-emerald-400">Page {{ pageIdx + 1 }} / {{ pageCount }}</span>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
