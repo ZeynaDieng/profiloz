@@ -165,22 +165,16 @@ const crossSellLink = computed(() => {
   return isLetter.value ? '/creer/modele' : '/creer/lettre/modele'
 })
 
-const crossSellTitle = computed(() => {
-  if (nextDocument.value === 'letter') return 'Bonus inclus dans votre offre'
-  if (nextDocument.value === 'cv') return 'Bonus inclus dans votre offre'
-  return 'Bonus inclus dans votre offre'
-})
+const crossSellTitle = computed(() => 'Profitez de votre document offert')
 
-const crossSellBody = computed(() => {
-  if (nextDocument.value === 'letter') return 'Votre dossier comprend également une lettre de motivation personnalisée, prête à être envoyée.'
-  if (nextDocument.value === 'cv') return 'Votre dossier comprend également la création d’un 2ème CV personnalisé.'
-  return 'Votre dossier comprend également une lettre de motivation personnalisée.'
-})
+const crossSellBody = computed(() =>
+  'Votre commande inclut 1 document offert : créez votre lettre de motivation personnalisée ou un 2ème CV au choix.',
+)
 
 const crossSellCta = computed(() => {
-  if (nextDocument.value === 'letter') return 'Créer ma lettre incluse'
-  if (nextDocument.value === 'cv') return 'Créer mon 2ème CV inclus'
-  return isLetter.value ? 'Créer mon CV inclus' : 'Créer ma lettre incluse'
+  if (nextDocument.value === 'letter') return 'Profiter de mon bonus'
+  if (nextDocument.value === 'cv') return 'Créer mon 2e CV'
+  return isLetter.value ? 'Créer mon 2e CV' : 'Profiter de mon bonus'
 })
 
 const hasPaidAccess = ref(false)
