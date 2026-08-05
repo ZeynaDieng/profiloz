@@ -299,7 +299,10 @@ async function saveLetterToServer(): Promise<string | null> {
   return created.id
 }
 
-async function downloadPdf() {
+const confirmModalOpen = ref(false)
+const { pageCount, isOverflowing } = useCoverLetterPageOverflowState()
+
+function promptDownloadPdf() {
   pdfError.value = ''
   clearAll()
   const validation = validateCoverLetterFields({
@@ -319,6 +322,19 @@ async function downloadPdf() {
     return
   }
 
+  confirmModalOpen.value = true
+}
+
+async function confirmAndDownload() {
+  confirmModalOpen.value = false
+  await executePdfDownload()
+}
+
+async function downloadPdf() {
+  promptDownloadPdf()
+}
+
+async function executePdfDownload() {
   let stepTimer: number | undefined
   try {
     pdfLoading.value = true
@@ -351,27 +367,20 @@ async function downloadPdf() {
     }
 
     const snapshot = coverLetterStore.toSnapshot()
-    if (!snapshot) throw new Error('missing snapshot')
+    if (!snapshot) {
+      pdfError.value = MSG.letter.loadError
+      return
+    }
 
-    const linkedResumeId = resolvePersistableResumeId(resumeStore.savedResumeId)
-    const { filename } = await pdfService.generateLetterAndDownload(snapshot, linkedResumeId)
-    restorePaidGuestSession()
+    const { filename } = await pdfService.downloadGuestLetterPdf(snapshot)
+    markGuestDossierDownload('letter')
     ensurePaidGuestDossier('letter')
-    markGuestDossierDownload('letter', snapshot.id)
     saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
-    const problem = err as { status?: number; statusCode?: number }
-    const status = problem.status ?? problem.statusCode
-    if (status === 402) {
-      await navigateTo({
-        path: '/tarifs',
-        query: { reason: 'unlock', returnTo: route.fullPath },
-      })
-      return
-    }
-    pdfError.value = MSG.letter.error
-    useAppToast().error(MSG.letter.error)
+    const errorMsg = parseApiAuthError(err, MSG.pdf.error)
+    pdfError.value = errorMsg
+    useAppToast().error(errorMsg)
   } finally {
     if (stepTimer !== undefined) window.clearInterval(stepTimer)
     pdfLoading.value = false
@@ -495,9 +504,17 @@ async function downloadPdf() {
           </UiCard>
 
           <UiCard v-if="isDesktop" variant="glass" padding="sm" class="overflow-hidden bg-surface-container-low min-h-[480px] xl:sticky xl:top-4">
-            <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant px-4 py-3 border-b border-outline-variant/30">
-              Aperçu A4
-            </p>
+            <div class="px-4 py-3 border-b border-outline-variant/30 flex items-center justify-between">
+              <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">
+                Aperçu A4
+              </p>
+              <span
+                class="text-xs font-bold px-2.5 py-0.5 rounded-full transition-all"
+                :class="isOverflowing ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+              >
+                {{ isOverflowing ? `⚠️ ${pageCount} pages A4` : '🟢 1 page A4' }}
+              </span>
+            </div>
             <div class="h-[min(70vh,720px)]">
               <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
             </div>
@@ -508,24 +525,94 @@ async function downloadPdf() {
       <UiStickyActionBar class="md:hidden">
         <div class="grid grid-cols-2 gap-2">
           <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
-            Aperçu
+            Aperçu ({{ isOverflowing ? `${pageCount} p. ⚠️` : '1 page' }})
           </UiButton>
-          <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
+          <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
             {{ MSG.buttons.downloadPdf }}
           </UiButton>
         </div>
       </UiStickyActionBar>
 
-      <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4">
+      <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4 Lettre">
         <div class="h-full min-h-[70vh] bg-surface-container-low">
           <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
         </div>
         <template #footer>
-          <UiButton variant="secondary" block @click="previewOpen = false">
-            Retour au formulaire
-          </UiButton>
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <UiButton variant="outline" block icon="edit" @click="previewOpen = false">
+              ✏️ Modifier ma lettre
+            </UiButton>
+
+            <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
+              📥 Télécharger mon PDF
+            </UiButton>
+          </div>
         </template>
       </UiFullScreenSheet>
+
+      <!-- Modal de confirmation avant téléchargement -->
+      <Teleport to="body">
+        <Transition name="fade">
+          <div
+            v-if="confirmModalOpen"
+            class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+            @click.self="confirmModalOpen = false"
+          >
+            <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-5 text-center">
+              <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-2xl font-black">
+                📄
+              </div>
+
+              <div class="space-y-1.5">
+                <h3 class="text-lg font-black text-slate-900 leading-snug">
+                  Prêt à télécharger votre Lettre ?
+                </h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Votre document est prêt. Vérifiez une dernière fois sa longueur avant de générer le fichier PDF final.
+                </p>
+              </div>
+
+              <!-- Badges de statut de la lettre -->
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-left text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 font-medium">Format de page</span>
+                  <span
+                    class="font-extrabold px-2.5 py-0.5 rounded-full text-[11px]"
+                    :class="isOverflowing ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+                  >
+                    {{ isOverflowing ? `⚠️ ${pageCount} pages A4` : '🟢 1 page A4 (Parfait)' }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between border-t border-slate-200/60 pt-2">
+                  <span class="text-slate-500 font-medium">Qualité & Compatibilité</span>
+                  <span class="font-extrabold text-blue-600 flex items-center gap-1">
+                    <UiPzIcon name="verified" class="text-sm" /> 100% Compatible ATS
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  class="px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors"
+                  @click="confirmModalOpen = false"
+                >
+                  Vérifier encore
+                </button>
+
+                <button
+                  type="button"
+                  class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-1.5"
+                  @click="confirmAndDownload"
+                >
+                  <span>Lancer le PDF</span>
+                  <UiPzIcon name="arrow_forward" class="text-sm" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
 
       <div
         v-if="pdfLoading"

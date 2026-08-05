@@ -15,6 +15,10 @@ defineProps<{
 .letter-a4 {
   width: 210mm;
   min-height: 297mm;
+  height: auto;
+  overflow: visible !important;
   padding: 20mm;
+  position: relative;
+  box-sizing: border-box;
 }
 </style>
