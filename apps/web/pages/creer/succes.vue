@@ -451,32 +451,89 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Encadré Vert : Bonus Inclus (Lettre ou 2ème CV) -->
-        <div
-          v-if="showCrossSell"
-          class="w-full max-w-xl mt-6 p-4 md:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-left"
-        >
-          <div class="flex items-start gap-3 min-w-0">
-            <UiPzIcon name="card_giftcard" class="text-3xl text-emerald-600 shrink-0" />
-            <div class="min-w-0">
-              <div class="text-sm font-extrabold text-emerald-950 flex items-center gap-2">
-                {{ crossSellTitle }}
+        <!-- 🎁 BANNIÈRE BONUS EN VEDETTE & HUB D'ACTIONS "ET ENSUITE ?" -->
+        <div class="w-full max-w-xl mt-6 space-y-4 text-left">
+          <!-- Carte Hero Bonus ultra mise en valeur -->
+          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
+            <!-- Motif lumineux de fond -->
+            <div class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+
+            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="space-y-1.5 min-w-0">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm">
+                  <UiPzIcon name="card_giftcard" class="text-xs text-slate-950" />
+                  <span>Bonus 100% Inclus avec votre commande</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-extrabold text-white leading-snug">
+                  {{ crossSellTitle }}
+                </h2>
+                <p class="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-md">
+                  {{ crossSellBody }}
+                </p>
               </div>
-              <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
-                {{ crossSellBody }}
-              </p>
+
+              <NuxtLink :to="crossSellLink" class="shrink-0 w-full sm:w-auto">
+                <button
+                  type="button"
+                  class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs sm:text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span>{{ crossSellCta }}</span>
+                  <UiPzIcon name="arrow_forward" class="text-base text-emerald-700" />
+                </button>
+              </NuxtLink>
             </div>
           </div>
 
-          <NuxtLink :to="crossSellLink" class="shrink-0 w-full sm:w-auto">
-            <button
-              type="button"
-              class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-300 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          <!-- Grille d'actions rapide : Créer sa lettre ou un autre CV -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Option 1 : Lettre de motivation -->
+            <div
+              class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group cursor-pointer"
+              @click="startSecondLetter"
             >
-              <span>{{ crossSellCta }}</span>
-              <UiPzIcon name="arrow_forward" class="text-sm" />
-            </button>
-          </NuxtLink>
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0 border border-emerald-100">
+                  <UiPzIcon name="mail" class="text-xl text-emerald-600" />
+                </div>
+                <div>
+                  <div class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    Créer ma lettre de motivation
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                    Générez une lettre rédigée par l'IA assortie au design de votre CV.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
+                <span>Rédiger ma lettre</span>
+                <UiPzIcon name="arrow_forward" class="text-sm ml-1" />
+              </div>
+            </div>
+
+            <!-- Option 2 : Créer un autre CV -->
+            <div
+              class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group cursor-pointer"
+              @click="startSecondCv"
+            >
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0 border border-blue-100">
+                  <UiPzIcon name="description" class="text-xl text-blue-600" />
+                </div>
+                <div>
+                  <div class="text-xs font-extrabold text-slate-900 group-hover:text-blue-700 transition-colors">
+                    Créer un autre CV
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                    Commencez un nouveau CV ou adaptez vos données à un autre modèle.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
+                <span>Créer un nouveau CV</span>
+                <UiPzIcon name="arrow_forward" class="text-sm ml-1" />
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Boîte Nom du fichier + Copier -->
