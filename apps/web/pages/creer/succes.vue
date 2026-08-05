@@ -233,6 +233,22 @@ async function copyFilename() {
 }
 
 onMounted(async () => {
+  if (import.meta.client) {
+    if (window.top && window.top !== window.self) {
+      try {
+        window.top.location.href = window.location.href
+        return
+      } catch (_) {}
+    }
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.location.href = window.location.href
+        window.close()
+        return
+      } catch (_) {}
+    }
+  }
+
   authStore.loadFromStorage()
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
