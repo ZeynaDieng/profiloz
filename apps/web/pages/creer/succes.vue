@@ -353,11 +353,11 @@ onMounted(async () => {
         <!-- Aperçu Vignette Document (Carte interactive) -->
         <div class="relative group my-2 w-full max-w-sm flex flex-col items-center">
           <div class="relative w-[260px] h-[368px] min-h-[350px] bg-slate-100 rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-transform duration-300 group-hover:scale-[1.02]">
-            <FeaturesTemplatesA4PreviewFit
+            <FeatureTemplatesA4PreviewFit
               v-if="!isLetter && currentResumeSnapshot"
               :resume="currentResumeSnapshot"
             />
-            <FeaturesCoverLetterTemplatesA4PreviewFit
+            <FeatureCoverLetterTemplatesA4PreviewFit
               v-else-if="isLetter && currentLetterSnapshot"
               :letter="currentLetterSnapshot"
             />
@@ -571,11 +571,11 @@ onMounted(async () => {
             </div>
             <div class="flex-1 p-4 overflow-auto bg-slate-200/60 flex items-center justify-center min-h-[500px]">
               <div class="w-[420px] h-[594px] max-w-full bg-white rounded-xl shadow-2xl overflow-hidden relative">
-                <FeaturesTemplatesA4PreviewFit
+                <FeatureTemplatesA4PreviewFit
                   v-if="!isLetter && currentResumeSnapshot"
                   :resume="currentResumeSnapshot"
                 />
-                <FeaturesCoverLetterTemplatesA4PreviewFit
+                <FeatureCoverLetterTemplatesA4PreviewFit
                   v-else-if="isLetter && currentLetterSnapshot"
                   :letter="currentLetterSnapshot"
                 />
