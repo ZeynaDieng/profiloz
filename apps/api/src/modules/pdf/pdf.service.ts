@@ -153,10 +153,10 @@ async function waitForPrintPageMarker(page: import('puppeteer').Page) {
 function isBlockedPrintRequest(url: string): boolean {
   if (url.startsWith('data:') || url.startsWith('blob:')) return false
 
+  // Seules les requêtes de suivi/analytics non nécessaires sont bloquées
   const blockedUrlPrefixes = [
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
-    'https://fonts.bunny.net',
+    'https://www.google-analytics.com',
+    'https://connect.facebook.net',
   ]
   return blockedUrlPrefixes.some((prefix) => url.startsWith(prefix))
 }
@@ -181,7 +181,7 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
       if (document.fonts?.ready) {
         await Promise.race([
           document.fonts.ready,
-          new Promise<void>((resolve) => setTimeout(resolve, 200)),
+          new Promise<void>((resolve) => setTimeout(resolve, 2500)),
         ])
       }
     })
