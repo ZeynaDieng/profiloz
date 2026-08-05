@@ -2092,6 +2092,9 @@ function normalizeCompareText(value?: string): string {
 function isCoverLetterHeaderLine(line: string, meta: CoverLetterExtractMeta): boolean {
   const trimmed = cleanLine(line)
   if (!trimmed) return true
+  if (/^\s*\[\s*(?:votre|nom|prénom|prenom|adresse|téléphone|telephone|numéro|numero|e-?mail|coordonnées|destinataire|entreprise|ville|pays)\b.*?\]\s*$/i.test(trimmed)) return true
+  if (/^(?:à\s+l['']?attention\s+d[eu]|à\s+l['']?attention\s+de|destinataire\s*:?|aux\s+soins\s+de|service\s+des\s+ressources|direction\s+des\s+ressources)/i.test(trimmed)) return true
+  if (/^(?:avenue|rue|boulevard|b\.?p\.?|cité|route|quartier)\b/i.test(trimmed)) return true
   if (SALUTATION_LINE_RE.test(trimmed)) return true
   if (OBJECT_LINE_RE.test(trimmed)) return true
   if (COVER_LETTER_DATE_RE.test(trimmed)) return true

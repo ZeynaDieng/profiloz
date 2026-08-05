@@ -5,7 +5,7 @@ import { createScopedCoverLetterDraftStorage } from '~/utils/cover-letter-draft-
 import { coverLetterDraftFromResume } from '~/features/demo/aminata-persona'
 import type { ResumeSnapshot } from '@profiloz/shared'
 import { createRandomId } from '~/utils/random-id'
-import { defaultLetterAccentColor } from '~/utils/template-accent-colors'
+import { cleanCoverLetterBodyText } from '~/utils/cover-letter-cleaner'
 
 export interface CoverLetterDraft {
   id: string
@@ -126,7 +126,7 @@ export const useCoverLetterStore = defineStore('coverLetter', {
       if (data.companyAddress) this.current.companyAddress = data.companyAddress
       if (data.position) this.current.position = data.position
       if (data.recruiterName) this.current.recruiterName = data.recruiterName
-      if (data.content) this.current.content = data.content
+      if (data.content) this.current.content = cleanCoverLetterBodyText(data.content)
       if (data.closingText) this.current.closingText = data.closingText
       if (data.templateSlug) this.current.templateSlug = data.templateSlug
       if (data.accentColor) this.current.accentColor = data.accentColor

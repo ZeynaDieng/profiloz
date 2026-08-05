@@ -6,6 +6,7 @@ import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
+import { cleanCoverLetterBodyText } from '~/utils/cover-letter-cleaner'
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
@@ -199,6 +200,13 @@ onMounted(async () => {
       }
       if (!coverLetterStore.current?.position?.trim() && cvInfo.jobTitle) {
         coverLetterStore.patchFields({ position: cvInfo.jobTitle })
+      }
+    }
+
+    if (coverLetterStore.current?.content) {
+      const cleaned = cleanCoverLetterBodyText(coverLetterStore.current.content)
+      if (cleaned !== coverLetterStore.current.content) {
+        coverLetterStore.patchFields({ content: cleaned })
       }
     }
 
