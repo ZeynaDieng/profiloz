@@ -424,35 +424,35 @@ onMounted(async () => {
           </div>
         </button>
 
-        <!-- Rangée 3 Avantages / Réassurance -->
+        <!-- Rangée 3 Garanties & Valeur Profilo'Z -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-xl mt-8 pt-6 border-t border-slate-100">
-          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
-            <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              <UiPzIcon name="bolt" class="text-xl text-emerald-600" />
+          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50/80 md:bg-transparent">
+            <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 font-bold">
+              <UiPzIcon name="picture_as_pdf" class="text-lg text-blue-600" />
             </div>
             <div class="text-left md:text-center">
-              <div class="text-xs font-bold text-slate-800">Téléchargement instantané</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">Votre fichier PDF est prêt et disponible immédiatement.</div>
+              <div class="text-xs font-extrabold text-slate-800">PDF Haute Définition</div>
+              <div class="text-[11px] text-slate-500 mt-0.5 leading-snug">Rendu vectoriel net pour impression et envoi direct.</div>
             </div>
           </div>
 
-          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
+          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50/80 md:bg-transparent">
             <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              <UiPzIcon name="verified_user" class="text-xl text-emerald-600" />
+              <UiPzIcon name="verified" class="text-lg text-emerald-600" />
             </div>
             <div class="text-left md:text-center">
-              <div class="text-xs font-bold text-slate-800">Optimisé pour les recruteurs</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">Mise en page professionnelle compatible ATS.</div>
+              <div class="text-xs font-extrabold text-slate-800">100% Compatible ATS</div>
+              <div class="text-[11px] text-slate-500 mt-0.5 leading-snug">Mise en page analysée sans erreur par les recruteurs.</div>
             </div>
           </div>
 
-          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50 md:bg-transparent">
-            <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-              <UiPzIcon name="smartphone" class="text-xl text-emerald-600" />
+          <div class="flex items-center md:flex-col md:text-center gap-3 p-3 rounded-xl bg-slate-50/80 md:bg-transparent">
+            <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center shrink-0 font-bold">
+              <UiPzIcon name="cloud_done" class="text-lg text-teal-600" />
             </div>
             <div class="text-left md:text-center">
-              <div class="text-xs font-bold text-slate-800">Compatible partout</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">Fonctionne sur LinkedIn, Indeed, France Travail, etc.</div>
+              <div class="text-xs font-extrabold text-slate-800">Disponible & Éditable</div>
+              <div class="text-[11px] text-slate-500 mt-0.5 leading-snug">Modifiez vos données quand vous le souhaitez.</div>
             </div>
           </div>
         </div>
