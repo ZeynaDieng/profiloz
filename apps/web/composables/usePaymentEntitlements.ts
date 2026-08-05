@@ -49,15 +49,24 @@ export function usePaymentEntitlements() {
       return true
     }
 
-    // Invité : 1er doc déjà téléchargé → 2e inclus ; re-pin session payée et re-vérifier.
     const dossier = loadGuestDossierState()
-    if (dossier?.paidAt && (dossier.cvDownloaded || dossier.letterDownloaded)) {
-      restorePaidGuestSession()
-      resetGuestSessionSync()
-      await ensureSession().catch(() => {})
-      entitlements = await fetchEntitlements()
-      if (hasDossierDownloadAccess(entitlements)) {
-        return true
+    if (dossier?.paidAt) {
+      if (dossier.cvDownloaded && dossier.letterDownloaded) {
+        await navigateTo({
+          path: '/tarifs',
+          query: { reason: 'completed', returnTo },
+        })
+        return false
+      }
+
+      if (dossier.cvDownloaded || dossier.letterDownloaded) {
+        restorePaidGuestSession()
+        resetGuestSessionSync()
+        await ensureSession().catch(() => {})
+        entitlements = await fetchEntitlements()
+        if (hasDossierDownloadAccess(entitlements)) {
+          return true
+        }
       }
     }
 

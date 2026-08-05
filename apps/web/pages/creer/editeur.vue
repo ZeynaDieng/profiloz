@@ -8,6 +8,7 @@ import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 import { clearPaymentDraftBackup, loadPaymentDraftBackup } from '~/utils/payment-draft-backup'
 import { findResumeSnapshotInStorage } from '~/utils/guest-draft-sync'
+import { isPaymentRequiredError } from '~/utils/api-error'
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 
 definePageMeta({ layout: false })
@@ -335,12 +336,12 @@ async function downloadPdf() {
     saveLastDownloadContext({ kind: 'cv', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename } })
   } catch (err) {
-    const problem = err as { status?: number; statusCode?: number }
-    const status = problem.status ?? problem.statusCode
-    if (status === 402) {
+    if (isPaymentRequiredError(err)) {
+      const dossier = loadGuestDossierState()
+      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded) ? 'completed' : 'unlock'
       await navigateTo({
         path: '/tarifs',
-        query: { reason: 'unlock', returnTo: route.fullPath },
+        query: { reason, returnTo: route.fullPath },
       })
       return
     }

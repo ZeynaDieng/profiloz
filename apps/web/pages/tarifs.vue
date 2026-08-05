@@ -48,6 +48,7 @@ const returnTo = computed(() =>
     : null,
 )
 const fromPaywall = computed(() => route.query.reason === 'unlock')
+const fromCompleted = computed(() => route.query.reason === 'completed')
 
 const activePlan = computed(
   () => plans.value[activePlanIndex.value] ?? plans.value.find((p) => p.popular) ?? plans.value[0],
@@ -124,6 +125,17 @@ async function onChoose(plan: PlanDto) {
         <UiPzIcon name="arrow_back" class="text-[18px]" />
         Retourner à mon brouillon (continuer l'édition)
       </NuxtLink>
+    </div>
+
+    <!-- Bandeau d'information si offre précédente 100% consommée -->
+    <div v-if="fromCompleted" class="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 flex items-start gap-3 text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto text-left shadow-sm">
+      <div class="w-8 h-8 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-base shrink-0">
+        🎉
+      </div>
+      <div>
+        <strong class="font-extrabold text-sm sm:text-base block mb-0.5 text-amber-950 dark:text-amber-100">Votre offre précédente est 100% terminée !</strong>
+        Vous avez téléchargé avec succès votre dossier complet (CV + Bonus). Pour débloquer votre nouveau document, choisissez une nouvelle formule ci-dessous.
+      </div>
     </div>
 
     <header

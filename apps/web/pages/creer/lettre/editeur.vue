@@ -6,6 +6,7 @@ import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { getLetterAccentPalette, resolveLetterAccentColor } from '~/utils/template-accent-colors'
 import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft'
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
+import { isPaymentRequiredError } from '~/utils/api-error'
 import { cleanCoverLetterBodyText } from '~/utils/cover-letter-cleaner'
 import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
@@ -378,6 +379,15 @@ async function executePdfDownload() {
     saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })
     await navigateTo({ path: '/creer/succes', query: { file: filename, type: 'letter' } })
   } catch (err) {
+    if (isPaymentRequiredError(err)) {
+      const dossier = loadGuestDossierState()
+      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded) ? 'completed' : 'unlock'
+      await navigateTo({
+        path: '/tarifs',
+        query: { reason, returnTo: route.fullPath },
+      })
+      return
+    }
     const errorMsg = parseApiAuthError(err, MSG.pdf.error)
     pdfError.value = errorMsg
     useAppToast().error(errorMsg)

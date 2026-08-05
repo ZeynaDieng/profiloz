@@ -1,4 +1,22 @@
-import { MSG } from '@profiloz/shared'
+export function isPaymentRequiredError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const problem = err as {
+    status?: number
+    statusCode?: number
+    data?: { statusCode?: number; status?: number; code?: string }
+    response?: { status?: number }
+    code?: string
+  }
+  const status =
+    problem.status ??
+    problem.statusCode ??
+    problem.data?.status ??
+    problem.data?.statusCode ??
+    problem.response?.status
+  if (status === 402) return true
+  if (problem.code === 'PAYMENT_REQUIRED' || problem.data?.code === 'PAYMENT_REQUIRED') return true
+  return false
+}
 
 export function parseApiAuthError(err: unknown, fallback = MSG.error.generic): string {
   if (!err || typeof err !== 'object') {
