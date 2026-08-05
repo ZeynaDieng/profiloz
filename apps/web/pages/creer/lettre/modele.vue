@@ -109,7 +109,7 @@ function onContinue() {
       </button>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-gutter">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 max-w-md sm:max-w-none mx-auto">
       <FeatureCoverLetterTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"

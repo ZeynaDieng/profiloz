@@ -48,13 +48,13 @@ useResizeObserver(containerRef, () => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full h-full relative overflow-hidden preview-canvas-bg flex items-center justify-center">
+  <div ref="containerRef" class="w-full h-full relative overflow-hidden preview-canvas-bg flex items-center justify-center p-2">
     <div
-      class="absolute top-1/2 left-1/2 pointer-events-none a4-preview-fit"
+      class="shrink-0 pointer-events-none a4-preview-fit flex items-center justify-center"
       :style="{
         width: `${A4_WIDTH_PX}px`,
         height: `${A4_HEIGHT_PX}px`,
-        transform: `translate(-50%, -50%) scale(${scale})`,
+        transform: `scale(${scale})`,
         transformOrigin: 'center center',
       }"
     >

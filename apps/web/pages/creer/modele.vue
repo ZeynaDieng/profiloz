@@ -182,7 +182,7 @@ useWizardStep(computed(() => ({
       </button>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 sm:gap-y-7 lg:gap-y-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-8 max-w-md sm:max-w-none mx-auto">
       <FeatureTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"
