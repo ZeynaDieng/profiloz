@@ -209,7 +209,13 @@ async function triggerDownload() {
 function startSecondCv() {
   resumeStore.startNewDraft()
   clearPaymentDraftBackup()
-  navigateTo('/creer/modele')
+  navigateTo('/creer/modele?new=1')
+}
+
+function startImportCv() {
+  resumeStore.startNewDraft()
+  clearPaymentDraftBackup()
+  navigateTo('/creer/importer/cv')
 }
 
 function startSecondLetter() {
@@ -484,8 +490,8 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Grille d'actions rapide : Créer sa lettre ou un autre CV -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Grille d'actions rapide : Lettre, Importer un CV ou Nouveau CV vierge -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <!-- Option 1 : Lettre de motivation -->
             <div
               class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group cursor-pointer"
@@ -497,39 +503,63 @@ onMounted(async () => {
                 </div>
                 <div>
                   <div class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                    Créer ma lettre de motivation
+                    Créer ma lettre IA
                   </div>
                   <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                    Générez une lettre rédigée par l'IA assortie au design de votre CV.
+                    Rédigez une lettre personnalisée par l'IA assortie à votre CV.
                   </p>
                 </div>
               </div>
-              <div class="flex items-center text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
+              <div class="flex items-center text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform mt-1">
                 <span>Rédiger ma lettre</span>
                 <UiPzIcon name="arrow_forward" class="text-sm ml-1" />
               </div>
             </div>
 
-            <!-- Option 2 : Créer un autre CV -->
+            <!-- Option 2 : Importer un CV existant (PDF, Word) -->
+            <div
+              class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group cursor-pointer"
+              @click="startImportCv"
+            >
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold shrink-0 border border-teal-100">
+                  <UiPzIcon name="file_upload" class="text-xl text-teal-600" />
+                </div>
+                <div>
+                  <div class="text-xs font-extrabold text-slate-900 group-hover:text-teal-700 transition-colors">
+                    Importer un CV
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                    Extraire vos données depuis un fichier PDF ou Word.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center text-xs font-bold text-teal-600 group-hover:translate-x-1 transition-transform mt-1">
+                <span>Importer un fichier</span>
+                <UiPzIcon name="arrow_forward" class="text-sm ml-1" />
+              </div>
+            </div>
+
+            <!-- Option 3 : Nouveau CV vierge -->
             <div
               class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group cursor-pointer"
               @click="startSecondCv"
             >
               <div class="flex items-start gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0 border border-blue-100">
-                  <UiPzIcon name="description" class="text-xl text-blue-600" />
+                  <UiPzIcon name="add_circle" class="text-xl text-blue-600" />
                 </div>
                 <div>
                   <div class="text-xs font-extrabold text-slate-900 group-hover:text-blue-700 transition-colors">
-                    Créer un autre CV
+                    Nouveau CV vierge
                   </div>
                   <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                    Commencez un nouveau CV ou adaptez vos données à un autre modèle.
+                    Partir d'un modèle vierge et remplir votre CV à zéro.
                   </p>
                 </div>
               </div>
-              <div class="flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-                <span>Créer un nouveau CV</span>
+              <div class="flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform mt-1">
+                <span>Partir à zéro</span>
                 <UiPzIcon name="arrow_forward" class="text-sm ml-1" />
               </div>
             </div>
