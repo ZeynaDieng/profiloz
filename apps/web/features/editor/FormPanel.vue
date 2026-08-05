@@ -5,6 +5,7 @@ import { EXTENDED_ACCENT_PALETTE } from '~/utils/template-accent-colors'
 
 // FormPanel pour l'édition dynamique du CV avec ergonomie SaaS Mobile Premium
 const resumeStore = useResumeStore()
+const { pageCount, isOverflowing } = useResumePageOverflowState()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 const { enhanceText, loading: aiLoading } = useAi()
 
@@ -287,13 +288,25 @@ provideResumeEditorValidation({
   <div class="flex flex-col h-full bg-surface">
     <!-- 🚀 BARRE DE PROGRESSION & HÉROS IA -->
     <div class="p-3.5 sm:p-4 border-b border-outline-variant/40 shrink-0 space-y-3 bg-surface-container/20">
-      <!-- Progression 1 ligne épurée -->
+      <!-- Progression 1 ligne épurée avec badge A4 -->
       <div class="flex items-center justify-between gap-2">
         <span class="text-xs font-bold text-on-surface">
           Votre CV est complété à <span class="text-primary font-extrabold">{{ completionPercentage }}%</span>
         </span>
-        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full" :class="completionPercentage >= 100 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-primary/10 text-primary'">
-          {{ completionPercentage >= 100 ? 'Prêt' : `${completionPercentage}%` }}
+
+        <span
+          v-if="isOverflowing"
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/30 animate-pulse shrink-0"
+        >
+          <UiPzIcon name="warning" class="text-xs text-amber-600" />
+          <span>{{ pageCount }} pages A4</span>
+        </span>
+        <span
+          v-else
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 shrink-0"
+        >
+          <UiPzIcon name="check_circle" class="text-xs text-emerald-600" />
+          <span>1 page A4</span>
         </span>
       </div>
 
@@ -303,6 +316,17 @@ provideResumeEditorValidation({
           class="bg-primary h-full transition-all duration-500 rounded-full"
           :style="{ width: `${completionPercentage}%` }"
         />
+      </div>
+
+      <!-- Avertissement de dépassement A4 -->
+      <div
+        v-if="isOverflowing"
+        class="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 flex items-center justify-between gap-2 shadow-2xs"
+      >
+        <div class="flex items-center gap-2 min-w-0">
+          <UiPzIcon name="warning" class="text-amber-600 text-base shrink-0" />
+          <span class="truncate"><strong>Dépassement A4 :</strong> Votre CV comporte {{ pageCount }} pages.</span>
+        </div>
       </div>
 
       <!-- BANNIÈRE HERO IA TOUT EN HAUT -->

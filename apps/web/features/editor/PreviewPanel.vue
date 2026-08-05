@@ -11,6 +11,7 @@ const isMobilePreview = useMediaQuery('(max-width: 1023px)')
 const { zoom, setZoom, zoomIn, zoomOut, scaleStyle, previewWrapperStyle, containerRef, ZOOM_LEVELS } =
   useEditorZoom({ initial: 75, autoFit: isMobilePreview })
 
+const { setOverflow } = useResumePageOverflowState()
 const isOverflowing = ref(false)
 const pageCount = ref(1)
 let observer: ResizeObserver | null = null
@@ -29,6 +30,7 @@ function checkOverflow() {
     if (!el) {
       isOverflowing.value = false
       pageCount.value = 1
+      setOverflow(1, false)
       return
     }
 
@@ -44,6 +46,7 @@ function checkOverflow() {
     const count = Math.max(1, Math.ceil((actualHeight - 15) / expectedPageHeight))
     pageCount.value = count
     isOverflowing.value = count > 1
+    setOverflow(count, count > 1)
   }, 100)
 }
 

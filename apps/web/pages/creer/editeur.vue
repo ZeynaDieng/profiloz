@@ -59,6 +59,8 @@ function handleResetToBlank() {
   }
 }
 
+const { pageCount, isOverflowing } = useResumePageOverflowState()
+
 const accentColors = computed(() =>
   getCvAccentPalette(resumeStore.current?.templateSlug ?? 'PROFESSIONNEL'),
 )
@@ -541,8 +543,14 @@ async function downloadPdf() {
     <!-- Mobile & tablette : barre d'actions sticky -->
     <UiStickyActionBar v-if="isMobileOrTablet">
       <div class="flex gap-2">
-        <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
-          Voir l'aperçu du CV
+        <UiButton
+          :variant="isOverflowing ? 'danger' : 'outline'"
+          block
+          icon="visibility"
+          @click="previewOpen = true"
+        >
+          <span v-if="isOverflowing">Aperçu ({{ pageCount }} pages ⚠️)</span>
+          <span v-else>Aperçu (1 page A4)</span>
         </UiButton>
         <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
           {{ MSG.buttons.downloadPdf }}

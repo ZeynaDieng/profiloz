@@ -1,4 +1,19 @@
 import type { ResumeSnapshot } from '@profiloz/shared'
+import { ref, readonly } from 'vue'
+
+const sharedPageCount = ref(1)
+const sharedIsOverflowing = ref(false)
+
+export function useResumePageOverflowState() {
+  return {
+    pageCount: readonly(sharedPageCount),
+    isOverflowing: readonly(sharedIsOverflowing),
+    setOverflow(count: number, overflowing: boolean) {
+      sharedPageCount.value = count
+      sharedIsOverflowing.value = overflowing
+    },
+  }
+}
 
 export interface PaginationRule {
   type: 'section' | 'experience' | 'education' | 'list'
