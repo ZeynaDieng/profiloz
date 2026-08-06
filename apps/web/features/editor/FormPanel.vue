@@ -2,6 +2,7 @@
 import type { Certification, Education, Experience, Interest, Language, Skill, TemplateSlug } from '@profiloz/shared'
 import { resolveShowPhoto } from '@profiloz/shared'
 import { EXTENDED_ACCENT_PALETTE } from '~/utils/template-accent-colors'
+import { formatPhoneNumber } from '~/utils/phone-formatter'
 
 // FormPanel pour l'édition dynamique du CV avec ergonomie SaaS Mobile Premium
 const resumeStore = useResumeStore()
@@ -453,6 +454,7 @@ provideResumeEditorValidation({
                     type="tel"
                     class="form-input w-full text-sm"
                     placeholder="+221 77 000 00 00"
+                    @blur="personalForm.phone = formatPhoneNumber(personalForm.phone)"
                   />
                 </UiFormField>
               </div>

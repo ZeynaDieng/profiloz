@@ -3,6 +3,7 @@ import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { COVER_LETTER_TEMPLATE_REGISTRY } from '~/features/cover-letter-templates/registry'
 import { useAi } from '~/composables/useAi'
+import { formatPhoneNumber } from '~/utils/phone-formatter'
 
 const templateId = defineModel<CoverLetterTemplateSlug>('templateId', { required: true })
 const accentColor = defineModel<string>('accentColor', { default: '#0051d5' })
@@ -203,6 +204,7 @@ async function handleGenerateFromJobOffer() {
               type="text"
               class="form-input form-input--white w-full"
               placeholder="+221 77 000 00 00"
+              @blur="senderPhone = formatPhoneNumber(senderPhone)"
             />
           </UiFormField>
         </div>

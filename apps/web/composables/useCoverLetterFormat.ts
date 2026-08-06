@@ -1,5 +1,6 @@
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
+import { formatPhoneNumber } from '~/utils/phone-formatter'
 
 export function formatRecruiterName(raw: string | null | undefined): string {
   if (!raw) return ''
@@ -126,7 +127,7 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     const lines: string[] = []
     if (snapshot.value.senderName) lines.push(snapshot.value.senderName)
     if (snapshot.value.senderLocation) lines.push(snapshot.value.senderLocation)
-    if (snapshot.value.senderPhone) lines.push(snapshot.value.senderPhone)
+    if (snapshot.value.senderPhone) lines.push(formatPhoneNumber(snapshot.value.senderPhone))
     if (snapshot.value.senderEmail) lines.push(snapshot.value.senderEmail)
     return lines
   })
