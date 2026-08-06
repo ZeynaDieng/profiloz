@@ -326,6 +326,11 @@ function promptDownloadPdf() {
   confirmModalOpen.value = true
 }
 
+function cancelConfirmModal() {
+  confirmModalOpen.value = false
+  previewOpen.value = false
+}
+
 async function confirmAndDownload() {
   confirmModalOpen.value = false
   await executePdfDownload()
@@ -565,8 +570,8 @@ async function executePdfDownload() {
         <Transition name="fade">
           <div
             v-if="confirmModalOpen"
-            class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
-            @click.self="confirmModalOpen = false"
+            class="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+            @click.self="cancelConfirmModal"
           >
             <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-5 text-center">
               <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-2xl font-black">
@@ -604,15 +609,15 @@ async function executePdfDownload() {
               <div class="grid grid-cols-2 gap-3 pt-2">
                 <button
                   type="button"
-                  class="px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors"
-                  @click="confirmModalOpen = false"
+                  class="px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-bold text-xs transition-colors cursor-pointer touch-manipulation"
+                  @click="cancelConfirmModal"
                 >
                   Vérifier encore
                 </button>
 
                 <button
                   type="button"
-                  class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-1.5"
+                  class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
                   @click="confirmAndDownload"
                 >
                   <span>Lancer le PDF</span>
