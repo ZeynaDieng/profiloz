@@ -44,19 +44,6 @@ onMounted(async () => {
     return
   }
 
-  try {
-    const entitlements = await paymentService.getEntitlements()
-    if (!entitlements.features.historique) {
-      isLocked.value = true
-      loading.value = false
-      return
-    }
-  } catch {
-    isLocked.value = true
-    loading.value = false
-    return
-  }
-
   await loadDocuments()
 })
 
