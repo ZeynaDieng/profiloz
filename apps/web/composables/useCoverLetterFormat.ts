@@ -30,8 +30,22 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
   })
 
   const cleanPosition = computed(() => {
-    const raw = snapshot.value.position?.trim() || ''
-    return raw.replace(/^candidature\s*(:|-|·|—)?\s*(au\s+poste\s+de\s+|pour\s+le\s+poste\s+de\s+|au\s+poste\s+d['’]|pour\s+le\s+poste\s+d['’])?/i, '').trim()
+    let raw = snapshot.value.position?.trim() || ''
+    while (/^(candidature\s*(:|-|·|—)?\s*)?(au\s+poste\s+de\s+|pour\s+le\s+poste\s+de\s+|au\s+poste\s+d['’]|pour\s+le\s+poste\s+d['’])?/i.test(raw) && raw.length > 0) {
+      const next = raw.replace(/^(candidature\s*(:|-|·|—)?\s*)?(au\s+poste\s+de\s+|pour\s+le\s+poste\s+de\s+|au\s+poste\s+d['’]|pour\s+le\s+poste\s+d['’])?/i, '').trim()
+      if (next === raw) break
+      raw = next
+    }
+    return raw
+  })
+
+  const formattedSubject = computed(() => {
+    const title = cleanPosition.value
+    if (!title) return ''
+    if (/^[aeiouyhàâéèêëîïôùûü]/i.test(title)) {
+      return `Candidature au poste d'${title}`
+    }
+    return `Candidature au poste de ${title}`
   })
 
   const paragraphs = computed(() => {
@@ -60,7 +74,15 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     return cleaned
   })
 
-  const closing = computed(() => snapshot.value.closingText?.trim() || DEFAULT_CLOSING_TEXT)
+  const closing = computed(() => {
+    const rawClosing = snapshot.value.closingText?.trim() || DEFAULT_CLOSING_TEXT
+    const name = snapshot.value.recruiterName?.trim()
+    if (name && !/^(madame,\s*monsieur|madame\s*\/\s*monsieur|monsieur,\s*madame)$/i.test(name)) {
+      // Remplacer automatiquement "Madame, Monsieur" dans la formule de politesse par le destinataire (ex: Mme Ndiaye)
+      return rawClosing.replace(/madame,\s*monsieur/gi, name)
+    }
+    return rawClosing
+  })
 
   const senderLines = computed(() => {
     const lines: string[] = []
@@ -91,6 +113,7 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     formattedDate,
     greeting,
     cleanPosition,
+    formattedSubject,
     paragraphs,
     closing,
     senderLines,

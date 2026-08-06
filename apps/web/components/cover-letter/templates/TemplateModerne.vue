@@ -6,6 +6,7 @@ const props = defineProps<{ letter: CoverLetterSnapshot }>();
 const {
   formattedDate,
   greeting,
+  formattedSubject,
   paragraphs,
   closing,
   senderLines,
@@ -80,7 +81,7 @@ const {
           "
         />
         <span class="text-[#334155] font-medium"
-          >Candidature — {{ letter.position }}</span
+          >{{ formattedSubject }}</span
         >
       </div>
 

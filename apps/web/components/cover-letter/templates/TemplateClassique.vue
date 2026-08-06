@@ -6,6 +6,7 @@ const props = defineProps<{ letter: CoverLetterSnapshot }>();
 const {
   formattedDate,
   greeting,
+  formattedSubject,
   paragraphs,
   closing,
   senderLines,
@@ -53,9 +54,7 @@ const {
       <div v-if="letter.position" class="mb-8 pb-2 border-b border-[#c8c9cf]">
         <p class="text-[10pt] tracking-wide">
           <span class="font-bold">Objet&nbsp;:</span>
-          <span class="ml-1"
-            >Candidature au poste de {{ letter.position }}</span
-          >
+          <span class="ml-1">{{ formattedSubject }}</span>
         </p>
       </div>
 
