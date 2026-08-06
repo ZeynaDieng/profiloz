@@ -27,7 +27,7 @@ const previewStyle = computed(() => letterPreviewWrapperStyle(props.slug))
     @click="$emit('select', slug)"
   >
     <div class="relative aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewStyle">
-      <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+      <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" hide-badge />
     </div>
     <div class="p-4 flex justify-between items-center bg-surface-container-lowest">
       <slot />

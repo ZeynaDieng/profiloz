@@ -3,7 +3,10 @@ import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { useResizeObserver } from '@vueuse/core'
 import { letterPreviewWrapperStyle } from '~/utils/template-accent-colors'
 
-const props = defineProps<{ letter?: CoverLetterSnapshot | null }>()
+const props = defineProps<{
+  letter?: CoverLetterSnapshot | null
+  hideBadge?: boolean
+}>()
 
 const containerRef = ref<HTMLElement | null>(null)
 const scale = ref(0.3)
@@ -87,9 +90,15 @@ const previewStyle = computed(() =>
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full h-full relative overflow-y-auto preview-canvas-bg--landing p-4 flex flex-col items-center justify-start" :style="previewStyle">
-    <!-- Badge de statut de page -->
+  <div
+    ref="containerRef"
+    class="w-full h-full relative overflow-hidden preview-canvas-bg--landing p-2 flex flex-col items-center justify-center"
+    :class="!hideBadge && 'overflow-y-auto justify-start p-4'"
+    :style="previewStyle"
+  >
+    <!-- Badge de statut de page (Masqué en mode vignette galerie) -->
     <div
+      v-if="!hideBadge"
       class="sticky top-2 z-20 mb-3 px-3 py-1 rounded-full text-xs font-bold shadow-md backdrop-blur-md transition-all flex items-center gap-1.5"
       :class="isOverflowing ? 'bg-amber-500 text-white' : 'bg-slate-900/80 text-white'"
     >
@@ -99,13 +108,13 @@ const previewStyle = computed(() =>
 
     <!-- Conteneur A4 avec mise à l'échelle -->
     <div
-      class="relative pointer-events-none letter-a4-preview-fit shadow-2xl rounded-sm transition-all"
+      class="shrink-0 pointer-events-none letter-a4-preview-fit shadow-2xl rounded-sm transition-all flex items-center justify-center"
       :style="{
         width: `${A4_WIDTH_PX}px`,
         height: `${A4_HEIGHT_PX * pageCount}px`,
         transform: `scale(${scale})`,
-        transformOrigin: 'top center',
-        marginBottom: `-${(1 - scale) * (A4_HEIGHT_PX * pageCount)}px`,
+        transformOrigin: hideBadge ? 'center center' : 'top center',
+        marginBottom: hideBadge ? '0px' : `-${(1 - scale) * (A4_HEIGHT_PX * pageCount)}px`,
       }"
     >
       <CoverLetterPreviewA4 :letter="letter" />
