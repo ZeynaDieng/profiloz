@@ -289,7 +289,23 @@ async function saveResume(silent = false) {
   }
 }
 
-async function downloadPdf() {
+const confirmModalOpen = ref(false)
+
+function promptDownloadPdf() {
+  pdfError.value = ''
+  if (editorValidation && !editorValidation.validateAll()) {
+    pdfError.value = MSG.validation.invalidData
+    return
+  }
+  confirmModalOpen.value = true
+}
+
+async function confirmAndDownload() {
+  confirmModalOpen.value = false
+  await executePdfDownload()
+}
+
+async function executePdfDownload() {
   pdfError.value = ''
   if (editorValidation && !editorValidation.validateAll()) {
     // validateAll annonce déjà l’erreur (banner + toast + scroll)
@@ -351,6 +367,9 @@ async function downloadPdf() {
     if (stepTimer !== undefined) window.clearInterval(stepTimer)
     pdfLoading.value = false
   }
+}
+async function downloadPdf() {
+  await executePdfDownload()
 }
 </script>
 
@@ -514,7 +533,7 @@ async function downloadPdf() {
           class="!hidden xl:!inline-flex"
           icon="download"
           :loading="pdfLoading"
-          @click="downloadPdf"
+          @click="promptDownloadPdf"
         >
           {{ MSG.buttons.downloadPdf }}
         </UiButton>
@@ -553,7 +572,7 @@ async function downloadPdf() {
           <span v-if="isOverflowing">Aperçu ({{ pageCount }} pages ⚠️)</span>
           <span v-else>Aperçu (1 page A4)</span>
         </UiButton>
-        <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="downloadPdf">
+        <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
           {{ MSG.buttons.downloadPdf }}
         </UiButton>
       </div>
@@ -563,11 +582,80 @@ async function downloadPdf() {
     <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu du CV">
       <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" />
       <template #footer>
-        <UiButton variant="secondary" block @click="previewOpen = false">
-          Retour à l'édition
-        </UiButton>
+        <div class="grid grid-cols-2 gap-3 w-full">
+          <UiButton variant="outline" block icon="edit" @click="previewOpen = false">
+            ✏️ Modifier mon CV
+          </UiButton>
+          <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
+            📥 Télécharger mon PDF
+          </UiButton>
+        </div>
       </template>
     </UiFullScreenSheet>
+
+    <!-- Modal de confirmation avant téléchargement CV -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="confirmModalOpen"
+          class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+          @click.self="confirmModalOpen = false"
+        >
+          <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-5 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-2xl font-black">
+              📄
+            </div>
+
+            <div class="space-y-1.5">
+              <h3 class="text-lg font-black text-slate-900 leading-snug">
+                Prêt à télécharger votre CV ?
+              </h3>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Votre document est prêt. Vérifiez une dernière fois sa longueur avant de générer le fichier PDF final.
+              </p>
+            </div>
+
+            <!-- Badges de statut du CV -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-left text-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Format de page</span>
+                <span
+                  class="font-extrabold px-2.5 py-0.5 rounded-full text-[11px]"
+                  :class="isOverflowing ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+                >
+                  {{ isOverflowing ? `⚠️ ${pageCount} pages A4` : '🟢 1 page A4 (Parfait)' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between border-t border-slate-200/60 pt-2">
+                <span class="text-slate-500 font-medium">Qualité & Compatibilité</span>
+                <span class="font-extrabold text-blue-600 flex items-center gap-1">
+                  <UiPzIcon name="verified" class="text-sm" /> 100% Compatible ATS
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                class="px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors"
+                @click="confirmModalOpen = false"
+              >
+                Vérifier encore
+              </button>
+
+              <button
+                type="button"
+                class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-1.5"
+                @click="confirmAndDownload"
+              >
+                <span>Lancer le PDF</span>
+                <UiPzIcon name="arrow_forward" class="text-sm" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Mobile : options plein écran -->
     <UiFullScreenSheet v-model:open="actionsOpen" title="Options">
