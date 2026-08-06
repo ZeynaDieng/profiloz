@@ -34,8 +34,8 @@ const targetCompanyInput = ref('')
 const targetPositionInput = ref('')
 const showAllColors = ref(false)
 
-// Section ouverte par défaut : Contenu & IA
-const openSection = ref<string>('content')
+// Section ouverte par défaut : Vos Coordonnées (Expéditeur)
+const openSection = ref<string>('sender')
 
 // Ouverture avec défilement automatique vers la section ouverte pour ne plus avoir à glisser !
 function toggleSection(id: string, event?: Event) {
@@ -154,66 +154,7 @@ async function handleGenerateFromJobOffer() {
       </div>
     </div>
 
-    <!-- ACCORDÉON 1 (OUVERT PAR DÉFAUT) : 📝 Contenu de la Lettre & IA -->
-    <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
-      <button
-        type="button"
-        class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('content', $event)"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-            <UiPzIcon name="description" class="text-base" />
-          </div>
-          <div>
-            <h3 class="font-bold text-sm text-on-surface">1. Contenu de la Lettre & IA</h3>
-            <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
-              {{ content ? 'Lettre rédigée' : 'Rédigez vous-même ou générez avec l’IA' }}
-            </p>
-          </div>
-        </div>
-        <UiPzIcon
-          name="expand_more"
-          class="text-on-surface-variant transition-transform duration-200"
-          :class="openSection === 'content' && 'rotate-180'"
-        />
-      </button>
-
-      <div v-show="openSection === 'content'" class="p-4 sm:p-5 space-y-4 border-t border-outline-variant/30">
-        <UiFormField label="Corps de la lettre" required :error="fieldError(fieldErrors, 'content')">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs text-on-surface-variant font-medium">Texte principal de la lettre</span>
-              <button
-                type="button"
-                class="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all active:scale-95 shrink-0"
-                :disabled="aiLoading"
-                @click="handleEnhanceContent"
-              >
-                <UiPzIcon name="auto_awesome" class="text-xs" />
-                <span>{{ aiLoading ? 'Génération IA...' : 'Reformuler avec l’IA' }}</span>
-              </button>
-            </div>
-            <textarea
-              v-model="content"
-              rows="9"
-              class="form-input form-input--white w-full resize-y text-sm leading-relaxed"
-              placeholder="Rédigez votre lettre ou cliquez sur le bouton « Reformuler avec l’IA » ci-dessus..."
-            />
-          </div>
-        </UiFormField>
-
-        <UiFormField label="Formule de politesse de fin">
-          <textarea
-            v-model="closingText"
-            rows="2"
-            class="form-input form-input--white w-full resize-y text-sm"
-          />
-        </UiFormField>
-      </div>
-    </div>
-
-    <!-- ACCORDÉON 2 : 👤 Vos Coordonnées (Expéditeur) -->
+    <!-- ACCORDÉON 1 (OUVERT PAR DÉFAUT) : 👤 Vos Coordonnées (Expéditeur) -->
     <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
       <button
         type="button"
@@ -225,7 +166,7 @@ async function handleGenerateFromJobOffer() {
             <UiPzIcon name="person" class="text-base" />
           </div>
           <div>
-            <h3 class="font-bold text-sm text-on-surface">2. Vos Coordonnées (Expéditeur)</h3>
+            <h3 class="font-bold text-sm text-on-surface">1. Vos Coordonnées (Expéditeur)</h3>
             <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
               {{ senderName ? `${senderName} · ${senderLocation || 'Lieu non renseigné'}` : 'Pré-rempli automatiquement depuis votre CV' }}
             </p>
@@ -276,7 +217,7 @@ async function handleGenerateFromJobOffer() {
       </div>
     </div>
 
-    <!-- ACCORDÉON 3 : 🏢 L'Entreprise & Poste Visé -->
+    <!-- ACCORDÉON 2 : 🏢 L'Entreprise & Poste Visé -->
     <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
       <button
         type="button"
@@ -288,7 +229,7 @@ async function handleGenerateFromJobOffer() {
             <UiPzIcon name="business" class="text-base" />
           </div>
           <div>
-            <h3 class="font-bold text-sm text-on-surface">3. L'Entreprise & Poste Visé</h3>
+            <h3 class="font-bold text-sm text-on-surface">2. L'Entreprise & Poste Visé</h3>
             <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
               {{ position ? `${position} ${companyName ? `chez ${companyName}` : ''}` : 'Poste recherché, Nom entreprise' }}
             </p>
@@ -339,7 +280,137 @@ async function handleGenerateFromJobOffer() {
       </div>
     </div>
 
-    <!-- ACCORDÉON 4 : 🎨 Modèle & Couleurs (Design avec vraies miniatures du modèle) -->
+    <!-- ACCORDÉON 3 : 📝 Contenu de la Lettre & IA -->
+    <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70">
+      <button
+        type="button"
+        class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
+        @click="toggleSection('content', $event)"
+      >
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+            <UiPzIcon name="description" class="text-base" />
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-on-surface">3. Contenu de la Lettre & IA</h3>
+            <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
+              {{ content ? 'Lettre rédigée' : 'Rédigez vous-même ou générez avec l’IA' }}
+            </p>
+          </div>
+        </div>
+        <UiPzIcon
+          name="expand_more"
+          class="text-on-surface-variant transition-transform duration-200"
+          :class="openSection === 'content' && 'rotate-180'"
+        />
+      </button>
+
+      <div v-show="openSection === 'content'" class="p-4 sm:p-5 space-y-4 border-t border-outline-variant/30">
+        <UiFormField label="Corps de la lettre" required :error="fieldError(fieldErrors, 'content')">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs text-on-surface-variant font-medium">Texte principal de la lettre</span>
+              <button
+                type="button"
+                class="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all active:scale-95 shrink-0"
+                :disabled="aiLoading"
+                @click="handleEnhanceContent"
+              >
+                <UiPzIcon name="auto_awesome" class="text-xs" />
+                <span>{{ aiLoading ? 'Génération IA...' : 'Reformuler avec l’IA' }}</span>
+              </button>
+            </div>
+            <textarea
+              v-model="content"
+              rows="9"
+              class="form-input form-input--white w-full resize-y text-sm leading-relaxed"
+              placeholder="Rédigez votre lettre ou cliquez sur le bouton « Reformuler avec l’IA » ci-dessus..."
+            />
+          </div>
+        </UiFormField>
+
+        <UiFormField label="Formule de politesse de fin">
+          <textarea
+            v-model="closingText"
+            rows="2"
+            class="form-input form-input--white w-full resize-y text-sm"
+          />
+        </UiFormField>
+      </div>
+    </div>
+
+    <!-- ACCORDÉON 4 : ✍️ Signature Électronique -->
+    <div class="border border-outline-variant/60 rounded-2xl overflow-hidden bg-surface transition-shadow duration-200 shadow-2xs">
+      <button
+        type="button"
+        class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
+        @click="toggleSection('signature', $event)"
+      >
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+            <UiPzIcon name="edit" class="text-base" />
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-on-surface">4. Signature Électronique</h3>
+            <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
+              Dessiner, importer ou générer une signature manuscrite
+            </p>
+          </div>
+        </div>
+        <UiPzIcon
+          name="expand_more"
+          class="text-on-surface-variant transition-transform duration-200"
+          :class="openSection === 'signature' && 'rotate-180'"
+        />
+      </button>
+
+      <div v-show="openSection === 'signature'" class="p-4 sm:p-5 space-y-4 border-t border-outline-variant/30">
+        <div v-if="signatureUrl" class="p-3.5 bg-surface-container/40 border border-outline-variant/40 rounded-xl flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="p-2 bg-white rounded-lg border border-slate-200 shrink-0">
+              <img :src="signatureUrl" alt="Signature active" class="max-h-10 max-w-[120px] object-contain block" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-on-surface">Signature active</p>
+              <p class="text-[11px] text-on-surface-variant truncate">S'affichera sous la formule de politesse</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              @click="signatureModalOpen = true"
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              @click="signatureUrl = ''"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-surface-container/30 rounded-xl border border-dashed border-outline-variant/60">
+          <div class="space-y-0.5">
+            <p class="text-xs font-bold text-on-surface">Aucune signature ajoutée</p>
+            <p class="text-[11px] text-on-surface-variant">Ajoutez votre signature pour donner une touche officielle à votre lettre.</p>
+          </div>
+          <button
+            type="button"
+            class="px-4 py-2 bg-surface text-on-surface border border-outline-variant hover:bg-surface-container font-bold text-xs rounded-xl shadow-2xs transition-colors flex items-center gap-2 active:scale-95 shrink-0"
+            @click="signatureModalOpen = true"
+          >
+            <UiPzIcon name="edit" class="text-xs" />
+            <span>Ajouter une signature</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCORDÉON 5 : 🎨 Modèle & Couleurs (Design avec vraies miniatures du modèle) -->
     <div class="rounded-2xl border border-outline-variant/40 overflow-hidden bg-surface-container-lowest transition-all shadow-2xs hover:border-outline-variant/70 mb-8">
       <button
         type="button"
@@ -351,7 +422,7 @@ async function handleGenerateFromJobOffer() {
             <UiPzIcon name="palette" class="text-base" />
           </div>
           <div>
-            <h3 class="font-bold text-sm text-on-surface">4. Modèle & Couleurs (Design)</h3>
+            <h3 class="font-bold text-sm text-on-surface">5. Modèle & Couleurs (Design)</h3>
             <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
               Choisir le modèle visuel et la couleur d'accent
             </p>
@@ -410,77 +481,6 @@ async function handleGenerateFromJobOffer() {
               </div>
             </FeatureCoverLetterTemplatesPreviewCard>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ✍️ SECTION 5: SIGNATURE ÉLECTRONIQUE -->
-    <div class="border border-outline-variant/60 rounded-2xl overflow-hidden bg-surface transition-shadow duration-200 shadow-2xs">
-      <button
-        type="button"
-        class="w-full px-4 py-3.5 flex items-center justify-between text-left bg-surface-container/30 hover:bg-surface-container/60 transition-colors"
-        @click="toggleSection('signature', $event)"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-            <UiPzIcon name="edit" class="text-base" />
-          </div>
-          <div>
-            <h3 class="font-bold text-sm text-on-surface">5. Signature Électronique</h3>
-            <p class="text-[11px] text-on-surface-variant line-clamp-1 font-medium">
-              Dessiner, importer ou générer une signature manuscrite
-            </p>
-          </div>
-        </div>
-        <UiPzIcon
-          name="expand_more"
-          class="text-on-surface-variant transition-transform duration-200"
-          :class="openSection === 'signature' && 'rotate-180'"
-        />
-      </button>
-
-      <div v-show="openSection === 'signature'" class="p-4 sm:p-5 space-y-4 border-t border-outline-variant/30">
-        <div v-if="signatureUrl" class="p-3.5 bg-surface-container/40 border border-outline-variant/40 rounded-xl flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="p-2 bg-white rounded-lg border border-slate-200 shrink-0">
-              <img :src="signatureUrl" alt="Signature active" class="max-h-10 max-w-[120px] object-contain block" />
-            </div>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-on-surface">Signature active</p>
-              <p class="text-[11px] text-on-surface-variant truncate">S'affichera sous la formule de politesse</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 rounded-lg transition-colors"
-              @click="signatureModalOpen = true"
-            >
-              Modifier
-            </button>
-            <button
-              type="button"
-              class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-              @click="signatureUrl = ''"
-            >
-              Supprimer
-            </button>
-          </div>
-        </div>
-
-        <div v-else class="text-center p-6 border-2 border-dashed border-outline-variant/60 rounded-2xl space-y-3 bg-surface-container/20">
-          <UiPzIcon name="draw" class="text-3xl text-primary/70 mx-auto" />
-          <div>
-            <p class="text-xs font-bold text-on-surface">Aucune signature électronique ajoutée</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">Donnez un aspect officiel et professionnel à votre lettre de motivation</p>
-          </div>
-          <button
-            type="button"
-            class="px-4 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all active:scale-95 inline-flex items-center gap-2"
-            @click="signatureModalOpen = true"
-          >
-            <span>✍️ Ajouter une signature</span>
-          </button>
         </div>
       </div>
     </div>
