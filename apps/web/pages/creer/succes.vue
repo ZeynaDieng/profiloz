@@ -464,33 +464,64 @@ onMounted(async () => {
 
         <!-- 🎁 BANNIÈRE BONUS EN VEDETTE & HUB D'ACTIONS "ET ENSUITE ?" -->
         <div class="w-full max-w-xl mt-6 space-y-4 text-left">
-          <!-- Carte Hero Bonus ultra mise en valeur (Uniquement s'il reste un document offert) -->
-          <div v-if="showCrossSell" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
+          <!-- Carte Hero Bonus ultra mise en valeur (Choix explicite du 2ème document inclus) -->
+          <div v-if="showCrossSell" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30 space-y-4">
             <!-- Motif lumineux de fond -->
             <div class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
-            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div class="space-y-1.5 min-w-0">
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm">
-                  <UiPzIcon name="card_giftcard" class="text-xs text-slate-950" />
-                  <span>Bonus 100% Inclus avec votre commande</span>
-                </div>
-                <h2 class="text-base sm:text-lg font-extrabold text-white leading-snug">
-                  {{ crossSellTitle }}
-                </h2>
-                <p class="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-md">
-                  {{ crossSellBody }}
-                </p>
+            <div class="relative z-10 space-y-1.5 min-w-0">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm">
+                <UiPzIcon name="card_giftcard" class="text-xs text-slate-950" />
+                <span>Votre 2ème document est 100% Inclus !</span>
               </div>
+              <h2 class="text-base sm:text-xl font-extrabold text-white leading-snug">
+                Choisissez votre 2ème document offert
+              </h2>
+              <p class="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-lg">
+                Votre formule comprend 2 documents au choix. Sélectionnez le 2ème document que vous désirez créer maintenant :
+              </p>
+            </div>
 
-              <NuxtLink :to="crossSellLink" class="shrink-0 w-full sm:w-auto">
-                <button
-                  type="button"
-                  class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs sm:text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span>{{ crossSellCta }}</span>
-                  <UiPzIcon name="arrow_forward" class="text-base text-emerald-700" />
-                </button>
+            <!-- Les 2 Choix Directs pour l'utilisateur -->
+            <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <!-- Choix 1 : Le document complémentaire (Lettre si CV en 1er, CV si Lettre en 1er) -->
+              <NuxtLink :to="isLetter ? '/creer/modele' : '/creer/lettre/modele'" class="block">
+                <div class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-between gap-3 group cursor-pointer">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xl shrink-0">{{ isLetter ? '📄' : '✉️' }}</span>
+                    <div class="min-w-0">
+                      <div class="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
+                        {{ isLetter ? 'Un CV professionnel' : 'Une Lettre de motivation' }}
+                      </div>
+                      <div class="text-[11px] text-emerald-100/80 truncate">
+                        {{ isLetter ? 'Assorti à votre lettre' : 'Rédigée par l’IA & sur-mesure' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="px-3 py-1.5 rounded-xl bg-white text-emerald-900 font-extrabold text-[11px] shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                    Choisir
+                  </div>
+                </div>
+              </NuxtLink>
+
+              <!-- Choix 2 : Un 2ème document du même type (2ème CV si CV en 1er, 2ème Lettre si Lettre en 1er) -->
+              <NuxtLink :to="isLetter ? '/creer/lettre/modele' : '/creer/modele'" class="block">
+                <div class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-between gap-3 group cursor-pointer">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xl shrink-0">{{ isLetter ? '✉️' : '📄' }}</span>
+                    <div class="min-w-0">
+                      <div class="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
+                        {{ isLetter ? 'Une 2ème Lettre IA' : 'Un 2ème CV (ou réimport)' }}
+                      </div>
+                      <div class="text-[11px] text-emerald-100/80 truncate">
+                        {{ isLetter ? 'Pour une autre entreprise' : 'Autre poste / candidature' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="px-3 py-1.5 rounded-xl bg-white/90 text-emerald-950 font-extrabold text-[11px] shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                    Choisir
+                  </div>
+                </div>
               </NuxtLink>
             </div>
           </div>
