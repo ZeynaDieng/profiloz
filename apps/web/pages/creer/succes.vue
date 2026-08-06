@@ -436,8 +436,8 @@ onMounted(async () => {
 
         <!-- 🎁 BANNIÈRE BONUS EN VEDETTE & HUB D'ACTIONS "ET ENSUITE ?" -->
         <div class="w-full max-w-xl mt-6 space-y-4 text-left">
-          <!-- Carte Hero Bonus ultra mise en valeur -->
-          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
+          <!-- Carte Hero Bonus ultra mise en valeur (Uniquement s'il reste un document offert) -->
+          <div v-if="showCrossSell" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
             <!-- Motif lumineux de fond -->
             <div class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
@@ -464,6 +464,23 @@ onMounted(async () => {
                   <UiPzIcon name="arrow_forward" class="text-base text-emerald-700" />
                 </button>
               </NuxtLink>
+            </div>
+          </div>
+
+          <!-- Si le dossier complet (CV + Lettre) a déjà été entièrement téléchargé -->
+          <div v-else-if="dossierComplete" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
+            <div class="relative z-10 flex items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center font-extrabold text-2xl shrink-0">
+                🏆
+              </div>
+              <div class="space-y-1">
+                <h2 class="text-base sm:text-lg font-extrabold text-white leading-snug">
+                  Votre dossier de candidature est 100% complet !
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Félicitations ! Vous disposez désormais de votre CV et de votre Lettre de Motivation parfaitement assortis et prêts pour vos candidatures.
+                </p>
+              </div>
             </div>
           </div>
 
