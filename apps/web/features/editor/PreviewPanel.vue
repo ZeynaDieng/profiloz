@@ -52,7 +52,8 @@ function checkOverflow() {
     })
 
     const unscaledActualHeight = currentScale > 0 ? maxBottomOffset / currentScale : maxBottomOffset
-    const count = Math.max(1, Math.ceil((unscaledActualHeight - 15) / expectedPageHeight))
+    // Marge de sécurité stricte (+4px) pour éviter qu'un rendu subpixel Puppeteer ne crée une 2e page imprévue
+    const count = Math.max(1, Math.ceil((unscaledActualHeight + 4) / expectedPageHeight))
 
     pageCount.value = count
     isOverflowing.value = count > 1

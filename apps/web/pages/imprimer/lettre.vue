@@ -55,9 +55,34 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
   })
 })
 
-const printErrorMessage = computed(
-  () => fetchError.value?.message || MSG.error.loadPrintLetter,
-)
+onMounted(() => {
+  if (import.meta.client) {
+    const applySinglePageClass = async () => {
+      if (document.fonts?.ready) {
+        await document.fonts.ready.catch(() => {})
+      }
+      const el = document.querySelector('.letter-a4') as HTMLElement | null
+      if (el) {
+        const expectedHeight = el.offsetWidth * (297 / 210)
+        let maxBottom = 0
+        const children = el.querySelectorAll('div, p, header, section')
+        children.forEach((child) => {
+          const r = (child as HTMLElement).getBoundingClientRect()
+          const sheetRect = el.getBoundingClientRect()
+          if (r.height > 0) {
+            const bottom = r.bottom - sheetRect.top
+            if (bottom > maxBottom) maxBottom = bottom
+          }
+        })
+        if (maxBottom > 0 && maxBottom <= expectedHeight + 10) {
+          el.classList.add('single-page-strict')
+        }
+      }
+    }
+    nextTick(applySinglePageClass)
+    setTimeout(applySinglePageClass, 150)
+  }
+})
 </script>
 
 <template>
@@ -82,6 +107,10 @@ const printErrorMessage = computed(
     margin: 0;
     padding: 0;
     background: white;
+  }
+  .letter-a4.single-page-strict {
+    max-height: 297mm !important;
+    overflow: hidden !important;
   }
 }
 </style>
