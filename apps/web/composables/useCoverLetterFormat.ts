@@ -4,9 +4,19 @@ import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapshot>) {
   const snapshot = computed(() => toValue(letter))
 
-  const formattedDate = computed(() =>
-    new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-  )
+  const formattedDate = computed(() => {
+    const dateStr = new Date().toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+    const loc = snapshot.value.senderLocation?.trim()
+    if (loc) {
+      const city = loc.split(',')[0].trim()
+      return `Fait à ${city}, le ${dateStr}`
+    }
+    return `Fait le ${dateStr}`
+  })
 
   const greeting = computed(() => {
     const name = snapshot.value.recruiterName?.trim()
