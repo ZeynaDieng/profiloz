@@ -91,6 +91,18 @@ function onContinue() {
     return
   }
   resumeStore.setTemplate(selectedSlug.value)
+
+  // Persistance immédiate dans les backups si un brouillon existe
+  if (import.meta.client && resumeStore.current) {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'resume' && backup.snapshot) {
+      savePaymentDraftBackup({
+        ...backup,
+        snapshot: { ...resumeStore.current },
+      })
+    }
+  }
+
   const back = returnPath.value
   if (back) {
     navigateTo(back)
@@ -100,7 +112,7 @@ function onContinue() {
   if (isImport) {
     navigateTo('/creer/editeur?imported=1')
   } else {
-    navigateTo('/creer/editeur?new=1')
+    navigateTo('/creer/editeur')
   }
 }
 

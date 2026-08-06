@@ -54,7 +54,24 @@ const filteredTemplates = computed(() => {
 function useTemplate(slug: TemplateSlug) {
   selectedSlug.value = slug
   resumeStore.setTemplate(slug)
-  navigateTo(cvTemplateStartLink(slug))
+
+  if (import.meta.client && resumeStore.current) {
+    const backup = loadPaymentDraftBackup()
+    if (backup?.kind === 'resume' && backup.snapshot) {
+      savePaymentDraftBackup({
+        ...backup,
+        snapshot: { ...resumeStore.current },
+      })
+    }
+  }
+
+  const p = resumeStore.current?.personalInfo
+  const hasData = Boolean((p?.firstName || p?.lastName || p?.fullName)?.trim() || resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length)
+  if (hasData) {
+    navigateTo('/creer/editeur')
+  } else {
+    navigateTo(cvTemplateStartLink(slug))
+  }
 }
 </script>
 

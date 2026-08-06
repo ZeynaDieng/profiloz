@@ -63,6 +63,7 @@ function isLetterSnapshotValid(draft: any): boolean {
 
 const currentResumeSnapshot = computed(() => {
   let snap: ResumeSnapshot | null = null
+  const storeTemplateSlug = resumeStore.current?.templateSlug
 
   if (isResumeSnapshotValid(resumeStore.current)) {
     snap = {
@@ -89,7 +90,15 @@ const currentResumeSnapshot = computed(() => {
     }
   }
 
-  const slug = (snap?.templateSlug ?? resumeStore.current?.templateSlug ?? 'PROFESSIONNEL') as TemplateSlug
+  // Priorité absolue au modèle sélectionné en cours par l'utilisateur
+  const slug = (storeTemplateSlug ?? snap?.templateSlug ?? 'PROFESSIONNEL') as TemplateSlug
+  if (snap) {
+    snap.templateSlug = slug
+    snap.templateConfig = {
+      ...snap.templateConfig,
+      accentColor: snap.templateConfig?.accentColor ?? cvTemplateAccentColors(slug).accent,
+    }
+  }
   const accent = snap?.templateConfig?.accentColor ?? cvTemplateAccentColors(slug).accent
 
   return buildPreviewSnapshot(slug, accent, snap)
@@ -415,7 +424,7 @@ onMounted(async () => {
             </NuxtLink>
 
             <NuxtLink
-              :to="isLetter ? '/creer/lettre/modele' : '/creer/modele'"
+              :to="isLetter ? '/creer/lettre/modele?returnTo=/creer/succes' : '/creer/modele?returnTo=/creer/succes'"
               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 transition-colors shadow-2xs"
             >
               <UiPzIcon name="palette" class="text-sm text-slate-500" />
