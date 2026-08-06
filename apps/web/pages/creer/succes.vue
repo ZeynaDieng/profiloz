@@ -165,16 +165,26 @@ const crossSellLink = computed(() => {
   return isLetter.value ? '/creer/modele' : '/creer/lettre/modele'
 })
 
-const crossSellTitle = computed(() => 'Profitez de votre document offert')
+const crossSellTitle = computed(() => {
+  if (nextDocument.value === 'cv') return 'Profitez de votre CV offert'
+  if (nextDocument.value === 'letter') return 'Profitez de votre Lettre offerte'
+  return 'Profitez de votre document offert'
+})
 
-const crossSellBody = computed(() =>
-  'Votre commande inclut 1 document offert : créez votre lettre de motivation personnalisée ou un 2ème CV au choix.',
-)
+const crossSellBody = computed(() => {
+  if (nextDocument.value === 'cv') {
+    return 'Votre commande inclut votre CV professionnel offert : créez-le à zéro ou importez un fichier existant.'
+  }
+  if (nextDocument.value === 'letter') {
+    return 'Votre commande inclut votre Lettre de Motivation offerte : générez une lettre personnalisée par l\'IA assortie à votre CV.'
+  }
+  return 'Votre commande inclut 1 document offert au choix.'
+})
 
 const crossSellCta = computed(() => {
-  if (nextDocument.value === 'letter') return 'Profiter de mon bonus'
-  if (nextDocument.value === 'cv') return 'Créer mon 2e CV'
-  return isLetter.value ? 'Créer mon 2e CV' : 'Profiter de mon bonus'
+  if (nextDocument.value === 'cv') return 'Créer mon CV offert'
+  if (nextDocument.value === 'letter') return 'Créer ma Lettre offerte'
+  return 'Profiter de mon bonus'
 })
 
 const hasPaidAccess = ref(false)
@@ -385,15 +395,33 @@ onMounted(async () => {
             </div>
           </div>
 
-          <button
-            type="button"
-            class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors shadow-sm"
-            @click="isPreviewModalOpen = true"
-          >
-            <UiPzIcon name="visibility" class="text-sm" />
-            <span class="hidden md:inline">Aperçu du {{ docTypeNameUpper }}</span>
-            <span class="md:hidden">Voir l'aperçu en grand</span>
-          </button>
+          <!-- Actions rapides sur le document actif -->
+          <div class="flex flex-wrap items-center justify-center gap-2 mt-3.5">
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-colors shadow-2xs"
+              @click="isPreviewModalOpen = true"
+            >
+              <UiPzIcon name="visibility" class="text-sm" />
+              <span>Aperçu HD</span>
+            </button>
+
+            <NuxtLink
+              :to="isLetter ? '/creer/lettre/editeur' : '/creer/editeur'"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 transition-colors shadow-2xs"
+            >
+              <UiPzIcon name="edit" class="text-sm text-blue-600" />
+              <span>Modifier ce document</span>
+            </NuxtLink>
+
+            <NuxtLink
+              :to="isLetter ? '/creer/lettre/modele' : '/creer/modele'"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 transition-colors shadow-2xs"
+            >
+              <UiPzIcon name="palette" class="text-sm text-slate-500" />
+              <span>Changer le modèle</span>
+            </NuxtLink>
+          </div>
         </div>
 
         <!-- Message d'erreur de téléchargement -->
