@@ -59,7 +59,7 @@ function useTemplate(slug: TemplateSlug) {
 </script>
 
 <template>
-  <div class="page-container max-w-container-max mx-auto pb-8">
+  <div class="page-container max-w-container-max mx-auto pb-8 min-w-0 overflow-x-hidden">
     <header class="mb-stack-lg space-y-3">
       <p class="text-sm font-medium text-secondary">{{ MSG.guide.modelStep }}</p>
       <div>

@@ -49,7 +49,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-container max-w-container-max mx-auto pb-8">
+  <div class="page-container max-w-container-max mx-auto pb-8 min-w-0 overflow-x-hidden">
     <NuxtLink :to="backLink" class="text-sm text-secondary font-semibold hover:underline mb-4 inline-flex items-center gap-1 min-h-11">
       <UiPzIcon name="arrow_back" class="text-base" />
       {{ backLabel }}

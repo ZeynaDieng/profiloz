@@ -11,9 +11,9 @@ function exitImpersonation() {
 </script>
 
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex max-w-full overflow-x-hidden">
     <LayoutAppSidebar class="hidden md:flex" />
-    <main class="flex-1 md:ml-56 min-h-screen flex flex-col">
+    <main class="flex-1 md:ml-56 min-h-screen flex flex-col min-w-0 w-full overflow-x-hidden">
       <LayoutAppHeader variant="dashboard" />
       <div v-if="authStore.impersonating" class="bg-tertiary/15 border-b border-tertiary/30 px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p class="text-sm text-on-surface">
@@ -21,7 +21,7 @@ function exitImpersonation() {
         </p>
         <UiButton variant="ghost" size="sm" @click="exitImpersonation">Quitter l’impersonation</UiButton>
       </div>
-      <div class="flex-1">
+      <div class="flex-1 min-w-0 w-full">
         <slot />
       </div>
     </main>
