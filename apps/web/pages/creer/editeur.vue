@@ -569,12 +569,13 @@ async function downloadPdf() {
     <UiStickyActionBar v-if="isMobileOrTablet">
       <div class="flex gap-2">
         <UiButton
-          :variant="isOverflowing ? 'danger' : 'outline'"
+          :variant="previewOpen ? 'outline' : (isOverflowing ? 'danger' : 'outline')"
           block
-          icon="visibility"
-          @click="previewOpen = true"
+          :icon="previewOpen ? 'edit' : 'visibility'"
+          @click="previewOpen = !previewOpen"
         >
-          <span v-if="isOverflowing">Aperçu ({{ pageCount }} pages ⚠️)</span>
+          <span v-if="previewOpen">✏️ Revenir à la saisie</span>
+          <span v-else-if="isOverflowing">Aperçu ({{ pageCount }} pages ⚠️)</span>
           <span v-else>Aperçu (1 page A4)</span>
         </UiButton>
         <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
@@ -589,7 +590,7 @@ async function downloadPdf() {
       <template #footer>
         <div class="grid grid-cols-2 gap-3 w-full">
           <UiButton variant="outline" block icon="edit" @click="previewOpen = false">
-            ✏️ Modifier mon CV
+            ✏️ Revenir à la saisie
           </UiButton>
           <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
             📥 Télécharger mon PDF

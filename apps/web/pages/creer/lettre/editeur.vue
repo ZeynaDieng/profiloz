@@ -539,8 +539,14 @@ async function executePdfDownload() {
 
       <UiStickyActionBar class="md:hidden">
         <div class="grid grid-cols-2 gap-2">
-          <UiButton variant="outline" block icon="visibility" @click="previewOpen = true">
-            Aperçu ({{ isOverflowing ? `${pageCount} p. ⚠️` : '1 page' }})
+          <UiButton
+            variant="outline"
+            block
+            :icon="previewOpen ? 'edit' : 'visibility'"
+            @click="previewOpen = !previewOpen"
+          >
+            <span v-if="previewOpen">✏️ Revenir à la saisie</span>
+            <span v-else>Aperçu ({{ isOverflowing ? `${pageCount} p. ⚠️` : '1 page' }})</span>
           </UiButton>
           <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
             {{ MSG.buttons.downloadPdf }}
@@ -555,7 +561,7 @@ async function executePdfDownload() {
         <template #footer>
           <div class="grid grid-cols-2 gap-3 w-full">
             <UiButton variant="outline" block icon="edit" @click="previewOpen = false">
-              ✏️ Modifier ma lettre
+              ✏️ Revenir à la saisie
             </UiButton>
 
             <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
