@@ -266,6 +266,7 @@ async function handleGenerateFromJobOffer() {
               type="text"
               class="form-input form-input--white w-full"
               placeholder="Ex: Mme Ndiaye, Monsieur le Directeur, M. Jean Dupont..."
+              @blur="recruiterName = formatRecruiterName(recruiterName)"
             />
           </UiFormField>
           <UiFormField label="Adresse entreprise (optionnel)">

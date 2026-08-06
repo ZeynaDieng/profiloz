@@ -1,6 +1,43 @@
 import type { CoverLetterSnapshot } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 
+export function formatRecruiterName(raw: string | null | undefined): string {
+  if (!raw) return ''
+  let cleaned = raw.trim().replace(/\s+/g, ' ')
+  if (!cleaned) return ''
+
+  // 1. Normalisation des civilités usuelles au début
+  cleaned = cleaned
+    .replace(/^(mr|mr\.|m\.)\b/i, 'M.')
+    .replace(/^(mme|mme\.)\b/i, 'Mme')
+    .replace(/^(mlle|mlle\.)\b/i, 'Mlle')
+    .replace(/^(dr|dr\.)\b/i, 'Dr.')
+    .replace(/^(pr|pr\.)\b/i, 'Pr.')
+    .replace(/^monsieur\b/i, 'Monsieur')
+    .replace(/^madame\b/i, 'Madame')
+
+  // 2. Capitalisation intelligente de chaque mot
+  const lowercaseWords = new Set(['la', 'de', 'du', 'des', 'le', 'et', 'en', 'à'])
+  const words = cleaned.split(' ')
+
+  const formattedWords = words.map((w, index) => {
+    if (!w) return ''
+    const lower = w.toLowerCase()
+
+    if (/^(M\.|Mme|Mlle|Dr\.|Pr\.|Monsieur|Madame)$/.test(w)) {
+      return w
+    }
+
+    if (index > 0 && lowercaseWords.has(lower)) {
+      return lower
+    }
+
+    return lower.charAt(0).toUpperCase() + lower.slice(1)
+  })
+
+  return formattedWords.join(' ')
+}
+
 export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapshot>) {
   const snapshot = computed(() => toValue(letter))
 
@@ -18,12 +55,13 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     return `Fait le ${dateStr}`
   })
 
+  const formattedRecruiterName = computed(() => {
+    return formatRecruiterName(snapshot.value.recruiterName)
+  })
+
   const greeting = computed(() => {
-    const name = snapshot.value.recruiterName?.trim()
+    const name = formattedRecruiterName.value
     if (name) {
-      if (/^(mme|madame|m\.|monsieur)\b/i.test(name)) {
-        return `${name},`
-      }
       return `${name},`
     }
     return 'Madame, Monsieur,'
@@ -76,9 +114,9 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
 
   const closing = computed(() => {
     const rawClosing = snapshot.value.closingText?.trim() || DEFAULT_CLOSING_TEXT
-    const name = snapshot.value.recruiterName?.trim()
+    const name = formattedRecruiterName.value
     if (name && !/^(madame,\s*monsieur|madame\s*\/\s*monsieur|monsieur,\s*madame)$/i.test(name)) {
-      // Remplacer automatiquement "Madame, Monsieur" dans la formule de politesse par le destinataire (ex: Mme Ndiaye)
+      // Remplacer automatiquement "Madame, Monsieur" dans la formule de politesse par le destinataire (ex: Mme Ndiaye, M. Cisse)
       return rawClosing.replace(/madame,\s*monsieur/gi, name)
     }
     return rawClosing
@@ -95,11 +133,9 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
 
   const recipientLines = computed(() => {
     const lines: string[] = []
-    const raw = snapshot.value.recruiterName?.trim()
+    const raw = formattedRecruiterName.value
     if (raw) {
-      // Si la valeur est juste une civilité simple ("Monsieur", "Madame", "M.", "Mme"),
-      // on ne l'ajoute pas dans l'en-tête d'adresse au-dessus de l'entreprise (pour éviter "Monsieur" au-dessus de l'entreprise + "Monsieur," en salutation).
-      const isSimpleCivility = /^(m\.|mme|monsieur|madame|madame,\s*monsieur)$/i.test(raw)
+      const isSimpleCivility = /^(m\.|mme|mlle|dr\.|pr\.|monsieur|madame|madame,\s*monsieur)$/i.test(raw)
       if (!isSimpleCivility) {
         lines.push(raw)
       }
