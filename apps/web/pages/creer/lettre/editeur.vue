@@ -373,7 +373,7 @@ async function executePdfDownload() {
       return
     }
 
-    const { filename } = await pdfService.downloadGuestLetterPdf(snapshot)
+    const { filename } = await pdfService.generateLetterAndDownload(snapshot)
     markGuestDossierDownload('letter')
     ensurePaidGuestDossier('letter')
     saveLastDownloadContext({ kind: 'letter', filename, downloadedAt: new Date().toISOString() })

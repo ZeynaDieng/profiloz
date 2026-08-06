@@ -61,8 +61,8 @@ export function parseApiAuthError(err: unknown, fallback = MSG.error.generic): s
     return MSG.network.serverUnavailable
   }
 
-  if (problem.message?.includes('fetch') || problem.message?.includes('network') || err instanceof TypeError) {
-    return 'Le serveur API est injoignable. Assurez-vous que l’API tourne (pnpm dev).'
+  if (problem.message?.includes('Failed to fetch') || problem.message?.includes('NetworkError') || problem.message?.includes('network')) {
+    return 'Le serveur API est injoignable. Veuillez vérifier votre connexion internet.'
   }
 
   return fallback

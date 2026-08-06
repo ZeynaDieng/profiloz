@@ -174,6 +174,7 @@ export function usePdfService() {
     downloadWithAuth,
     generateAndDownload,
     generateLetterAndDownload,
+    downloadGuestLetterPdf: generateLetterAndDownload,
     downloadResumeCv,
     downloadDossier,
     getDownloadUrl,
