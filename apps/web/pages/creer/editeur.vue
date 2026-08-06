@@ -307,6 +307,7 @@ function cancelConfirmModal() {
 
 async function confirmAndDownload() {
   confirmModalOpen.value = false
+  previewOpen.value = false
   await executePdfDownload()
 }
 

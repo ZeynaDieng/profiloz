@@ -319,6 +319,8 @@ function promptDownloadPdf() {
   formError.value = validation.formError
   if (validation.formError) {
     pdfError.value = validation.formError
+    useAppToast().error(validation.formError)
+    previewOpen.value = false
     announceFormError(validation.formError)
     return
   }
@@ -333,6 +335,7 @@ function cancelConfirmModal() {
 
 async function confirmAndDownload() {
   confirmModalOpen.value = false
+  previewOpen.value = false
   await executePdfDownload()
 }
 
