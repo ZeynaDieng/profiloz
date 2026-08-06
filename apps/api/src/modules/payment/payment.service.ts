@@ -831,6 +831,8 @@ function isDraftSnapshotValid(snap: any): boolean {
       unlimitedUntil: guest?.unlimitedUntil ?? null,
       subscriptionPlanSlug: asSubscriptionPlanSlug(guest?.subscriptionPlanSlug),
     })
+    resolved.features.historique = true
+    resolved.features.importScan = true
     const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
     const meta = readGuestSessionMeta(guest?.data)
     const rawData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
