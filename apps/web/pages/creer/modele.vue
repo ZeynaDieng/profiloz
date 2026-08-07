@@ -109,8 +109,11 @@ function onContinue() {
     return
   }
   const isImport = route.query.flow === 'import' || route.query.imported === '1'
+  const isFresh = route.query.new === '1' || route.query.fresh === '1' || route.query.flow === 'new'
   if (isImport) {
     navigateTo('/creer/editeur?imported=1')
+  } else if (isFresh) {
+    navigateTo('/creer/editeur?new=1')
   } else {
     navigateTo('/creer/editeur')
   }

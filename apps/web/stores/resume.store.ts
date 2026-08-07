@@ -85,6 +85,11 @@ export const useResumeStore = defineStore('resume', {
       this.current = createEmptyResume()
       this.savedResumeId = null
       this.isDirty = false
+      if (import.meta.client) {
+        try {
+          createScopedResumeDraftStorage().removeItem('profiloz:resume:draft')
+        } catch {}
+      }
     },
     loadDemoPersona() {
       const slug = this.current?.templateSlug ?? 'PROFESSIONNEL'

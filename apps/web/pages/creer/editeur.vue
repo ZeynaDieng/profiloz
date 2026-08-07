@@ -175,6 +175,7 @@ onMounted(async () => {
         resumeStore.loadSnapshot(previousSavedDraft.value)
       } else if (isExplicitNew) {
         // Clic sur "Créer mon CV" de zéro -> OUVRIR UN FORMULAIRE 100% VIERGE SANS ANCIENNES DONNÉES
+        clearPaymentDraftBackup()
         resumeStore.startNewDraft()
         resumeStore.setTemplate(requestedSlug)
       } else if (isImport || (resumeStore.current && isResumeSnapshotValid(resumeStore.current))) {
