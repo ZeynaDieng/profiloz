@@ -56,13 +56,9 @@ function useTemplate(slug: TemplateSlug) {
   resumeStore.setTemplate(slug)
 
   if (import.meta.client && resumeStore.current) {
-    const backup = loadPaymentDraftBackup()
-    if (backup?.kind === 'resume' && backup.snapshot) {
-      savePaymentDraftBackup({
-        ...backup,
-        snapshot: { ...resumeStore.current },
-      })
-    }
+    try {
+      savePaymentDraftBackup()
+    } catch (_) {}
   }
 
   const p = resumeStore.current?.personalInfo

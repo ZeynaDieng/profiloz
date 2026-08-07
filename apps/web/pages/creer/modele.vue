@@ -92,15 +92,11 @@ function onContinue() {
   }
   resumeStore.setTemplate(selectedSlug.value)
 
-  // Persistance immédiate dans les backups si un brouillon existe
+  // Persistance immédiate sécurisée dans les backups si un brouillon existe
   if (import.meta.client && resumeStore.current) {
-    const backup = loadPaymentDraftBackup()
-    if (backup?.kind === 'resume' && backup.snapshot) {
-      savePaymentDraftBackup({
-        ...backup,
-        snapshot: { ...resumeStore.current },
-      })
-    }
+    try {
+      savePaymentDraftBackup(returnPath.value)
+    } catch (_) {}
   }
 
   const back = returnPath.value
