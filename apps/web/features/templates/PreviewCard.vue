@@ -38,9 +38,9 @@ const previewCanvasStyle = computed(() => ({
     <div class="relative aspect-[3/4] overflow-hidden preview-canvas-bg--landing" :style="previewCanvasStyle">
       <FeatureTemplatesA4PreviewFit :resume="previewResume" />
     </div>
-    <div class="p-4 flex justify-between items-center bg-surface-container-lowest">
+    <div class="p-2.5 sm:p-4 flex justify-between items-center bg-surface-container-lowest min-w-0">
       <slot />
-      <UiPzIcon v-if="selected" name="check_circle" class="text-secondary shrink-0" />
+      <UiPzIcon v-if="selected" name="check_circle" class="text-secondary shrink-0 text-base sm:text-lg ml-1" />
     </div>
   </button>
 </template>

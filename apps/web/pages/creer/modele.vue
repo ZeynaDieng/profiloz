@@ -194,7 +194,7 @@ useWizardStep(computed(() => ({
       </button>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-8 max-w-md sm:max-w-none mx-auto">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 w-full mx-auto">
       <FeatureTemplatesPreviewCard
         v-for="template in filteredTemplates"
         :key="template.slug"
@@ -204,9 +204,9 @@ useWizardStep(computed(() => ({
         class=""
         @select="selectTemplate"
       >
-        <div>
-          <h4 class="font-bold text-on-surface">{{ template.name }}</h4>
-          <p class="text-xs text-on-surface-variant">{{ template.category }}</p>
+        <div class="min-w-0">
+          <h4 class="font-bold text-on-surface text-xs sm:text-sm truncate">{{ template.name }}</h4>
+          <p class="text-[10px] sm:text-xs text-on-surface-variant truncate">{{ template.category }}</p>
         </div>
       </FeatureTemplatesPreviewCard>
     </div>
