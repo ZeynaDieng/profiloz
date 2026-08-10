@@ -919,11 +919,11 @@ export class AdminService {
         select: { createdAt: true },
       }),
       // 4. CV créés (cv_created)
-      prisma.resume.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true, metadata: true } }),
+      prisma.resume.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true } }),
       // 5. CV complétés (+70%) (cv_completed)
       prisma.resume.findMany({
-        where: { createdAt: { gte: start } },
-        select: { createdAt: true, metadata: true },
+        where: { createdAt: { gte: start }, completeness: { gte: 70 } },
+        select: { createdAt: true, completeness: true },
       }),
       // 6. CV importés (cv_imported)
       prisma.document.findMany({
@@ -946,10 +946,7 @@ export class AdminService {
     ])
 
     const revenueSeries = bucketPaymentsByDay(paymentsSuccess, daysN)
-    const completedResumesList = resumesCompleted.filter((r) => {
-      const meta = r.metadata as { completeness?: number } | null
-      return (meta?.completeness ?? 0) >= 70
-    })
+    const completedResumesList = resumesCompleted
 
     const pageViewCount = guestSessions.length
     const signupCount = users.length
