@@ -958,7 +958,28 @@ export class AdminService {
     const paymentSuccessCount = paymentsSuccess.length
     const pdfDownloadCount = pdfJobs.length
 
+    // Calcul des 3 Taux Métier selon les formules exactes :
+    // 1. Taux d'inscription = inscriptions / visiteurs × 100
+    const signupRate = pageViewCount > 0 ? Math.round((signupCount / pageViewCount) * 1000) / 10 : 0
+
+    // 2. Taux d'activation = CV créés / inscriptions × 100
+    const totalCvCount = cvCreatedCount + cvImportedCount
+    const activationRate = signupCount > 0
+      ? Math.round((totalCvCount / signupCount) * 1000) / 10
+      : (pageViewCount > 0 ? Math.round((totalCvCount / pageViewCount) * 1000) / 10 : 0)
+
+    // 3. Taux de paiement = paiements / candidatures × 100
+    const totalCandidaturesCount = applicationCreatedCount > 0 ? applicationCreatedCount : (totalCvCount || cvCompletedCount)
+    const paymentRate = totalCandidaturesCount > 0
+      ? Math.round((paymentSuccessCount / totalCandidaturesCount) * 1000) / 10
+      : 0
+
     return {
+      kpiRates: {
+        signupRate,
+        activationRate,
+        paymentRate,
+      },
       // 9 Evénements avec séries temporelles journalières
       page_view: bucketByDay(guestSessions, daysN),
       signup: bucketByDay(users, daysN),

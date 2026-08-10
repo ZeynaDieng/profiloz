@@ -49,6 +49,8 @@ const eventMetrics = computed(() => [
   { key: 'payment_success', label: '8. Paiements réussis', code: 'payment_success', value: totals.value.payment_success ?? 0, icon: 'payments', color: 'bg-green-500/10 text-green-600' },
   { key: 'pdf_download', label: '9. Téléchargements PDF', code: 'pdf_download', value: totals.value.pdf_download ?? 0, icon: 'download', color: 'bg-sky-500/10 text-sky-600' },
 ])
+
+const kpiRates = computed(() => analytics.value?.kpiRates ?? { signupRate: 0, activationRate: 0, paymentRate: 0 })
 </script>
 
 <template>
@@ -79,6 +81,50 @@ const eventMetrics = computed(() => [
     </div>
 
     <template v-else-if="analytics">
+      <!-- 🎯 LES 3 TAUX CLÉS DE PERFORMANCES -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Taux d'inscription -->
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-500/20 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-blue-700">Taux d'inscription</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+              <UiPzIcon name="person_add" />
+            </div>
+          </div>
+          <p class="text-3xl font-black text-blue-900">{{ kpiRates.signupRate }} %</p>
+          <p class="text-[11px] font-medium text-slate-600">
+            Formule : Inscriptions / Visiteurs × 100
+          </p>
+        </div>
+
+        <!-- Taux d'activation -->
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-emerald-700">Taux d'activation</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">
+              <UiPzIcon name="bolt" />
+            </div>
+          </div>
+          <p class="text-3xl font-black text-emerald-900">{{ kpiRates.activationRate }} %</p>
+          <p class="text-[11px] font-medium text-slate-600">
+            Formule : CV créés / Inscriptions × 100
+          </p>
+        </div>
+
+        <!-- Taux de paiement -->
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/20 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-amber-700">Taux de paiement</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center text-sm font-bold">
+              <UiPzIcon name="payments" />
+            </div>
+          </div>
+          <p class="text-3xl font-black text-amber-900">{{ kpiRates.paymentRate }} %</p>
+          <p class="text-[11px] font-medium text-slate-600">
+            Formule : Paiements réussis / Candidatures × 100
+          </p>
+        </div>
+      </div>
       <!-- 🏆 LES 9 ÉVÉNEMENTS CLÉS -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
