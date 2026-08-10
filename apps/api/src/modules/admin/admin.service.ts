@@ -890,39 +890,160 @@ export class AdminService {
     return this.getPayment(id)
   }
 
-  async getAnalytics() {
-    const days90 = lastNDays(90)
-    const start = days90[0]!
-    const [users, payments, resumes, letters, pdfJobs, guestSessions, paidGuestPayments] = await Promise.all([
+  async getAnalytics(daysCount = 90) {
+    const daysN = lastNDays(daysCount)
+    const start = daysN[0]!
+
+    const [
+      users,
+      paymentsSuccess,
+      paymentsAll,
+      resumesCreated,
+      resumesCompleted,
+      documentsImported,
+      letters,
+      pdfJobs,
+      guestSessions,
+      paidGuestPayments,
+    ] = await Promise.all([
+      // 1. Inscriptions (signup)
       prisma.user.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true } }),
+      // 2. Paiements réussis (payment_success)
       prisma.payment.findMany({
         where: { paidAt: { gte: start }, status: 'PAID' },
         select: { paidAt: true, amountXof: true, status: true },
       }),
-      prisma.resume.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true } }),
+      // 3. Paiements démarrés (payment_started)
+      prisma.payment.findMany({
+        where: { createdAt: { gte: start } },
+        select: { createdAt: true },
+      }),
+      // 4. CV créés (cv_created)
+      prisma.resume.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true, metadata: true } }),
+      // 5. CV complétés (+70%) (cv_completed)
+      prisma.resume.findMany({
+        where: { createdAt: { gte: start } },
+        select: { createdAt: true, metadata: true },
+      }),
+      // 6. CV importés (cv_imported)
+      prisma.document.findMany({
+        where: { createdAt: { gte: start }, status: 'PARSED' },
+        select: { createdAt: true },
+      }),
+      // 7. Candidatures / Lettres créées (application_created)
       prisma.coverLetter.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true } }),
+      // 8. Téléchargements PDF (pdf_download)
       prisma.pdfJob.findMany({
         where: { createdAt: { gte: start }, status: 'completed' },
         select: { createdAt: true },
       }),
-      prisma.guestSession.count({ where: { createdAt: { gte: start } } }),
+      // 9. Visites & Sessions (page_view)
+      prisma.guestSession.findMany({ where: { createdAt: { gte: start } }, select: { createdAt: true } }),
+      // Convertis invités
       prisma.payment.count({
         where: { status: 'PAID', guestSessionId: { not: null }, createdAt: { gte: start } },
       }),
     ])
 
-    const revenueSeries = bucketPaymentsByDay(payments, days90)
+    const revenueSeries = bucketPaymentsByDay(paymentsSuccess, daysN)
+    const completedResumesList = resumesCompleted.filter((r) => {
+      const meta = r.metadata as { completeness?: number } | null
+      return (meta?.completeness ?? 0) >= 70
+    })
+
+    const pageViewCount = guestSessions.length
+    const signupCount = users.length
+    const cvCreatedCount = resumesCreated.length
+    const cvImportedCount = documentsImported.length
+    const cvCompletedCount = completedResumesList.length
+    const applicationCreatedCount = letters.length
+    const paymentStartedCount = paymentsAll.length
+    const paymentSuccessCount = paymentsSuccess.length
+    const pdfDownloadCount = pdfJobs.length
 
     return {
-      signups: bucketByDay(users, days90),
+      // 9 Evénements avec séries temporelles journalières
+      page_view: bucketByDay(guestSessions, daysN),
+      signup: bucketByDay(users, daysN),
+      cv_created: bucketByDay(resumesCreated, daysN),
+      cv_imported: bucketByDay(documentsImported, daysN),
+      cv_completed: bucketByDay(completedResumesList, daysN),
+      application_created: bucketByDay(letters, daysN),
+      payment_started: bucketByDay(paymentsAll, daysN),
+      payment_success: bucketByDay(paymentsSuccess.map((p) => ({ createdAt: p.paidAt ?? new Date() })), daysN),
+      pdf_download: bucketByDay(pdfJobs.map((j) => ({ createdAt: j.createdAt })), daysN),
+
+      // Séries pour compatibilité graphiques existants
+      signups: bucketByDay(users, daysN),
       revenue: revenueSeries.map((p) => ({ date: p.date, value: p.amount })),
-      downloads: bucketByDay(pdfJobs.map((j) => ({ createdAt: j.createdAt })), days90),
-      resumes: bucketByDay(resumes, days90),
-      letters: bucketByDay(letters, days90),
+      downloads: bucketByDay(pdfJobs.map((j) => ({ createdAt: j.createdAt })), daysN),
+      resumes: bucketByDay(resumesCreated, daysN),
+      letters: bucketByDay(letters, daysN),
+
+      // Totaux des 9 événements
+      totals: {
+        page_view: pageViewCount,
+        signup: signupCount,
+        cv_created: cvCreatedCount,
+        cv_imported: cvImportedCount,
+        cv_completed: cvCompletedCount,
+        application_created: applicationCreatedCount,
+        payment_started: paymentStartedCount,
+        payment_success: paymentSuccessCount,
+        pdf_download: pdfDownloadCount,
+      },
+
+      // Rapport complet du tunnel de conversion (Funnel Report)
+      funnel: [
+        { key: 'page_view', label: '1. Visites & Sessions (page_view)', count: pageViewCount, rate: 100 },
+        {
+          key: 'signup',
+          label: '2. Inscriptions (signup)',
+          count: signupCount,
+          rate: pageViewCount > 0 ? Math.round((signupCount / pageViewCount) * 1000) / 10 : 0,
+        },
+        {
+          key: 'cv_creation',
+          label: '3. CV créés & importés (cv_created + cv_imported)',
+          count: cvCreatedCount + cvImportedCount,
+          rate: pageViewCount > 0 ? Math.round(((cvCreatedCount + cvImportedCount) / pageViewCount) * 1000) / 10 : 0,
+        },
+        {
+          key: 'cv_completed',
+          label: '4. CV complétés (+70%) (cv_completed)',
+          count: cvCompletedCount,
+          rate: (cvCreatedCount + cvImportedCount) > 0 ? Math.round((cvCompletedCount / (cvCreatedCount + cvImportedCount)) * 1000) / 10 : 0,
+        },
+        {
+          key: 'application_created',
+          label: '5. Lettres / Candidatures (application_created)',
+          count: applicationCreatedCount,
+          rate: cvCompletedCount > 0 ? Math.round((applicationCreatedCount / cvCompletedCount) * 1000) / 10 : 0,
+        },
+        {
+          key: 'payment_started',
+          label: '6. Paiements démarrés (payment_started)',
+          count: paymentStartedCount,
+          rate: cvCompletedCount > 0 ? Math.round((paymentStartedCount / cvCompletedCount) * 1000) / 10 : 0,
+        },
+        {
+          key: 'payment_success',
+          label: '7. Paiements réussis (payment_success)',
+          count: paymentSuccessCount,
+          rate: paymentStartedCount > 0 ? Math.round((paymentSuccessCount / paymentStartedCount) * 1000) / 10 : 0,
+        },
+        {
+          key: 'pdf_download',
+          label: '8. Téléchargements PDF (pdf_download)',
+          count: pdfDownloadCount,
+          rate: paymentSuccessCount > 0 ? Math.round((pdfDownloadCount / paymentSuccessCount) * 1000) / 10 : 0,
+        },
+      ],
+
       conversion: {
-        visits: guestSessions,
+        visits: pageViewCount,
         payments: paidGuestPayments,
-        rate: guestSessions > 0 ? Math.round((paidGuestPayments / guestSessions) * 1000) / 10 : 0,
+        rate: pageViewCount > 0 ? Math.round((paidGuestPayments / pageViewCount) * 1000) / 10 : 0,
       },
     }
   }
