@@ -182,8 +182,8 @@ export function useAdminService() {
     }>(`/admin/payments${qs ? `?${qs}` : ''}`)
   }
 
-  async function getAnalytics() {
-    return get<Record<string, unknown>>('/admin/analytics')
+  async function getAnalytics(days = 90) {
+    return get<Record<string, unknown>>(`/admin/analytics?days=${days}`)
   }
 
   async function getOcrStats() {

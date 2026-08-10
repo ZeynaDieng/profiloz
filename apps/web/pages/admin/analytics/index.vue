@@ -13,9 +13,9 @@ async function loadAnalytics() {
   loading.value = true
   error.value = ''
   try {
-    const api = useApiClient()
-    analytics.value = await api.get(`/api/v1/admin/analytics?days=${selectedDays.value}`)
-  } catch {
+    analytics.value = await adminService.getAnalytics(selectedDays.value)
+  } catch (err) {
+    console.error('Analytics load error:', err)
     error.value = 'Impossible de charger les données d’analytics.'
   } finally {
     loading.value = false
