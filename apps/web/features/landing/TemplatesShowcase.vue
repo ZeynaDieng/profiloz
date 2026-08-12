@@ -199,7 +199,39 @@ const { target, revealed } = useScrollReveal(0.25)
                   class="absolute inset-0 pz-template-preview preview-canvas-bg--landing"
                   :style="landingPreviewStyle(template.slug, 'cv')"
                 >
-                  <FeatureTemplatesA4PreviewFit :resume="cvPreview(template.slug)" />
+                  <!-- Modèle principal/populaire rendu en SSR (1 seul exemple complet dans le DOM initial) -->
+                  <FeatureTemplatesA4PreviewFit
+                    v-if="index === 0 || template.slug === POPULAR_SLUG"
+                    :resume="cvPreview(template.slug)"
+                  />
+                  <!-- Modèles secondaires hydratés côté client (évite 20+ duplications HTML en SSR) -->
+                  <ClientOnly v-else>
+                    <FeatureTemplatesA4PreviewFit :resume="cvPreview(template.slug)" />
+                    <template #fallback>
+                      <div class="w-full h-full p-4 flex flex-col justify-between opacity-70">
+                        <div class="space-y-2">
+                          <div
+                            class="h-3 w-2/5 rounded"
+                            :style="{ backgroundColor: cvLandingPreviewColors(template.slug).accent }"
+                          />
+                          <div class="h-2 w-3/4 rounded bg-outline-variant/30" />
+                          <div class="h-2 w-1/2 rounded bg-outline-variant/20" />
+                        </div>
+                        <div class="space-y-2 py-4">
+                          <div class="h-2 w-full rounded bg-outline-variant/25" />
+                          <div class="h-2 w-4/5 rounded bg-outline-variant/20" />
+                          <div class="h-2 w-5/6 rounded bg-outline-variant/15" />
+                        </div>
+                        <div class="space-y-1.5">
+                          <div
+                            class="h-2 w-1/3 rounded"
+                            :style="{ backgroundColor: cvLandingPreviewColors(template.slug).accent }"
+                          />
+                          <div class="h-2 w-2/3 rounded bg-outline-variant/20" />
+                        </div>
+                      </div>
+                    </template>
+                  </ClientOnly>
                 </div>
 
                 <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
@@ -259,7 +291,31 @@ const { target, revealed } = useScrollReveal(0.25)
                   class="absolute inset-0 pz-template-preview preview-canvas-bg--landing"
                   :style="landingPreviewStyle(template.slug, 'letter')"
                 >
-                  <FeatureCoverLetterTemplatesA4PreviewFit :letter="buildCoverLetterDemoSnapshot(template.slug)" />
+                  <!-- Modèle principal de lettre rendu en SSR (1 seul exemple complet) -->
+                  <FeatureCoverLetterTemplatesA4PreviewFit
+                    v-if="index === 0"
+                    :letter="buildCoverLetterDemoSnapshot(template.slug)"
+                  />
+                  <!-- Modèles de lettres secondaires hydratés côté client -->
+                  <ClientOnly v-else>
+                    <FeatureCoverLetterTemplatesA4PreviewFit :letter="buildCoverLetterDemoSnapshot(template.slug)" />
+                    <template #fallback>
+                      <div class="w-full h-full p-4 flex flex-col justify-between opacity-70">
+                        <div class="space-y-2">
+                          <div
+                            class="h-3 w-1/3 rounded"
+                            :style="{ backgroundColor: letterLandingPreviewColors(template.slug).accent }"
+                          />
+                          <div class="h-2 w-2/3 rounded bg-outline-variant/30" />
+                        </div>
+                        <div class="space-y-2 py-4">
+                          <div class="h-2 w-full rounded bg-outline-variant/25" />
+                          <div class="h-2 w-4/5 rounded bg-outline-variant/20" />
+                          <div class="h-2 w-5/6 rounded bg-outline-variant/15" />
+                        </div>
+                      </div>
+                    </template>
+                  </ClientOnly>
                 </div>
 
                 <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">

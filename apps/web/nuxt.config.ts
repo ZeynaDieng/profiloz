@@ -25,17 +25,33 @@ export default defineNuxtConfig({
 
   // ─── Sitemap ─────────────────────────────────────────────────────
   sitemap: {
-    // Routes dynamiques fournies par server/api/__sitemap__/urls.ts
-    // Routes statiques auto-découvertes via le filesystem (par défaut)
-    // Exclure les routes privées du sitemap
+    // Liste explicite des URLs publiques à inclure obligatoirement
+    urls: [
+      '/',
+      '/creer',
+      '/creer/modele',
+      '/creer/lettre',
+      '/faq',
+      '/tarifs',
+      '/confidentialite',
+      '/conditions',
+      '/mentions-legales',
+    ],
+    // Exclure uniquement les routes privées, processus d'édition et blog vide
     exclude: [
       '/connexion',
       '/inscription',
       '/tableau-de-bord/**',
       '/admin/**',
-      '/creer/**',
+      '/creer/editeur',
+      '/creer/assistant/**',
+      '/creer/importer/**',
+      '/creer/succes',
+      '/creer/lettre/editeur',
       '/paiement/**',
       '/imprimer/**',
+      '/blog',
+      '/blog/**',
     ],
     // Priorités et fréquences par défaut
     defaults: {
@@ -54,7 +70,11 @@ export default defineNuxtConfig({
           '/api',
           '/admin',
           '/tableau-de-bord',
-          '/creer',
+          '/creer/editeur',
+          '/creer/assistant',
+          '/creer/importer',
+          '/creer/succes',
+          '/creer/lettre/editeur',
           '/paiement',
           '/imprimer',
           '/connexion',
@@ -143,6 +163,7 @@ export default defineNuxtConfig({
   components: [
     { path: '~/components/layout', prefix: 'Layout' },
     { path: '~/components/ui', prefix: 'Ui' },
+    { path: '~/components/seo', prefix: 'Seo' },
     { path: '~/components/dashboard', prefix: 'Dashboard' },
     { path: '~/components/editor', prefix: 'Editor' },
     { path: '~/components/wizard' },
@@ -170,7 +191,11 @@ export default defineNuxtConfig({
     // Pages privées — noindex
     '/tableau-de-bord/**': { robots: 'noindex, nofollow' },
     '/admin/**': { robots: 'noindex, nofollow' },
-    '/creer/**': { robots: 'noindex, nofollow' },
+    '/creer/editeur': { robots: 'noindex, nofollow' },
+    '/creer/assistant/**': { robots: 'noindex, nofollow' },
+    '/creer/importer/**': { robots: 'noindex, nofollow' },
+    '/creer/succes': { robots: 'noindex, nofollow' },
+    '/creer/lettre/editeur': { robots: 'noindex, nofollow' },
     '/paiement/**': { robots: 'noindex, nofollow' },
     '/connexion': { robots: 'noindex, nofollow' },
     '/inscription': { robots: 'noindex, nofollow' },
@@ -205,7 +230,7 @@ export default defineNuxtConfig({
       title: "Profilo'Z | Créateur de CV professionnel",
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover', tagPriority: 'high' },
         {
           name: 'description',
           content: "Le moyen le plus rapide de créer un CV qui donne envie d'être lu. Importez vos documents, choisissez un modèle, exportez en PDF.",

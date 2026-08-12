@@ -71,7 +71,7 @@
               <UiOptimizedImage
                 src="/logo.png"
                 alt="Profilo'Z"
-                loading="lazy"
+                loading="eager"
                 img-class="h-5 w-auto object-contain"
               />
               <span
@@ -175,7 +175,7 @@
             <UiOptimizedImage
               src="/logo.png"
               alt="Profilo'Z"
-              loading="lazy"
+              loading="eager"
               img-class="h-5 w-auto object-contain"
             />
             <span
