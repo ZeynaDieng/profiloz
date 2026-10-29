@@ -1,17 +1,9 @@
-import type { ResumeSnapshot, TemplateSlug } from './types/index.js'
+import { getTemplateCatalogEntry, type TemplateSlug } from './templates.js'
+import type { ResumeSnapshot } from './types/index.js'
 
-/** Modèles conçus avec un emplacement photo dès l'origine. */
-const TEMPLATES_WITH_PHOTO_SLOT = new Set<TemplateSlug>([
-  'PROFESSIONNEL',
-  'MODERNE',
-  'EXECUTIF',
-  'CADRE',
-  'CREATIF',
-  'INTERNATIONAL',
-])
-
+/** Modèles conçus avec un emplacement photo dès l'origine (`photoSlot` du catalogue). */
 export function templatePhotoDefault(slug: TemplateSlug): boolean {
-  return TEMPLATES_WITH_PHOTO_SLOT.has(slug)
+  return getTemplateCatalogEntry(slug).photoSlot === true
 }
 
 export function resolveShowPhoto(snapshot: ResumeSnapshot | null | undefined): boolean {

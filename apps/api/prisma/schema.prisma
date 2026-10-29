@@ -32,32 +32,6 @@ enum ResumeStatus {
   ARCHIVED
 }
 
-enum TemplateSlug {
-  ETUDIANT
-  PROFESSIONNEL
-  MODERNE
-  DEVELOPPEUR
-  COMMERCIAL
-  MANAGER
-  INTERNATIONAL
-  MINIMALISTE
-  CREATIF
-  PREMIUM
-  CADRE
-  EXECUTIF
-  EPURE
-  TECH_LEAD
-  ELEGANCE
-  IMPACT
-  CABINET
-  ACADEMIQUE
-  ATELIER
-  CLINIQUE
-  DUOTONE
-  CHRONOS
-  ATS_FRIENDLY
-}
-
 enum SkillLevel {
   BEGINNER
   INTERMEDIATE
@@ -223,7 +197,7 @@ model Resume {
 
   title          String       @default("Mon CV")
   status         ResumeStatus @default(DRAFT)
-  templateSlug   TemplateSlug @default(PROFESSIONNEL)
+  templateSlug   String       @default("PROFESSIONNEL")
   templateConfig Json         @default("{}")
 
   fullName       String?
@@ -505,7 +479,7 @@ model CoverLetter {
 
 model Template {
   id          String       @id @default(cuid())
-  slug        TemplateSlug @unique
+  slug        String       @unique
   name        String
   category    String
   description String?

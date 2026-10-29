@@ -1,6 +1,7 @@
-import { TEMPLATE_SLUGS, WIZARD_STEPS } from '../constants.js'
+import type { TemplateSlug } from '../templates.js'
+import { WIZARD_STEPS } from '../constants.js'
 
-export type TemplateSlug = (typeof TEMPLATE_SLUGS)[number]
+export type { TemplateSlug }
 
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 

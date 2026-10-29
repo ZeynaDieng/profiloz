@@ -277,7 +277,7 @@ export default defineNuxtConfig({
         // Google Fonts
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=Poppins:wght@400;600;700&display=swap',
         },
         {
           rel: 'stylesheet',

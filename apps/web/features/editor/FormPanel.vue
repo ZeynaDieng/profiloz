@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Certification, Education, Experience, Interest, Language, Skill, TemplateSlug } from '@profiloz/shared'
-import { resolveShowPhoto } from '@profiloz/shared'
+import { TEMPLATE_CATALOG, resolveShowPhoto } from '@profiloz/shared'
 import { EXTENDED_ACCENT_PALETTE } from '~/utils/template-accent-colors'
 import { formatPhoneNumber } from '~/utils/phone-formatter'
 
@@ -54,31 +54,11 @@ const displayedAccentColors = computed(() => {
   return primaryPalette
 })
 
-const CV_TEMPLATES: { slug: TemplateSlug; name: string; desc: string }[] = [
-  { slug: 'PROFESSIONNEL', name: 'Professionnel', desc: 'Structure rigoureuse et intemporelle' },
-  { slug: 'MODERNE', name: 'Moderne', desc: 'Design épuré et contemporain' },
-  { slug: 'ETUDIANT', name: 'Étudiant', desc: 'Mise en valeur des formations' },
-  { slug: 'DEVELOPPEUR', name: 'Développeur', desc: 'Axé compétences et projets' },
-  { slug: 'COMMERCIAL', name: 'Commercial', desc: 'Dynamique et orienté résultats' },
-  { slug: 'MANAGER', name: 'Executive', desc: 'Élégant pour cadres et responsables' },
-  { slug: 'INTERNATIONAL', name: 'International', desc: 'Format standard bilingue' },
-  { slug: 'MINIMALISTE', name: 'Minimaliste', desc: 'Clarté et sobriété absolue' },
-  { slug: 'CREATIF', name: 'Créatif', desc: 'Layout artistique et audacieux' },
-  { slug: 'PREMIUM', name: 'Premium', desc: 'Esthétique luxueuse et soignée' },
-  { slug: 'CADRE', name: 'Cadre', desc: 'Idéal pour managers et dirigeants' },
-  { slug: 'EXECUTIF', name: 'Exécutif', desc: 'Structure haut de gamme et sobre' },
-  { slug: 'EPURE', name: 'Épuré', desc: 'Design aéré et moderne' },
-  { slug: 'TECH_LEAD', name: 'Tech Lead', desc: 'Parfait pour les profils techniques' },
-  { slug: 'ELEGANCE', name: 'Élégance', desc: 'Design minimaliste chic' },
-  { slug: 'IMPACT', name: 'Impact', desc: 'Idéal pour le marketing et la comm' },
-  { slug: 'CABINET', name: 'Cabinet', desc: 'Style classique pour droit et finance' },
-  { slug: 'ACADEMIQUE', name: 'Académique', desc: 'Enseignement et recherche' },
-  { slug: 'ATELIER', name: 'Atelier', desc: 'Style chaleureux pour créatifs' },
-  { slug: 'CLINIQUE', name: 'Clinique', desc: 'Médical, santé et soin' },
-  { slug: 'DUOTONE', name: 'DuoTone', desc: 'Style bicolore contemporain' },
-  { slug: 'CHRONOS', name: 'Chronos', desc: 'Présentation avec timeline' },
-  { slug: 'ATS_FRIENDLY', name: 'ATS Friendly', desc: 'Optimisé pour les filtres robots' },
-]
+const CV_TEMPLATES: { slug: TemplateSlug; name: string; desc: string }[] = TEMPLATE_CATALOG.map((t) => ({
+  slug: t.slug,
+  name: 'editorName' in t ? t.editorName : t.name,
+  desc: t.description,
+}))
 
 const completionPercentage = computed(() => {
   let score = 0

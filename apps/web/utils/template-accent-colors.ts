@@ -1,4 +1,4 @@
-import type { TemplateSlug } from '@profiloz/shared'
+import { TEMPLATE_CATALOG, type TemplateSlug } from '@profiloz/shared'
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 
 export type TemplateAccentColors = {
@@ -26,21 +26,9 @@ export const EXTENDED_ACCENT_PALETTE = [
   '#64748b',
 ] as const
 
-export const CV_TEMPLATE_ACCENT_COLORS: Record<TemplateSlug, TemplateAccentColors> = {
-  ETUDIANT: { accent: '#059669', canvas: '#ecfdf5' },
-  PROFESSIONNEL: { accent: '#0051d5', canvas: '#eff4ff' },
-  MODERNE: { accent: '#009485', canvas: '#f0fdfa' },
-  DEVELOPPEUR: { accent: '#ea580c', canvas: '#fff7ed' },
-  COMMERCIAL: { accent: '#1b2a47', canvas: '#f0f4f8' },
-  MANAGER: { accent: '#1e293b', canvas: '#f8fafc' },
-  INTERNATIONAL: { accent: '#0891b2', canvas: '#ecfeff' },
-  MINIMALISTE: { accent: '#64748b', canvas: '#f1f5f9' },
-  CREATIF: { accent: '#7c3aed', canvas: '#f5f3ff' },
-  PREMIUM: { accent: '#4f46e5', canvas: '#eef2ff' },
-  CADRE: { accent: '#1a3050', canvas: '#e8eef5' },
-  EXECUTIF: { accent: '#2c3e50', canvas: '#eef1f4' },
-  EPURE: { accent: '#0d9488', canvas: '#f0fdfa' },
-}
+export const CV_TEMPLATE_ACCENT_COLORS = Object.fromEntries(
+  TEMPLATE_CATALOG.map((t) => [t.slug, { accent: t.accent, canvas: t.canvas }]),
+) as Record<TemplateSlug, TemplateAccentColors>
 
 export const LETTER_TEMPLATE_ACCENT_COLORS: Record<CoverLetterTemplateSlug, TemplateAccentColors> = {
   CLASSIQUE: { accent: '#0051d5', canvas: '#eff4ff' },

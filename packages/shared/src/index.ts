@@ -1,4 +1,5 @@
 export * from './constants.js'
+export * from './templates.js'
 export * from './avatar.js'
 export * from './cover-letter.js'
 export * from './payment.js'

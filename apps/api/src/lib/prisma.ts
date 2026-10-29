@@ -1,7 +1,7 @@
-import { PrismaClient, TemplateSlug } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 /** Bump when Prisma schema changes so dev HMR does not keep a stale client. */
-const PRISMA_CLIENT_CACHE_KEY = 'prismaClient_v20250625_templates' as const
+const PRISMA_CLIENT_CACHE_KEY = 'prismaClient_v20261029_template_slug_text' as const
 
 const globalForPrisma = globalThis as unknown as {
   [PRISMA_CLIENT_CACHE_KEY]?: PrismaClient
@@ -15,11 +15,4 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma[PRISMA_CLIENT_CACHE_KEY] = prisma
-
-  const templateSlugs = Object.values(TemplateSlug)
-  if (!templateSlugs.includes('EXECUTIF') || !templateSlugs.includes('CADRE')) {
-    console.error(
-      '[prisma] Client Prisma obsolète (modèles CADRE/EXECUTIF manquants). Exécutez `pnpm --filter @profiloz/api db:generate` puis redémarrez l’API.',
-    )
-  }
 }

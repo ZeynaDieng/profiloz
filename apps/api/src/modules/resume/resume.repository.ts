@@ -1,5 +1,5 @@
 import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
-import type { Prisma, TemplateSlug as PrismaTemplateSlug } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 function parseFlexibleDate(value?: string) {
@@ -73,7 +73,7 @@ function snapshotRelationData(snapshot: ResumeSnapshot) {
 function snapshotScalarData(snapshot: ResumeSnapshot) {
   return {
     title: snapshot.title,
-    templateSlug: snapshot.templateSlug as PrismaTemplateSlug,
+    templateSlug: snapshot.templateSlug,
     templateConfig: snapshot.templateConfig as Prisma.InputJsonValue,
     fullName: snapshot.personalInfo.fullName,
     email: snapshot.personalInfo.email,

@@ -1,53 +1,27 @@
-import type { TemplateSlug } from '@profiloz/shared'
+import { TEMPLATE_CATALOG, templateComponentName, type TemplateSlug } from '@profiloz/shared'
 import type { Component } from 'vue'
-import TemplateCommercial from '~/components/resume/templates/TemplateCommercial.vue'
-import TemplateCreatif from '~/components/resume/templates/TemplateCreatif.vue'
-import TemplateDeveloppeur from '~/components/resume/templates/TemplateDeveloppeur.vue'
-import TemplateEtudiant from '~/components/resume/templates/TemplateEtudiant.vue'
-import TemplateInternational from '~/components/resume/templates/TemplateInternational.vue'
-import TemplateManager from '~/components/resume/templates/TemplateManager.vue'
-import TemplateMinimaliste from '~/components/resume/templates/TemplateMinimaliste.vue'
-import TemplateModerne from '~/components/resume/templates/TemplateModerne.vue'
-import TemplateCadre from '~/components/resume/templates/TemplateCadre.vue'
-import TemplateExecutif from '~/components/resume/templates/TemplateExecutif.vue'
-import TemplatePremium from '~/components/resume/templates/TemplatePremium.vue'
 import TemplateProfessionnel from '~/components/resume/templates/TemplateProfessionnel.vue'
-import TemplateSidebar from '~/components/resume/templates/TemplateSidebar.vue'
-import TemplateTechLead from '~/components/resume/templates/TemplateTechLead.vue'
-import TemplateElegance from '~/components/resume/templates/TemplateElegance.vue'
-import TemplateImpact from '~/components/resume/templates/TemplateImpact.vue'
-import TemplateCabinet from '~/components/resume/templates/TemplateCabinet.vue'
-import TemplateAcademique from '~/components/resume/templates/TemplateAcademique.vue'
-import TemplateAtelier from '~/components/resume/templates/TemplateAtelier.vue'
-import TemplateClinique from '~/components/resume/templates/TemplateClinique.vue'
-import TemplateDuotone from '~/components/resume/templates/TemplateDuotone.vue'
-import TemplateChronos from '~/components/resume/templates/TemplateChronos.vue'
-import TemplateAtsFriendly from '~/components/resume/templates/TemplateAtsFriendly.vue'
 
-const TEMPLATE_COMPONENTS: Record<TemplateSlug, Component> = {
-  ETUDIANT: TemplateEtudiant,
-  PROFESSIONNEL: TemplateProfessionnel,
-  MODERNE: TemplateModerne,
-  DEVELOPPEUR: TemplateDeveloppeur,
-  COMMERCIAL: TemplateCommercial,
-  MANAGER: TemplateManager,
-  INTERNATIONAL: TemplateInternational,
-  MINIMALISTE: TemplateMinimaliste,
-  CREATIF: TemplateCreatif,
-  PREMIUM: TemplatePremium,
-  CADRE: TemplateCadre,
-  EXECUTIF: TemplateExecutif,
-  EPURE: TemplateSidebar,
-  TECH_LEAD: TemplateTechLead,
-  ELEGANCE: TemplateElegance,
-  IMPACT: TemplateImpact,
-  CABINET: TemplateCabinet,
-  ACADEMIQUE: TemplateAcademique,
-  ATELIER: TemplateAtelier,
-  CLINIQUE: TemplateClinique,
-  DUOTONE: TemplateDuotone,
-  CHRONOS: TemplateChronos,
-  ATS_FRIENDLY: TemplateAtsFriendly,
+// Chaque modèle du catalogue est résolu par son nom de fichier : Template<Composant>.vue
+const MODULES = import.meta.glob<Component>('../../components/resume/templates/Template*.vue', {
+  eager: true,
+  import: 'default',
+})
+
+const COMPONENTS_BY_NAME = new Map<string, Component>(
+  Object.entries(MODULES).map(([path, component]) => [path.split('/').pop()!.replace(/\.vue$/, ''), component]),
+)
+
+const TEMPLATE_COMPONENTS = Object.fromEntries(
+  TEMPLATE_CATALOG.map((t) => [t.slug, COMPONENTS_BY_NAME.get(templateComponentName(t))]),
+) as Partial<Record<TemplateSlug, Component>>
+
+if (import.meta.dev) {
+  for (const t of TEMPLATE_CATALOG) {
+    if (!TEMPLATE_COMPONENTS[t.slug]) {
+      console.error(`[templates] Composant ${templateComponentName(t)}.vue introuvable pour le modèle ${t.slug}`)
+    }
+  }
 }
 
 export function resolveTemplateComponent(slug: TemplateSlug): Component {

@@ -22,28 +22,4 @@ export const WIZARD_STEPS = [
   'interets',
 ] as const
 
-export const TEMPLATE_SLUGS = [
-  'ETUDIANT',
-  'PROFESSIONNEL',
-  'MODERNE',
-  'DEVELOPPEUR',
-  'COMMERCIAL',
-  'MANAGER',
-  'INTERNATIONAL',
-  'MINIMALISTE',
-  'CREATIF',
-  'PREMIUM',
-  'CADRE',
-  'EXECUTIF',
-  'EPURE',
-  'TECH_LEAD',
-  'ELEGANCE',
-  'IMPACT',
-  'CABINET',
-  'ACADEMIQUE',
-  'ATELIER',
-  'CLINIQUE',
-  'DUOTONE',
-  'CHRONOS',
-  'ATS_FRIENDLY',
-] as const
+export { TEMPLATE_SLUGS } from './templates.js'
