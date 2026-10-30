@@ -211,7 +211,7 @@ onUnmounted(() => {
           ref="closeRef"
           type="button"
           aria-label="Fermer l'aperçu"
-          class="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10 sm:order-2 sm:bg-white/10 sm:hover:bg-white/20"
+          class="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10 sm:order-2 sm:bg-white/10 sm:hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           @click="close"
         >
           <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>

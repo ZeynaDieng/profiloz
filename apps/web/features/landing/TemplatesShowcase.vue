@@ -8,7 +8,6 @@ import { TEMPLATE_REGISTRY } from '~/features/templates/registry'
 import { cvTemplateStartLink, letterTemplateStartLink } from '~/utils/template-links'
 import {
   cvLandingPreviewColors,
-  landingPreviewStyle,
   letterLandingPreviewColors,
 } from '~/utils/landing-accents'
 
@@ -31,10 +30,16 @@ const activeKind = ref<TemplateKind>('cv')
 const cvRailRef = ref<{ reset: () => void } | null>(null)
 const letterRailRef = ref<{ reset: () => void } | null>(null)
 
-const previewOpen = ref(false)
+// Aperçu plein écran, le même que dans les galeries
 const previewKind = ref<TemplateKind>('cv')
-const previewSlug = ref<TemplateSlug | CoverLetterTemplateSlug>('PROFESSIONNEL')
-const previewTitle = ref('')
+const previewIndex = ref<number | null>(null)
+const viewerItems = computed(() =>
+  (previewKind.value === 'cv' ? cvTemplates : letterTemplates).map((t) => ({
+    key: t.slug,
+    name: t.name,
+    category: t.category,
+  })),
+)
 
 const panelMeta = computed(() =>
   activeKind.value === 'cv'
@@ -57,11 +62,23 @@ function selectKind(kind: TemplateKind) {
   activeKind.value = kind
 }
 
-function openPreview(kind: TemplateKind, slug: TemplateSlug | CoverLetterTemplateSlug, title: string) {
+function openPreview(kind: TemplateKind, index: number) {
   previewKind.value = kind
-  previewSlug.value = slug
-  previewTitle.value = title
-  previewOpen.value = true
+  previewIndex.value = index
+}
+
+/** Clic capté sur la rangée : marche aussi sur les copies créées par le défilement en boucle. */
+function onRailClick(kind: TemplateKind, event: MouseEvent) {
+  const card = (event.target as HTMLElement).closest<HTMLElement>('[data-preview-index]')
+  if (card) openPreview(kind, Number(card.dataset.previewIndex))
+}
+
+function useFromPreview(slug: string) {
+  navigateTo(
+    previewKind.value === 'cv'
+      ? cvTemplateStartLink(slug as TemplateSlug)
+      : letterTemplateStartLink(slug as CoverLetterTemplateSlug),
+  )
 }
 
 function cvPreview(slug: TemplateSlug) {
@@ -169,6 +186,7 @@ const { target, revealed } = useScrollReveal(0.25)
         >
           <FeaturesLandingTemplateShowcaseRail
             ref="cvRailRef"
+            @click="onRailClick('cv', $event)"
             :count="cvCount"
             :active="activeKind === 'cv'"
           >
@@ -179,13 +197,17 @@ const { target, revealed } = useScrollReveal(0.25)
               :class="template.slug === POPULAR_SLUG ? 'is-popular' : ''"
               :style="{ '--card-i': index }"
             >
-              <div
-                class="relative aspect-[3/4] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px] rounded-2xl border overflow-hidden mb-3 sm:mb-4 pz-template-card template-showcase-card-visual bg-white"
+              <!-- Toute la carte ouvre l'aperçu (rien à choisir sur l'accueil) -->
+              <button
+                type="button"
+                class="relative block aspect-[3/4] w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px] rounded-2xl border overflow-hidden mb-3 sm:mb-4 pz-template-card template-showcase-card-visual bg-white text-left"
                 :class="
                   template.slug === POPULAR_SLUG
                     ? 'border-secondary template-showcase-card-visual--featured ring-2 ring-secondary/20'
                     : 'border-outline-variant/60 group-hover:border-secondary/40'
                 "
+                :aria-label="`Voir le modèle ${template.name} en grand`"
+                :data-preview-index="index"
               >
                 <span
                   v-if="template.slug === POPULAR_SLUG"
@@ -195,63 +217,28 @@ const { target, revealed } = useScrollReveal(0.25)
                   Populaire
                 </span>
 
-                <div
-                  class="absolute inset-0 pz-template-preview preview-canvas-bg--landing"
-                  :style="landingPreviewStyle(template.slug, 'cv')"
-                >
-                  <!-- Modèle principal/populaire rendu en SSR (1 seul exemple complet dans le DOM initial) -->
-                  <FeatureTemplatesA4PreviewFit
-                    v-if="index === 0 || template.slug === POPULAR_SLUG"
-                    :resume="cvPreview(template.slug)"
-                  />
-                  <!-- Modèles secondaires hydratés côté client (évite 20+ duplications HTML en SSR) -->
-                  <ClientOnly v-else>
-                    <FeatureTemplatesA4PreviewFit :resume="cvPreview(template.slug)" />
-                    <template #fallback>
-                      <div class="w-full h-full p-4 flex flex-col justify-between opacity-70">
-                        <div class="space-y-2">
-                          <div
-                            class="h-3 w-2/5 rounded"
-                            :style="{ backgroundColor: cvLandingPreviewColors(template.slug).accent }"
-                          />
-                          <div class="h-2 w-3/4 rounded bg-outline-variant/30" />
-                          <div class="h-2 w-1/2 rounded bg-outline-variant/20" />
-                        </div>
-                        <div class="space-y-2 py-4">
-                          <div class="h-2 w-full rounded bg-outline-variant/25" />
-                          <div class="h-2 w-4/5 rounded bg-outline-variant/20" />
-                          <div class="h-2 w-5/6 rounded bg-outline-variant/15" />
-                        </div>
-                        <div class="space-y-1.5">
-                          <div
-                            class="h-2 w-1/3 rounded"
-                            :style="{ backgroundColor: cvLandingPreviewColors(template.slug).accent }"
-                          />
-                          <div class="h-2 w-2/3 rounded bg-outline-variant/20" />
-                        </div>
-                      </div>
-                    </template>
-                  </ClientOnly>
-                </div>
+                <!-- Premier modèle et modèle populaire rendus en SSR, les autres côté client (HTML initial léger) -->
+                <UiA4Sheet v-if="index === 0 || template.slug === POPULAR_SLUG">
+                  <ResumePreviewA4 :resume="cvPreview(template.slug)" />
+                </UiA4Sheet>
+                <ClientOnly v-else>
+                  <UiA4Sheet>
+                    <ResumePreviewA4 :resume="cvPreview(template.slug)" />
+                  </UiA4Sheet>
+                  <template #fallback>
+                    <span class="block w-full h-full bg-surface-container-low" />
+                  </template>
+                </ClientOnly>
 
-                <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="flex gap-2">
-                    <button
-                      type="button"
-                      class="btn-outline flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm !bg-white/95 !border-white/30"
-                      @click="openPreview('cv', template.slug, template.name)"
-                    >
-                      Aperçu
-                    </button>
-                    <NuxtLink
-                      :to="cvTemplateStartLink(template.slug)"
-                      class="btn-secondary flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm"
-                    >
-                      Utiliser
-                    </NuxtLink>
-                  </div>
-                </div>
-              </div>
+                <span
+                  class="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  aria-hidden="true"
+                >
+                  <span class="w-12 h-12 rounded-full border border-outline-variant/60 bg-white/95 text-on-surface shadow-md flex items-center justify-center transition-opacity duration-150 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+                  </span>
+                </span>
+              </button>
 
               <div class="px-1 w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px]">
                 <h4 class="landing-subtitle">{{ template.name }}</h4>
@@ -275,6 +262,7 @@ const { target, revealed } = useScrollReveal(0.25)
         >
           <FeaturesLandingTemplateShowcaseRail
             ref="letterRailRef"
+            @click="onRailClick('letter', $event)"
             :count="letterCount"
             :active="activeKind === 'letter'"
           >
@@ -284,58 +272,33 @@ const { target, revealed } = useScrollReveal(0.25)
               class="group flex flex-col template-showcase-card shrink-0 snap-center"
               :style="{ '--card-i': index }"
             >
-              <div
-                class="relative aspect-[3/4] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px] rounded-2xl border border-outline-variant/60 overflow-hidden mb-3 sm:mb-4 pz-template-card template-showcase-card-visual bg-white sm:group-hover:border-secondary/40"
+              <button
+                type="button"
+                class="relative block aspect-[3/4] w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px] rounded-2xl border border-outline-variant/60 overflow-hidden mb-3 sm:mb-4 pz-template-card template-showcase-card-visual bg-white text-left group-hover:border-secondary/40"
+                :aria-label="`Voir le modèle ${template.name} en grand`"
+                :data-preview-index="index"
               >
-                <div
-                  class="absolute inset-0 pz-template-preview preview-canvas-bg--landing"
-                  :style="landingPreviewStyle(template.slug, 'letter')"
-                >
-                  <!-- Modèle principal de lettre rendu en SSR (1 seul exemple complet) -->
-                  <FeatureCoverLetterTemplatesA4PreviewFit
-                    v-if="index === 0"
-                    :letter="buildCoverLetterDemoSnapshot(template.slug)"
-                  />
-                  <!-- Modèles de lettres secondaires hydratés côté client -->
-                  <ClientOnly v-else>
-                    <FeatureCoverLetterTemplatesA4PreviewFit :letter="buildCoverLetterDemoSnapshot(template.slug)" />
-                    <template #fallback>
-                      <div class="w-full h-full p-4 flex flex-col justify-between opacity-70">
-                        <div class="space-y-2">
-                          <div
-                            class="h-3 w-1/3 rounded"
-                            :style="{ backgroundColor: letterLandingPreviewColors(template.slug).accent }"
-                          />
-                          <div class="h-2 w-2/3 rounded bg-outline-variant/30" />
-                        </div>
-                        <div class="space-y-2 py-4">
-                          <div class="h-2 w-full rounded bg-outline-variant/25" />
-                          <div class="h-2 w-4/5 rounded bg-outline-variant/20" />
-                          <div class="h-2 w-5/6 rounded bg-outline-variant/15" />
-                        </div>
-                      </div>
-                    </template>
-                  </ClientOnly>
-                </div>
+                <UiA4Sheet v-if="index === 0">
+                  <CoverLetterPreviewA4 :letter="buildCoverLetterDemoSnapshot(template.slug)" />
+                </UiA4Sheet>
+                <ClientOnly v-else>
+                  <UiA4Sheet>
+                    <CoverLetterPreviewA4 :letter="buildCoverLetterDemoSnapshot(template.slug)" />
+                  </UiA4Sheet>
+                  <template #fallback>
+                    <span class="block w-full h-full bg-surface-container-low" />
+                  </template>
+                </ClientOnly>
 
-                <div class="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent sm:from-black/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="flex gap-2">
-                    <button
-                      type="button"
-                      class="btn-outline flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm !bg-white/95 !border-white/30"
-                      @click="openPreview('letter', template.slug, template.name)"
-                    >
-                      Aperçu
-                    </button>
-                    <NuxtLink
-                      :to="letterTemplateStartLink(template.slug)"
-                      class="btn-secondary flex-1 !min-h-10 !py-2 !px-3 !text-xs sm:!text-sm"
-                    >
-                      Utiliser
-                    </NuxtLink>
-                  </div>
-                </div>
-              </div>
+                <span
+                  class="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  aria-hidden="true"
+                >
+                  <span class="w-12 h-12 rounded-full border border-outline-variant/60 bg-white/95 text-on-surface shadow-md flex items-center justify-center transition-opacity duration-150 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+                  </span>
+                </span>
+              </button>
 
               <div class="px-1 w-[72vw] max-w-[280px] sm:w-[280px] md:w-[300px]">
                 <h4 class="landing-subtitle group-hover:text-secondary transition-colors">
@@ -357,13 +320,12 @@ const { target, revealed } = useScrollReveal(0.25)
       </div>
     </div>
 
-    <FeaturesLandingTemplatePreviewModal
-      :open="previewOpen"
-      :kind="previewKind"
-      :template-slug="previewSlug"
-      :title="previewTitle"
-      @close="previewOpen = false"
-    />
+    <FeatureTemplatesTemplateViewer v-model="previewIndex" :items="viewerItems" @use="useFromPreview">
+      <template #page="{ item }">
+        <ResumePreviewA4 v-if="previewKind === 'cv'" :resume="cvPreview(item.key as TemplateSlug)" />
+        <CoverLetterPreviewA4 v-else :letter="buildCoverLetterDemoSnapshot(item.key as CoverLetterTemplateSlug)" />
+      </template>
+    </FeatureTemplatesTemplateViewer>
   </section>
 </template>
 

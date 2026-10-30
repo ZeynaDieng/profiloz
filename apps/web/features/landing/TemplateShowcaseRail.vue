@@ -94,7 +94,7 @@ function setupInfiniteLoop() {
     const clone = item.cloneNode(true) as HTMLElement
     clone.setAttribute('data-rail-clone', 'true')
     clone.setAttribute('aria-hidden', 'true')
-    clone.setAttribute('inert', '')
+    // Pas d'« inert » : la rangée défile en continu, ces copies doivent rester cliquables à la souris / au doigt
     clone.querySelectorAll('a, button').forEach((node) => {
       node.setAttribute('tabindex', '-1')
     })
