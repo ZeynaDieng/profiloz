@@ -1,6 +1,7 @@
 import type { CoverLetterTemplateDefinition, CoverLetterTemplateSlug } from '~/types/cover-letter'
 
-export const COVER_LETTER_TEMPLATE_REGISTRY: CoverLetterTemplateDefinition[] = [
+// Liste écrite dans l'ordre d'ajout des modèles
+const REGISTRY_IN_ADDED_ORDER: CoverLetterTemplateDefinition[] = [
   {
     slug: 'CLASSIQUE',
     name: 'Classique',
@@ -92,6 +93,9 @@ export const COVER_LETTER_TEMPLATE_REGISTRY: CoverLetterTemplateDefinition[] = [
     description: 'Structure brute optimisée à 100% pour la lecture par robots recruteurs.',
   },
 ]
+
+// Galeries : les modèles les plus récents en premier
+export const COVER_LETTER_TEMPLATE_REGISTRY: CoverLetterTemplateDefinition[] = [...REGISTRY_IN_ADDED_ORDER].reverse()
 
 export const COVER_LETTER_TEMPLATE_FILTERS = [
   { id: 'all', label: 'Tous les modèles' },

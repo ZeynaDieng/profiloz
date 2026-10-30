@@ -55,7 +55,7 @@ const displayedAccentColors = computed(() => {
   return primaryPalette
 })
 
-const CV_TEMPLATES: { slug: TemplateSlug; name: string; desc: string }[] = TEMPLATE_CATALOG.map((t) => ({
+const CV_TEMPLATES: { slug: TemplateSlug; name: string; desc: string }[] = [...TEMPLATE_CATALOG].reverse().map((t) => ({
   slug: t.slug,
   name: 'editorName' in t ? t.editorName : t.name,
   desc: t.description,

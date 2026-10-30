@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
+import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
 import { MSG } from '@profiloz/shared'
 import {
   COVER_LETTER_TEMPLATE_FILTERS,
@@ -33,6 +34,16 @@ const filteredTemplates = computed(() => {
   if (activeFilter.value === 'all') return COVER_LETTER_TEMPLATE_REGISTRY
   return COVER_LETTER_TEMPLATE_REGISTRY.filter((t) => t.category === activeFilter.value)
 })
+
+// Aperçu plein écran (œil des cartes) : rien n'est choisi avant « Utiliser ce modèle »
+const previewIndex = ref<number | null>(null)
+const viewerItems = computed(() =>
+  filteredTemplates.value.map((t) => ({ key: t.slug, name: t.name, category: t.category })),
+)
+
+function openPreview(slug: CoverLetterTemplateSlug) {
+  previewIndex.value = filteredTemplates.value.findIndex((t) => t.slug === slug)
+}
 
 function selectTemplate(slug: CoverLetterTemplateSlug) {
   const params = new URLSearchParams()
@@ -89,7 +100,9 @@ onMounted(() => {
         :slug="template.slug"
         :selected="preselected === template.slug || coverLetterStore.current?.templateSlug === template.slug"
         :resume-id="linkedResumeId"
+        :preview-label="template.name"
         @select="selectTemplate"
+        @preview="openPreview"
       >
         <div class="min-w-0">
           <h4 class="font-bold text-on-surface text-xs sm:text-sm truncate">{{ template.name }}</h4>
@@ -97,6 +110,12 @@ onMounted(() => {
         </div>
       </FeatureCoverLetterTemplatesPreviewCard>
     </div>
+
+    <FeatureTemplatesTemplateViewer v-model="previewIndex" :items="viewerItems" @use="(slug) => selectTemplate(slug as CoverLetterTemplateSlug)">
+      <template #page="{ item }">
+        <CoverLetterPreviewA4 :letter="buildCoverLetterDemoSnapshot(item.key as CoverLetterTemplateSlug)" />
+      </template>
+    </FeatureTemplatesTemplateViewer>
 
     <UiCard variant="glass" padding="md" class="mt-stack-lg text-sm text-on-surface-variant text-center border border-outline-variant/30 rounded-2xl">
       Cliquez sur un modèle pour l'ouvrir dans l'éditeur, ou

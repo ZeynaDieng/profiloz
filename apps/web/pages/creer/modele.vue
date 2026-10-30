@@ -3,6 +3,8 @@ import type { TemplateSlug } from '@profiloz/shared'
 import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
 import { resolveTemplatePickerReturn } from '~/utils/template-navigation'
+import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { cvTemplateAccentColors } from '~/utils/template-accent-colors'
 
 definePageMeta({ layout: 'wizard', wizardFooter: true })
 
@@ -77,6 +79,26 @@ const filteredTemplates = computed(() => {
 function selectTemplate(slug: TemplateSlug) {
   selectedSlug.value = slug
   resumeStore.setTemplate(slug)
+}
+
+// Aperçu plein écran (œil des cartes) : rien n'est choisi avant « Utiliser ce modèle »
+const previewIndex = ref<number | null>(null)
+const viewerItems = computed(() =>
+  filteredTemplates.value.map((t) => ({ key: t.slug, name: t.name, category: t.category })),
+)
+
+function openPreview(slug: TemplateSlug) {
+  previewIndex.value = filteredTemplates.value.findIndex((t) => t.slug === slug)
+}
+
+function previewResume(slug: string) {
+  const templateSlug = slug as TemplateSlug
+  return buildPreviewSnapshot(templateSlug, cvTemplateAccentColors(templateSlug).accent, userSnapshotForPreview.value)
+}
+
+function useFromPreview(slug: string) {
+  selectTemplate(slug as TemplateSlug)
+  onContinue()
 }
 
 function onContinue() {
@@ -199,8 +221,9 @@ useWizardStep(computed(() => ({
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
         :user-snapshot="userSnapshotForPreview"
-        class=""
+        :preview-label="template.name"
         @select="selectTemplate"
+        @preview="openPreview"
       >
         <div class="min-w-0">
           <h4 class="font-bold text-on-surface text-xs sm:text-sm truncate">{{ template.name }}</h4>
@@ -208,6 +231,12 @@ useWizardStep(computed(() => ({
         </div>
       </FeatureTemplatesPreviewCard>
     </div>
+
+    <FeatureTemplatesTemplateViewer v-model="previewIndex" :items="viewerItems" @use="useFromPreview">
+      <template #page="{ item }">
+        <ResumePreviewA4 :resume="previewResume(item.key)" />
+      </template>
+    </FeatureTemplatesTemplateViewer>
   </div>
 </template>
 

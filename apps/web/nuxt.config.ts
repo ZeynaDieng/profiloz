@@ -169,6 +169,7 @@ export default defineNuxtConfig({
     { path: '~/components/ui', prefix: 'Ui' },
     { path: '~/components/seo', prefix: 'Seo' },
     { path: '~/components/dashboard', prefix: 'Dashboard' },
+    { path: '~/components/billing', prefix: 'Billing' },
     { path: '~/components/editor', prefix: 'Editor' },
     { path: '~/components/wizard' },
     { path: '~/components/resume', pathPrefix: true },

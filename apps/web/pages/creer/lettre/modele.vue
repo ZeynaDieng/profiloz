@@ -6,6 +6,7 @@ import {
   COVER_LETTER_TEMPLATE_REGISTRY,
 } from '~/features/cover-letter-templates/registry'
 import { AMINATA_PERSONA } from '~/features/demo/aminata-persona'
+import { buildCoverLetterDemoSnapshot } from '~/features/cover-letter-templates/demoSnapshot'
 
 definePageMeta({ layout: 'wizard' })
 
@@ -46,6 +47,21 @@ const filteredTemplates = computed(() => {
 function selectTemplate(slug: CoverLetterTemplateSlug) {
   selectedSlug.value = slug
   coverLetterStore.setTemplate(slug)
+}
+
+// Aperçu plein écran (œil des cartes) : rien n'est choisi avant « Utiliser ce modèle »
+const previewIndex = ref<number | null>(null)
+const viewerItems = computed(() =>
+  filteredTemplates.value.map((t) => ({ key: t.slug, name: t.name, category: t.category })),
+)
+
+function openPreview(slug: CoverLetterTemplateSlug) {
+  previewIndex.value = filteredTemplates.value.findIndex((t) => t.slug === slug)
+}
+
+function useFromPreview(slug: string) {
+  selectTemplate(slug as CoverLetterTemplateSlug)
+  onContinue()
 }
 
 function onContinue() {
@@ -115,7 +131,9 @@ function onContinue() {
         :key="template.slug"
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
+        :preview-label="template.name"
         @select="selectTemplate"
+        @preview="openPreview"
       >
         <div class="min-w-0">
           <h4 class="font-bold text-on-surface text-xs sm:text-sm truncate">{{ template.name }}</h4>
@@ -123,6 +141,12 @@ function onContinue() {
         </div>
       </FeatureCoverLetterTemplatesPreviewCard>
     </div>
+
+    <FeatureTemplatesTemplateViewer v-model="previewIndex" :items="viewerItems" @use="useFromPreview">
+      <template #page="{ item }">
+        <CoverLetterPreviewA4 :letter="buildCoverLetterDemoSnapshot(item.key as CoverLetterTemplateSlug)" />
+      </template>
+    </FeatureTemplatesTemplateViewer>
 
     <UiStickyActionBar>
       <UiButton variant="secondary" block @click="onContinue">

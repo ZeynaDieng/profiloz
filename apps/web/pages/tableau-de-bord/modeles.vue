@@ -3,6 +3,8 @@ import type { TemplateSlug } from '@profiloz/shared'
 import { MSG } from '@profiloz/shared'
 import { TEMPLATE_FILTERS, TEMPLATE_REGISTRY } from '~/features/templates/registry'
 import { cvTemplateStartLink } from '~/utils/template-links'
+import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
+import { cvTemplateAccentColors } from '~/utils/template-accent-colors'
 
 definePageMeta({ layout: 'dashboard' })
 
@@ -50,6 +52,21 @@ const filteredTemplates = computed(() => {
   if (activeFilter.value === 'all') return TEMPLATE_REGISTRY
   return TEMPLATE_REGISTRY.filter((t) => t.category === activeFilter.value)
 })
+
+// Aperçu plein écran (œil des cartes) : rien n'est choisi avant « Utiliser ce modèle »
+const previewIndex = ref<number | null>(null)
+const viewerItems = computed(() =>
+  filteredTemplates.value.map((t) => ({ key: t.slug, name: t.name, category: t.category })),
+)
+
+function openPreview(slug: TemplateSlug) {
+  previewIndex.value = filteredTemplates.value.findIndex((t) => t.slug === slug)
+}
+
+function previewResume(slug: string) {
+  const templateSlug = slug as TemplateSlug
+  return buildPreviewSnapshot(templateSlug, cvTemplateAccentColors(templateSlug).accent, userSnapshotForPreview.value)
+}
 
 function useTemplate(slug: TemplateSlug) {
   selectedSlug.value = slug
@@ -133,7 +150,9 @@ function useTemplate(slug: TemplateSlug) {
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
         :user-snapshot="userSnapshotForPreview"
+        :preview-label="template.name"
         @select="useTemplate"
+        @preview="openPreview"
       >
         <div class="min-w-0">
           <h4 class="font-bold text-on-surface text-xs sm:text-sm truncate">{{ template.name }}</h4>
@@ -141,6 +160,12 @@ function useTemplate(slug: TemplateSlug) {
         </div>
       </FeatureTemplatesPreviewCard>
     </div>
+
+    <FeatureTemplatesTemplateViewer v-model="previewIndex" :items="viewerItems" @use="(slug) => useTemplate(slug as TemplateSlug)">
+      <template #page="{ item }">
+        <ResumePreviewA4 :resume="previewResume(item.key)" />
+      </template>
+    </FeatureTemplatesTemplateViewer>
   </div>
 </template>
 

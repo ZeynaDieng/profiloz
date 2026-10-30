@@ -1,6 +1,7 @@
 import { TEMPLATE_CATALOG, type TemplateDefinition, type TemplateSlug } from '@profiloz/shared'
 
-export const TEMPLATE_REGISTRY: TemplateDefinition[] = TEMPLATE_CATALOG.map((t) => ({
+// Galeries : les modèles les plus récents en premier (le catalogue est dans l'ordre d'ajout)
+export const TEMPLATE_REGISTRY: TemplateDefinition[] = [...TEMPLATE_CATALOG].reverse().map((t) => ({
   slug: t.slug,
   name: t.name,
   category: t.category,
