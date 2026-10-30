@@ -25,6 +25,7 @@ export async function GET(request: Request) {
               paidDraftSnapshot: result.paidDraftSnapshot,
               paidResumeSnapshot: result.paidResumeSnapshot,
               paidLetterSnapshot: result.paidLetterSnapshot,
+              paidDocuments: result.paidDocuments,
             }
           : {}),
       }),

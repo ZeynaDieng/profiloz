@@ -24,6 +24,8 @@ export interface Entitlements {
   /** Dernières versions du CV / de la lettre du dossier payé (reprise sur un autre appareil). */
   paidResumeSnapshot?: any
   paidLetterSnapshot?: any
+  /** Documents du dossier payé en cours (2 au choix : CV et/ou lettres). */
+  paidDocuments?: Array<{ key: string; kind: 'cv' | 'letter'; snapshot: any }>
 }
 
 export interface PurchasedPlanSummary {

@@ -80,9 +80,12 @@ function readGuestSessionMeta(data: unknown): GuestSessionMeta {
   }
 }
 
+/** Un dossier payé = 2 documents au choix (CV + lettre, 2 CV ou 2 lettres). */
+export const DOSSIER_DOCUMENT_LIMIT = 2
+
 /**
  * Clé d'un document du dossier : `cv:<id>` / `letter:<id>` (anciennes sessions : `cv` / `letter` sans id).
- * Un dossier payé = 1 CV + 1 lettre précis ; les modifier et les retélécharger reste gratuit.
+ * Un document du dossier reste modifiable et retéléchargeable gratuitement.
  */
 export function snapshotDocKey(type: 'cv' | 'letter', id?: unknown): string {
   return typeof id === 'string' && id.trim() ? `${type}:${id.trim()}` : type
@@ -94,15 +97,61 @@ function docKeyType(key: string): string {
 
 type DossierSlotDecision = 'known' | 'free-slot' | 'adopt-legacy' | 'slot-taken'
 
-/** Place du document dans le dossier courant : déjà dedans, emplacement libre, ou emplacement pris par un autre document. */
+/** Place du document dans le dossier courant : déjà dedans, place libre (moins de 2 documents), ou dossier complet. */
 export function decideDossierSlot(downloadedIds: string[], docId: string): DossierSlotDecision {
   if (downloadedIds.includes(docId)) return 'known'
-  const type = docKeyType(docId)
-  const sameType = downloadedIds.filter((key) => docKeyType(key) === type)
-  if (sameType.length === 0) return 'free-slot'
-  // Ancien format sans id : le premier document identifié de ce type prend la place
-  if (docId !== type && sameType.every((key) => key === type)) return 'adopt-legacy'
-  return 'slot-taken'
+  // Ancien format sans id (`cv` / `letter`) : le premier document identifié de ce type le remplace
+  if (docId !== docKeyType(docId) && downloadedIds.includes(docKeyType(docId))) return 'adopt-legacy'
+  return downloadedIds.length < DOSSIER_DOCUMENT_LIMIT ? 'free-slot' : 'slot-taken'
+}
+
+/**
+ * Compte connecté : réserve la place du document dans le dossier en cours (2 documents au choix par crédit).
+ * Document déjà dans le dossier ou place libre → gratuit ; sinon consomme 1 crédit et ouvre un nouveau dossier.
+ */
+async function claimUserDossierSlot(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  docKey: string,
+): Promise<'free' | 'consumed'> {
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: { dossierDocIds: true, dossierUnlockedAt: true },
+  })
+  // Dossier payé avant le suivi par document : on le considère entamé (1 document utilisé)
+  const docIds = user?.dossierDocIds.length ? user.dossierDocIds : user?.dossierUnlockedAt ? ['legacy'] : []
+  const decision = decideDossierSlot(docIds, docKey)
+
+  if (decision === 'known') return 'free'
+  if (docIds.length > 0 && (decision === 'free-slot' || decision === 'adopt-legacy')) {
+    await tx.user.update({
+      where: { id: userId },
+      data: { dossierDocIds: [...docIds, docKey] },
+    })
+    return 'free'
+  }
+
+  const decremented = await tx.user.updateMany({
+    where: { id: userId, creditsBalance: { gt: 0 } },
+    data: { creditsBalance: { decrement: 1 }, dossierUnlockedAt: new Date(), dossierDocIds: [docKey] },
+  })
+  if (decremented.count === 0) {
+    throw new AppError(
+      402,
+      'Payment Required',
+      docIds.length >= DOSSIER_DOCUMENT_LIMIT
+        ? 'Votre dossier payé contient déjà ses 2 documents. Choisissez une offre pour télécharger ce nouveau document.'
+        : 'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier.',
+    )
+  }
+  return 'consumed'
+}
+
+function readPaidDocuments(raw: unknown, downloadedDocIds: string[] = []) {
+  if (!raw || typeof raw !== 'object') return []
+  return Object.entries(raw as Record<string, unknown>)
+    .filter(([key]) => downloadedDocIds.includes(key))
+    .map(([key, snapshot]) => ({ key, kind: (key.startsWith('letter') ? 'letter' : 'cv') as 'cv' | 'letter', snapshot }))
 }
 
 async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string, docId?: string): Promise<boolean> {
@@ -142,6 +191,8 @@ type EntitlementsWithSnapshot = ResolvedEntitlements & {
   /** Dernières versions du CV / de la lettre du dossier payé (reprise sur un autre appareil). */
   paidResumeSnapshot?: unknown
   paidLetterSnapshot?: unknown
+  /** Documents du dossier payé en cours, clé `cv:<id>` / `letter:<id>`. */
+  paidDocuments?: Array<{ key: string; kind: 'cv' | 'letter'; snapshot: unknown }>
 }
 
 function mergeEntitlementResults(
@@ -168,6 +219,7 @@ function mergeEntitlementResults(
     paidDraftSnapshot: primary.paidDraftSnapshot || secondary.paidDraftSnapshot,
     paidResumeSnapshot: primary.paidResumeSnapshot || secondary.paidResumeSnapshot,
     paidLetterSnapshot: primary.paidLetterSnapshot || secondary.paidLetterSnapshot,
+    paidDocuments: primary.paidDocuments || secondary.paidDocuments,
   }
 }
 
@@ -183,6 +235,7 @@ function serializeEntitlementsForClient(result: EntitlementsWithSnapshot) {
     paidDraftSnapshot: result.paidDraftSnapshot,
     paidResumeSnapshot: result.paidResumeSnapshot,
     paidLetterSnapshot: result.paidLetterSnapshot,
+    paidDocuments: result.paidDocuments,
   }
 }
 
@@ -492,6 +545,11 @@ export class PaymentService {
     const entitlements = await this.getEntitlements(owner)
     if (entitlements.unlimitedActive) return { consumed: false }
 
+    // Compte avec document identifié : même règle des 2 documents par dossier
+    if (owner.userId && docId && docId.includes(':')) {
+      const claimed = await prisma.$transaction((tx) => claimUserDossierSlot(tx, owner.userId!, docId))
+      return { consumed: claimed === 'consumed' }
+    }
     if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
       return { consumed: false }
     }
@@ -576,7 +634,7 @@ export class PaymentService {
         return { consumed: false }
       }
 
-      // Dossier déjà payé et place libre pour ce type de document : il rejoint le dossier gratuitement
+      // Dossier déjà payé et moins de 2 documents : celui-ci rejoint le dossier gratuitement
       if (unlocked && (decision === 'free-slot' || decision === 'adopt-legacy')) {
         const kept = decision === 'adopt-legacy'
           ? downloadedIds.filter((key) => key !== docKeyType(docId!))
@@ -601,6 +659,7 @@ export class PaymentService {
             // Nouveau dossier : les versions reprises de l'ancien ne doivent plus être proposées
             paidResumeSnapshot: undefined,
             paidLetterSnapshot: undefined,
+            paidSnapshots: undefined,
           } as Prisma.InputJsonValue,
         },
       })
@@ -609,7 +668,7 @@ export class PaymentService {
           402,
           'Payment Required',
           unlocked
-            ? 'Votre dossier payé contient déjà un autre document de ce type. Choisissez une offre pour télécharger ce nouveau document.'
+            ? 'Votre dossier payé contient déjà ses 2 documents. Choisissez une offre pour télécharger ce nouveau document.'
             : 'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
         )
       }
@@ -624,6 +683,7 @@ export class PaymentService {
   async savePaidGuestSnapshot(owner: EntitlementOwner, kind: 'resume' | 'letter', snapshot: unknown) {
     if (owner.userId || !owner.guestSessionDbId || !snapshot || typeof snapshot !== 'object') return
     const key = kind === 'resume' ? 'paidResumeSnapshot' : 'paidLetterSnapshot'
+    const docKey = snapshotDocKey(kind === 'resume' ? 'cv' : 'letter', (snapshot as { id?: unknown }).id)
     await prisma.$transaction(async (tx) => {
       const guest = await tx.guestSession.findUnique({ where: { id: owner.guestSessionDbId }, select: { data: true } })
       const baseData =
@@ -632,7 +692,17 @@ export class PaymentService {
           : {}
       await tx.guestSession.update({
         where: { id: owner.guestSessionDbId },
-        data: { data: { ...baseData, [key]: JSON.parse(JSON.stringify(snapshot)) } as Prisma.InputJsonValue },
+        data: {
+          data: {
+            ...baseData,
+            [key]: JSON.parse(JSON.stringify(snapshot)),
+            // Chaque document du dossier (jusqu'à 2), pour les reprendre tous sur un autre appareil
+            paidSnapshots: {
+              ...((baseData.paidSnapshots as Record<string, unknown> | undefined) ?? {}),
+              [docKey]: JSON.parse(JSON.stringify(snapshot)),
+            },
+          } as Prisma.InputJsonValue,
+        },
       })
     })
   }
@@ -888,6 +958,7 @@ function isDraftSnapshotValid(snap: any): boolean {
       paidDraftSnapshot,
       paidResumeSnapshot: hasPaidAccess ? rawData.paidResumeSnapshot : undefined,
       paidLetterSnapshot: hasPaidAccess ? rawData.paidLetterSnapshot : undefined,
+      paidDocuments: hasPaidAccess ? readPaidDocuments(rawData.paidSnapshots, meta.downloadedDocIds) : undefined,
     }
   }
 
@@ -898,11 +969,8 @@ function isDraftSnapshotValid(snap: any): boolean {
    * - Sinon consomme 1 crédit (transaction anti double-consommation).
    * - Aucun droit → AppError 402.
    */
-  /**
-   * Lettre d'un compte sans CV rattaché : débloquée par son propre crédit.
-   * (Avant : le déblocage global du compte rendait toutes les lettres suivantes gratuites.)
-   */
-  async unlockStandaloneLetter(owner: EntitlementOwner, letterId: string) {
+  /** Lettre d'un compte : un des 2 documents du dossier (rattachée ou non à un CV). */
+  async unlockLetter(owner: EntitlementOwner, letterId: string) {
     requireOwner(owner)
     if (!owner.userId) throw new AppError(401, 'Unauthorized', 'Authentification requise')
 
@@ -911,31 +979,32 @@ function isDraftSnapshotValid(snap: any): boolean {
       select: { unlockedAt: true },
     })
     if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
-    if (letter.unlockedAt) return { unlocked: true, consumedCredit: false }
+    return this.unlockUserDocument(owner.userId, snapshotDocKey('letter', letterId), letter.unlockedAt, (tx) =>
+      tx.coverLetter.update({ where: { id: letterId }, data: { unlockedAt: new Date() } }),
+    )
+  }
 
-    const entitlements = await this.getEntitlements(owner)
+  /** Débloque un CV ou une lettre d'un compte (déjà débloqué, abonnement, ou place dans le dossier). */
+  private async unlockUserDocument(
+    userId: string,
+    docKey: string,
+    unlockedAt: Date | null,
+    markUnlocked: (tx: Prisma.TransactionClient) => Promise<unknown>,
+  ) {
+    if (unlockedAt) return { unlocked: true, consumedCredit: false }
+
+    const entitlements = await this.getEntitlements({ userId })
     if (entitlements.unlimitedActive) {
-      await prisma.coverLetter.update({ where: { id: letterId }, data: { unlockedAt: new Date() } })
+      await prisma.$transaction(async (tx) => { await markUnlocked(tx) })
       return { unlocked: true, consumedCredit: false }
     }
 
-    const consumed = await prisma.$transaction(async (tx) => {
-      const decremented = await tx.user.updateMany({
-        where: { id: owner.userId, creditsBalance: { gt: 0 } },
-        data: { creditsBalance: { decrement: 1 } },
-      })
-      if (decremented.count === 0) return false
-      await tx.coverLetter.update({ where: { id: letterId }, data: { unlockedAt: new Date() } })
-      return true
+    const result = await prisma.$transaction(async (tx) => {
+      const claimed = await claimUserDossierSlot(tx, userId, docKey)
+      await markUnlocked(tx)
+      return claimed
     })
-    if (!consumed) {
-      throw new AppError(
-        402,
-        'Payment Required',
-        'Aucun crédit disponible. Choisissez une offre pour télécharger cette lettre.',
-      )
-    }
-    return { unlocked: true, consumedCredit: true }
+    return { unlocked: true, consumedCredit: result === 'consumed' }
   }
 
   async unlockResume(owner: EntitlementOwner, resumeId: string) {
@@ -954,6 +1023,13 @@ function isDraftSnapshotValid(snap: any): boolean {
       select: { id: true, unlockedAt: true },
     })
     if (!resume) throw new AppError(404, 'Not Found', 'Dossier introuvable')
+
+    // Compte : le CV est un des 2 documents du dossier (plus de déblocage global du compte)
+    if (owner.userId) {
+      return this.unlockUserDocument(owner.userId, snapshotDocKey('cv', resumeId), resume.unlockedAt, (tx) =>
+        tx.resume.update({ where: { id: resumeId }, data: { unlockedAt: new Date() } }),
+      )
+    }
 
     // Si le CV est déjà débloqué (unlockedAt), alors le dossier de candidature (CV+lettre)
     // doit aussi être considéré comme débloqué. On synchronise l'état dossier sans consommer.

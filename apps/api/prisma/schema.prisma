@@ -101,6 +101,8 @@ model User {
   unlimitedUntil DateTime?
   subscriptionPlanSlug String?
   dossierUnlockedAt DateTime?
+  /// Documents du dossier en cours (`cv:<id>` / `letter:<id>`, 2 au choix par crédit)
+  dossierDocIds     String[]  @default([])
   suspendedAt   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

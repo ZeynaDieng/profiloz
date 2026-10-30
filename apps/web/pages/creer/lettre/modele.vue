@@ -20,7 +20,8 @@ onMounted(() => {
   resumeStore.rehydrateFromStorage()
   coverLetterStore.rehydrateFromStorage()
   // Formulaire vide : la démo Aminata reste uniquement dans l’aperçu
-  if (coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
+  // ?new=1 : nouvelle lettre (2e document du dossier) ; la démo Aminata ne doit jamais rester
+  if (route.query.new === '1' || coverLetterStore.current?.senderName === AMINATA_PERSONA.fullName) {
     coverLetterStore.startNewDraft()
   }
   coverLetterStore.initDraft()

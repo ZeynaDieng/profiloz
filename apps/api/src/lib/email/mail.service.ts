@@ -53,7 +53,7 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
   <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
   
   <h3 style="color: #0f172a; margin-top: 0;">Il vous reste des documents disponibles !</h3>
-  <p>N'oubliez pas que votre formule comprend un <strong>Duo Complet (1 CV + 1 Lettre de motivation)</strong>.</p>
+  <p>N'oubliez pas que votre dossier comprend <strong>2 documents au choix</strong> : un CV et une lettre de motivation, deux CV ou deux lettres.</p>
   <p>Modifiez votre CV, créez votre lettre de motivation ou retéléchargez vos documents à tout moment, depuis n'importe quel appareil :</p>
   
   <div style="text-align: center; margin: 25px 0;">

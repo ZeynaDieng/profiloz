@@ -208,12 +208,8 @@ export class CoverLetterService {
     const letter = await coverLetterRepository.findById(id, owner.userId)
     if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
 
-    // 1 dossier = CV + lettre : débloquer dès le premier téléchargement.
-    if (letter.resumeId) {
-      await paymentService.unlockResume(owner, letter.resumeId)
-    } else {
-      await paymentService.unlockStandaloneLetter(owner, letter.id)
-    }
+    // Dossier = 2 documents au choix : la lettre compte pour elle-même, rattachée ou non à un CV
+    await paymentService.unlockLetter(owner, letter.id)
 
     const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf(
       {

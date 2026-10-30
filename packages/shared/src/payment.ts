@@ -39,7 +39,7 @@ const SUBSCRIPTION_CORE_FEATURES = [
 /**
  * Catalogue des offres Profilo'Z V1.
  * Le paiement intervient à la fin du parcours (au téléchargement du dossier).
- * 1 dossier débloqué = 1 crédit (CV + lettre). Les téléchargements ne consomment jamais de crédit.
+ * 1 dossier débloqué = 1 crédit = 2 documents au choix (CV + lettre, 2 CV ou 2 lettres). Les téléchargements ne consomment jamais de crédit.
  */
 export const PLANS: Plan[] = [
   {
@@ -49,7 +49,7 @@ export const PLANS: Plan[] = [
     kind: 'credits',
     credits: 1,
     description: 'Un dossier complet, prêt à envoyer.',
-    features: ['1 dossier (CV + lettre)', ...DOSSIER_QUALITY_FEATURES],
+    features: ['1 dossier : 2 documents au choix (CV ou lettre)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'pack_10',
@@ -58,7 +58,7 @@ export const PLANS: Plan[] = [
     kind: 'credits',
     credits: 10,
     description: 'Idéal pour multiplier les candidatures.',
-    features: ['10 dossiers (CV + lettre chacun)', ...DOSSIER_QUALITY_FEATURES],
+    features: ['10 dossiers (2 documents au choix chacun)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'illimite',

@@ -14,29 +14,29 @@ describe('snapshotDocKey', () => {
 })
 
 describe('decideDossierSlot', () => {
-  it('retéléchargement du même CV : déjà dans le dossier', () => {
+  it('retéléchargement du même document : déjà dans le dossier', () => {
     expect(decideDossierSlot(['cv:a'], 'cv:a')).toBe('known')
   })
 
-  it('la lettre rejoint un dossier qui ne contient que le CV', () => {
+  it('2 documents au choix : CV + lettre, lettre + CV, 2 CV ou 2 lettres', () => {
     expect(decideDossierSlot(['cv:a'], 'letter:l1')).toBe('free-slot')
+    expect(decideDossierSlot(['letter:l1'], 'cv:a')).toBe('free-slot')
+    expect(decideDossierSlot(['cv:a'], 'cv:b')).toBe('free-slot')
+    expect(decideDossierSlot(['letter:l1'], 'letter:l2')).toBe('free-slot')
   })
 
-  it('un autre CV ne rentre pas dans le dossier payé', () => {
+  it('un 3e document demande une nouvelle offre', () => {
     expect(decideDossierSlot(['cv:a', 'letter:l1'], 'cv:b')).toBe('slot-taken')
-    expect(decideDossierSlot(['cv:a'], 'cv:b')).toBe('slot-taken')
+    expect(decideDossierSlot(['cv:a', 'cv:b'], 'letter:l1')).toBe('slot-taken')
+    expect(decideDossierSlot(['letter:l1', 'letter:l2'], 'letter:l3')).toBe('slot-taken')
   })
 
-  it('une autre lettre ne rentre pas dans le dossier payé', () => {
-    expect(decideDossierSlot(['cv:a', 'letter:l1'], 'letter:l2')).toBe('slot-taken')
-  })
-
-  it("ancien format sans id : le premier document identifié adopte l'emplacement", () => {
+  it("ancien format sans id : le premier document identifié de ce type le remplace", () => {
     expect(decideDossierSlot(['cv'], 'cv:a')).toBe('adopt-legacy')
     expect(decideDossierSlot(['cv', 'letter'], 'letter:l1')).toBe('adopt-legacy')
   })
 
-  it('dossier vide : emplacement libre', () => {
+  it('dossier vide : place libre', () => {
     expect(decideDossierSlot([], 'cv:a')).toBe('free-slot')
   })
 })

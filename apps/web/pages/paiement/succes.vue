@@ -325,7 +325,7 @@ onMounted(async () => {
           </UiButton>
         </NuxtLink>
         <p class="text-xs text-center text-on-surface-variant px-2">
-          Votre dossier (CV + lettre) est inclus — aucun crédit supplémentaire requis.
+          Votre dossier (2 documents au choix : CV ou lettre) est inclus — aucun crédit supplémentaire requis.
         </p>
       </div>
 

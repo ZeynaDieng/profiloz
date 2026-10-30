@@ -184,10 +184,10 @@ export const MSG = {
     ] as const,
     successCrossSellCvTitle: 'Votre dossier inclut aussi une lettre de motivation',
     successCrossSellCvBody:
-      '1 dossier = 1 CV + 1 lettre. Créez votre lettre maintenant — téléchargement inclus, sans repayer.',
+      '1 dossier = 2 documents au choix. Créez votre lettre maintenant — téléchargement inclus, sans repayer.',
     successCrossSellLetterTitle: 'Votre dossier inclut aussi un CV',
     successCrossSellLetterBody:
-      '1 dossier = 1 CV + 1 lettre. Créez ou retrouvez votre CV pour l’envoyer avec votre lettre — sans repayer.',
+      '1 dossier = 2 documents au choix. Créez ou retrouvez votre CV pour l’envoyer avec votre lettre — sans repayer.',
     successCrossSellCtaLetter: 'Créer ma lettre incluse',
     successCrossSellCtaCv: 'Créer mon CV inclus',
     successCrossSellDashboard: 'Voir mon tableau de bord',

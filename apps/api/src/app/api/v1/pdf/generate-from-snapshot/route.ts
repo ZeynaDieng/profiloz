@@ -16,8 +16,8 @@ export async function POST(request: Request) {
     const resumeId = typeof body.resumeId === 'string' ? body.resumeId : undefined
     const owner = { userId: ctx.userId, guestSessionDbId: ctx.guestSessionDbId, resumeId }
 
-    // 1 dossier = CV + lettre : débloquer immédiatement au premier téléchargement
-    // (pas après génération PDF), pour que le 2e document du duo reste gratuit.
+    // Dossier = 2 documents au choix : débloquer avant la génération PDF,
+    // pour qu'un échec n'empêche pas de réessayer gratuitement.
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
     } else {

@@ -178,14 +178,21 @@ onMounted(async () => {
       } else if (isExplicitNew) {
         const { new: _new, fresh: _fresh, flow: _flow, ...keptQuery } = route.query
         const paidName = resumeStore.current?.personalInfo?.fullName?.trim()
-        // Le CV du dossier payé serait remplacé : prévenir avant (un autre CV demande une nouvelle offre)
-        const keepPaidCv = isPaidGuestDossierActive()
-          && resumeStore.current
-          && isResumeSnapshotValid(resumeStore.current)
-          && !(await useConfirm().confirm(
-            `Votre dossier payé contient le CV${paidName ? ` de ${paidName}` : ''}. Un nouveau CV le remplacera dans l'éditeur, et son téléchargement nécessitera une nouvelle offre. Vous pourrez revenir à votre CV payé avec « Reprendre » ou le lien « Reprendre mon dossier » reçu par e-mail.`,
-            { title: 'Commencer un nouveau CV ?', confirmLabel: 'Nouveau CV', cancelLabel: 'Garder mon CV payé' },
+        // Le CV du dossier payé quitte l'éditeur : prévenir, en disant si ce nouveau CV reste inclus (2 documents par dossier)
+        let keepPaidCv = false
+        if (isPaidGuestDossierActive() && resumeStore.current && isResumeSnapshotValid(resumeStore.current)) {
+          const usedDocuments = await usePaymentService()
+            .getEntitlements({ withDrafts: true })
+            .then((entitlements) => entitlements.downloadedDocIds?.length ?? 0)
+            .catch(() => 0)
+          const costNote = usedDocuments < 2
+            ? 'Ce nouveau CV utilisera le second document inclus dans votre dossier.'
+            : 'Votre dossier contient déjà ses 2 documents : ce nouveau CV nécessitera une nouvelle offre.'
+          keepPaidCv = !(await useConfirm().confirm(
+            `Votre CV${paidName ? ` de ${paidName}` : ''} va être remplacé dans l'éditeur. ${costNote} Vous pourrez le retrouver avec « Reprendre » ou le lien « Reprendre mon dossier » reçu par e-mail.`,
+            { title: 'Commencer un nouveau CV ?', confirmLabel: 'Nouveau CV', cancelLabel: 'Garder mon CV' },
           ))
+        }
 
         if (keepPaidCv) {
           if (requestedSlug !== resumeStore.current?.templateSlug) resumeStore.setTemplate(requestedSlug)

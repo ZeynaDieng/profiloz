@@ -50,9 +50,7 @@ const returnTo = computed(() =>
 const fromOtherDocument = computed(() => route.query.reason === 'other-document')
 const fromPaywall = computed(() => route.query.reason === 'unlock' || fromOtherDocument.value)
 const otherDocumentMessage = computed(() =>
-  route.query.kind === 'letter'
-    ? 'Votre dossier payé contient déjà une autre lettre : elle reste modifiable et retéléchargeable gratuitement. Cette nouvelle lettre nécessite une nouvelle offre.'
-    : 'Votre dossier payé contient déjà un autre CV : il reste modifiable et retéléchargeable gratuitement. Ce nouveau CV nécessite une nouvelle offre.',
+  `Votre dossier payé contient déjà ses 2 documents : ils restent modifiables et retéléchargeables gratuitement. ${route.query.kind === 'letter' ? 'Cette nouvelle lettre nécessite' : 'Ce nouveau CV nécessite'} une nouvelle offre.`,
 )
 const fromCompleted = computed(() => route.query.reason === 'completed')
 
@@ -140,7 +138,7 @@ async function onChoose(plan: PlanDto) {
       </div>
       <div>
         <strong class="font-extrabold text-sm sm:text-base block mb-0.5 text-amber-950 dark:text-amber-100">Votre offre précédente est 100% terminée !</strong>
-        Vous avez téléchargé avec succès votre dossier complet (CV + Bonus). Pour débloquer votre nouveau document, choisissez une nouvelle formule ci-dessous.
+        Vous avez téléchargé les 2 documents de votre dossier. Pour débloquer votre nouveau document, choisissez une nouvelle formule ci-dessous.
       </div>
     </div>
 
