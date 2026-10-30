@@ -25,12 +25,9 @@ async function registerGuestSession() {
     localStorage.setItem('profiloz:guest-session', id)
   }
 
-  const { request } = useApiClient()
+  const { post } = useApiClient()
   try {
-    await request('/guest/session', {
-      method: 'POST',
-      body: JSON.stringify({ sessionId: id }),
-    })
+    await post('/guest/session', { sessionId: id })
   } catch {
     // Session locale conservée si l'API est temporairement indisponible
   }

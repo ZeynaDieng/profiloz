@@ -23,3 +23,24 @@ export const WIZARD_STEPS = [
 ] as const
 
 export { TEMPLATE_SLUGS } from './templates.js'
+
+/** Modèles de lettre de motivation (champ `templateId` en base, texte libre). */
+export const COVER_LETTER_TEMPLATE_SLUGS = [
+  'CLASSIQUE',
+  'MODERNE',
+  'ACCENT',
+  'PROFESSIONNEL',
+  'CREATIF',
+  'TECH_LEAD',
+  'ELEGANCE',
+  'IMPACT',
+  'CABINET',
+  'ACADEMIQUE',
+  'ATELIER',
+  'CLINIQUE',
+  'DUOTONE',
+  'CHRONOS',
+  'ATS_FRIENDLY',
+] as const
+
+export type CoverLetterTemplateSlug = (typeof COVER_LETTER_TEMPLATE_SLUGS)[number]

@@ -28,7 +28,7 @@ function removeItem(index: number) {
 
 function moveUp(index: number) {
   if (index <= 0) return
-  const item = model.value[index]
+  const item = model.value[index]!
   model.value.splice(index, 1)
   model.value.splice(index - 1, 0, item)
   useResumeStore().setTemplateConfig({ customOrder: true })
@@ -36,7 +36,7 @@ function moveUp(index: number) {
 
 function moveDown(index: number) {
   if (index >= model.value.length - 1) return
-  const item = model.value[index]
+  const item = model.value[index]!
   model.value.splice(index, 1)
   model.value.splice(index + 1, 0, item)
   useResumeStore().setTemplateConfig({ customOrder: true })
@@ -56,7 +56,7 @@ function dropItem(event: DragEvent, toIndex: number) {
   const fromIndex = draggedIndex.value
   if (fromIndex === null || fromIndex === toIndex) return
 
-  const item = model.value[fromIndex]
+  const item = model.value[fromIndex]!
   model.value.splice(fromIndex, 1)
   model.value.splice(toIndex, 0, item)
   draggedIndex.value = null

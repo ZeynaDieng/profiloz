@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { TEMPLATE_CATALOG } from '@profiloz/shared'
 
 const props = defineProps<{
   modelValue: boolean // active state
@@ -14,13 +15,14 @@ interface TourStep {
   title: string
   content: string
   section?: string
+  icon?: string
 }
 
 const steps: TourStep[] = [
   {
     target: '#tour-template-selector',
     title: '🎨 Choix du modèle',
-    content: 'Sélectionnez le design de votre CV parmi nos 23 modèles professionnels. Vos données sont conservées et adaptées instantanément à chaque style.',
+    content: `Sélectionnez le design de votre CV parmi nos ${TEMPLATE_CATALOG.length} modèles professionnels. Vos données sont conservées et adaptées instantanément à chaque style.`,
   },
   {
     target: '[data-section-id="personal"]',
@@ -286,7 +288,7 @@ watch(openSectionState, () => {
       <!-- En-tête -->
       <div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
         <h4 class="text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-          <UiPzIcon v-if="(currentStep as any)?.icon" :name="(currentStep as any).icon" class="text-base text-primary shrink-0" />
+          <UiPzIcon v-if="currentStep?.icon" :name="currentStep.icon" class="text-base text-primary shrink-0" />
           <span>{{ currentStep?.title }}</span>
         </h4>
         <span class="text-[10px] font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10 select-none">

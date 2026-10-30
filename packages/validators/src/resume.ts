@@ -90,6 +90,7 @@ export const updateResumeSchema = z.object({
       margins: z.number().optional(),
       lineHeight: z.number().optional(),
       typography: z.string().optional(),
+      customOrder: z.boolean().optional(),
     })
     .optional(),
   personalInfo: personalInfoSchema.optional(),
@@ -144,6 +145,7 @@ export const saveResumeSnapshotSchema = z.object({
       margins: z.number().optional(),
       lineHeight: z.number().optional(),
       typography: z.string().optional(),
+      customOrder: z.boolean().optional(),
     })
     .default({}),
   personalInfo: personalInfoSchema.default({}),

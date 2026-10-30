@@ -7,7 +7,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   devServer: {
     port: 3000,
-    strictPort: true,
   },
 
   // ─── Modules ──────────────────────────────────────────────────────
@@ -107,7 +106,10 @@ export default defineNuxtConfig({
     enabled: false,
   },
 
+  // ─── Nitro (serveur) ─────────────────────────────────────────────
   nitro: {
+    // Compression automatique des réponses
+    compressPublicAssets: true,
     devProxy: {
       '/api/v1': {
         target: process.env.NUXT_API_INTERNAL_BASE_URL || 'http://localhost:3001/api/v1',
@@ -204,12 +206,6 @@ export default defineNuxtConfig({
     '/_nuxt/**': {
       headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
     },
-  },
-
-  // ─── Nitro (serveur) ─────────────────────────────────────────────
-  nitro: {
-    // Compression automatique des réponses
-    compressPublicAssets: true,
   },
 
   // ─── Vite ────────────────────────────────────────────────────────

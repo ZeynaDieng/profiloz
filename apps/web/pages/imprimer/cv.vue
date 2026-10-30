@@ -31,6 +31,10 @@ const { data: resume, error: fetchError } = await useAsyncData(
   { watch: [renderId] },
 )
 
+const printErrorMessage = computed(
+  () => fetchError.value?.message || MSG.error.loadPrintCv,
+)
+
 onMounted(() => {
   if (import.meta.client) {
     const applySinglePageClass = async () => {

@@ -116,8 +116,8 @@ export function useGuestDownload() {
       }
 
       if (authStore.isAuthenticated && kind === 'letter') {
-        const letterId =
-          typeof useRoute().query.letterId === 'string' ? useRoute().query.letterId : null
+        const queryLetterId = useRoute().query.letterId
+        const letterId = typeof queryLetterId === 'string' ? queryLetterId : null
         if (letterId) {
           const { filename } = await coverLetterService.downloadPdf(letterId)
           markGuestDossierDownload('letter', letterId)

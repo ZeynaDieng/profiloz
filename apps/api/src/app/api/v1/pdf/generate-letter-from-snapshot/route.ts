@@ -1,4 +1,4 @@
-import { buildCoverLetterTitle } from '@profiloz/shared'
+import { COVER_LETTER_TEMPLATE_SLUGS, buildCoverLetterTitle, type CoverLetterTemplateSlug } from '@profiloz/shared'
 import { paymentService } from '@/modules/payment/payment.service'
 import { pdfService, type CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
@@ -7,12 +7,10 @@ import { requireGuestOrAuth } from '@/lib/request-context'
 
 import { sendEmailTemplate } from '@/lib/email/mail.service'
 
-const COVER_LETTER_TEMPLATE_SLUGS = ['CLASSIQUE', 'MODERNE', 'ACCENT', 'PROFESSIONNEL', 'CREATIF'] as const
-
-function normalizeCoverLetterTemplateSlug(value?: string): (typeof COVER_LETTER_TEMPLATE_SLUGS)[number] {
+function normalizeCoverLetterTemplateSlug(value?: string): CoverLetterTemplateSlug {
   const upper = value?.toUpperCase()
   if (upper && (COVER_LETTER_TEMPLATE_SLUGS as readonly string[]).includes(upper)) {
-    return upper as (typeof COVER_LETTER_TEMPLATE_SLUGS)[number]
+    return upper as CoverLetterTemplateSlug
   }
   return 'CLASSIQUE'
 }

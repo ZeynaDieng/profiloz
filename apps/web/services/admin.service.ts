@@ -1,3 +1,4 @@
+import type { AuthUser } from '~/types/auth'
 import type { OrganizationType, Plan } from '@profiloz/shared'
 import type { OrgRole } from '@profiloz/shared'
 
@@ -127,7 +128,7 @@ export function useAdminService() {
 
   async function impersonateUser(id: string) {
     return post<{
-      user: { id: string; email: string; role: string; firstName?: string | null; lastName?: string | null }
+      user: AuthUser
       accessToken: string
       refreshToken: string
       impersonatedBy: string | null

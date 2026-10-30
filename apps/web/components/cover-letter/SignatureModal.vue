@@ -65,11 +65,10 @@ function stopDrawing() {
 function getPos(e: MouseEvent | TouchEvent) {
   const canvas = canvasRef.value!
   const rect = canvas.getBoundingClientRect()
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+  const point = 'touches' in e ? (e.touches[0] ?? e.changedTouches[0]) : e
   return {
-    x: clientX - rect.left,
-    y: clientY - rect.top,
+    x: (point?.clientX ?? rect.left) - rect.left,
+    y: (point?.clientY ?? rect.top) - rect.top,
   }
 }
 

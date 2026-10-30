@@ -92,6 +92,8 @@ export interface TemplateConfig {
   margins?: number
   lineHeight?: number
   typography?: string
+  /** Ordre manuel des expériences / formations (sinon tri chronologique). */
+  customOrder?: boolean
 }
 
 export interface ResumeMetadata {

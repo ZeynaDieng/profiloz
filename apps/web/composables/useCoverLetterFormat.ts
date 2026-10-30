@@ -50,7 +50,7 @@ export function useCoverLetterFormat(letter: MaybeRefOrGetter<CoverLetterSnapsho
     })
     const loc = snapshot.value.senderLocation?.trim()
     if (loc) {
-      const city = loc.split(',')[0].trim()
+      const city = loc.split(',')[0]!.trim()
       return `Fait à ${city}, le ${dateStr}`
     }
     return `Fait le ${dateStr}`

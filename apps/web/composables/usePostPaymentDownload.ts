@@ -20,6 +20,8 @@ import { saveLastPurchasedPlan } from '~/utils/payment-purchase'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 import { buildResumePdfFilename } from '~/utils/resumePdfFilename'
+import { defaultLetterAccentColor } from '~/utils/template-accent-colors'
+import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { buildCoverLetterPdfFilename } from '~/utils/coverLetterPdfFilename'
 
 const POLL_INTERVAL_MS = 800
@@ -217,11 +219,17 @@ export function usePostPaymentDownload() {
       id: 'letter-1',
       templateSlug: 'CLASSIQUE',
       senderName: 'Aminata Diallo',
-      recipientName: 'Responsable des Ressources Humaines',
-      jobTitle: 'Chef de Projet Marketing',
+      senderEmail: '',
+      senderPhone: '',
+      senderLocation: '',
+      recruiterName: 'Responsable des Ressources Humaines',
+      position: 'Chef de Projet Marketing',
       companyName: 'Société X',
+      companyAddress: '',
       content: 'Madame, Monsieur,\n\nC’est avec un grand intérêt que je vous adresse ma candidature pour le poste de Chef de Projet.\nFort de plusieurs années d’expérience dans la gestion de projets et le marketing stratégique, j’ai développé une solide expertise.\n\nJe reste à votre disposition pour un entretien.\n\nCordialement,\nAminata Diallo',
-      fontSize: 'medium',
+      closingText: DEFAULT_CLOSING_TEXT,
+      accentColor: defaultLetterAccentColor('CLASSIQUE'),
+      lastModified: new Date().toISOString(),
     }
     return coverLetterStore.toSnapshot()
   }

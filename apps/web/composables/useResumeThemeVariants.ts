@@ -214,7 +214,7 @@ export function useResumeThemeVariants() {
     }
 
     // Sinon, retourner la variante par défaut
-    return variants[0]
+    return variants[0] ?? null
   }
 
   /**

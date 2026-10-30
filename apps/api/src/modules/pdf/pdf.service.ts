@@ -184,6 +184,17 @@ async function renderPdfFromPrintUrl(printUrl: string): Promise<Buffer> {
           new Promise<void>((resolve) => setTimeout(resolve, 2500)),
         ])
       }
+      // page.pdf() n'attend pas les images : sans ça, la photo de profil peut manquer dans le PDF
+      const pendingImages = Array.from(document.images)
+        .filter((img) => !img.complete)
+        .map((img) => new Promise<void>((resolve) => {
+          img.addEventListener('load', () => resolve(), { once: true })
+          img.addEventListener('error', () => resolve(), { once: true })
+        }))
+      await Promise.race([
+        Promise.all(pendingImages),
+        new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+      ])
     })
 
     return Buffer.from(

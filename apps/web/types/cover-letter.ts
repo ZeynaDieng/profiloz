@@ -1,12 +1,6 @@
-export const COVER_LETTER_TEMPLATE_SLUGS = [
-  'CLASSIQUE',
-  'MODERNE',
-  'ACCENT',
-  'PROFESSIONNEL',
-  'CREATIF',
-] as const
+import { COVER_LETTER_TEMPLATE_SLUGS, type CoverLetterTemplateSlug } from '@profiloz/shared'
 
-export type CoverLetterTemplateSlug = (typeof COVER_LETTER_TEMPLATE_SLUGS)[number]
+export { COVER_LETTER_TEMPLATE_SLUGS, type CoverLetterTemplateSlug }
 
 export interface CoverLetterTemplateDefinition {
   slug: CoverLetterTemplateSlug

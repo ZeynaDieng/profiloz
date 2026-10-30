@@ -31,7 +31,7 @@ export function useFormValidation() {
     }
   }
 
-  function setFromZod(error: FieldValidationResult, summary = MSG.validation.invalidData) {
+  function setFromZod(error: FieldValidationResult, summary: string = MSG.validation.invalidData) {
     clearAll()
     for (const issue of error.errors) {
       const key = String(issue.path[0] ?? '')
@@ -59,7 +59,7 @@ export function useFormValidation() {
   }
 
   /** Affiche le résumé + scroll vers le premier champ en erreur. */
-  function announceFormError(summary = MSG.validation.invalidData) {
+  function announceFormError(summary: string = MSG.validation.invalidData) {
     formError.value = summary
     const toast = useAppToast()
     toast.error(summary)

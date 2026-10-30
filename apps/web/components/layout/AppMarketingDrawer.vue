@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
 const route = useRoute()
 const authStore = useAuthStore()
 const { open, closeMenu, menuTriggerRef } = useMarketingMenuState()
@@ -6,12 +7,12 @@ const closeButtonRef = ref<HTMLButtonElement | null>(null)
 
 useDrawerA11y(open, closeButtonRef, menuTriggerRef)
 
-const marketingLinks = [
+const marketingLinks: { href?: string; to?: RouteLocationRaw; label: string; icon: string; isRoute?: boolean }[] = [
   { href: '#features', label: 'Fonctionnalités', icon: 'auto_awesome' },
   { href: '/#templates', label: 'Modèles', icon: 'description', isRoute: true },
   { to: { path: '/', hash: '#tarifs' }, label: 'Tarifs', icon: 'payments', isRoute: true },
   { to: '/faq', label: 'Questions fréquentes', icon: 'help', isRoute: true },
-] as const
+]
 
 onMounted(() => {
   authStore.loadFromStorage()
@@ -62,8 +63,8 @@ watch(
               class="mobile-drawer-item is-visible"
             >
               <NuxtLink
-                v-if="'isRoute' in link && link.isRoute"
-                :to="'to' in link ? link.to : link.href"
+                v-if="link.isRoute"
+                :to="link.to ?? link.href ?? '/'"
                 class="mobile-drawer-link group"
                 @click="closeMenu"
               >

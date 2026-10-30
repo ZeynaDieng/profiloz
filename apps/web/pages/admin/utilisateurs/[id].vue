@@ -97,9 +97,8 @@ async function impersonate() {
 
 async function removeUser() {
   if (!user.value || user.value.role === 'ADMIN') return
-  const accepted = await confirm({
+  const accepted = await confirm('Cette action est irréversible. Tous les dossiers associés seront supprimés.', {
     title: 'Supprimer cet utilisateur ?',
-    message: 'Cette action est irréversible. Tous les dossiers associés seront supprimés.',
     confirmLabel: 'Supprimer',
     destructive: true,
   })

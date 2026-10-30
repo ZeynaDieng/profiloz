@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { LanguageLevel, ResumeSnapshot } from '@profiloz/shared'
+import type { ResumeSnapshot } from '@profiloz/shared'
+import { languageLevelPercent } from '~/utils/resume-template-style'
 import { formatDateRange } from '~/composables/useResumeSections'
 import { formatEducationPeriod } from '~/utils/education'
 
@@ -32,15 +33,9 @@ const accentLight = computed(() => {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
 })
 
-const LANGUAGE_BAR_WIDTH: Record<LanguageLevel, number> = {
-  BASIC: 25,
-  CONVERSATIONAL: 50,
-  PROFESSIONAL: 75,
-  NATIVE: 100,
-}
-
-function languageBarWidth(level?: LanguageLevel) {
-  return level ? LANGUAGE_BAR_WIDTH[level] : 50
+// Les niveaux de langue arrivent déjà formatés (libellés)
+function languageBarWidth(level?: string) {
+  return level ? languageLevelPercent(level) : 50
 }
 
 function descriptionLines(description?: string) {

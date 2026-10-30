@@ -1,3 +1,5 @@
+import { MSG } from '@profiloz/shared'
+
 export function isPaymentRequiredError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
   const problem = err as {
@@ -18,7 +20,7 @@ export function isPaymentRequiredError(err: unknown): boolean {
   return false
 }
 
-export function parseApiAuthError(err: unknown, fallback = MSG.error.generic): string {
+export function parseApiAuthError(err: unknown, fallback: string = MSG.error.generic): string {
   if (!err || typeof err !== 'object') {
     return MSG.network.contactFailed
   }
@@ -81,7 +83,7 @@ function translateValidationMessage(message: string): string {
 
 export function formatValidationErrors(
   errors?: Array<{ message: string }>,
-  fallback = MSG.validation.invalidData,
+  fallback: string = MSG.validation.invalidData,
 ): string {
   if (!errors?.length) return fallback
   return errors.map((e) => translateValidationMessage(e.message)).join('. ')

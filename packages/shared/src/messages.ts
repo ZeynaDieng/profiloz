@@ -62,6 +62,7 @@ export const MSG = {
     error: 'Impossible de générer votre lettre pour le moment.',
     createError: 'Impossible de créer votre lettre pour le moment.',
     saveError: "Impossible d'enregistrer votre lettre pour le moment.",
+    loadError: 'Impossible de charger votre lettre pour le moment.',
   },
 
   letterPdf: {

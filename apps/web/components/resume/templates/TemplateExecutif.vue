@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { LanguageLevel, ResumeSnapshot } from '@profiloz/shared'
+import type { ResumeSnapshot } from '@profiloz/shared'
+import { languageLevelDots as languageLevelDotCount } from '~/utils/resume-template-style'
 import { formatDateRange } from '~/composables/useResumeSections'
 import { formatEducationPeriod } from '~/utils/education'
 
@@ -23,27 +24,10 @@ const mainText = '#2d3436'
 const accentColor = '#6366f1'
 const secondaryText = '#64748b'
 
-const LANGUAGE_LABELS: Record<LanguageLevel, string> = {
-  NATIVE: 'Bilingue',
-  PROFESSIONAL: 'Courant',
-  CONVERSATIONAL: 'Intermédiaire',
-  BASIC: 'Niveau scolaire',
-}
-
-const LANGUAGE_LEVELS: Record<LanguageLevel, number> = {
-  NATIVE: 5,
-  PROFESSIONAL: 4,
-  CONVERSATIONAL: 3,
-  BASIC: 2,
-}
-
-function formatLanguageLevel(level?: LanguageLevel) {
-  return level ? LANGUAGE_LABELS[level] : ''
-}
-
-function languageLevelDots(level?: LanguageLevel) {
+// Les niveaux de langue arrivent déjà formatés (libellés)
+function languageLevelDots(level?: string) {
   const max = 5
-  const current = level ? LANGUAGE_LEVELS[level] : 0
+  const current = level ? languageLevelDotCount(level) : 0
   return Array.from({ length: max }, (_, i) => i < current)
 }
 

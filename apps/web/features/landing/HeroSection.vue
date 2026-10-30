@@ -39,18 +39,18 @@ useHead({
     ...(hasMobilePhoto.value
       ? [{
           rel: 'preload',
-          as: 'image',
+          as: 'image' as const,
           href: heroBannerMobileSrc.value,
           media: '(max-width: 1023px)',
-          fetchpriority: 'high',
+          fetchpriority: 'high' as const,
         }]
       : []),
     {
       rel: 'preload',
-      as: 'image',
+      as: 'image' as const,
       href: heroBannerSrc.value,
       media: '(min-width: 1024px)',
-      fetchpriority: 'high',
+      fetchpriority: 'high' as const,
     },
   ],
 })

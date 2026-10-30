@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MSG, type TemplateSlug } from '@profiloz/shared'
+import { MSG, type ResumeSnapshot, type TemplateSlug } from '@profiloz/shared'
 import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 import { hasDossierDownloadAccess } from '~/utils/dossier-access'
 import { summarizeEntitlements } from '~/utils/entitlements-summary'
@@ -58,7 +58,7 @@ function isResumeSnapshotValid(snap: any): boolean {
 
 function isLetterSnapshotValid(draft: any): boolean {
   if (!draft || typeof draft !== 'object') return false
-  return Boolean(draft.content?.trim() || draft.senderName?.trim() || draft.recipientName?.trim())
+  return Boolean(draft.content?.trim() || draft.senderName?.trim() || draft.recruiterName?.trim())
 }
 
 const currentResumeSnapshot = computed(() => {

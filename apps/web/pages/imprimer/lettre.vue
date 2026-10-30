@@ -55,6 +55,10 @@ const letter = computed<CoverLetterSnapshot | null>(() => {
   })
 })
 
+const printErrorMessage = computed(
+  () => fetchError.value?.message || MSG.error.loadPrintLetter,
+)
+
 onMounted(() => {
   if (import.meta.client) {
     const applySinglePageClass = async () => {

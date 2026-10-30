@@ -16,7 +16,8 @@ export function useImportFlow(documentType: DocumentType) {
   const documentId = ref('')
   const mimeType = ref('')
   const extractedData = ref<Partial<ResumeSnapshot>>({})
-  const machineParsed = ref<Partial<ResumeSnapshot>>({})
+  // Données brutes de l'API, avec les métadonnées d'extraction (score de confiance)
+  const machineParsed = ref<Partial<ResumeSnapshot> & { _extraction?: { confidence?: { overall?: number } } }>({})
   const errorMessage = ref('')
 
   let progressTimer: ReturnType<typeof setInterval> | undefined

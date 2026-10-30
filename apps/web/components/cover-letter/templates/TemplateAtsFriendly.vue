@@ -19,7 +19,7 @@ const {
       <!-- Plain Text Header -->
       <div class="text-center mb-6">
         <h2 class="text-lg font-bold uppercase mb-1">
-          {{ senderLines[0] || letter.fullName }}
+          {{ senderLines[0] || letter.senderName }}
         </h2>
         <div class="text-xs text-slate-600">
           {{ senderLines.slice(1).join('  |  ') }}

@@ -1,13 +1,8 @@
 import { z } from 'zod'
+import { COVER_LETTER_TEMPLATE_SLUGS } from '@profiloz/shared'
 import './error-map.js'
 
-export const COVER_LETTER_TEMPLATE_IDS = [
-  'CLASSIQUE',
-  'MODERNE',
-  'ACCENT',
-  'PROFESSIONNEL',
-  'CREATIF',
-] as const
+export const COVER_LETTER_TEMPLATE_IDS = COVER_LETTER_TEMPLATE_SLUGS
 
 const templateIdSchema = z.enum(COVER_LETTER_TEMPLATE_IDS).default('CLASSIQUE')
 

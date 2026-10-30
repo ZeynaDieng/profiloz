@@ -57,7 +57,7 @@ const userSnapshotForPreview = computed(() => {
 const activeDraftName = computed(() => {
   if (!authStore.isAuthenticated) return ''
   const p = resumeStore.current?.personalInfo
-  const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
+  const name = p?.fullName?.trim()
   if (name) return name
   if (resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length) return 'CV en cours'
   return ''

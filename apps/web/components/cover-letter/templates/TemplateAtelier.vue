@@ -20,7 +20,7 @@ const {
       <div class="grid grid-cols-12 gap-6 mb-10 pb-6 border-b border-amber-900/20">
         <div class="col-span-8">
           <h2 class="text-xl font-bold tracking-wide text-amber-950">
-            {{ senderLines[0] || letter.fullName }}
+            {{ senderLines[0] || letter.senderName }}
           </h2>
           <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-2 text-xs font-sans text-amber-900/60">
             <span v-for="(line, i) in senderLines.slice(1)" :key="i">{{ line }}</span>

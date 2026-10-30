@@ -33,8 +33,8 @@ export interface SeoPageOptions {
   description?: string
   /** Image OG/Twitter (chemin relatif ou URL absolue). Défaut: /logo.png */
   image?: string
-  /** Type OG : 'website' | 'article' | 'product'. Défaut: 'website' */
-  type?: 'website' | 'article' | 'product'
+  /** Type OG : 'website' | 'article'. Défaut: 'website' */
+  type?: 'website' | 'article'
   /** Si true, ajoute noindex,nofollow */
   noindex?: boolean
   /** Keywords meta (optionnel) */

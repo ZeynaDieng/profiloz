@@ -20,7 +20,7 @@ const {
       <aside class="col-span-4 bg-slate-100 -ml-[20mm] -my-[20mm] p-6 text-slate-800 flex flex-col gap-6">
         <div>
           <h2 class="text-lg font-bold tracking-tight text-slate-900 leading-none">
-            {{ senderLines[0] || letter.fullName }}
+            {{ senderLines[0] || letter.senderName }}
           </h2>
           <p class="text-[8pt] uppercase tracking-widest text-slate-500 mt-2 font-bold">{{ letter.position || 'Candidat' }}</p>
         </div>

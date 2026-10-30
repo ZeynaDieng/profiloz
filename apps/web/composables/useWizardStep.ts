@@ -1,3 +1,5 @@
+import type { ShallowRef } from 'vue'
+
 export interface WizardStepConfig {
   nextLabel: string
   showBack: boolean

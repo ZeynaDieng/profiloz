@@ -90,7 +90,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => [props.resume.templateSlug, props.resume.accentColor],
+  () => [props.resume.templateSlug, props.resume.templateConfig.accentColor],
   () => {
     if (overflowTimer) clearTimeout(overflowTimer)
     overflowTimer = setTimeout(checkOverflow, 200)

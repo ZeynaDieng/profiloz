@@ -42,8 +42,8 @@ function parseDateString(dateStr?: string | null, preferLastYear = false): Date 
   // 3. Format MM/YYYY
   const slashMatch = clean.match(/^(\d{1,2})\/(\d{4})$/)
   if (slashMatch) {
-    const month = parseInt(slashMatch[1], 10) - 1
-    const year = parseInt(slashMatch[2], 10)
+    const month = parseInt(slashMatch[1]!, 10) - 1
+    const year = parseInt(slashMatch[2]!, 10)
     return new Date(year, month, 1)
   }
 
@@ -51,8 +51,8 @@ function parseDateString(dateStr?: string | null, preferLastYear = false): Date 
   const yearMatches = [...clean.matchAll(/\b(\d{4}|\d{2})\b/g)]
   if (yearMatches.length > 0) {
     // Si preferLastYear (ex: pour endDate) et qu'il y a plusieurs années dans la chaîne (ex: "2019-2022"), on prend la dernière
-    const selectedMatch = preferLastYear && yearMatches.length > 1 ? yearMatches[yearMatches.length - 1] : yearMatches[0]
-    let year = parseInt(selectedMatch[1], 10)
+    const selectedMatch = preferLastYear && yearMatches.length > 1 ? yearMatches[yearMatches.length - 1]! : yearMatches[0]!
+    let year = parseInt(selectedMatch[1]!, 10)
     if (year < 100) year += 2000
 
     let month = 0
@@ -113,7 +113,7 @@ function compareDates(
 export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
   const snapshot = computed(() => {
     const raw = toValue(resume)
-    const isCustomOrder = (raw.templateConfig as any)?.customOrder ?? false
+    const isCustomOrder = raw.templateConfig?.customOrder ?? false
 
     const experiences = isCustomOrder
       ? [...raw.experiences]
@@ -206,7 +206,7 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
     p,
     initials,
     contactItems,
-    showPhotoBlock: computed(() => resolveShowPhoto(snapshot.value)),
+    showPhotoBlock: computed(() => resolveShowPhoto(toValue(resume))),
     hasPhoto: computed(() => Boolean(p.value.photoUrl)),
     hasSummary: computed(() => Boolean(snapshot.value.summary)),
     hasExperiences: computed(() => snapshot.value.experiences.length > 0),

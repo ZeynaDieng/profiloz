@@ -9,7 +9,6 @@
  *
  * @see https://nuxtseo.com/sitemap/guides/dynamic-urls
  */
-import { defineSitemapEventHandler } from '#imports'
 
 export default defineSitemapEventHandler(async () => {
   /**

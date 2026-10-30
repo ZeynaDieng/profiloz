@@ -14,7 +14,7 @@ export function useApiClient() {
         try {
           const parts = token.split('.')
           if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1]))
+            const payload = JSON.parse(atob(parts[1]!))
             if (payload.exp && payload.exp * 1000 < Date.now()) {
               localStorage.removeItem('profiloz:access-token')
             } else {

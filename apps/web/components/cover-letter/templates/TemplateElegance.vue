@@ -19,7 +19,7 @@ const {
       <!-- Header -->
       <div class="text-center mb-12 border-b border-slate-200 pb-8">
         <h2 class="text-2xl font-serif tracking-widest uppercase text-slate-900 mb-2">
-          {{ senderLines[0] || letter.fullName }}
+          {{ senderLines[0] || letter.senderName }}
         </h2>
         <div class="flex flex-wrap justify-center gap-x-4 gap-y-0.5 text-xs text-slate-400 font-sans">
           <span v-for="(line, i) in senderLines.slice(1)" :key="i">{{ line }}</span>

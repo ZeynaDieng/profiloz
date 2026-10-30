@@ -36,6 +36,17 @@ export const LETTER_TEMPLATE_ACCENT_COLORS: Record<CoverLetterTemplateSlug, Temp
   ACCENT: { accent: '#7c3aed', canvas: '#f5f3ff' },
   PROFESSIONNEL: { accent: '#1d4ed8', canvas: '#dbeafe' },
   CREATIF: { accent: '#ea580c', canvas: '#fff7ed' },
+  // Couleurs reprises des teintes codées en dur dans chaque modèle
+  TECH_LEAD: { accent: '#0f172a', canvas: '#f1f5f9' },
+  ELEGANCE: { accent: '#1e293b', canvas: '#f8fafc' },
+  IMPACT: { accent: '#0f172a', canvas: '#f1f5f9' },
+  CABINET: { accent: '#0f1e36', canvas: '#eef1f6' },
+  ACADEMIQUE: { accent: '#1e293b', canvas: '#f8fafc' },
+  ATELIER: { accent: '#78350f', canvas: '#fdfaf6' },
+  CLINIQUE: { accent: '#134e4a', canvas: '#f0fdfa' },
+  DUOTONE: { accent: '#1e293b', canvas: '#f8fafc' },
+  CHRONOS: { accent: '#0f172a', canvas: '#f1f5f9' },
+  ATS_FRIENDLY: { accent: '#334155', canvas: '#f8fafc' },
 }
 
 const CV_FALLBACK: TemplateAccentColors = { accent: '#0051d5', canvas: '#eff4ff' }

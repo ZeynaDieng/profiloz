@@ -32,7 +32,7 @@ const userSnapshotForPreview = computed(() => {
 const activeDraftName = computed(() => {
   if (!authStore.isAuthenticated) return ''
   const p = resumeStore.current?.personalInfo
-  const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
+  const name = p?.fullName?.trim()
   if (name) return name
   if (resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length) return 'CV en cours'
   return ''
@@ -62,7 +62,7 @@ function useTemplate(slug: TemplateSlug) {
   }
 
   const p = resumeStore.current?.personalInfo
-  const hasData = Boolean((p?.firstName || p?.lastName || p?.fullName)?.trim() || resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length)
+  const hasData = Boolean(p?.fullName?.trim() || resumeStore.current?.experiences?.length || resumeStore.current?.skills?.length)
   if (hasData) {
     navigateTo('/creer/editeur')
   } else {

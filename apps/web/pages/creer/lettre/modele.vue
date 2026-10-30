@@ -115,7 +115,6 @@ function onContinue() {
         :key="template.slug"
         :slug="template.slug"
         :selected="selectedSlug === template.slug"
-        :resume-id="linkedResumeId"
         @select="selectTemplate"
       >
         <div class="min-w-0">

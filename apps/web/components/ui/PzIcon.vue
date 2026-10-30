@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { HTMLAttributes } from 'vue'
+
 const props = withDefaults(
   defineProps<{
     name: string
     filled?: boolean
-    class?: string
+    class?: HTMLAttributes['class']
   }>(),
   { filled: false },
 )

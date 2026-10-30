@@ -128,7 +128,7 @@ onMounted(() => {
 })
 
 watch(
-  () => [resumeStore.current?.id, resumeStore.current?.updatedAt],
+  () => resumeStore.current?.id,
   () => {
     if (!isHydratingFromStore.value) {
       loadFromStore()
@@ -194,9 +194,10 @@ function toggleSection(id: string, event?: Event) {
   const isOpening = openSection.value !== id
   openSection.value = isOpening ? id : ''
 
-  if (isOpening && event?.currentTarget) {
+  // currentTarget vaut null une fois l'événement terminé : le lire avant nextTick
+  const btn = event?.currentTarget as HTMLElement | null | undefined
+  if (isOpening && btn) {
     nextTick(() => {
-      const btn = event.currentTarget as HTMLElement
       btn.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   }
@@ -386,7 +387,7 @@ provideResumeEditorValidation({
           <UiMessageBanner
             v-if="sectionErrors[section.id]"
             variant="error"
-            :message="sectionErrors[section.id]"
+            :message="sectionErrors[section.id] ?? ''"
           />
 
           <template v-if="section.id === 'personal'">
@@ -498,7 +499,7 @@ provideResumeEditorValidation({
 
           <template v-else-if="section.id === 'parcours'">
             <div id="tour-field-experience" class="space-y-3">
-              <div v-if="(resumeStore.current?.templateConfig as any)?.customOrder" class="flex justify-end">
+              <div v-if="resumeStore.current?.templateConfig?.customOrder" class="flex justify-end">
                 <button
                   type="button"
                   class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95 shrink-0"
@@ -514,7 +515,7 @@ provideResumeEditorValidation({
 
           <template v-else-if="section.id === 'qualifications'">
             <div class="space-y-6">
-              <div v-if="(resumeStore.current?.templateConfig as any)?.customOrder" class="flex justify-end mb-1">
+              <div v-if="resumeStore.current?.templateConfig?.customOrder" class="flex justify-end mb-1">
                 <button
                   type="button"
                   class="text-[11px] font-bold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors active:scale-95 shrink-0"

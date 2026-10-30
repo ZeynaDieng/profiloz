@@ -14,6 +14,7 @@ import { buildPreviewSnapshot } from '~/features/templates/demoSnapshot'
 definePageMeta({ layout: false })
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const resumeStore = useResumeStore()
 const resumeService = useResumeService()
@@ -40,7 +41,7 @@ const previousDraftName = computed(() => {
   const snap = previousSavedDraft.value
   if (!snap) return ''
   const p = snap.personalInfo
-  const name = [p?.firstName, p?.lastName].filter(Boolean).join(' ').trim() || p?.fullName?.trim()
+  const name = p?.fullName?.trim()
   return name || (snap.experiences?.length ? 'Dernier CV rédigé' : '')
 })
 
@@ -178,6 +179,9 @@ onMounted(async () => {
         clearPaymentDraftBackup()
         resumeStore.startNewDraft()
         resumeStore.setTemplate(requestedSlug)
+        // Retirer le marqueur de l'URL : un rechargement (F5) ne doit pas effacer le brouillon en cours
+        const { new: _new, fresh: _fresh, flow: _flow, ...keptQuery } = route.query
+        void router.replace({ query: keptQuery })
       } else if (isImport || (resumeStore.current && isResumeSnapshotValid(resumeStore.current))) {
         // Importation de document -> CONSERVER ET PRÉ-REMPLIR TOUTES LES DONNÉES EXTRAITES !
         if (requestedSlug) {

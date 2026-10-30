@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DocumentType } from '@profiloz/shared'
+import { MSG, type DocumentType } from '@profiloz/shared'
 
 const props = defineProps<{
   accept?: string

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { AppNavItem } from '~/composables/useAppNavigation'
 const { primaryNavItems, isActive } = useAppNavigation()
 const { toggleDrawer } = useDrawerState()
 
-function navClass(item: (typeof primaryNavItems)[number]) {
+function navClass(item: AppNavItem) {
   return isActive(item)
     ? 'flex flex-col items-center justify-center gap-1 min-h-11 min-w-11 text-secondary font-bold text-label-xs'
     : 'flex flex-col items-center justify-center gap-1 min-h-11 min-w-11 text-on-surface-variant text-label-xs'
