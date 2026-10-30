@@ -28,6 +28,8 @@ const fallbackPlans: PlanDto[] = PLANS.map((plan) => ({
   description: plan.description,
   features: [...plan.features],
   popular: plan.popular,
+  priceUnit: plan.priceUnit,
+  priceFrom: plan.priceFrom,
 }))
 
 const plans = ref<PlanDto[]>([])

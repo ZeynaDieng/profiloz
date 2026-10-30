@@ -10,6 +10,8 @@ export interface PlanDto {
   description: string
   features: string[]
   popular?: boolean
+  priceUnit?: 'dossier' | 'pack' | 'mois'
+  priceFrom?: boolean
 }
 
 export interface Entitlements {

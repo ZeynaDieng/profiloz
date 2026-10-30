@@ -19,6 +19,10 @@ export interface Plan {
   description: string
   features: string[]
   popular?: boolean
+  /** Unité affichée après le prix : « FCFA / dossier », « FCFA / pack », « FCFA / mois ». */
+  priceUnit: 'dossier' | 'pack' | 'mois'
+  /** Prix de départ (tarif personnalisé au-delà) : affiché « À partir de ». */
+  priceFrom?: boolean
 }
 
 /** Fonctionnalités communes à tout dossier débloqué (crédits ou abonnement). */
@@ -44,30 +48,33 @@ const SUBSCRIPTION_CORE_FEATURES = [
 export const PLANS: Plan[] = [
   {
     slug: 'dossier_unique',
-    name: 'Dossier Unique',
-    priceXof: 300,
+    name: 'Dossier unique',
+    priceXof: 1000,
+    priceUnit: 'dossier',
     kind: 'credits',
     credits: 1,
-    description: 'Un dossier complet, prêt à envoyer.',
+    description: 'Pour les besoins ponctuels.',
     features: ['1 dossier : 2 documents au choix (CV ou lettre)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'pack_10',
-    name: 'Pack 10 Dossiers',
-    priceXof: 1500,
+    name: 'Pack 10 dossiers',
+    priceXof: 5000,
+    priceUnit: 'pack',
     kind: 'credits',
     credits: 10,
-    description: 'Idéal pour multiplier les candidatures.',
+    description: 'Soit 500 FCFA par dossier, sans abonnement.',
     features: ['10 dossiers (2 documents au choix chacun)', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'illimite',
-    name: 'Illimité',
+    name: 'Abonnement illimité',
     priceXof: 3900,
+    priceUnit: 'mois',
     kind: 'subscription',
     credits: Number.POSITIVE_INFINITY,
     durationDays: 30,
-    description: 'Tout, sans limite, chaque mois.',
+    description: 'Pour les candidats qui postulent régulièrement.',
     features: [...SUBSCRIPTION_CORE_FEATURES],
     popular: true,
   },
@@ -75,10 +82,12 @@ export const PLANS: Plan[] = [
     slug: 'business',
     name: 'Business',
     priceXof: 9900,
+    priceUnit: 'mois',
+    priceFrom: true,
     kind: 'subscription',
     credits: Number.POSITIVE_INFINITY,
     durationDays: 30,
-    description: 'Pour les entreprises, écoles et cabinets RH.',
+    description: 'Tarification personnalisée selon le nombre d’utilisateurs et les fonctionnalités.',
     features: [
       ...SUBSCRIPTION_CORE_FEATURES,
       'Multi-collaborateurs',

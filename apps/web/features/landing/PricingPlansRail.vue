@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatXof } from '@profiloz/shared'
 import type { PlanDto } from '~/services/payment.service'
 
 const props = withDefaults(
@@ -181,15 +180,20 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
               v-if="plan.popular"
               class="pricing-card__badge absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-secondary text-on-secondary text-xs font-bold whitespace-nowrap"
             >
-              Le plus populaire
+              Offre recommandée
             </span>
 
-            <h3 class="landing-subtitle md:text-lg md:font-bold">{{ plan.name }}</h3>
-            <p class="text-sm text-on-surface-variant mt-1 min-h-[2.5rem]">{{ plan.description }}</p>
+            <p class="text-[11px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+              Offre {{ String(index + 1).padStart(2, '0') }}
+            </p>
+            <h3 class="landing-subtitle md:text-lg md:font-bold mt-1">{{ plan.name }}</h3>
+            <!-- Hauteur réservée sur grand écran : les 4 prix restent alignés -->
+            <p class="text-sm text-on-surface-variant mt-1 min-h-[2.5rem] md:min-h-[5rem]">{{ plan.description }}</p>
 
             <div class="mt-4 mb-5">
-              <span class="text-3xl font-bold text-on-surface tabular-nums">{{ formatXof(plan.priceXof) }}</span>
-              <span v-if="plan.kind === 'subscription'" class="text-on-surface-variant text-sm"> / mois</span>
+              <p class="text-xs font-semibold text-on-surface-variant" :class="!plan.priceFrom && 'hidden md:block md:invisible'">À partir de</p>
+              <span class="text-3xl font-bold text-on-surface tabular-nums">{{ plan.priceXof.toLocaleString('fr-FR') }}</span>
+              <span class="text-on-surface-variant text-sm"> FCFA / {{ plan.priceUnit ?? (plan.kind === 'subscription' ? 'mois' : 'dossier') }}</span>
             </div>
 
             <ul class="space-y-2.5 sm:space-y-3 mb-6 flex-1">

@@ -79,6 +79,8 @@ onMounted(async () => {
       description: plan.description,
       features: [...plan.features],
       popular: plan.popular,
+      priceUnit: plan.priceUnit,
+      priceFrom: plan.priceFrom,
     }))
   } finally {
     loading.value = false
