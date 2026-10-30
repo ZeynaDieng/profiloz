@@ -12,6 +12,7 @@ const props = defineProps<{
 const { enhanceText, suggestBullets, loading: aiLoading } = useAi()
 const activeAiIndex = ref<number | null>(null)
 const aiActionType = ref<'enhance' | 'bullets' | null>(null)
+const aiWaitLabel = useAiWaitLabel(computed(() => activeAiIndex.value !== null))
 
 function fieldError(index: number, field: ExperienceFieldKey) {
   return props.fieldErrors?.[`exp-${index}-${field}`] ?? ''
@@ -175,7 +176,7 @@ async function handleSuggestBullets(index: number) {
             :disabled="aiLoading"
             @click="handleSuggestBullets(index)"
           >
-            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? 'Génération...' : '💡 Suggérer des puces IA' }}</span>
+            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? aiWaitLabel : '💡 Suggérer des puces IA' }}</span>
           </button>
         </div>
         <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />
@@ -220,7 +221,7 @@ async function handleSuggestBullets(index: number) {
             @click="handleEnhanceExperience(index)"
           >
             <UiPzIcon name="auto_awesome" class="text-xs" />
-            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? 'Génération...' : (item.description?.trim() ? 'Embellir' : 'Générer avec l’IA') }}</span>
+            <span>{{ activeAiIndex === index && aiActionType === 'enhance' ? aiWaitLabel : (item.description?.trim() ? 'Embellir' : 'Générer avec l’IA') }}</span>
           </button>
         </div>
         <textarea

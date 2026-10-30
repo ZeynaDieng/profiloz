@@ -47,7 +47,13 @@ const returnTo = computed(() =>
     ? route.query.returnTo
     : null,
 )
-const fromPaywall = computed(() => route.query.reason === 'unlock')
+const fromOtherDocument = computed(() => route.query.reason === 'other-document')
+const fromPaywall = computed(() => route.query.reason === 'unlock' || fromOtherDocument.value)
+const otherDocumentMessage = computed(() =>
+  route.query.kind === 'letter'
+    ? 'Votre dossier payé contient déjà une autre lettre : elle reste modifiable et retéléchargeable gratuitement. Cette nouvelle lettre nécessite une nouvelle offre.'
+    : 'Votre dossier payé contient déjà un autre CV : il reste modifiable et retéléchargeable gratuitement. Ce nouveau CV nécessite une nouvelle offre.',
+)
 const fromCompleted = computed(() => route.query.reason === 'completed')
 
 const activePlan = computed(
@@ -160,7 +166,10 @@ async function onChoose(plan: PlanDto) {
       v-if="fromPaywall"
       class="tarifs-page__banner max-w-2xl mx-auto mb-6 md:mb-8 p-4 rounded-xl bg-secondary-fixed text-on-secondary-fixed text-sm text-center"
     >
-      Votre CV est prêt ! Choisissez une offre pour le télécharger (compte facultatif).
+      <template v-if="fromOtherDocument">{{ otherDocumentMessage }}</template>
+      <template v-else>
+        Votre CV est prêt ! Choisissez une offre pour le télécharger (compte facultatif).
+      </template>
     </div>
 
     <div

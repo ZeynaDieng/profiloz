@@ -3,7 +3,7 @@ import type { ResumeSnapshot, TemplateSlug } from '@profiloz/shared'
 import { MSG, TEMPLATE_SLUGS } from '@profiloz/shared'
 import { getTemplateBySlug } from '~/features/templates/registry'
 import { getCvAccentPalette, resolveCvAccentColor } from '~/utils/template-accent-colors'
-import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { ensurePaidGuestDossier, isPaidGuestDossierActive, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
 import { changeTemplateHrefFromRoute } from '~/utils/template-navigation'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 import { clearPaymentDraftBackup, loadPaymentDraftBackup } from '~/utils/payment-draft-backup'
@@ -176,12 +176,26 @@ onMounted(async () => {
         // Restauration explicite du brouillon précédent
         resumeStore.loadSnapshot(previousSavedDraft.value)
       } else if (isExplicitNew) {
-        // Clic sur "Créer mon CV" de zéro -> OUVRIR UN FORMULAIRE 100% VIERGE SANS ANCIENNES DONNÉES
-        clearPaymentDraftBackup()
-        resumeStore.startNewDraft()
-        resumeStore.setTemplate(requestedSlug)
-        // Retirer le marqueur de l'URL : un rechargement (F5) ne doit pas effacer le brouillon en cours
         const { new: _new, fresh: _fresh, flow: _flow, ...keptQuery } = route.query
+        const paidName = resumeStore.current?.personalInfo?.fullName?.trim()
+        // Le CV du dossier payé serait remplacé : prévenir avant (un autre CV demande une nouvelle offre)
+        const keepPaidCv = isPaidGuestDossierActive()
+          && resumeStore.current
+          && isResumeSnapshotValid(resumeStore.current)
+          && !(await useConfirm().confirm(
+            `Votre dossier payé contient le CV${paidName ? ` de ${paidName}` : ''}. Un nouveau CV le remplacera dans l'éditeur, et son téléchargement nécessitera une nouvelle offre. Vous pourrez revenir à votre CV payé avec « Reprendre » ou le lien « Reprendre mon dossier » reçu par e-mail.`,
+            { title: 'Commencer un nouveau CV ?', confirmLabel: 'Nouveau CV', cancelLabel: 'Garder mon CV payé' },
+          ))
+
+        if (keepPaidCv) {
+          if (requestedSlug !== resumeStore.current?.templateSlug) resumeStore.setTemplate(requestedSlug)
+        } else {
+          // Clic sur "Créer mon CV" de zéro -> OUVRIR UN FORMULAIRE 100% VIERGE SANS ANCIENNES DONNÉES
+          clearPaymentDraftBackup()
+          resumeStore.startNewDraft()
+          resumeStore.setTemplate(requestedSlug)
+        }
+        // Retirer le marqueur de l'URL : un rechargement (F5) ne doit pas effacer le brouillon en cours
         void router.replace({ query: keptQuery })
       } else if (isImport || (resumeStore.current && isResumeSnapshotValid(resumeStore.current))) {
         // Importation de document -> CONSERVER ET PRÉ-REMPLIR TOUTES LES DONNÉES EXTRAITES !
@@ -366,10 +380,13 @@ async function executePdfDownload() {
   } catch (err) {
     if (isPaymentRequiredError(err)) {
       const dossier = loadGuestDossierState()
-      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded) ? 'completed' : 'unlock'
+      // Dossier déjà payé mais refus : ce document n'est pas celui du dossier (autre CV)
+      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded)
+        ? 'completed'
+        : isPaidGuestDossierActive() ? 'other-document' : 'unlock'
       await navigateTo({
         path: '/tarifs',
-        query: { reason, returnTo: route.fullPath },
+        query: { reason, kind: 'cv', returnTo: route.fullPath },
       })
       return
     }

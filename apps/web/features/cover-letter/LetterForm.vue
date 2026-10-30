@@ -26,6 +26,7 @@ const props = defineProps<{
 }>()
 
 const { enhanceText, generateLetter, loading: aiLoading } = useAi()
+const aiWaitLabel = useAiWaitLabel(aiLoading)
 const resumeStore = useResumeStore()
 
 const aiModalOpen = ref(false)
@@ -320,7 +321,7 @@ async function handleGenerateFromJobOffer() {
                 @click="handleEnhanceContent"
               >
                 <UiPzIcon name="auto_awesome" class="text-xs" />
-                <span>{{ aiLoading ? 'Génération IA...' : 'Reformuler avec l’IA' }}</span>
+                <span>{{ aiLoading ? aiWaitLabel : 'Reformuler avec l’IA' }}</span>
               </button>
             </div>
             <textarea
@@ -566,7 +567,7 @@ async function handleGenerateFromJobOffer() {
               @click="handleGenerateFromJobOffer"
             >
               <UiPzIcon name="auto_awesome" class="text-sm" />
-              <span>{{ aiLoading ? 'Génération...' : 'Rédiger la lettre' }}</span>
+              <span>{{ aiLoading ? aiWaitLabel : 'Rédiger la lettre' }}</span>
             </button>
           </div>
         </div>

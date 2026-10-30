@@ -5,7 +5,7 @@ import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/er
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
 import { requireGuestOrAuth } from '@/lib/request-context'
 
-import { sendEmailTemplate } from '@/lib/email/mail.service'
+import { buildResumeDossierUrl, sendEmailTemplate } from '@/lib/email/mail.service'
 
 function normalizeCoverLetterTemplateSlug(value?: string): CoverLetterTemplateSlug {
   const upper = value?.toUpperCase()
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       await paymentService.unlockResume(owner, resumeId)
     } else {
       await paymentService.consumeSnapshotDownload(owner, snapshotDocKey('letter', letterId))
+      await paymentService.savePaidGuestSnapshot(owner, 'letter', body.snapshot)
     }
 
     const result = await pdfService.startCoverLetterPdfJob(letter, {
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
       if (targetEmail) {
         const publicAppUrl = process.env.PUBLIC_APP_URL || 'https://profiloz.com'
         const downloadUrl = `${publicAppUrl}/api/v1/pdf/download/${result.jobId}?filename=lettre_motivation_Profiloz.pdf`
-        const dashboardUrl = `${publicAppUrl}/creer`
+        const dashboardUrl = buildResumeDossierUrl(publicAppUrl, ctx.guestSessionId)
         
         void sendEmailTemplate('document_download', targetEmail, {
           firstName: targetFirstName,

@@ -8,7 +8,7 @@ import { consumeCoverLetterImportDraft } from '~/utils/cover-letter-import-draft
 import { buildCoverLetterPdfFilename, buildCoverLetterTitle } from '~/utils/coverLetterPdfFilename'
 import { isPaymentRequiredError } from '~/utils/api-error'
 import { cleanCoverLetterBodyText } from '~/utils/cover-letter-cleaner'
-import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession } from '~/utils/guest-dossier-state'
+import { ensurePaidGuestDossier, markGuestDossierDownload, restorePaidGuestSession, isPaidGuestDossierActive } from '~/utils/guest-dossier-state'
 import { saveLastDownloadContext } from '~/utils/last-download-context'
 import { resolvePersistableResumeId } from '~/utils/resume-id'
 import { clearPaymentDraftBackup } from '~/utils/payment-draft-backup'
@@ -389,10 +389,13 @@ async function executePdfDownload() {
   } catch (err) {
     if (isPaymentRequiredError(err)) {
       const dossier = loadGuestDossierState()
-      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded) ? 'completed' : 'unlock'
+      // Dossier déjà payé mais refus : ce document n'est pas celui du dossier (autre lettre)
+      const reason = (dossier?.cvDownloaded && dossier?.letterDownloaded)
+        ? 'completed'
+        : isPaidGuestDossierActive() ? 'other-document' : 'unlock'
       await navigateTo({
         path: '/tarifs',
-        query: { reason, returnTo: route.fullPath },
+        query: { reason, kind: 'letter', returnTo: route.fullPath },
       })
       return
     }

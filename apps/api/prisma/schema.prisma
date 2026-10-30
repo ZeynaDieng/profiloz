@@ -468,6 +468,8 @@ model CoverLetter {
   templateId      String   @default("CLASSIQUE")
   accentColor     String?
   signatureUrl    String?  @db.Text
+  /// Lettre sans CV rattaché : débloquée par son propre crédit (sinon via le CV, cf. Resume.unlockedAt)
+  unlockedAt      DateTime?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

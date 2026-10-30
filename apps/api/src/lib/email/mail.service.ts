@@ -39,7 +39,7 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
   
   <p style="font-size: 0.9em; color: #64748b; background-color: #f8fafc; padding: 12px; border-radius: 6px;">
     <strong>Important :</strong> Ce lien de téléchargement direct expire dans <strong>24 heures</strong> pour des raisons de sécurité. 
-    Pas d'inquiétude ! Vous pourrez toujours régénérer votre document gratuitement depuis votre tableau de bord.
+    Pas d'inquiétude ! Vous pourrez toujours le régénérer gratuitement avec le bouton « Reprendre mon dossier » ci-dessous.
   </p>
 
   <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -54,17 +54,24 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
   
   <h3 style="color: #0f172a; margin-top: 0;">Il vous reste des documents disponibles !</h3>
   <p>N'oubliez pas que votre formule comprend un <strong>Duo Complet (1 CV + 1 Lettre de motivation)</strong>.</p>
-  <p>Vous pouvez à tout moment créer votre lettre de motivation (ou un second CV si vous préférez l'échanger) depuis votre espace personnel :</p>
+  <p>Modifiez votre CV, créez votre lettre de motivation ou retéléchargez vos documents à tout moment, depuis n'importe quel appareil :</p>
   
   <div style="text-align: center; margin: 25px 0;">
-    <a href="{{dashboardUrl}}" style="background-color: #0d9488; color: white; padding: 10px 20px; text-decoration: none; font-weight: 500; border-radius: 6px; display: inline-block;">Accéder à mon espace client</a>
+    <a href="{{dashboardUrl}}" style="background-color: #0d9488; color: white; padding: 10px 20px; text-decoration: none; font-weight: 500; border-radius: 6px; display: inline-block;">Reprendre mon dossier</a>
   </div>
   
   <p>Merci pour votre confiance,<br />L'équipe Profilo'Z</p>
 </div>
     `,
-    bodyText: 'Votre {{documentType}} est prêt !\n\nBonjour {{firstName}},\n\nVous venez de générer votre {{documentType}} sur Profilo\'Z. Vous pouvez le télécharger via ce lien : {{downloadUrl}}\n\nCe lien expire dans 24 heures.\n\nConservez vos documents à vie : Pensez à créer un compte gratuit sur Profilo\'Z pour retrouver tout votre historique, modifier vos documents et les sauvegarder à vie.\n\nAccédez à votre espace client pour gérer vos documents : {{dashboardUrl}}',
+    bodyText: 'Votre {{documentType}} est prêt !\n\nBonjour {{firstName}},\n\nVous venez de générer votre {{documentType}} sur Profilo\'Z. Vous pouvez le télécharger via ce lien : {{downloadUrl}}\n\nCe lien de téléchargement expire dans 24 heures.\n\nConservez vos documents à vie : Pensez à créer un compte gratuit sur Profilo\'Z pour retrouver tout votre historique, modifier vos documents et les sauvegarder à vie.\n\nReprenez votre dossier (CV + lettre) depuis n\'importe quel appareil : {{dashboardUrl}}',
   },
+}
+
+/** Lien « Reprendre mon dossier » : recharge le dossier payé d'un invité sur n'importe quel appareil. */
+export function buildResumeDossierUrl(publicAppUrl: string, guestSessionId?: string): string {
+  return guestSessionId
+    ? `${publicAppUrl}/reprendre?gs=${encodeURIComponent(guestSessionId)}`
+    : `${publicAppUrl}/creer`
 }
 
 export async function sendEmailTemplate(

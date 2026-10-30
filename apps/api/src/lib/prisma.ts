@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 /** Bump when Prisma schema changes so dev HMR does not keep a stale client. */
-const PRISMA_CLIENT_CACHE_KEY = 'prismaClient_v20261029_template_slug_text' as const
+const PRISMA_CLIENT_CACHE_KEY = 'prismaClient_v20261030_cover_letter_unlock' as const
 
 const globalForPrisma = globalThis as unknown as {
   [PRISMA_CLIENT_CACHE_KEY]?: PrismaClient

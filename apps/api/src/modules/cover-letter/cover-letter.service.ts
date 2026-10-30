@@ -212,7 +212,7 @@ export class CoverLetterService {
     if (letter.resumeId) {
       await paymentService.unlockResume(owner, letter.resumeId)
     } else {
-      await paymentService.consumeSnapshotDownload(owner)
+      await paymentService.unlockStandaloneLetter(owner, letter.id)
     }
 
     const { jobId, expiresAt } = await pdfService.generateCoverLetterPdf(

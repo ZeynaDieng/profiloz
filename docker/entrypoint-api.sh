@@ -3,6 +3,9 @@ set -e
 
 cd /app
 
+echo "Preparing database schema (data-preserving conversions)..."
+pnpm --filter @profiloz/api exec prisma db execute --file prisma/sql/pre-push.sql --schema prisma/schema.prisma
+
 echo "Syncing database schema with Prisma..."
 pnpm --filter @profiloz/api exec prisma db push --accept-data-loss
 

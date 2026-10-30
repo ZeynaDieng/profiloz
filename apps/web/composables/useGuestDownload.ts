@@ -101,7 +101,9 @@ export function useGuestDownload() {
 
     try {
       const entitlements = await preparePaidSession()
-      const serverDraft = entitlements?.paidDraftSnapshot
+      const serverDraft = kind === 'letter'
+        ? entitlements?.paidLetterSnapshot ?? entitlements?.paidDraftSnapshot
+        : entitlements?.paidResumeSnapshot ?? entitlements?.paidDraftSnapshot
 
       if (authStore.isAuthenticated && kind === 'cv') {
         resumeStore.rehydrateFromStorage()

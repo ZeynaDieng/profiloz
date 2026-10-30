@@ -9,6 +9,7 @@ const resumeStore = useResumeStore()
 const { pageCount, isOverflowing } = useResumePageOverflowState()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
 const { enhanceText, loading: aiLoading } = useAi()
+const aiWaitLabel = useAiWaitLabel(aiLoading)
 
 const openSection = useState<string>('active-editor-section', () => 'personal')
 const sectionErrors = reactive<Record<string, string>>({})
@@ -327,7 +328,7 @@ provideResumeEditorValidation({
           class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95"
           @click="handleEnhanceSummary(); openSection = 'summary'"
         >
-          <span>{{ aiLoading ? 'Génération...' : 'Générer mon profil IA' }}</span>
+          <span>{{ aiLoading ? aiWaitLabel : 'Générer mon profil IA' }}</span>
         </button>
       </div>
 
@@ -485,7 +486,7 @@ provideResumeEditorValidation({
                   @click="handleEnhanceSummary"
                 >
                   <UiPzIcon name="auto_awesome" class="text-xs" />
-                  <span>{{ aiLoading ? 'Génération...' : (summary?.trim() ? 'Reformuler avec l’IA' : 'Générer mon profil IA') }}</span>
+                  <span>{{ aiLoading ? aiWaitLabel : (summary?.trim() ? 'Reformuler avec l’IA' : 'Générer mon profil IA') }}</span>
                 </button>
               </div>
               <textarea

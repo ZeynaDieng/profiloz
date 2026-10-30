@@ -85,7 +85,7 @@ export function usePostPaymentDownload() {
       return result.entitlements!
     }
 
-    const afterSwitch = await paymentService.getEntitlements()
+    const afterSwitch = await paymentService.getEntitlements({ withDrafts: true })
     if (hasDossierDownloadAccess(afterSwitch)) {
       return afterSwitch
     }
@@ -108,7 +108,7 @@ export function usePostPaymentDownload() {
       }
     } else {
       try {
-        const current = await paymentService.getEntitlements()
+        const current = await paymentService.getEntitlements({ withDrafts: true })
         if (hasDossierDownloadAccess(current)) return current
       } catch {
         // continue
@@ -131,7 +131,7 @@ export function usePostPaymentDownload() {
       }
 
       try {
-        const entitlements = await paymentService.getEntitlements()
+        const entitlements = await paymentService.getEntitlements({ withDrafts: true })
         if (hasDossierDownloadAccess(entitlements)) {
           return entitlements
         }
@@ -245,6 +245,7 @@ export function usePostPaymentDownload() {
     }
 
     const entitlements = await waitForEntitlements(paymentRef)
+    // Brouillon enregistré au paiement : c'est ce document-là qui vient d'être payé
     const serverDraft = entitlements?.paidDraftSnapshot
 
     phase.value = 'downloading'

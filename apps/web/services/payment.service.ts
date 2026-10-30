@@ -21,6 +21,9 @@ export interface Entitlements {
   canDownloadSnapshot?: boolean
   downloadedDocIds?: string[]
   paidDraftSnapshot?: any
+  /** Dernières versions du CV / de la lettre du dossier payé (reprise sur un autre appareil). */
+  paidResumeSnapshot?: any
+  paidLetterSnapshot?: any
 }
 
 export interface PurchasedPlanSummary {
@@ -63,8 +66,9 @@ export function usePaymentService() {
     return get<{ data: PlanDto[] }>('/plans')
   }
 
-  async function getEntitlements() {
-    return get<Entitlements>('/payments/me')
+  /** withDrafts : inclut les versions du CV / de la lettre payés (reprise du dossier, téléchargement après paiement). */
+  async function getEntitlements(options: { withDrafts?: boolean } = {}) {
+    return get<Entitlements>(options.withDrafts ? '/payments/me?withDrafts=1' : '/payments/me')
   }
 
   /** Démarre un paiement et renvoie l'URL de redirection PayTech. */

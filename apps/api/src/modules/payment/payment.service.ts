@@ -139,6 +139,9 @@ type EntitlementsWithSnapshot = ResolvedEntitlements & {
   canDownloadSnapshot: boolean
   downloadedDocIds?: string[]
   paidDraftSnapshot?: unknown
+  /** Dernières versions du CV / de la lettre du dossier payé (reprise sur un autre appareil). */
+  paidResumeSnapshot?: unknown
+  paidLetterSnapshot?: unknown
 }
 
 function mergeEntitlementResults(
@@ -163,6 +166,8 @@ function mergeEntitlementResults(
     canDownloadSnapshot: primary.canDownloadSnapshot || secondary.canDownloadSnapshot,
     downloadedDocIds: primary.downloadedDocIds || secondary.downloadedDocIds,
     paidDraftSnapshot: primary.paidDraftSnapshot || secondary.paidDraftSnapshot,
+    paidResumeSnapshot: primary.paidResumeSnapshot || secondary.paidResumeSnapshot,
+    paidLetterSnapshot: primary.paidLetterSnapshot || secondary.paidLetterSnapshot,
   }
 }
 
@@ -176,6 +181,8 @@ function serializeEntitlementsForClient(result: EntitlementsWithSnapshot) {
     canDownloadSnapshot: result.canDownloadSnapshot,
     downloadedDocIds: result.downloadedDocIds,
     paidDraftSnapshot: result.paidDraftSnapshot,
+    paidResumeSnapshot: result.paidResumeSnapshot,
+    paidLetterSnapshot: result.paidLetterSnapshot,
   }
 }
 
@@ -591,6 +598,9 @@ export class PaymentService {
             ...baseData,
             snapshotUnlockedAt: new Date().toISOString(),
             downloadedDocIds: docId ? [docId] : [],
+            // Nouveau dossier : les versions reprises de l'ancien ne doivent plus être proposées
+            paidResumeSnapshot: undefined,
+            paidLetterSnapshot: undefined,
           } as Prisma.InputJsonValue,
         },
       })
@@ -604,6 +614,26 @@ export class PaymentService {
         )
       }
       return { consumed: true }
+    })
+  }
+
+  /**
+   * Garde côté serveur la dernière version téléchargée du CV / de la lettre d'un invité,
+   * pour reprendre le dossier payé sur un autre appareil (lien « Reprendre mon dossier »).
+   */
+  async savePaidGuestSnapshot(owner: EntitlementOwner, kind: 'resume' | 'letter', snapshot: unknown) {
+    if (owner.userId || !owner.guestSessionDbId || !snapshot || typeof snapshot !== 'object') return
+    const key = kind === 'resume' ? 'paidResumeSnapshot' : 'paidLetterSnapshot'
+    await prisma.$transaction(async (tx) => {
+      const guest = await tx.guestSession.findUnique({ where: { id: owner.guestSessionDbId }, select: { data: true } })
+      const baseData =
+        guest?.data && typeof guest.data === 'object' && !Array.isArray(guest.data)
+          ? (guest.data as Record<string, unknown>)
+          : {}
+      await tx.guestSession.update({
+        where: { id: owner.guestSessionDbId },
+        data: { data: { ...baseData, [key]: JSON.parse(JSON.stringify(snapshot)) } as Prisma.InputJsonValue },
+      })
     })
   }
 
@@ -848,11 +878,17 @@ function isDraftSnapshotValid(snap: any): boolean {
     const canDownloadSnapshot = await isGuestSnapshotDossierUnlocked(guestSessionDbId)
     const meta = readGuestSessionMeta(guest?.data)
     const rawData = (guest?.data && typeof guest.data === 'object') ? (guest.data as Record<string, unknown>) : {}
-    const paidDraftSnapshot = (canDownloadSnapshot || (guest?.creditsBalance ?? 0) > 0 || isUnlimitedActive(guest?.unlimitedUntil))
-      ? rawData.draftSnapshot
-      : undefined
+    const hasPaidAccess = canDownloadSnapshot || (guest?.creditsBalance ?? 0) > 0 || isUnlimitedActive(guest?.unlimitedUntil)
+    const paidDraftSnapshot = hasPaidAccess ? rawData.draftSnapshot : undefined
 
-    return { ...resolved, canDownloadSnapshot, downloadedDocIds: meta.downloadedDocIds, paidDraftSnapshot }
+    return {
+      ...resolved,
+      canDownloadSnapshot,
+      downloadedDocIds: meta.downloadedDocIds,
+      paidDraftSnapshot,
+      paidResumeSnapshot: hasPaidAccess ? rawData.paidResumeSnapshot : undefined,
+      paidLetterSnapshot: hasPaidAccess ? rawData.paidLetterSnapshot : undefined,
+    }
   }
 
   /**
@@ -862,6 +898,46 @@ function isDraftSnapshotValid(snap: any): boolean {
    * - Sinon consomme 1 crédit (transaction anti double-consommation).
    * - Aucun droit → AppError 402.
    */
+  /**
+   * Lettre d'un compte sans CV rattaché : débloquée par son propre crédit.
+   * (Avant : le déblocage global du compte rendait toutes les lettres suivantes gratuites.)
+   */
+  async unlockStandaloneLetter(owner: EntitlementOwner, letterId: string) {
+    requireOwner(owner)
+    if (!owner.userId) throw new AppError(401, 'Unauthorized', 'Authentification requise')
+
+    const letter = await prisma.coverLetter.findFirst({
+      where: { id: letterId, userId: owner.userId },
+      select: { unlockedAt: true },
+    })
+    if (!letter) throw new AppError(404, 'Not Found', 'Lettre introuvable')
+    if (letter.unlockedAt) return { unlocked: true, consumedCredit: false }
+
+    const entitlements = await this.getEntitlements(owner)
+    if (entitlements.unlimitedActive) {
+      await prisma.coverLetter.update({ where: { id: letterId }, data: { unlockedAt: new Date() } })
+      return { unlocked: true, consumedCredit: false }
+    }
+
+    const consumed = await prisma.$transaction(async (tx) => {
+      const decremented = await tx.user.updateMany({
+        where: { id: owner.userId, creditsBalance: { gt: 0 } },
+        data: { creditsBalance: { decrement: 1 } },
+      })
+      if (decremented.count === 0) return false
+      await tx.coverLetter.update({ where: { id: letterId }, data: { unlockedAt: new Date() } })
+      return true
+    })
+    if (!consumed) {
+      throw new AppError(
+        402,
+        'Payment Required',
+        'Aucun crédit disponible. Choisissez une offre pour télécharger cette lettre.',
+      )
+    }
+    return { unlocked: true, consumedCredit: true }
+  }
+
   async unlockResume(owner: EntitlementOwner, resumeId: string) {
     requireOwner(owner)
 

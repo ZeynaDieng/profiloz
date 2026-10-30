@@ -18,6 +18,15 @@ export async function GET(request: Request) {
         activePlanSlug: result.activePlanSlug,
         features: result.features,
         canDownloadSnapshot: result.canDownloadSnapshot,
+        // Brouillons payés : uniquement sur demande (reprise du dossier), pas à chaque rafraîchissement des droits
+        ...(new URL(request.url).searchParams.get('withDrafts') === '1'
+          ? {
+              downloadedDocIds: result.downloadedDocIds,
+              paidDraftSnapshot: result.paidDraftSnapshot,
+              paidResumeSnapshot: result.paidResumeSnapshot,
+              paidLetterSnapshot: result.paidLetterSnapshot,
+            }
+          : {}),
       }),
       origin,
     )
