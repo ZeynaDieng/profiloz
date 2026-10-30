@@ -105,9 +105,12 @@ export function useGuestSession() {
     lastSyncedSessionId = null
   }
 
-  onMounted(() => {
-    ensureSession().catch(() => {})
-  })
+  // Aussi appelé hors setup (depuis d'autres composables, dans des handlers async) : pas de hook dans ce cas
+  if (getCurrentInstance()) {
+    onMounted(() => {
+      ensureSession().catch(() => {})
+    })
+  }
 
   return { guestSessionId, applyGuestSessionId, ensureSession, resetGuestSessionSync }
 }

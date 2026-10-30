@@ -15,7 +15,7 @@ const {
 
 <template>
   <CoverLetterShell template-name="Élégance">
-    <div class="font-serif text-[11pt] leading-[1.8] text-slate-800 bg-[#faf9f6] -mx-[20mm] -my-[20mm] px-[25mm] py-[25mm] min-h-full">
+    <div class="font-serif text-[11pt] leading-[1.8] text-slate-800 bg-[#faf9f6] -mx-[20mm] -my-[20mm] px-[25mm] py-[25mm] min-h-[297mm]">
       <!-- Header -->
       <div class="text-center mb-12 border-b border-slate-200 pb-8">
         <h2 class="text-2xl font-serif tracking-widest uppercase text-slate-900 mb-2">

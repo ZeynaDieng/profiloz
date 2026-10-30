@@ -25,8 +25,8 @@ onMounted(() => {
   }
   coverLetterStore.initDraft()
 
-  if (!selectedSlug.value && coverLetterStore.current?.templateSlug) {
-    selectedSlug.value = coverLetterStore.current.templateSlug
+  if (!selectedSlug.value) {
+    selectedSlug.value = coverLetterStore.current?.templateSlug ?? 'CLASSIQUE'
   }
   if (selectedSlug.value) {
     coverLetterStore.setTemplate(selectedSlug.value)
@@ -34,9 +34,8 @@ onMounted(() => {
 })
 
 const activeFilter = ref('all')
-const selectedSlug = ref<CoverLetterTemplateSlug>(
-  (route.query.select as CoverLetterTemplateSlug) ?? coverLetterStore.current?.templateSlug ?? 'CLASSIQUE',
-)
+// Le brouillon (localStorage) n'existe que côté client : il est appliqué au montage pour garder l'hydratation identique
+const selectedSlug = ref<CoverLetterTemplateSlug | null>((route.query.select as CoverLetterTemplateSlug) ?? null)
 
 const filteredTemplates = computed(() => {
   if (activeFilter.value === 'all') return COVER_LETTER_TEMPLATE_REGISTRY

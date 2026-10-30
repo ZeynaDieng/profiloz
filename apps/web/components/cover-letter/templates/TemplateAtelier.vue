@@ -15,7 +15,7 @@ const {
 
 <template>
   <CoverLetterShell template-name="Atelier">
-    <div class="font-serif text-[11pt] leading-[1.8] text-amber-950 bg-[#fdfaf6] -mx-[20mm] -my-[20mm] px-[20mm] py-[20mm] min-h-full">
+    <div class="font-serif text-[11pt] leading-[1.8] text-amber-950 bg-[#fdfaf6] -mx-[20mm] -my-[20mm] px-[20mm] py-[20mm] min-h-[297mm]">
       <!-- Minimalist Header -->
       <div class="grid grid-cols-12 gap-6 mb-10 pb-6 border-b border-amber-900/20">
         <div class="col-span-8">

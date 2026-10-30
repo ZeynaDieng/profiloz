@@ -126,20 +126,6 @@ const heroSubtitleShort = computed(() => {
 const heroLine2 = computed(() => heroLines.value[1] ?? '')
 
 const reducedMotion = ref(false)
-// Show everything immediately if there's no second line, or if the user asked for reduced motion.
-const heroCopyVisible = ref(false)
-
-watch(
-  [heroLine2, reducedMotion],
-  ([line, reduced]) => {
-    if (!line || reduced) heroCopyVisible.value = true
-  },
-  { immediate: true },
-)
-
-function onHeroTitleComplete() {
-  heroCopyVisible.value = true
-}
 </script>
 
 <template>
@@ -195,34 +181,24 @@ function onHeroTitleComplete() {
               :segments="[{ text: heroLine2 }]"
               loop
               loop-mode="full"
-              @complete="onHeroTitleComplete"
             />
           </span>
         </h1>
 
         <p
-          class="landing-lead sm:hidden mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2
-                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
-          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
-          style="transition-delay: 150ms"
+          class="landing-lead sm:hidden mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
         >
           {{ heroSubtitleShort }}
         </p>
         <p
-          class="landing-lead hidden sm:block mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2
-                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
-          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
-          style="transition-delay: 150ms"
+          class="landing-lead hidden sm:block mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
         >
           {{ heroSubtitle }}
         </p>
 
         <!-- items-start from the mobile breakpoint up: this is what stops the button from stretching full-width -->
         <div
-          class="order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-start justify-center lg:justify-start gap-3
-                 transition-opacity duration-500 ease-out motion-reduce:transition-none"
-          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
-          style="transition-delay: 300ms"
+          class="order-3 lg:order-4 mt-6 flex flex-col sm:flex-row items-start justify-center lg:justify-start gap-3"
         >
           <NuxtLink
             :to="hero.ctaPrimaryLink || '/creer'"
@@ -233,9 +209,7 @@ function onHeroTitleComplete() {
         </div>
 
         <div
-          class="order-4 lg:order-3 mt-5 flex flex-wrap items-center justify-start gap-x-4 gap-y-2.5 sm:gap-x-5 sm:gap-y-2 transition-opacity duration-500 ease-out motion-reduce:transition-none"
-          :class="heroCopyVisible ? 'opacity-100' : 'opacity-0'"
-          style="transition-delay: 450ms"
+          class="order-4 lg:order-3 mt-5 flex flex-wrap items-center justify-start gap-x-4 gap-y-2.5 sm:gap-x-5 sm:gap-y-2"
         >
           <!-- Item 1: Import -->
           <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 shrink-0">

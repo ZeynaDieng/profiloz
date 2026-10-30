@@ -30,8 +30,8 @@ onMounted(() => {
   if (slug && TEMPLATE_SLUGS.includes(slug as TemplateSlug)) {
     selectedSlug.value = slug as TemplateSlug
     resumeStore.setTemplate(slug as TemplateSlug)
-  } else if (!selectedSlug.value && resumeStore.current?.templateSlug) {
-    selectedSlug.value = resumeStore.current.templateSlug
+  } else if (!selectedSlug.value) {
+    selectedSlug.value = resumeStore.current?.templateSlug ?? 'PROFESSIONNEL'
   }
   if (selectedSlug.value) {
     resumeStore.setTemplate(selectedSlug.value)
@@ -39,9 +39,8 @@ onMounted(() => {
 })
 
 const activeFilter = ref('all')
-const selectedSlug = ref<TemplateSlug | null>(
-  (route.query.select as TemplateSlug) ?? resumeStore.current?.templateSlug ?? 'PROFESSIONNEL',
-)
+// Le brouillon (localStorage) n'existe que côté client : il est appliqué au montage pour garder l'hydratation identique
+const selectedSlug = ref<TemplateSlug | null>((route.query.select as TemplateSlug) ?? null)
 
 const authStore = useAuthStore()
 

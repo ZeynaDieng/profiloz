@@ -39,7 +39,8 @@ const previousSavedDraft = ref<ResumeSnapshot | null>(null)
 
 const previousDraftName = computed(() => {
   const snap = previousSavedDraft.value
-  if (!snap) return ''
+  // Rien à reprendre si ce brouillon est déjà celui ouvert dans l'éditeur
+  if (!snap || snap.id === resumeStore.current?.id) return ''
   const p = snap.personalInfo
   const name = p?.fullName?.trim()
   return name || (snap.experiences?.length ? 'Dernier CV rédigé' : '')
@@ -385,6 +386,8 @@ async function downloadPdf() {
 </script>
 
 <template>
+  <div>
+  <!-- Racine unique requise par les transitions de page (ClientOnly seul n'est pas un élément) -->
   <ClientOnly>
     <div class="editor-page-root min-h-screen">
     <!-- Skeleton Loader de l'éditeur de CV -->
@@ -455,12 +458,12 @@ async function downloadPdf() {
 
   <div v-else class="h-screen flex flex-col overflow-hidden bg-background">
     <!-- Header compact mobile-first -->
-    <header class="grid grid-cols-[minmax(0,1fr)_auto] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
+    <header class="grid grid-cols-[auto_minmax(0,1fr)] items-center px-margin-mobile md:px-gutter py-2 bg-surface border-b border-outline-variant shrink-0 gap-2 min-h-[3.25rem]">
       <div class="flex items-center gap-2 min-w-0">
         <UiAppLogo size="sm" variant="full" class="shrink-0 [&_img]:h-8" />
       </div>
 
-      <div class="flex items-center gap-0.5 shrink-0">
+      <div class="flex items-center justify-end gap-0.5 min-w-0">
         <button
           type="button"
           class="lg:hidden touch-target inline-flex items-center justify-center rounded-xl text-on-surface hover:bg-surface-container"
@@ -501,7 +504,8 @@ async function downloadPdf() {
           @click="restorePreviousDraft"
         >
           <UiPzIcon name="restore" class="text-[16px]" />
-          <span>Reprendre : {{ previousDraftName }}</span>
+          <span class="hidden 2xl:inline">Reprendre : {{ previousDraftName }}</span>
+          <span class="2xl:hidden">Reprendre</span>
         </button>
 
         <!-- Bouton Vider/Réinitialiser si le formulaire contient déjà du texte -->
@@ -524,12 +528,12 @@ async function downloadPdf() {
           <UiPzIcon name="dashboard_customize" class="text-[18px]" />
           {{ templateName }}
         </NuxtLink>
-        <div id="tour-color-picker" class="hidden lg:flex gap-1">
+        <div id="tour-color-picker" class="hidden lg:flex gap-0.5 2xl:gap-1">
           <button
             v-for="color in accentColors"
             :key="color"
             type="button"
-            class="w-7 h-7 rounded-full ring-2 ring-offset-1"
+            class="w-5 h-5 2xl:w-7 2xl:h-7 rounded-full ring-2 ring-offset-1"
             :class="accentColor === color ? 'ring-secondary' : 'ring-transparent'"
             :style="{ backgroundColor: color }"
             :aria-label="`Couleur ${color}`"
@@ -767,4 +771,5 @@ async function downloadPdf() {
     </div>
   </div>
   </ClientOnly>
+  </div>
 </template>

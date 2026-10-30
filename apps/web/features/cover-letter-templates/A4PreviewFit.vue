@@ -51,7 +51,8 @@ function checkOverflow() {
     }
   })
 
-  const count = Math.max(1, Math.ceil((maxBottom + 10) / A4_HEIGHT_PX))
+  // Les fonds pleine page s'arrêtent exactement au bas de la feuille : seul un vrai dépassement crée une page
+  const count = Math.max(1, Math.ceil((maxBottom - 1) / A4_HEIGHT_PX))
   if (count !== pageCount.value) {
     pageCount.value = count
     sheet.style.minHeight = `${count * 297}mm`

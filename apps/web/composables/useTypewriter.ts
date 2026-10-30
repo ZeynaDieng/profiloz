@@ -237,9 +237,10 @@ export function useTypewriter(
 
   onUnmounted(stop)
 
+  // hasMounted (et non import.meta.client) : le premier rendu client doit égaler le rendu serveur
   const showCursor = computed(
     () =>
-      import.meta.client
+      hasMounted.value
       && !prefersReducedMotion()
       && toValue(options.active ?? true)
       && (isAnimating.value || shouldLoop()),

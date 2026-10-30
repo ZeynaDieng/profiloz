@@ -15,7 +15,7 @@ const {
 
 <template>
   <CoverLetterShell template-name="Tech Lead">
-    <div class="font-mono text-[10pt] leading-[1.6] text-slate-300 bg-slate-900 -mx-[20mm] -my-[20mm] px-[20mm] py-[20mm] min-h-full">
+    <div class="font-mono text-[10pt] leading-[1.6] text-slate-300 bg-slate-900 -mx-[20mm] -my-[20mm] px-[20mm] py-[20mm] min-h-[297mm]">
       <!-- Header -->
       <div class="flex justify-between items-start mb-10 border-b border-slate-700 pb-6 gap-6">
         <div v-if="senderLines.length" class="space-y-1">

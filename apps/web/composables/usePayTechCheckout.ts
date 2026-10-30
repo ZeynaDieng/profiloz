@@ -12,6 +12,29 @@ declare global {
   }
 }
 
+const PAYTECH_SDK_URL = 'https://paytech.sn/assets/js/paytech.js'
+let paytechSdkPromise: Promise<boolean> | null = null
+
+/** Charge le SDK PayTech au premier paiement plutôt que sur chaque page (false si indisponible). */
+function loadPayTechSdk(timeoutMs = 4000): Promise<boolean> {
+  if (window.PayTech) return Promise.resolve(true)
+  paytechSdkPromise ??= new Promise<boolean>((resolve) => {
+    const script = document.createElement('script')
+    script.src = PAYTECH_SDK_URL
+    script.async = true
+    script.onload = () => resolve(Boolean(window.PayTech))
+    script.onerror = () => {
+      paytechSdkPromise = null
+      resolve(false)
+    }
+    document.head.appendChild(script)
+  })
+  return Promise.race([
+    paytechSdkPromise,
+    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeoutMs)),
+  ])
+}
+
 export function usePayTechCheckout() {
   const paymentService = usePaymentService()
   const { ensureSession } = useGuestSession()
@@ -110,7 +133,7 @@ export function usePayTechCheckout() {
       }
 
       // 1. Essayer d'utiliser le SDK PayTech officiel sur desktop s'il est chargé
-      if (import.meta.client && window.PayTech && token) {
+      if (import.meta.client && token && await loadPayTechSdk()) {
         try {
           // Garantir qu'aucune modale de fallback n'est ouverte simultanément
           isModalOpen.value = false

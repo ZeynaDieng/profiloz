@@ -15,7 +15,9 @@ const {
 
 <template>
   <CoverLetterShell template-name="DuoTone">
-    <div class="grid grid-cols-12 gap-0 min-h-full">
+    <div class="grid grid-cols-12 gap-0 min-h-full isolate">
+      <!-- Fond de la colonne sur toute la hauteur de la feuille (20mm de marge + 4/12 de 170mm), sous le contenu -->
+      <div class="absolute inset-y-0 left-0 -z-10 w-[76.667mm] bg-slate-100" aria-hidden="true" />
       <!-- Left side (Colored/Tinted) -->
       <aside class="col-span-4 bg-slate-100 -ml-[20mm] -my-[20mm] p-6 text-slate-800 flex flex-col gap-6">
         <div>
