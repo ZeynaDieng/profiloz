@@ -1,5 +1,5 @@
 import { COVER_LETTER_TEMPLATE_SLUGS, buildCoverLetterTitle, type CoverLetterTemplateSlug } from '@profiloz/shared'
-import { paymentService } from '@/modules/payment/payment.service'
+import { paymentService, snapshotDocKey } from '@/modules/payment/payment.service'
 import { pdfService, type CoverLetterPdfInput } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
     } else {
-      await paymentService.consumeSnapshotDownload(owner, 'letter')
+      await paymentService.consumeSnapshotDownload(owner, snapshotDocKey('letter', letterId))
     }
 
     const result = await pdfService.startCoverLetterPdfJob(letter, {

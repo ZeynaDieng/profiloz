@@ -1,5 +1,5 @@
 import { normalizeResumeSnapshotForPdf, toPdfGenerationError } from '@/lib/pdf/normalize-resume-snapshot'
-import { paymentService } from '@/modules/payment/payment.service'
+import { paymentService, snapshotDocKey } from '@/modules/payment/payment.service'
 import { pdfService } from '@/modules/pdf/pdf.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { assertPdfRateLimit } from '@/lib/pdf/rate-limit-pdf'
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     if (owner.userId && resumeId) {
       await paymentService.unlockResume(owner, resumeId)
     } else {
-      await paymentService.consumeSnapshotDownload(owner, 'cv')
+      await paymentService.consumeSnapshotDownload(owner, snapshotDocKey('cv', body.snapshot?.id))
     }
 
     const result = await pdfService.startSnapshotPdfJob(snapshot, ctx.guestSessionDbId, {

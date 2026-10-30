@@ -19,7 +19,8 @@ export class AiService {
 Améliore ce texte de CV pour qu'il soit percutant, élégant, sans fautes, mais surtout TRÈS HUMAIN et fluide.
 Consignes :
 - Évite absolument les expressions robotiques ou clichés corporate (ex: "facilitateur", "catalyseur", "synergie", "passionné par", "ayant à cœur de", "forte valeur ajoutée").
-- Privilégie un ton authentique, sincère, direct et simple. Raconte des faits réels.
+- Privilégie un ton authentique, sincère, direct et simple, en t'appuyant uniquement sur les faits fournis.
+- N'invente AUCUN fait : pas de chiffre, durée d'expérience, entreprise, diplôme ou résultat absent du texte ou du contexte. S'il manque une information, reste général plutôt que de la deviner.
 - Sois concis : pas de phrases à rallonge ou de jargon de remplissage.
 ${context ? `Contexte : ${context}` : ''}
 Texte à améliorer : "${text}"
@@ -61,6 +62,7 @@ Consignes strictes :
 - Chaque puce doit commencer par un verbe d'action différent (ex: "Coordonner", "Optimiser", "Négocier", "Piloter").
 - Rédige des phrases courtes (10 à 15 mots maximum par puce) qui décrivent un résultat tangible.
 - Propose des tâches spécifiques au secteur de "${jobTitle}" pour éviter les répétitions d'un métier à un autre.
+- N'invente pas de chiffres précis (pourcentages, montants, effectifs) : ce sont des suggestions que le candidat adaptera à son parcours réel.
 
 Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans texte autour :
 [
@@ -128,6 +130,7 @@ Consignes de structure et de style STRICTES :
 - NE réponds PAS avec la formule de politesse de fin ("Veuillez agréer...", "Je vous prie d'agréer...") ni avec la signature finale.
 - Bannis TOUTES les formules de politesse poussiéreuses du XIXe siècle.
 - Écris de manière synthétique, fluide et moderne (maximum 3 paragraphes courts séparés par des sauts de ligne).
+- N'invente AUCUN fait : pas de chiffre, durée d'expérience, entreprise, diplôme ou résultat absent du profil du candidat ou de l'offre. S'il manque une information, reste général plutôt que de la deviner.
 
 Réponds UNIQUEMENT avec un objet JSON valide :
 {

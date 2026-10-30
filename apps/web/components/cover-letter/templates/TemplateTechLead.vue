@@ -34,7 +34,7 @@ const {
       <!-- Object -->
       <div v-if="letter.position" class="mb-8">
         <p class="text-[9.5pt] text-white font-bold">
-          <span>Subject:</span>
+          <span>Objet :</span>
           <span class="ml-2 font-normal text-slate-300">Candidature - {{ letter.position }}</span>
         </p>
       </div>

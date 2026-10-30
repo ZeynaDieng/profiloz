@@ -80,6 +80,31 @@ function readGuestSessionMeta(data: unknown): GuestSessionMeta {
   }
 }
 
+/**
+ * Clé d'un document du dossier : `cv:<id>` / `letter:<id>` (anciennes sessions : `cv` / `letter` sans id).
+ * Un dossier payé = 1 CV + 1 lettre précis ; les modifier et les retélécharger reste gratuit.
+ */
+export function snapshotDocKey(type: 'cv' | 'letter', id?: unknown): string {
+  return typeof id === 'string' && id.trim() ? `${type}:${id.trim()}` : type
+}
+
+function docKeyType(key: string): string {
+  return key.split(':')[0] ?? key
+}
+
+type DossierSlotDecision = 'known' | 'free-slot' | 'adopt-legacy' | 'slot-taken'
+
+/** Place du document dans le dossier courant : déjà dedans, emplacement libre, ou emplacement pris par un autre document. */
+export function decideDossierSlot(downloadedIds: string[], docId: string): DossierSlotDecision {
+  if (downloadedIds.includes(docId)) return 'known'
+  const type = docKeyType(docId)
+  const sameType = downloadedIds.filter((key) => docKeyType(key) === type)
+  if (sameType.length === 0) return 'free-slot'
+  // Ancien format sans id : le premier document identifié de ce type prend la place
+  if (docId !== type && sameType.every((key) => key === type)) return 'adopt-legacy'
+  return 'slot-taken'
+}
+
 async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string, docId?: string): Promise<boolean> {
   const guest = await prisma.guestSession.findUnique({
     where: { id: guestSessionDbId },
@@ -88,24 +113,14 @@ async function isGuestSnapshotDossierUnlocked(guestSessionDbId: string, docId?: 
   if (!guest) return false
 
   const meta = readGuestSessionMeta(guest.data)
-  const downloadedIds = meta.downloadedDocIds || []
+  const unlocked = Boolean(guest.dossierUnlockedAt || meta.snapshotUnlockedAt)
 
-  // Si le document a déjà été téléchargé, on l'autorise gratuitement
-  if (docId && downloadedIds.includes(docId)) {
-    return true
-  }
+  // Sans docId : vérification globale d'accès au dossier
+  if (!docId) return unlocked
 
-  // S'il n'y a pas de docId, c'est une vérification globale d'accès
-  if (!docId) {
-    return Boolean(guest.dossierUnlockedAt || meta.snapshotUnlockedAt)
-  }
-
-  // S'il y a moins de 2 documents distincts téléchargés, on autorise l'accès si débloqué
-  if (downloadedIds.length < 2 && (guest.dossierUnlockedAt || meta.snapshotUnlockedAt)) {
-    return true
-  }
-
-  return false
+  const decision = decideDossierSlot(meta.downloadedDocIds || [], docId)
+  if (decision === 'known') return true
+  return unlocked && decision !== 'slot-taken'
 }
 
 async function isUserSnapshotDossierUnlocked(userId: string): Promise<boolean> {
@@ -473,7 +488,8 @@ export class PaymentService {
     if (owner.userId && (await isUserSnapshotDossierUnlocked(owner.userId))) {
       return { consumed: false }
     }
-    if (owner.guestSessionDbId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId, docId))) {
+    // Avec docId, le document doit être enregistré dans le dossier : la transaction ci-dessous s'en charge
+    if (owner.guestSessionDbId && !docId && (await isGuestSnapshotDossierUnlocked(owner.guestSessionDbId))) {
       return { consumed: false }
     }
 
@@ -527,24 +543,18 @@ export class PaymentService {
           ? (guest.data as Record<string, unknown>)
           : {}
 
-      if (docId && downloadedIds.includes(docId)) {
-        return { consumed: false }
-      }
+      const unlocked = Boolean(guest.dossierUnlockedAt || meta.snapshotUnlockedAt)
+      const decision: DossierSlotDecision = docId ? decideDossierSlot(downloadedIds, docId) : 'known'
 
-      if (downloadedIds.length < 2) {
-        const newDownloadedIds = docId ? [...downloadedIds, docId] : downloadedIds
-
-        if (!guest.dossierUnlockedAt && !meta.snapshotUnlockedAt) {
+      if (decision === 'known' && (unlocked || !docId)) {
+        if (!unlocked) {
+          // Pas de docId et dossier non débloqué : premier téléchargement, consomme 1 crédit
           const decremented = await tx.guestSession.updateMany({
             where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
             data: {
               creditsBalance: { decrement: 1 },
               dossierUnlockedAt: new Date(),
-              data: {
-                ...baseData,
-                snapshotUnlockedAt: new Date().toISOString(),
-                downloadedDocIds: newDownloadedIds,
-              } as Prisma.InputJsonValue,
+              data: { ...baseData, snapshotUnlockedAt: new Date().toISOString() } as Prisma.InputJsonValue,
             },
           })
           if (decremented.count === 0) {
@@ -555,43 +565,45 @@ export class PaymentService {
             )
           }
           return { consumed: true }
-        } else {
-          await tx.guestSession.update({
-            where: { id: owner.guestSessionDbId },
-            data: {
-              data: {
-                ...baseData,
-                downloadedDocIds: newDownloadedIds,
-              } as Prisma.InputJsonValue,
-            },
-          })
-          return { consumed: false }
         }
-      } else {
-        // Limite dépassée : on consomme un nouveau crédit pour entamer un nouveau cycle de 2 documents
-        const newDownloadedIds = docId ? [docId] : []
-        const decremented = await tx.guestSession.updateMany({
-          where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
-          data: {
-            creditsBalance: { decrement: 1 },
-            dossierUnlockedAt: new Date(),
-            data: {
-              ...baseData,
-              snapshotUnlockedAt: new Date().toISOString(),
-              downloadedDocIds: newDownloadedIds,
-            } as Prisma.InputJsonValue,
-          },
-        })
-
-        if (decremented.count === 0) {
-          throw new AppError(
-            402,
-            'Payment Required',
-            'Limite de 2 documents par dossier atteinte. Veuillez reprendre une offre pour créer un nouveau dossier.',
-          )
-        }
-        return { consumed: true }
+        return { consumed: false }
       }
+
+      // Dossier déjà payé et place libre pour ce type de document : il rejoint le dossier gratuitement
+      if (unlocked && (decision === 'free-slot' || decision === 'adopt-legacy')) {
+        const kept = decision === 'adopt-legacy'
+          ? downloadedIds.filter((key) => key !== docKeyType(docId!))
+          : downloadedIds
+        await tx.guestSession.update({
+          where: { id: owner.guestSessionDbId },
+          data: { data: { ...baseData, downloadedDocIds: [...kept, docId!] } as Prisma.InputJsonValue },
+        })
+        return { consumed: false }
+      }
+
+      // Premier dossier, ou document différent de celui déjà payé (autre CV / autre lettre) : nouveau crédit
+      const decremented = await tx.guestSession.updateMany({
+        where: { id: owner.guestSessionDbId, creditsBalance: { gt: 0 } },
+        data: {
+          creditsBalance: { decrement: 1 },
+          dossierUnlockedAt: new Date(),
+          data: {
+            ...baseData,
+            snapshotUnlockedAt: new Date().toISOString(),
+            downloadedDocIds: docId ? [docId] : [],
+          } as Prisma.InputJsonValue,
+        },
+      })
+      if (decremented.count === 0) {
+        throw new AppError(
+          402,
+          'Payment Required',
+          unlocked
+            ? 'Votre dossier payé contient déjà un autre document de ce type. Choisissez une offre pour télécharger ce nouveau document.'
+            : 'Aucun crédit disponible. Choisissez une offre pour télécharger votre dossier (CV + lettre).',
+        )
+      }
+      return { consumed: true }
     })
   }
 

@@ -220,8 +220,10 @@ export function useResumeSections(resume: MaybeRefOrGetter<ResumeSnapshot>) {
 
 export function formatDateRange(start?: string, end?: string, isCurrent?: boolean) {
   if (!start && !end) return ''
-  const endLabel = isCurrent ? 'Présent' : end ?? ''
-  return start ? `${start} – ${endLabel}` : endLabel
+  const endLabel = isCurrent ? 'Présent' : end?.trim() ?? ''
+  if (!start) return endLabel
+  // Pas de fin connue : afficher l'année seule plutôt qu'un tiret orphelin (« 2022 – »)
+  return endLabel ? `${start} – ${endLabel}` : start
 }
 
 const SKILL_LEVEL_LABELS: Record<string, string> = {

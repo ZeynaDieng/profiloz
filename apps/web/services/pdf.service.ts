@@ -66,8 +66,11 @@ export function usePdfService() {
   }
 
   async function downloadWithAuth(relativePath: string, filename = 'cv Profiloz.pdf') {
-    const url = getDownloadUrl(relativePath)
-
+    // Le nom du fichier est fixé par le serveur (Content-Disposition) : le transmettre s'il manque
+    const withFilename = relativePath.includes('/pdf/download/') && !relativePath.includes('filename=')
+      ? `${relativePath}${relativePath.includes('?') ? '&' : '?'}filename=${encodeContentDispositionFilename(filename)}`
+      : relativePath
+    const url = getDownloadUrl(withFilename)
 
 
     if (import.meta.client) {
