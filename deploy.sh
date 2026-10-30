@@ -47,12 +47,23 @@ echo "🚀 Démarrage avec une seule API (mise à jour du schéma et seed sans c
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up --scale api=1 -d --remove-orphans
 
 echo "Attente de l'API..."
-if ! timeout 300 bash -c "until docker compose -f '$COMPOSE_FILE' --env-file '$ENV_FILE' exec -T api node -e \"fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\" >/dev/null 2>&1; do sleep 3; done"; then
+# On lit l'état de santé calculé par Docker (healthcheck du docker-compose)
+api_healthy=false
+for _ in $(seq 1 100); do
+  API_CONTAINER=$(docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps -q api | head -n 1)
+  if [ -n "$API_CONTAINER" ] && [ "$(docker inspect --format '{{.State.Health.Status}}' "$API_CONTAINER" 2>/dev/null)" = "healthy" ]; then
+    api_healthy=true
+    break
+  fi
+  sleep 3
+done
+if [ "$api_healthy" != "true" ]; then
   echo "❌ L'API ne répond pas. Logs :"
   docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --tail=80 api
   echo "Base sauvegardée avant déploiement : $BACKUP_FILE"
   exit 1
 fi
+echo "✅ API en bonne santé"
 
 echo ""
 echo "🚀 Passage à 3 instances API..."
