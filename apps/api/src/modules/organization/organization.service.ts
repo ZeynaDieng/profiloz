@@ -39,6 +39,7 @@ function toOrganizationDto(org: NonNullable<Awaited<ReturnType<typeof organizati
     type: org.type,
     unlimitedUntil: org.unlimitedUntil?.toISOString() ?? null,
     subscriptionPlanSlug: org.subscriptionPlanSlug,
+    maxMembers: org.maxMembers,
     createdAt: org.createdAt.toISOString(),
     updatedAt: org.updatedAt.toISOString(),
     members: org.members.map((member) => ({
@@ -119,6 +120,17 @@ export class OrganizationService {
     const existing = await organizationRepository.findMember(membership.organizationId, invitedUser.id)
     if (existing) {
       throw new AppError(409, 'Conflict', 'Cette personne fait déjà partie de votre organisation.')
+    }
+
+    // Offre Business : nombre d'utilisateurs inclus (davantage sur devis)
+    const memberCount = await prisma.organizationMember.count({ where: { organizationId: membership.organizationId } })
+    const maxMembers = membership.organization.maxMembers
+    if (memberCount >= maxMembers) {
+      throw new AppError(
+        403,
+        'Forbidden',
+        `Votre offre Business inclut ${maxMembers} utilisateurs. Pour en ajouter davantage, contactez-nous à contact@profiloz.com.`,
+      )
     }
 
     const member = await organizationRepository.addMember(

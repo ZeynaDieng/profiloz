@@ -1,0 +1,3 @@
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "unlimitedReminderFor" TIMESTAMP(3);
+ALTER TABLE "guest_sessions" ADD COLUMN IF NOT EXISTS "unlimitedReminderFor" TIMESTAMP(3);
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "maxMembers" INTEGER NOT NULL DEFAULT 5;

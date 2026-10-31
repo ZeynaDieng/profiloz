@@ -255,7 +255,7 @@ async function removeMember(userId: string, name: string) {
           <div>
             <h2 class="font-bold text-on-surface">Collaborateurs</h2>
             <p class="text-sm text-on-surface-variant mt-1">
-              {{ organization.members.length }} membre{{ organization.members.length > 1 ? 's' : '' }}
+              {{ organization.members.length }}<template v-if="organization.maxMembers"> / {{ organization.maxMembers }}</template> utilisateur{{ (organization.maxMembers ?? organization.members.length) > 1 ? 's' : '' }}
             </p>
           </div>
         </div>

@@ -15,6 +15,8 @@ export interface OrganizationDto {
   type: OrganizationType
   unlimitedUntil: string | null
   subscriptionPlanSlug: string | null
+  /** Utilisateurs inclus dans l'offre Business. */
+  maxMembers?: number
   createdAt: string
   updatedAt: string
   members: OrganizationMemberDto[]

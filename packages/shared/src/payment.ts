@@ -25,18 +25,23 @@ export interface Plan {
   priceFrom?: boolean
 }
 
-/** Fonctionnalités communes à tout dossier débloqué (crédits ou abonnement). */
+/** Utilisateurs inclus dans l'offre Business (au-delà : sur devis). */
+export const BUSINESS_INCLUDED_MEMBERS = 5
+
+/** Inclus dans toutes les offres. */
 const DOSSIER_QUALITY_FEATURES = [
   'PDF haute qualité',
   'Téléchargements illimités',
   'Modifications illimitées',
+  'Historique de vos dossiers (compte gratuit)',
+  'Import & scan de documents',
 ] as const
 
 /** Fonctionnalités des abonnements Illimité et Business (liste explicite, pas de raccourci). */
 const SUBSCRIPTION_CORE_FEATURES = [
-  'Dossiers illimités',
-  'Historique de vos dossiers',
-  'Import & scan de documents',
+  'Dossiers illimités pendant 30 jours',
+  'Sans prélèvement automatique',
+  'Rappel par e-mail avant la fin',
   ...DOSSIER_QUALITY_FEATURES,
 ] as const
 
@@ -64,7 +69,7 @@ export const PLANS: Plan[] = [
     kind: 'credits',
     credits: 10,
     description: 'Soit 500 FCFA par dossier, sans abonnement.',
-    features: ['10 dossiers (2 documents au choix chacun)', ...DOSSIER_QUALITY_FEATURES],
+    features: ['10 dossiers (2 documents au choix chacun)', 'Crédits sans date d’expiration', ...DOSSIER_QUALITY_FEATURES],
   },
   {
     slug: 'illimite',
@@ -90,7 +95,7 @@ export const PLANS: Plan[] = [
     description: 'Tarification personnalisée selon le nombre d’utilisateurs et les fonctionnalités.',
     features: [
       ...SUBSCRIPTION_CORE_FEATURES,
-      'Multi-collaborateurs',
+      `${BUSINESS_INCLUDED_MEMBERS} utilisateurs inclus (au-delà, sur devis)`,
       'Espace organisation',
     ],
   },

@@ -99,6 +99,8 @@ model User {
   locale        String    @default("fr-FR")
   creditsBalance Int      @default(0)
   unlimitedUntil DateTime?
+  /// Fin d'accès illimité déjà rappelée par e-mail (un rappel par période)
+  unlimitedReminderFor DateTime?
   subscriptionPlanSlug String?
   dossierUnlockedAt DateTime?
   /// Documents du dossier en cours (`cv:<id>` / `letter:<id>`, 2 au choix par crédit)
@@ -141,6 +143,8 @@ model GuestSession {
   creditsBalance Int       @default(0)
   dossierUnlockedAt DateTime?
   unlimitedUntil DateTime?
+  /// Fin d'accès illimité déjà rappelée par e-mail (un rappel par période)
+  unlimitedReminderFor DateTime?
   subscriptionPlanSlug String?
   expiresAt      DateTime
   createdAt      DateTime  @default(now())
@@ -162,6 +166,8 @@ model Organization {
   type                 OrganizationType @default(OTHER)
   unlimitedUntil       DateTime?
   subscriptionPlanSlug String?
+  /// Utilisateurs inclus (offre Business : 5 ; davantage sur devis)
+  maxMembers           Int              @default(5)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 

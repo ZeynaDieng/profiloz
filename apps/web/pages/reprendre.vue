@@ -117,6 +117,10 @@ onMounted(async () => {
     documents.value = docs
     ensurePaidGuestDossier(docs[0]!.kind)
     state.value = 'ready'
+
+    // Lien du rappel de fin d'accès : session retrouvée, on enchaîne sur la page demandée (chemin interne)
+    const next = typeof route.query.next === 'string' ? route.query.next : ''
+    if (next.startsWith('/') && !next.startsWith('//')) await navigateTo(next)
   } catch {
     state.value = 'error'
   }

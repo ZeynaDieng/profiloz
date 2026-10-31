@@ -65,6 +65,25 @@ const FALLBACK_TEMPLATES: Record<string, { subject: string; bodyHtml: string; bo
     `,
     bodyText: 'Votre {{documentType}} est prêt !\n\nBonjour {{firstName}},\n\nVous venez de générer votre {{documentType}} sur Profilo\'Z. Vous pouvez le télécharger via ce lien : {{downloadUrl}}\n\nCe lien de téléchargement expire dans 24 heures.\n\nConservez vos documents à vie : Pensez à créer un compte gratuit sur Profilo\'Z pour retrouver tout votre historique, modifier vos documents et les sauvegarder à vie.\n\nReprenez votre dossier (CV + lettre) depuis n\'importe quel appareil : {{dashboardUrl}}',
   },
+  subscription_reminder: {
+    subject: 'Votre accès illimité se termine le {{endDate}}',
+    bodyHtml: `
+<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+  <h2 style="color: #0f172a; margin-bottom: 20px;">Votre accès illimité se termine bientôt</h2>
+  <p>Bonjour {{firstName}},</p>
+  <p>Votre offre <strong>{{planName}}</strong> sur Profilo'Z prend fin le <strong>{{endDate}}</strong>.</p>
+  <p>Elle ne se renouvelle pas automatiquement : aucun prélèvement ne sera fait sans votre accord. Pour continuer à créer et télécharger vos CV et lettres sans limite, il vous suffit de la reprendre.</p>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{renewUrl}}" style="background-color: #0051d5; color: white; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block;">Prolonger mon accès</a>
+  </div>
+
+  <p style="font-size: 0.9em; color: #64748b;">Vos documents déjà téléchargés restent à vous, et vous pourrez toujours les modifier.</p>
+  <p>Merci pour votre confiance,<br />L'équipe Profilo'Z</p>
+</div>
+    `,
+    bodyText: 'Votre accès illimité se termine le {{endDate}}.\n\nBonjour {{firstName}},\n\nVotre offre {{planName}} sur Profilo\'Z prend fin le {{endDate}}. Elle ne se renouvelle pas automatiquement : aucun prélèvement sans votre accord.\n\nPour prolonger votre accès : {{renewUrl}}\n\nL\'équipe Profilo\'Z',
+  },
 }
 
 /** Lien « Reprendre mon dossier » : recharge le dossier payé d'un invité sur n'importe quel appareil. */

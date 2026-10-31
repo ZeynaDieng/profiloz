@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     'pdfjs-dist',
     'pdf-parse',
     'mammoth',
+    'nodemailer',
   ],
   experimental: {
     serverActions: {
