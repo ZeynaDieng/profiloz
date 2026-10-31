@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const result = await aiService.generateLetter({
       jobOfferText: body.jobOfferText ?? '',
       candidateInfo: body.candidateInfo ?? '',
+      candidateName: body.candidateName ?? '',
       targetCompany: body.targetCompany ?? '',
       targetPosition: body.targetPosition ?? '',
     })

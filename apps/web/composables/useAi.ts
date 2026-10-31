@@ -66,6 +66,7 @@ export function useAi() {
   async function generateLetter(input: {
     jobOfferText: string
     candidateInfo?: string
+    candidateName?: string
     targetCompany?: string
     targetPosition?: string
   }): Promise<{ content: string; subject: string } | null> {

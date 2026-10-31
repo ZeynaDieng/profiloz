@@ -105,7 +105,6 @@ function buildCandidateInfo(): string | undefined {
   const r = resumeStore.current
   if (!r) return undefined
   const lines = [
-    r.personalInfo?.fullName && `Nom : ${r.personalInfo.fullName}`,
     r.personalInfo?.jobTitle && `Titre : ${r.personalInfo.jobTitle}`,
     r.summary?.trim() && `Résumé : ${r.summary.trim()}`,
     r.experiences.length > 0 && `Expériences : ${r.experiences
@@ -132,6 +131,8 @@ async function handleGenerateFromJobOffer() {
     targetCompany: targetCompanyInput.value || companyName.value,
     targetPosition: targetPositionInput.value || position.value,
     candidateInfo,
+    // Sert à accorder la lettre au bon genre, même sans CV
+    candidateName: resumeStore.current?.personalInfo?.fullName?.trim() || senderName.value?.trim() || undefined,
   })
 
   if (result) {

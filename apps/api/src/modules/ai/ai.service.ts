@@ -132,11 +132,13 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
   async generateLetter(input: {
     jobOfferText: string
     candidateInfo?: string
+    candidateName?: string
     targetCompany?: string
     targetPosition?: string
   }): Promise<{ content: string; subject: string }> {
     const jobOfferText = (input.jobOfferText || '').trim().slice(0, 3000)
     const candidateInfo = input.candidateInfo ? input.candidateInfo.trim().slice(0, 1000) : ''
+    const candidateName = input.candidateName ? input.candidateName.trim().slice(0, 80) : ''
     const targetCompany = input.targetCompany ? input.targetCompany.trim().slice(0, 100) : ''
     const targetPosition = input.targetPosition ? input.targetPosition.trim().slice(0, 100) : ''
     if (!jobOfferText && !targetPosition) {
@@ -148,13 +150,22 @@ Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans
 ${jobOfferText ? `Offre d'emploi : ${jobOfferText}` : 'Aucune offre fournie : candidature pour le poste ci-dessous.'}
 ${targetPosition ? `Poste visé : ${targetPosition}` : ''}
 ${targetCompany ? `Entreprise : ${targetCompany}` : ''}
+${candidateName ? `Nom du candidat : ${candidateName}` : ''}
 ${candidateInfo ? `Profil du candidat :\n${candidateInfo}` : 'Profil du candidat : non fourni.'}
 
 Adaptation à l'offre (le plus important) :
 - Repère dans l'offre les 2 ou 3 attentes principales (missions, compétences, qualités) et réponds-y explicitement.
 - Relie chaque attente à un élément RÉEL du profil (expérience, formation, compétence) en le nommant précisément.
 - Cite l'entreprise et le poste par leur nom quand ils sont connus.
-- Si le profil n'est pas fourni, écris une lettre crédible centrée sur les attentes de l'offre, sans inventer de parcours.
+
+${candidateInfo ? '' : `Profil absent (règle impérative) :
+- Le candidat n'a rien dit de son parcours : n'affirme AUCUNE expérience passée, aucun employeur, aucun outil déjà maîtrisé ("Mon parcours m'a permis…", "Habitué à…", "Fort de mon expérience…" sont interdits).
+- Parle de sa motivation, de ce qu'il a compris du poste et de ce qu'il s'engage à apporter, au présent ou au futur.
+- N'écris pas non plus qu'il remplit une exigence de l'offre ("possédant le permis B", "titulaire du diplôme", "je maîtrise Excel") : il le précisera lui-même.
+`}
+Accord en genre :
+- Déduis le genre uniquement du prénom du candidat s'il est fourni et sans ambiguïté.
+- Sinon, écris sans adjectif ni participe accordé au candidat (évite "prêt/prête", "convaincu/convaincue", "ravi/ravie", "habitué/habituée", "heureux/heureuse") : préfère "je souhaite", "j'ai à cœur", "c'est avec enthousiasme que".
 
 Consignes de structure et de style STRICTES :
 - Ne génère QUE les 3 paragraphes centraux du corps du message (Vous / Moi / Nous).
@@ -163,7 +174,11 @@ Consignes de structure et de style STRICTES :
 - NE réponds PAS avec la formule d'appel ("Madame, Monsieur," ou "Mme Ndiaye,").
 - NE réponds PAS avec la formule de politesse de fin ("Veuillez agréer...", "Je vous prie d'agréer...") ni avec la signature finale.
 - Bannis TOUTES les formules de politesse poussiéreuses du XIXe siècle.
-- Écris de manière synthétique, fluide et moderne (maximum 3 paragraphes courts séparés par des sauts de ligne).
+- Écris de manière synthétique, fluide et moderne : 3 paragraphes de 2 à 4 phrases, 180 à 260 mots au total.
+- Dans les phrases, écris l'intitulé du poste en minuscules ("un poste de développeur web junior"), sauf noms propres et sigles, qui restent en majuscules (B2B, PME, RH, permis B).
+- Le candidat ne fait pas encore partie de l'entreprise : dis "vos offres", "votre équipe", jamais "nos offres".
+- Une exigence de l'offre (permis, diplôme, langue, outil) n'est attribuée au candidat que si son profil la mentionne.
+- Évite les clichés : "forte valeur ajoutée", "passionné", "dynamique et motivé", "relever des défis", "synergie".
 - N'invente AUCUN fait : pas de chiffre, durée d'expérience, entreprise, diplôme ou résultat absent du profil du candidat ou de l'offre. S'il manque une information, reste général plutôt que de la deviner.
 
 Réponds UNIQUEMENT avec un objet JSON valide :
