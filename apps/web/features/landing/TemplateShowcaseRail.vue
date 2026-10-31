@@ -399,8 +399,8 @@ onUnmounted(() => {
   scroll-snap-type: none;
 }
 
+/* Copies cliquables : le clic est capté par la rangée (data-preview-index), comme sur les originaux */
 :deep([data-rail-clone]) {
-  pointer-events: none;
   user-select: none;
 }
 
