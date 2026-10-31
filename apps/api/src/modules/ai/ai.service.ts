@@ -1,132 +1,137 @@
 import { stripLetterFormulas } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
+import { callGemini, isGeminiConfigured, parseJsonOutput } from '@/lib/gemini'
 
-/**
- * Modèles essayés dans l'ordre : si l'un est surchargé (503) ou trop lent, on passe au suivant.
- * Mesuré le 31/10/2026 : 3.5-flash-lite répond en 2 à 4 s, 3.1-flash-lite renvoyait souvent 503 ou 20 s.
- */
-const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite']
-const GEMINI_TIMEOUT_MS = 15_000
+/** Textes courts de l'éditeur : réponse attendue en quelques secondes. */
+const TEXT_TIMEOUT_MS = 15_000
+const TEXT_BUDGET_MS = 30_000
 
-type GeminiConfig = {
-  temperature: number
-  maxOutputTokens: number
-  json?: boolean
+export type EnhanceKind = 'summary' | 'experience' | 'letter' | 'generic'
+
+const UNAVAILABLE = 'L’IA est momentanément indisponible. Réessayez dans un instant.'
+
+const STYLE_RULES = `- Ton authentique, direct et simple ; pas de clichés ("facilitateur", "catalyseur", "synergie", "passionné par", "forte valeur ajoutée", "dynamique et motivé").
+- N'invente AUCUN fait : pas de chiffre, durée, entreprise, diplôme, outil ou résultat absent du texte ou du contexte. S'il manque une information, reste général.
+- Garde la langue du texte d'origine (français par défaut) et corrige l'orthographe.
+- Genre : accorde selon le prénom du candidat s'il est donné dans le contexte et sans ambiguïté, ou si le texte d'origine le fait déjà ; sinon évite les adjectifs et participes accordés ("habitué", "fort de", "motivé", "rigoureux") au profit de tournures neutres ("maîtrise de…", "sens de la rigueur"). N'écris jamais les deux genres côte à côte ("rigoureux, rigoureuse").
+- N'écris jamais le nom du candidat dans le texte et n'en parle pas à la troisième personne ("il", "elle", "Fatou assure…").
+- Si le contexte ne donne que le poste visé (sans expérience ni formation), n'affirme AUCUNE expérience passée ("solide expérience", "plusieurs années") : décris les compétences du métier et l'objectif professionnel.`
+
+const KIND_RULES: Record<EnhanceKind, { improve: string; draft: string }> = {
+  summary: {
+    improve: `Réécris ce profil de CV (accroche en haut du CV) : 2 à 4 phrases, 300 à 550 caractères, à la première personne implicite (sans "je" en début de chaque phrase).`,
+    draft: `Rédige un profil de CV (accroche en haut du CV) de 2 à 4 phrases, 300 à 550 caractères, uniquement à partir du contexte fourni.`,
+  },
+  experience: {
+    improve: `Réécris cette description d'expérience de CV en 3 à 6 puces commençant par "- " et un verbe d'action, une puce par ligne. Conserve TOUTES les missions présentes dans le texte, sans en supprimer.`,
+    draft: `Rédige une description d'expérience de CV en 3 à 5 puces commençant par "- " et un verbe d'action, une puce par ligne, typiques du poste indiqué dans le contexte, sans chiffre inventé.`,
+  },
+  letter: {
+    improve: `Réécris ce corps de lettre de motivation en 3 paragraphes séparés par une ligne vide, sans formule d'appel ("Madame, Monsieur") ni formule de politesse finale ni signature.`,
+    draft: `Rédige un corps de lettre de motivation en 3 paragraphes séparés par une ligne vide, sans formule d'appel ni formule de politesse finale ni signature.`,
+  },
+  generic: {
+    improve: `Améliore ce texte de CV pour qu'il soit clair, percutant et sans fautes, en gardant sa structure (puces, retours à la ligne).`,
+    draft: `Rédige un court texte de CV adapté au contexte fourni.`,
+  },
 }
 
-/** Retire un éventuel bloc ```json … ``` autour de la réponse avant de la lire. */
-function parseJsonOutput(text: string): unknown {
-  const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
-  return JSON.parse(cleaned)
+/** Retire ce qu'un modèle ajoute parfois autour du texte (guillemets, « Voici… », titres en gras). */
+export function cleanGeneratedText(raw: string): string {
+  let text = raw.trim()
+  text = text.replace(/^(?:voici|voilà)[^\n]*:\s*\n+/i, '')
+  text = text.replace(/^\*\*[^*\n]+\*\*\s*\n+/, '')
+  if (/^["«“]/.test(text) && /["»”]$/.test(text)) text = text.slice(1, -1).trim()
+  // Puces Markdown « * » ou « • » → « - », comme dans l'éditeur
+  text = text.replace(/^[ \t]*[*•●▪]\s+/gm, '- ')
+  return text.replace(/\n{3,}/g, '\n\n').trim()
 }
 
 export class AiService {
-  private getApiKey(): string {
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
+  private ensureConfigured() {
+    if (!isGeminiConfigured()) {
       throw new AppError(503, 'Service Unavailable', 'L’API IA Gemini n’est pas configurée.')
     }
-    return apiKey
   }
 
-  /** Texte brut de la réponse, ou null si aucun modèle n'a renvoyé de réponse exploitable. */
-  private async callGemini(prompt: string, config: GeminiConfig): Promise<string | null> {
-    const apiKey = this.getApiKey()
-    const body = JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        ...(config.json ? { responseMimeType: 'application/json' } : {}),
-        temperature: config.temperature,
-        maxOutputTokens: config.maxOutputTokens,
-        // Pas de « réflexion » : plus rapide, et elle ne grignote plus la limite de tokens de la réponse
-        thinkingConfig: { thinkingLevel: 'minimal' },
-      },
+  private async ask(prompt: string, options: { temperature: number; maxOutputTokens: number; json?: boolean }) {
+    this.ensureConfigured()
+    return callGemini({
+      parts: [{ text: prompt }],
+      ...options,
+      timeoutMs: TEXT_TIMEOUT_MS,
+      budgetMs: TEXT_BUDGET_MS,
+      label: 'ai',
     })
-
-    for (const model of GEMINI_MODELS) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body,
-            signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-          },
-        )
-        if (res.ok) {
-          const data = await res.json()
-          const parts: Array<{ text?: string }> = data.candidates?.[0]?.content?.parts ?? []
-          const text = parts.map((part) => part.text ?? '').join('').trim()
-          if (text) return text
-          console.warn(`[ai] ${model} : réponse vide (${data.candidates?.[0]?.finishReason ?? 'inconnu'})`)
-        } else {
-          console.warn(`[ai] ${model} : HTTP ${res.status}`)
-          // Clé invalide, requête refusée… : un autre modèle n'y changera rien
-          if (res.status === 400 || res.status === 401 || res.status === 403) return null
-        }
-      } catch (error) {
-        // Délai dépassé ou réseau : on passe au modèle suivant
-        console.warn(`[ai] ${model} : ${(error as Error).name}`)
-      }
-    }
-    return null
   }
 
-  async enhanceText(rawText: string, rawContext?: string): Promise<string> {
-    if (!rawText || !rawText.trim()) return rawText
-    const text = rawText.trim().slice(0, 1000)
-    const context = rawContext ? rawContext.trim().slice(0, 500) : ''
+  /**
+   * Améliore un texte de CV, ou en rédige un brouillon s'il est vide (à partir du contexte).
+   * Les textes longs ne sont plus tronqués : jusqu'à 4 000 caractères sont envoyés.
+   */
+  async enhanceText(rawText: string, rawContext?: string, kind: EnhanceKind = 'generic'): Promise<string> {
+    const text = (rawText ?? '').trim().slice(0, 4000)
+    const context = rawContext ? rawContext.trim().slice(0, 2000) : ''
+    if (!text && !context) {
+      throw new AppError(400, 'Bad Request', 'Indiquez au moins le poste visé pour que l’IA puisse rédiger.')
+    }
 
-    const prompt = `Tu es un rédacteur professionnel et un coach de carrière humain.
-Améliore ce texte de CV pour qu'il soit percutant, élégant, sans fautes, mais surtout TRÈS HUMAIN et fluide.
+    const rules = KIND_RULES[kind] ?? KIND_RULES.generic
+    const prompt = `Tu es un rédacteur de CV professionnel et humain.
+${text ? rules.improve : rules.draft}
+
 Consignes :
-- Évite absolument les expressions robotiques ou clichés corporate (ex: "facilitateur", "catalyseur", "synergie", "passionné par", "ayant à cœur de", "forte valeur ajoutée").
-- Privilégie un ton authentique, sincère, direct et simple, en t'appuyant uniquement sur les faits fournis.
-- N'invente AUCUN fait : pas de chiffre, durée d'expérience, entreprise, diplôme ou résultat absent du texte ou du contexte. S'il manque une information, reste général plutôt que de la deviner.
-- Sois concis : pas de phrases à rallonge ou de jargon de remplissage.
-${context ? `Contexte : ${context}` : ''}
-Texte à améliorer : "${text}"
+${STYLE_RULES}
+${context ? `\nContexte (faits sur le candidat) :\n${context}\n` : ''}
+${text ? `Texte à améliorer :\n"""\n${text}\n"""\n` : ''}
+Réponds UNIQUEMENT avec le texte final, prêt à être inséré : aucune introduction, aucun commentaire, pas de guillemets autour, pas de Markdown en gras.`
 
-Réponds UNIQUEMENT avec le texte final amélioré, prêt à être inséré. Aucune introduction, aucune conclusion, aucun commentaire, pas de guillemets autour.`
-
-    const output = await this.callGemini(prompt, { temperature: 0.6, maxOutputTokens: 512 })
-    if (!output) {
-      throw new AppError(502, 'Bad Gateway', 'L’IA est momentanément indisponible. Réessayez dans un instant.')
-    }
-    return output
+    const output = await this.ask(prompt, { temperature: 0.5, maxOutputTokens: 2048 })
+    const cleaned = output ? cleanGeneratedText(output) : ''
+    if (!cleaned) throw new AppError(502, 'Bad Gateway', UNAVAILABLE)
+    return kind === 'letter' ? stripLetterFormulas(cleaned) || cleaned : cleaned
   }
 
-  async suggestBullets(rawJobTitle: string): Promise<string[]> {
-    if (!rawJobTitle || !rawJobTitle.trim()) return []
-    const jobTitle = rawJobTitle.trim().slice(0, 100)
-
-    const prompt = `Pour le poste de "${jobTitle}", génère 5 puces de réalisations professionnelles concrètes et variées pour un CV.
-Consignes strictes :
-- Sois TRÈS humain, moderne et réaliste. Évite les puces génériques et robotiques.
-- Chaque puce doit commencer par un verbe d'action différent (ex: "Coordonner", "Optimiser", "Négocier", "Piloter").
-- Rédige des phrases courtes (10 à 15 mots maximum par puce) qui décrivent un résultat tangible.
-- Propose des tâches spécifiques au secteur de "${jobTitle}" pour éviter les répétitions d'un métier à un autre.
-- N'invente pas de chiffres précis (pourcentages, montants, effectifs) : ce sont des suggestions que le candidat adaptera à son parcours réel.
-
-Réponds UNIQUEMENT avec un tableau JSON de chaînes de caractères valide, sans texte autour :
-[
-  "Réalisation spécifique 1...",
-  "Réalisation spécifique 2...",
-  "Réalisation spécifique 3...",
-  "Réalisation spécifique 4...",
-  "Réalisation spécifique 5..."
-]`
-
-    const textOutput = await this.callGemini(prompt, { temperature: 0.7, maxOutputTokens: 512, json: true })
-    if (!textOutput) return []
-
-    try {
-      const parsed = parseJsonOutput(textOutput)
-      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
-    } catch {
-      return []
+  async suggestBullets(rawJobTitle: string, rawContext?: string): Promise<string[]> {
+    const jobTitle = (rawJobTitle ?? '').trim().slice(0, 100)
+    if (!jobTitle) {
+      throw new AppError(400, 'Bad Request', 'Indiquez d’abord l’intitulé du poste.')
     }
+    const context = rawContext ? rawContext.trim().slice(0, 1500) : ''
+
+    const prompt = `Pour le poste de "${jobTitle}", propose 5 puces de missions ou réalisations concrètes et variées pour un CV.
+Consignes strictes :
+- Chaque puce commence par un verbe d'action différent (ex : "Coordonner", "Optimiser", "Négocier", "Piloter").
+- Phrases courtes : 8 à 15 mots par puce, spécifiques au métier de "${jobTitle}".
+- N'invente pas de chiffres précis (pourcentages, montants, effectifs) : le candidat adaptera à son parcours réel.
+${context ? `- Ne répète pas ce que la description actuelle contient déjà :\n"""\n${context}\n"""` : ''}
+
+Réponds UNIQUEMENT avec un tableau JSON de 5 chaînes de caractères, sans texte autour.`
+
+    const textOutput = await this.ask(prompt, { temperature: 0.7, maxOutputTokens: 1024, json: true })
+    if (!textOutput) throw new AppError(502, 'Bad Gateway', UNAVAILABLE)
+
+    let parsed: unknown
+    try {
+      parsed = parseJsonOutput(textOutput)
+    } catch {
+      // Réponse hors JSON : une puce par ligne
+      parsed = textOutput.split('\n')
+    }
+    const list = Array.isArray(parsed) ? parsed : Array.isArray((parsed as { bullets?: unknown })?.bullets) ? (parsed as { bullets: unknown[] }).bullets : []
+    const seen = new Set<string>()
+    const bullets = list
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.replace(/^[\s\-*•●▪\d.)]+/, '').trim())
+      .filter((item) => {
+        const key = item.toLowerCase()
+        if (item.length < 6 || seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, 5)
+    if (bullets.length === 0) throw new AppError(502, 'Bad Gateway', UNAVAILABLE)
+    return bullets
   }
 
   async generateLetter(input: {
@@ -187,9 +192,9 @@ Réponds UNIQUEMENT avec un objet JSON valide :
   "content": "Uniquement les paragraphes du corps du texte (séparés par des sauts de ligne \\n\\n)"
 }`
 
-    const textOutput = await this.callGemini(prompt, { temperature: 0.7, maxOutputTokens: 1536, json: true })
+    const textOutput = await this.ask(prompt, { temperature: 0.7, maxOutputTokens: 1536, json: true })
     if (!textOutput) {
-      throw new AppError(502, 'Bad Gateway', 'L’IA est momentanément indisponible. Réessayez dans un instant.')
+      throw new AppError(502, 'Bad Gateway', UNAVAILABLE)
     }
 
     let parsed: { subject?: unknown; content?: unknown } = {}

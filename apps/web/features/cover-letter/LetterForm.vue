@@ -26,7 +26,10 @@ const props = defineProps<{
   fieldErrors?: Record<string, string>
 }>()
 
-const { enhanceText, generateLetter, loading: aiLoading, error: aiError } = useAi()
+// Reformulation : erreur en notification. Génération : erreur affichée dans la fenêtre IA elle-même.
+const { enhanceText, loading: enhanceLoading } = useAi()
+const { generateLetter, loading: generateLoading, error: aiError } = useAi({ toastErrors: false })
+const aiLoading = computed(() => enhanceLoading.value || generateLoading.value)
 const aiWaitLabel = useAiWaitLabel(aiLoading)
 const resumeStore = useResumeStore()
 
@@ -77,14 +80,12 @@ function fieldError(fieldErrors: Record<string, string> | undefined, key: string
 }
 
 async function handleEnhanceContent() {
-  const textToEnhance = content.value?.trim()
-    ? content.value
-    : "Par la présente, je vous adresse ma candidature pour le poste. Fort de mes expériences passées, je souhaite apporter mes compétences et mon dynamisme à votre équipe."
   const context = [
-    "Corps d'une lettre de motivation, sans formule d'appel ni formule de politesse finale",
-    position.value && `Poste : ${position.value}`,
-  ].filter(Boolean).join('. ')
-  const result = await enhanceText(textToEnhance, context)
+    position.value?.trim() && `Poste visé : ${position.value.trim()}`,
+    companyName.value?.trim() && `Entreprise : ${companyName.value.trim()}`,
+    buildCandidateInfo(),
+  ].filter(Boolean).join('\n')
+  const result = await enhanceText(content.value ?? '', context, 'letter')
   if (result) {
     content.value = stripLetterFormulas(result)
     openSection.value = 'content'

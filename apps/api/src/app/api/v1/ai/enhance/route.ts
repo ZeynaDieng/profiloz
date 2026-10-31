@@ -1,4 +1,4 @@
-import { aiService } from '@/modules/ai/ai.service'
+import { aiService, type EnhanceKind } from '@/modules/ai/ai.service'
 import { handleOptions, jsonResponse, problemResponse, withCors } from '@/lib/errors'
 import { getRequestContext } from '@/lib/request-context'
 import { assertAiRateLimit } from '@/lib/rate-limit-ai'
@@ -12,7 +12,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const text = body.text ?? ''
     const context = body.context ?? ''
-    const enhanced = await aiService.enhanceText(text, context)
+    const kinds: EnhanceKind[] = ['summary', 'experience', 'letter', 'generic']
+    const kind = kinds.includes(body.kind) ? (body.kind as EnhanceKind) : 'generic'
+    const enhanced = await aiService.enhanceText(text, context, kind)
     return withCors(jsonResponse({ enhancedText: enhanced }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)

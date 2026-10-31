@@ -10,6 +10,7 @@ const props = defineProps<{
 }>()
 
 const { enhanceText, suggestBullets, loading: aiLoading } = useAi()
+const toast = useAppToast()
 const activeAiIndex = ref<number | null>(null)
 const aiActionType = ref<'enhance' | 'bullets' | null>(null)
 const aiWaitLabel = useAiWaitLabel(computed(() => activeAiIndex.value !== null))
@@ -86,9 +87,13 @@ async function handleEnhanceExperience(index: number) {
   if (!item) return
   activeAiIndex.value = index
   aiActionType.value = 'enhance'
-  const textToProcess = item.description?.trim() || `Rédige une description professionnelle percutante avec 3-4 puces de missions clés pour le poste de ${item.position || 'professionnel'}.`
-  const context = item.position ? `Poste : ${item.position}` : undefined
-  const result = await enhanceText(textToProcess, context)
+  const context = [
+    item.position?.trim() && `Poste : ${item.position.trim()}`,
+    item.company?.trim() && `Entreprise : ${item.company.trim()}`,
+    item.location?.trim() && `Lieu : ${item.location.trim()}`,
+  ].filter(Boolean).join('\n')
+  // Description vide : l'IA rédige un brouillon à partir du poste (et non d'une consigne déguisée en texte)
+  const result = await enhanceText(item.description ?? '', context, 'experience')
   if (result) {
     item.description = result
   }
@@ -99,13 +104,20 @@ async function handleEnhanceExperience(index: number) {
 async function handleSuggestBullets(index: number) {
   const item = model.value[index]
   if (!item) return
-  const positionToUse = item.position?.trim() || 'Professionnel Polyvalent'
+  const positionToUse = item.position?.trim()
+  if (!positionToUse) {
+    toast.info('Indiquez d’abord le poste', 'L’IA propose des missions adaptées à l’intitulé du poste.')
+    return
+  }
   activeAiIndex.value = index
   aiActionType.value = 'bullets'
-  const bullets = await suggestBullets(positionToUse)
-  if (bullets && bullets.length > 0) {
-    const formattedBullets = bullets.map((b: string) => `- ${b}`).join('\n')
-    item.description = item.description ? `${item.description}\n${formattedBullets}` : formattedBullets
+  const bullets = await suggestBullets(positionToUse, item.description)
+  // Pas de doublon avec les puces déjà présentes
+  const existing = new Set((item.description ?? '').split('\n').map((line) => line.replace(/^[-•*]\s*/, '').trim().toLowerCase()))
+  const fresh = bullets.filter((b) => !existing.has(b.trim().toLowerCase()))
+  if (fresh.length > 0) {
+    const formattedBullets = fresh.map((b) => `- ${b}`).join('\n')
+    item.description = item.description?.trim() ? `${item.description.trimEnd()}\n${formattedBullets}` : formattedBullets
   }
   activeAiIndex.value = null
   aiActionType.value = null

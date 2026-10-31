@@ -11,7 +11,8 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const jobTitle = body.jobTitle ?? ''
-    const bullets = await aiService.suggestBullets(jobTitle)
+    const context = typeof body.context === 'string' ? body.context : ''
+    const bullets = await aiService.suggestBullets(jobTitle, context)
     return withCors(jsonResponse({ bullets }), origin)
   } catch (error) {
     return withCors(problemResponse(error as Error), origin)

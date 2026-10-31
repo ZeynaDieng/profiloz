@@ -74,10 +74,27 @@ const completionPercentage = computed(() => {
   return score
 })
 
+/** Faits du CV transmis à l'IA : le profil rédigé s'appuie dessus au lieu d'être générique. */
+function summaryContext(): string {
+  const lines = [
+    // Le prénom permet d'accorder au bon genre
+    personalForm.fullName?.trim() && `Nom : ${personalForm.fullName.trim()}`,
+    personalForm.jobTitle?.trim() && `Poste visé : ${personalForm.jobTitle.trim()}`,
+    experiences.value.some((e) => e.position?.trim() || e.company?.trim()) &&
+      `Expériences : ${experiences.value
+        .filter((e) => e.position?.trim() || e.company?.trim())
+        .map((e) => [e.position, e.company && `chez ${e.company}`, e.startDate && `(${e.startDate}${e.isCurrent ? ' à aujourd’hui' : e.endDate ? ` – ${e.endDate}` : ''})`].filter(Boolean).join(' '))
+        .join(' ; ')}`,
+    educations.value.some((e) => e.degree?.trim() || e.institution?.trim()) &&
+      `Formation : ${educations.value.map((e) => [e.degree, e.institution].filter(Boolean).join(', ')).filter(Boolean).join(' ; ')}`,
+    skills.value.some((s) => s.name?.trim()) &&
+      `Compétences : ${skills.value.map((s) => s.name?.trim()).filter(Boolean).join(', ')}`,
+  ]
+  return lines.filter(Boolean).join('\n')
+}
+
 async function handleEnhanceSummary() {
-  const textToProcess = summary.value?.trim() || `Rédige un profil professionnel d'accroche captivant et dynamique pour un ${personalForm.jobTitle || 'professionnel'}.`
-  const context = personalForm.jobTitle ? `Poste visé : ${personalForm.jobTitle}` : undefined
-  const result = await enhanceText(textToProcess, context)
+  const result = await enhanceText(summary.value ?? '', summaryContext(), 'summary')
   if (result) {
     summary.value = result
     openSection.value = 'summary'
