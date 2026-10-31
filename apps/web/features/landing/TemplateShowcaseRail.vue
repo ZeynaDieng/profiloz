@@ -222,14 +222,36 @@ function onVisibilityChange() {
   else startContinuousScroll()
 }
 
-function onPointerEnter() {
+// Pause au survol d'une vraie souris uniquement : sur écran tactile, un toucher déclenche un
+// « survol » qui ne se termine jamais et figeait la rangée.
+function onPointerEnter(event: PointerEvent) {
+  if (event.pointerType !== 'mouse') return
   isPointerOver.value = true
   stopContinuousScroll()
 }
 
-function onPointerLeave() {
+function onPointerLeave(event: PointerEvent) {
+  if (event.pointerType !== 'mouse') return
   isPointerOver.value = false
   startContinuousScroll()
+}
+
+// Au doigt : pause pendant le glissement, reprise 3 s après avoir levé le doigt
+const TOUCH_RESUME_DELAY_MS = 3000
+let touchResumeTimer: ReturnType<typeof setTimeout> | undefined
+
+function onTouchStart() {
+  clearTimeout(touchResumeTimer)
+  isPointerOver.value = true
+  stopContinuousScroll()
+}
+
+function onTouchEnd() {
+  clearTimeout(touchResumeTimer)
+  touchResumeTimer = setTimeout(() => {
+    isPointerOver.value = false
+    startContinuousScroll()
+  }, TOUCH_RESUME_DELAY_MS)
 }
 
 function reset() {
@@ -293,6 +315,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearTimeout(touchResumeTimer)
   stopContinuousScroll()
   clearClones()
   resizeObserver?.disconnect()
@@ -303,8 +326,11 @@ onUnmounted(() => {
 <template>
   <div
     class="template-rail-wrap"
-    @mouseenter="onPointerEnter"
-    @mouseleave="onPointerLeave"
+    @pointerenter="onPointerEnter"
+    @pointerleave="onPointerLeave"
+    @touchstart.passive="onTouchStart"
+    @touchend.passive="onTouchEnd"
+    @touchcancel.passive="onTouchEnd"
   >
     <button
       v-if="scrollable"
