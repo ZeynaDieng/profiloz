@@ -1,3 +1,4 @@
+import { stripLetterFormulas } from '@profiloz/shared'
 import { AppError } from '@/lib/errors'
 
 /**
@@ -183,7 +184,8 @@ Réponds UNIQUEMENT avec un objet JSON valide :
       // Réponse hors JSON : on garde le texte tel quel plutôt que d'échouer
       parsed = { content: textOutput }
     }
-    const content = typeof parsed.content === 'string' ? parsed.content.trim() : ''
+    // Le modèle de lettre affiche déjà « Madame, Monsieur » et la politesse finale : pas de doublon
+    const content = typeof parsed.content === 'string' ? stripLetterFormulas(parsed.content) : ''
     if (!content) {
       throw new AppError(502, 'Bad Gateway', 'L’IA n’a pas pu rédiger la lettre. Réessayez dans un instant.')
     }

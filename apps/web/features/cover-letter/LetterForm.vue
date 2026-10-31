@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { stripLetterFormulas } from '@profiloz/shared'
 import type { CoverLetterTemplateSlug } from '~/types/cover-letter'
 import { DEFAULT_CLOSING_TEXT } from '~/types/cover-letter'
 import { COVER_LETTER_TEMPLATE_REGISTRY } from '~/features/cover-letter-templates/registry'
@@ -78,10 +79,14 @@ function fieldError(fieldErrors: Record<string, string> | undefined, key: string
 async function handleEnhanceContent() {
   const textToEnhance = content.value?.trim()
     ? content.value
-    : "Madame, Monsieur,\n\nPar la présente, je vous adresse ma candidature pour le poste. Fort de mes expériences passées, je souhaite apporter mes compétences et mon dynamisme à votre équipe."
-  const result = await enhanceText(textToEnhance, position.value ? `Poste : ${position.value}` : undefined)
+    : "Par la présente, je vous adresse ma candidature pour le poste. Fort de mes expériences passées, je souhaite apporter mes compétences et mon dynamisme à votre équipe."
+  const context = [
+    "Corps d'une lettre de motivation, sans formule d'appel ni formule de politesse finale",
+    position.value && `Poste : ${position.value}`,
+  ].filter(Boolean).join('. ')
+  const result = await enhanceText(textToEnhance, context)
   if (result) {
-    content.value = result
+    content.value = stripLetterFormulas(result)
     openSection.value = 'content'
   }
 }
