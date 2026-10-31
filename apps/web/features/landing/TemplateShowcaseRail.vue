@@ -8,8 +8,8 @@ const props = withDefaults(
   { autoplay: true, active: true },
 )
 
-/** Vitesse de défilement (~49 px/s à 60 fps) */
-const SCROLL_SPEED = 0.82
+/** Vitesse de défilement, en px par seconde (indépendante de la fréquence d'images) */
+const SCROLL_SPEED_PX_S = 49
 const MANUAL_SCROLL_MS = 780
 
 const railRef = ref<HTMLElement | null>(null)
@@ -21,6 +21,10 @@ const isPointerOver = ref(false)
 let rafId: number | null = null
 let resizeObserver: ResizeObserver | undefined
 let isManualAnimating = false
+// Position tenue en flottant : Safari (et Chrome sur certains écrans) arrondit scrollLeft au pixel,
+// donc ajouter 0,8 px par image directement sur scrollLeft ne faisait jamais avancer la rangée.
+let continuousPos = 0
+let lastFrameTime = 0
 
 function shouldRunContinuous() {
   if (!import.meta.client) return false
@@ -125,8 +129,19 @@ function continuousStep() {
     return
   }
 
-  if (!isManualAnimating) {
-    el.scrollLeft += SCROLL_SPEED
+  const now = performance.now()
+  // Plafond à 50 ms : pas de grand saut au retour d'un onglet en arrière-plan
+  const elapsed = Math.min(now - lastFrameTime, 50)
+  lastFrameTime = now
+
+  if (isManualAnimating) {
+    continuousPos = el.scrollLeft
+  } else {
+    // L'utilisateur a fait défiler (doigt, molette) : on repart de là où il s'est arrêté
+    if (Math.abs(el.scrollLeft - continuousPos) > 2) continuousPos = el.scrollLeft
+    continuousPos += (SCROLL_SPEED_PX_S * elapsed) / 1000
+    if (loopWidth.value > 0 && continuousPos >= loopWidth.value) continuousPos -= loopWidth.value
+    el.scrollLeft = continuousPos
     wrapScrollPosition()
     syncFromScroll()
   }
@@ -137,7 +152,16 @@ function continuousStep() {
 function startContinuousScroll() {
   stopContinuousScroll()
   if (!shouldRunContinuous()) return
+  continuousPos = railRef.value?.scrollLeft ?? 0
+  lastFrameTime = performance.now()
   rafId = requestAnimationFrame(continuousStep)
+}
+
+// Les cartes peuvent prendre leur largeur après le montage (images, polices) : on revérifie
+function refreshLayout() {
+  checkScrollable()
+  setupInfiniteLoop()
+  startContinuousScroll()
 }
 
 function easeInOutQuart(t: number): number {
@@ -304,12 +328,13 @@ onMounted(() => {
     startContinuousScroll()
   })
 
-  resizeObserver = new ResizeObserver(() => {
-    setupInfiniteLoop()
-    checkScrollable()
-    startContinuousScroll()
-  })
-  if (railRef.value) resizeObserver.observe(railRef.value)
+  resizeObserver = new ResizeObserver(refreshLayout)
+  if (railRef.value) {
+    resizeObserver.observe(railRef.value)
+    const firstCard = railRef.value.firstElementChild
+    if (firstCard) resizeObserver.observe(firstCard)
+  }
+  if (document.readyState !== 'complete') window.addEventListener('load', refreshLayout, { once: true })
 
   document.addEventListener('visibilitychange', onVisibilityChange)
 })
@@ -319,6 +344,7 @@ onUnmounted(() => {
   stopContinuousScroll()
   clearClones()
   resizeObserver?.disconnect()
+  window.removeEventListener('load', refreshLayout)
   document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
