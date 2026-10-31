@@ -58,14 +58,16 @@ export async function cropPhotoFromBuffer(
  */
 export async function compressImageForAi(
   buffer: Buffer,
-  maxDimension = 1600,
+  maxDimension = 2400,
+  originalMimeType = 'image/jpeg',
 ): Promise<{ buffer: Buffer; mimeType: string }> {
   try {
     const img = await loadImage(buffer)
     const { width, height } = img
 
+    // Petite image : envoyée telle quelle, avec son vrai type (un PNG annoncé en JPEG se lit mal)
     if (width <= maxDimension && height <= maxDimension) {
-      return { buffer, mimeType: 'image/jpeg' }
+      return { buffer, mimeType: originalMimeType }
     }
 
     const scale = Math.min(maxDimension / width, maxDimension / height)
@@ -76,9 +78,10 @@ export async function compressImageForAi(
     const ctx = canvas.getContext('2d')
     ctx.drawImage(img, 0, 0, targetW, targetH)
 
-    const compressed = canvas.toBuffer('image/jpeg')
+    // 2 400 px et qualité 0,9 : les petits caractères (email, téléphone) restent lisibles par l'IA
+    const compressed = canvas.toBuffer('image/jpeg', 90)
     return { buffer: compressed, mimeType: 'image/jpeg' }
   } catch {
-    return { buffer, mimeType: 'image/jpeg' }
+    return { buffer, mimeType: originalMimeType }
   }
 }

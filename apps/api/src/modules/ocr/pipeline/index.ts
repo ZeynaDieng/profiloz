@@ -12,6 +12,18 @@ import { type LlmEnhancer, noopLlmEnhancer } from './llm'
 import { classifyHeading, guessSectionForContent } from './sections'
 import { runConservativeImport, shouldUseConservativeParsing } from './conservative'
 
+/** Message affiché quand l'IA n'a pas pu lire le document (repli sur les heuristiques). */
+export const IMPORT_AI_FAILED_WARNING =
+  'L’analyse IA n’a pas abouti : import simplifié. Vérifiez chaque section avant de continuer.'
+
+const LOW_QUALITY_AI_WARNING =
+  'Document peu lisible : l’IA l’a lu directement, vérifiez attentivement chaque section.'
+
+function canReadVisually(options: ResumePipelineOptions): boolean {
+  const mime = options.mimeType ?? ''
+  return Boolean(options.buffer) && (mime.startsWith('image/') || mime === 'application/pdf')
+}
+
 export type ResumeExtraction = Partial<ResumeSnapshot> & { _extraction: ExtractionMeta }
 
 export interface ResumePipelineOptions {
@@ -106,7 +118,29 @@ export async function runResumePipeline(
   const ocrConfidence = options.ocrConfidence
 
   if (shouldUseConservativeParsing(ocrConfidence ?? 1, rawText)) {
-    return runConservativeImport(rawText, ocrConfidence ?? 0)
+    const conservative = runConservativeImport(rawText, ocrConfidence ?? 0)
+    // Scan ou photo peu lisible pour l'OCR : l'IA lit l'image elle-même, c'est là qu'elle aide le plus
+    if (llm === noopLlmEnhancer || !canReadVisually(options)) return conservative
+    const { _extraction: conservativeMeta, ...conservativeData } = conservative
+    const enhanced = await llm.enhance({
+      rawText,
+      lines: normalizeLines(rawText),
+      data: conservativeData,
+      meta: conservativeMeta,
+      buffer: options.buffer,
+      mimeType: options.mimeType,
+    })
+    if (enhanced.meta.engine !== 'heuristic+llm') return conservative
+    return {
+      ...enhanced.data,
+      _extraction: {
+        ...conservativeMeta,
+        confidence: buildConfidence(enhanced.data),
+        engine: 'heuristic+llm',
+        partialImport: false,
+        warnings: [LOW_QUALITY_AI_WARNING],
+      },
+    }
   }
 
   // 1. Nettoyage
@@ -191,12 +225,20 @@ export async function runResumePipeline(
         buffer: options.buffer,
         mimeType: options.mimeType,
       })
-      return {
-        ...enhanced.data,
-        _extraction: { ...enhanced.meta, engine: 'heuristic+llm' },
+      if (enhanced.meta.engine === 'heuristic+llm') {
+        return {
+          ...enhanced.data,
+          // Confiance recalculée sur les données finales, pour surligner les bons champs à vérifier
+          _extraction: { ...enhanced.meta, confidence: buildConfidence(enhanced.data) },
+        }
       }
     } catch {
-      meta = { ...meta, engine: 'heuristic' }
+      // repli heuristique ci-dessous
+    }
+    meta = {
+      ...meta,
+      engine: 'heuristic',
+      warnings: [...(meta.warnings ?? []), IMPORT_AI_FAILED_WARNING],
     }
   }
 

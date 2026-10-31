@@ -1,10 +1,73 @@
 import type { ExtractionMeta, ResumeSnapshot } from '@profiloz/shared'
+import { callGemini, GEMINI_MODELS, type GeminiPart, isGeminiConfigured, parseJsonOutput } from '@/lib/gemini'
 import type { LlmEnhancer } from './llm'
 import { cropPhotoFromBuffer, compressImageForAi } from './crop-photo'
+import { mergeLlmResume, normalizeLlmResume } from './llm-normalize'
 import { renderPdfPagesToImages } from '../ocr.service'
 
+/** Lecture d'un CV entier (souvent en image) : plus long qu'un texte court de l'éditeur. */
+const IMPORT_TIMEOUT_MS = 40_000
+const IMPORT_BUDGET_MS = 70_000
+/** Au-delà, le PDF n'est pas joint (le texte extrait suffit et l'appel resterait rapide). */
+const MAX_INLINE_BYTES = 15 * 1024 * 1024
+const MAX_RAW_TEXT = 20_000
+
+const PROMPT = `Tu es un expert de l'extraction de CV. Le document de CV est joint (PDF ou image). Quand un texte extrait automatiquement figure plus bas, il peut avoir un ordre de colonnes mélangé : fie-toi d'abord au document joint.
+
+RÈGLES ABSOLUES :
+- Recopie le contenu TEL QU'IL EST ÉCRIT : ne reformule pas, ne traduis pas, ne résume pas, ne corrige que les erreurs de lecture évidentes.
+- N'invente RIEN : un champ absent du CV vaut null (ou une liste vide).
+- Extrais TOUTES les expériences et formations, sans en omettre, avec la description complète de chaque expérience (une mission par ligne, préfixée par "- ").
+- Email et téléphone : lis-les sur le document joint, caractère par caractère ; le texte extrait confond souvent 0/o, 1/l/I et 5/S.
+- Dates : recopie-les comme écrites ("03/2021", "2019", "Janvier 2020"). Pour un poste en cours, endDate = null et isCurrent = true.
+- Compétences : une entrée par compétence (pas de liste séparée par des virgules dans un seul nom).
+- Langues : le nom de la langue dans "name", le niveau tel qu'écrit dans "level".
+- Photo : si une photo de portrait du candidat est présente, donne sa boîte [ymin, xmin, ymax, xmax] (0 à 1000) recadrée ÉTROITEMENT sur le visage et le haut des épaules, sans cadre, bordure ni motif décoratif.
+
+Réponds UNIQUEMENT avec ce JSON :
+{
+  "personalInfo": { "fullName": string|null, "jobTitle": string|null, "email": string|null, "phone": string|null, "location": string|null, "linkedinUrl": string|null, "websiteUrl": string|null },
+  "summary": string|null,
+  "photo": { "present": boolean, "box": [number, number, number, number]|null },
+  "experiences": [ { "position": string, "company": string, "location": string|null, "startDate": string|null, "endDate": string|null, "isCurrent": boolean, "description": string|null } ],
+  "educations": [ { "degree": string, "institution": string, "field": string|null, "location": string|null, "startDate": string|null, "endDate": string|null, "description": string|null } ],
+  "skills": [ { "name": string, "level": string|null, "category": string|null } ],
+  "languages": [ { "name": string, "level": string|null } ],
+  "certifications": [ { "name": string, "issuer": string|null, "issueDate": string|null } ],
+  "interests": [ { "name": string } ]
+}`
+
+async function documentPart(buffer?: Buffer, mimeType?: string): Promise<GeminiPart | null> {
+  if (!buffer || !mimeType) return null
+  if (mimeType.startsWith('image/')) {
+    const compressed = await compressImageForAi(buffer, undefined, mimeType)
+    return { inlineData: { mimeType: compressed.mimeType, data: compressed.buffer.toString('base64') } }
+  }
+  if (mimeType === 'application/pdf' && buffer.length <= MAX_INLINE_BYTES) {
+    return { inlineData: { mimeType, data: buffer.toString('base64') } }
+  }
+  return null
+}
+
+async function cropPhoto(
+  box: [number, number, number, number],
+  buffer: Buffer,
+  mimeType?: string,
+): Promise<string | undefined> {
+  try {
+    let image: Buffer | null = null
+    if (mimeType?.startsWith('image/')) image = buffer
+    else if (mimeType === 'application/pdf') image = (await renderPdfPagesToImages(buffer))[0] ?? null
+    if (!image) return undefined
+    return (await cropPhotoFromBuffer(image, box)) || undefined
+  } catch (error) {
+    console.warn('[import] recadrage photo impossible :', (error as Error).message)
+    return undefined
+  }
+}
+
 export class GeminiLlmEnhancer implements LlmEnhancer {
-  readonly name = 'gemini-3.1-flash-lite'
+  readonly name = GEMINI_MODELS[0]!
 
   async enhance(input: {
     rawText: string
@@ -14,224 +77,58 @@ export class GeminiLlmEnhancer implements LlmEnhancer {
     buffer?: Buffer
     mimeType?: string
   }): Promise<{ data: Partial<ResumeSnapshot>; meta: ExtractionMeta }> {
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      return { data: input.data, meta: input.meta }
-    }
+    const unchanged = { data: input.data, meta: { ...input.meta, engine: 'heuristic' as const } }
+    if (!isGeminiConfigured()) return unchanged
 
     try {
-      const parts: any[] = []
+      const parts: GeminiPart[] = []
+      const doc = await documentPart(input.buffer, input.mimeType)
+      if (doc) parts.push(doc)
+      // Image : le texte de l'OCR (Tesseract) est surtout du bruit que le modèle recopie (« 0n715… »
+      // au lieu de « on715… ») ; il lit mieux l'image seule. PDF, DOCX : le texte natif est exact.
+      const isImage = input.mimeType?.startsWith('image/') ?? false
+      const rawText = isImage && doc ? '' : input.rawText.slice(0, MAX_RAW_TEXT)
+      if (!doc && !rawText.trim()) return unchanged
+      parts.push({
+        text: rawText
+          ? `${PROMPT}\n\nTexte extrait automatiquement :\n---\n${rawText}\n---`
+          : `${PROMPT}\n\nLis le CV directement sur l'image jointe.`,
+      })
 
-      // 1. Transmettre le buffer du document (PDF ou Image) avec compression si image lourde
-      if (
-        input.buffer &&
-        input.mimeType &&
-        (input.mimeType.startsWith('image/') || input.mimeType === 'application/pdf')
-      ) {
-        let payloadBuffer = input.buffer
-        let payloadMime = input.mimeType
+      const output = await callGemini({
+        parts,
+        json: true,
+        temperature: 0.1,
+        maxOutputTokens: 8192,
+        timeoutMs: IMPORT_TIMEOUT_MS,
+        budgetMs: IMPORT_BUDGET_MS,
+        label: 'import',
+      })
+      if (!output) return unchanged
 
-        if (input.mimeType.startsWith('image/')) {
-          const compressed = await compressImageForAi(input.buffer)
-          payloadBuffer = compressed.buffer
-          payloadMime = compressed.mimeType
-        }
-
-        parts.push({
-          inlineData: {
-            mimeType: payloadMime,
-            data: payloadBuffer.toString('base64'),
-          },
-        })
-      }
-
-      // 2. Consignes strictes d'extraction avec Résumé (Profil) et Détection de Photo de Profil
-      const prompt = `Tu es un expert mondial en analyse et extraction de CV.
-Examine avec une précision absolue le document de CV ci-joint (PDF/Image) ainsi que le texte extrait ci-dessous :
----
-${input.rawText}
----
-
-CONSIGNES STRICTES :
-1. "summary" (Profil / À propos / Résumé professionnel) : S'il y a un texte d'accroche, un paragraphe de présentation ou de profil en haut du CV, extrait-le INTÉGRALEMENT dans le champ "summary". N'omets aucun mot du profil.
-2. "photo" (Photo de portrait du candidat) : Si le document contient une photo de portrait du candidat, indique "present": true et donne sa bounding box [ymin, xmin, ymax, xmax] (normalisée 0 à 1000). ATTENTION : Recadre ÉTROITEMENT et UNIQUEMENT sur le visage et le haut des épaules du candidat. EXCLUS impérativement tous les éléments extérieurs : contours, cadres, bordures circulaires, anneaux colorés ou motifs graphiques du modèle de CV d'origine.
-3. Expériences professionnelles : Extrait TOUTES les expériences sans omission, avec l'entreprise, le poste, les dates et TOUTES les descriptions de tâches intégrales.
-4. Formations, Compétences, Langues et Centres d'intérêt (Loisirs, Hobbies) : Extrait tout fidèlement.
-
-Réponds UNIQUEMENT avec un objet JSON valide suivant exactement cette structure :
-{
-  "summary": "Texte intégral du profil / à propos / résumé professionnel (null si absent)",
-  "photo": {
-    "present": true ou false,
-    "box": [ymin, xmin, ymax, xmax] (coordonnées 0..1000 du visage/photo si présente, sinon null)
-  },
-  "personalInfo": {
-    "fullName": "Nom et prénom exacts",
-    "jobTitle": "Titre du poste principal",
-    "email": "Email",
-    "phone": "Téléphone",
-    "location": "Ville / Pays",
-    "linkedin": "Lien LinkedIn si présent",
-    "website": "Site web / Portfolio",
-    "summary": "Même résumé de profil qu'au dessus"
-  },
-  "experiences": [
-    {
-      "company": "Nom de l'entreprise",
-      "position": "Intitulé du poste",
-      "location": "Ville / Lieu",
-      "startDate": "Date de début",
-      "endDate": "Date de fin",
-      "current": true ou false,
-      "description": "Description intégrale des tâches"
-    }
-  ],
-  "educations": [
-    {
-      "institution": "Nom de l'école ou université",
-      "degree": "Diplôme ou formation",
-      "fieldOfStudy": "Domaine d'études",
-      "location": "Ville / Lieu",
-      "startDate": "Date début",
-      "endDate": "Date fin",
-      "description": "Détails"
-    }
-  ],
-  "skills": [
-    { "name": "Nom de la compétence", "category": "Technique / Humaine / Outil" }
-  ],
-  "languages": [
-    { "language": "Langue", "level": "Niveau" }
-  ],
-  "interests": [
-    { "name": "Nom du centre d'intérêt ou loisir" }
-  ]
-}
-
-Ne rajoute AUCUN texte explicatif, ni balises markdown. Réponds directement par le JSON.`
-
-      parts.push({ text: prompt })
-
-      const controller = new AbortController()
-      const geminiTimeout = setTimeout(() => controller.abort(), 15000)
-
-      let response: Response
+      let parsed: unknown
       try {
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts }],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                temperature: 0.1,
-                maxOutputTokens: 2048,
-              },
-            }),
-            signal: controller.signal,
-          },
-        )
-      } finally {
-        clearTimeout(geminiTimeout)
+        parsed = parseJsonOutput(output)
+      } catch {
+        console.warn('[import] JSON IA illisible')
+        return unchanged
+      }
+      const llm = normalizeLlmResume(parsed)
+      if (!llm) {
+        console.warn('[import] réponse IA sans contenu de CV')
+        return unchanged
       }
 
-      if (!response.ok) {
-        console.warn('Gemini API call failed:', await response.text())
-        return { data: input.data, meta: input.meta }
+      const merged = mergeLlmResume(input.data, llm, input.rawText, Boolean(doc))
+      if (llm.photoBox && input.buffer) {
+        const photoUrl = await cropPhoto(llm.photoBox, input.buffer, input.mimeType)
+        if (photoUrl) merged.personalInfo = { ...merged.personalInfo, photoUrl }
       }
 
-      const resData = await response.json()
-      const textOutput = resData.candidates?.[0]?.content?.parts?.[0]?.text
-      if (!textOutput) {
-        return { data: input.data, meta: input.meta }
-      }
-
-      const parsed = JSON.parse(textOutput)
-
-      // Extraction du Résumé (Profil) au niveau racine du snapshot
-      const extractedSummary =
-        (typeof parsed.summary === 'string' && parsed.summary.trim()) ||
-        (typeof parsed.personalInfo?.summary === 'string' && parsed.personalInfo.summary.trim()) ||
-        input.data.summary
-
-      // Extraction et découpage automatique de la photo de profil si présente
-      let extractedPhotoUrl: string | undefined = input.data.personalInfo?.photoUrl
-
-      if (parsed.photo?.present && Array.isArray(parsed.photo?.box) && input.buffer) {
-        try {
-          let imageBufferToCrop: Buffer | null = null
-
-          if (input.mimeType?.startsWith('image/')) {
-            imageBufferToCrop = input.buffer
-          } else if (input.mimeType === 'application/pdf') {
-            const pages = await renderPdfPagesToImages(input.buffer)
-            if (pages.length > 0 && pages[0]) {
-              imageBufferToCrop = pages[0]
-            }
-          }
-
-          if (imageBufferToCrop) {
-            const croppedDataUrl = await cropPhotoFromBuffer(
-              imageBufferToCrop,
-              parsed.photo.box as [number, number, number, number],
-            )
-            if (croppedDataUrl) {
-              extractedPhotoUrl = croppedDataUrl
-            }
-          }
-        } catch (cropErr) {
-          console.warn('Photo extraction failed:', cropErr)
-        }
-      }
-
-      const mergedData: Partial<ResumeSnapshot> = {
-        ...input.data,
-        summary: extractedSummary,
-        personalInfo: {
-          ...input.data.personalInfo,
-          ...(parsed.personalInfo || {}),
-          photoUrl: extractedPhotoUrl,
-          summary: extractedSummary,
-        },
-        experiences:
-          Array.isArray(parsed.experiences) && parsed.experiences.length > 0
-            ? parsed.experiences
-            : input.data.experiences,
-        educations:
-          Array.isArray(parsed.educations) && parsed.educations.length > 0
-            ? parsed.educations
-            : input.data.educations,
-        skills:
-          Array.isArray(parsed.skills) && parsed.skills.length > 0
-            ? parsed.skills
-            : input.data.skills,
-        languages:
-          Array.isArray(parsed.languages) && parsed.languages.length > 0
-            ? parsed.languages
-            : input.data.languages,
-        interests:
-          Array.isArray(parsed.interests) && parsed.interests.length > 0
-            ? (parsed.interests
-                .map((i: any) => {
-                  const name = typeof i === 'string' ? i.trim() : String(i.name || i.title || i.label || '').trim()
-                  return name ? { name } : null
-                })
-                .filter(Boolean) as ResumeSnapshot['interests'])
-            : input.data.interests,
-      }
-
-      return {
-        data: mergedData,
-        meta: {
-          ...input.meta,
-          engine: 'heuristic+llm',
-        },
-      }
-    } catch (err) {
-      console.warn('Gemini enhancement error:', err)
-      return { data: input.data, meta: input.meta }
+      return { data: merged, meta: { ...input.meta, engine: 'heuristic+llm' } }
+    } catch (error) {
+      console.warn('[import] analyse IA en erreur :', (error as Error).message)
+      return unchanged
     }
   }
 }

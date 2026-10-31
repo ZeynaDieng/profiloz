@@ -2,7 +2,8 @@ import type { DocumentType, ResumeSnapshot } from '@profiloz/shared'
 import { MSG } from '@profiloz/shared'
 import { parseApiAuthError } from '~/utils/api-error'
 
-const PROCESS_TIMEOUT_MS = 120_000
+// OCR d'un scan (jusqu'à ~40 s) + lecture IA (budget 70 s), sous la limite nginx de 300 s
+const PROCESS_TIMEOUT_MS = 150_000
 
 export function useImportFlow(documentType: DocumentType) {
   const documentService = useDocumentService()
