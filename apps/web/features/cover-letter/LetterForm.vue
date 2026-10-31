@@ -25,7 +25,7 @@ const props = defineProps<{
   fieldErrors?: Record<string, string>
 }>()
 
-const { enhanceText, generateLetter, loading: aiLoading } = useAi()
+const { enhanceText, generateLetter, loading: aiLoading, error: aiError } = useAi()
 const aiWaitLabel = useAiWaitLabel(aiLoading)
 const resumeStore = useResumeStore()
 
@@ -86,13 +86,41 @@ async function handleEnhanceContent() {
   }
 }
 
-async function handleGenerateFromJobOffer() {
-  if (!jobOfferInput.value?.trim()) return
+// Une erreur d'un essai précédent ne doit pas réapparaître à la réouverture
+watch(aiModalOpen, (open) => {
+  if (open) aiError.value = null
+})
 
+const canGenerateLetter = computed(
+  () => Boolean(jobOfferInput.value.trim() || targetPositionInput.value.trim() || position.value?.trim()),
+)
+
+/** Profil tiré du CV en cours, sans lignes vides : c'est ce qui permet à l'IA d'adapter la lettre. */
+function buildCandidateInfo(): string | undefined {
   const r = resumeStore.current
-  const candidateInfo = r
-    ? `Poste : ${r.personalInfo?.jobTitle || ''}\nSummary : ${r.summary || ''}\nExpériences : ${r.experiences.map((e) => `${e.position} chez ${e.company}: ${e.description}`).join(' ; ')}`
-    : undefined
+  if (!r) return undefined
+  const lines = [
+    r.personalInfo?.fullName && `Nom : ${r.personalInfo.fullName}`,
+    r.personalInfo?.jobTitle && `Titre : ${r.personalInfo.jobTitle}`,
+    r.summary?.trim() && `Résumé : ${r.summary.trim()}`,
+    r.experiences.length > 0 && `Expériences : ${r.experiences
+      .filter((e) => e.position || e.company)
+      .map((e) => `${e.position}${e.company ? ` chez ${e.company}` : ''}${e.description ? ` (${e.description})` : ''}`)
+      .join(' ; ')}`,
+    r.educations.length > 0 && `Formation : ${r.educations
+      .filter((e) => e.degree || e.institution)
+      .map((e) => [e.degree, e.field, e.institution].filter(Boolean).join(', '))
+      .join(' ; ')}`,
+    r.skills.length > 0 && `Compétences : ${r.skills.map((sk) => sk.name).filter(Boolean).join(', ')}`,
+    r.languages.length > 0 && `Langues : ${r.languages.map((l) => l.name).filter(Boolean).join(', ')}`,
+  ].filter((line): line is string => Boolean(line) && !/: ?$/.test(line as string))
+  return lines.length > 0 ? lines.join('\n') : undefined
+}
+
+async function handleGenerateFromJobOffer() {
+  if (!canGenerateLetter.value) return
+
+  const candidateInfo = buildCandidateInfo()
 
   const result = await generateLetter({
     jobOfferText: jobOfferInput.value,
@@ -522,7 +550,7 @@ async function handleGenerateFromJobOffer() {
 
           <!-- Body Scrollable -->
           <div class="flex-1 overflow-y-auto py-4 space-y-4 text-left">
-            <UiFormField label="Texte de l'offre d'emploi" required>
+            <UiFormField label="Texte de l'offre d'emploi (conseillé)">
               <textarea
                 v-model="jobOfferInput"
                 rows="5"
@@ -530,6 +558,11 @@ async function handleGenerateFromJobOffer() {
                 placeholder="Collez ici l'annonce de recrutement (missions demandées, profil recherché)..."
               />
             </UiFormField>
+            <p class="text-xs text-on-surface-variant -mt-2">
+              {{ resumeStore.current?.experiences.length
+                ? 'L’IA s’appuie aussi sur votre CV pour adapter la lettre.'
+                : 'Pas d’offre sous la main ? Indiquez simplement le poste visé.' }}
+            </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <UiFormField label="Entreprise (optionnel)">
@@ -551,6 +584,10 @@ async function handleGenerateFromJobOffer() {
             </div>
           </div>
 
+          <p v-if="aiError && !aiLoading" class="text-xs text-error font-semibold pb-2" role="alert">
+            {{ aiError }}
+          </p>
+
           <!-- Footer Sticky Actions -->
           <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-outline-variant/30 shrink-0 bg-surface">
             <button
@@ -563,7 +600,7 @@ async function handleGenerateFromJobOffer() {
             <button
               type="button"
               class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-primary text-on-primary hover:bg-primary-hover shadow-md flex items-center gap-2 disabled:opacity-50 transition-all active:scale-95"
-              :disabled="aiLoading || !jobOfferInput.trim()"
+              :disabled="aiLoading || !canGenerateLetter"
               @click="handleGenerateFromJobOffer"
             >
               <UiPzIcon name="auto_awesome" class="text-sm" />
