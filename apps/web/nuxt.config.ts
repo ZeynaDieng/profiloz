@@ -1,4 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { fileURLToPath } from 'node:url'
+import { collectMaterialIconNames } from './utils/build/material-icon-names'
+
+const materialIconNames = collectMaterialIconNames(fileURLToPath(new URL('.', import.meta.url)))
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   future: {
@@ -11,6 +16,10 @@ export default defineNuxtConfig({
 
   // ─── Modules ──────────────────────────────────────────────────────
   modules: ['@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/seo'],
+
+  // @nuxt/fonts (activé par @nuxt/ui) re-téléchargeait chaque police citée dans le CSS en version
+  // complète non découpée (~140 Ko par graisse, ~1,5 Mo au total) : Google Fonts ci-dessous suffit.
+  ui: { fonts: false },
 
   css: ['~/assets/css/main.css'],
 
@@ -277,11 +286,12 @@ export default defineNuxtConfig({
         // Google Fonts
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=Poppins:wght@400;600;700&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,wght@0,100..900;1,400&family=Poppins:wght@400;600;700&display=swap',
         },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap',
+          // Seulement les icônes utilisées et la graisse 400 : ~10 Ko au lieu de ~1,1 Mo
+          href: `https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&icon_names=${materialIconNames.join(',')}&display=block`,
         },
       ],
     },
