@@ -36,6 +36,22 @@ const previewOpen = ref(false)
 const actionsOpen = ref(false)
 const tourActive = ref(false)
 
+// Mobile, première visite : message d'accueil (le guide ne s'ouvre plus tout seul sur petit écran)
+const WELCOME_DISMISSED_KEY = 'profiloz:editor-welcome-dismissed'
+const showWelcome = ref(false)
+function dismissWelcome() {
+  showWelcome.value = false
+  try {
+    localStorage.setItem(WELCOME_DISMISSED_KEY, 'true')
+  } catch {
+    // stockage indisponible : le message reviendra à la prochaine visite
+  }
+}
+function openGuideFromWelcome() {
+  dismissWelcome()
+  tourActive.value = true
+}
+
 /** Ni expérience ni formation : on prévient avant le paiement (sans bloquer), pour éviter de payer un CV presque vide. */
 const cvLooksIncomplete = computed(() => {
   const r = resumeStore.current
@@ -253,6 +269,8 @@ onMounted(async () => {
     setTimeout(() => {
       tourActive.value = true
     }, 800)
+  } else if (!isDesktop && !tourCompleted && localStorage.getItem(WELCOME_DISMISSED_KEY) !== 'true') {
+    showWelcome.value = true
   }
 
   if (route.query.download === '1') {
@@ -603,7 +621,11 @@ async function downloadPdf() {
     <!-- Contenu : formulaire seul sur mobile, split sur desktop -->
     <main class="flex-1 flex overflow-hidden pb-[4.5rem] xl:pb-0">
       <div class="w-full xl:w-[42%] shrink-0 border-r border-outline-variant overflow-hidden">
-        <FeatureEditorFormPanel />
+        <FeatureEditorFormPanel
+          :show-welcome="showWelcome"
+          @open-guide="openGuideFromWelcome"
+          @dismiss-welcome="dismissWelcome"
+        />
       </div>
 
       <div id="tour-preview-panel" v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">

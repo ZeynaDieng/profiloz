@@ -5,6 +5,12 @@ import { EXTENDED_ACCENT_PALETTE } from '~/utils/template-accent-colors'
 import { formatPhoneNumber } from '~/utils/phone-formatter'
 
 // FormPanel pour l'édition dynamique du CV avec ergonomie SaaS Mobile Premium
+defineProps<{
+  /** Message d'accueil (première visite sur mobile, à la place du guide automatique) */
+  showWelcome?: boolean
+}>()
+const emit = defineEmits<{ 'open-guide': []; 'dismiss-welcome': [] }>()
+
 const resumeStore = useResumeStore()
 const { pageCount, isOverflowing } = useResumePageOverflowState()
 const { fieldErrors, formError, clearAll, setFieldError, clearField, scrollToFirstError, announceFormError, fieldError } = useFormValidation()
@@ -329,6 +335,32 @@ provideResumeEditorValidation({
         </div>
       </div>
 
+
+      <!-- Accueil (mobile, 1re visite) : un repère d'une ligne au lieu du guide de 14 étapes -->
+      <div
+        v-if="showWelcome"
+        class="flex items-start gap-2.5 p-3 rounded-xl bg-secondary/5 border border-secondary/15"
+      >
+        <span class="text-lg leading-snug" aria-hidden="true">👋</span>
+        <p class="flex-1 text-[13px] leading-relaxed text-on-surface">
+          Remplissez vos informations, l’aperçu se met à jour tout seul.
+          <button
+            type="button"
+            class="font-bold text-secondary underline underline-offset-2"
+            @click="emit('open-guide')"
+          >
+            Voir le guide
+          </button>
+        </p>
+        <button
+          type="button"
+          class="shrink-0 -mt-1 -mr-1 min-h-9 min-w-9 inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container"
+          aria-label="Fermer le message"
+          @click="emit('dismiss-welcome')"
+        >
+          <UiPzIcon name="close" class="text-[18px]" />
+        </button>
+      </div>
 
       <Transition name="form-field__error">
         <UiMessageBanner
