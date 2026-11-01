@@ -3,10 +3,9 @@ withDefaults(
   defineProps<{
     compact?: boolean
     iconOnly?: boolean
-    showGuestBadge?: boolean
     showLoginLink?: boolean
   }>(),
-  { compact: false, iconOnly: false, showGuestBadge: true, showLoginLink: true },
+  { compact: false, iconOnly: false, showLoginLink: true },
 )
 
 const route = useRoute()
@@ -131,14 +130,7 @@ async function onLogout() {
     </template>
 
     <template v-else>
-      <span
-        v-if="showGuestBadge && !iconOnly"
-        class="inline-flex items-center gap-1.5 text-[11px] font-medium text-on-surface-variant bg-surface-container px-2.5 py-1.5 rounded-full"
-        title="Mode invité — connectez-vous pour sauvegarder votre CV en ligne"
-      >
-        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
-        Invité
-      </span>
+      <!-- Pas de pastille « Invité » : du jargon pour un visiteur, « Se connecter » suffit -->
       <NuxtLink
         v-if="showLoginLink"
         :to="{ path: '/connexion', query: { redirect: $route.fullPath } }"
