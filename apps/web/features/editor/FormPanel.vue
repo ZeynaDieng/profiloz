@@ -329,25 +329,6 @@ provideResumeEditorValidation({
         </div>
       </div>
 
-      <!-- BANNIÈRE HERO IA TOUT EN HAUT -->
-      <div class="p-3.5 rounded-xl bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/10 border border-primary/25 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div class="space-y-0.5">
-          <h3 class="text-xs sm:text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-            <UiPzIcon name="auto_awesome" class="text-sm text-primary" />
-            <span>Booster mon CV avec l'IA en 1 clic</span>
-          </h3>
-          <p class="text-[11px] text-on-surface-variant leading-relaxed">
-            L'IA rédige votre profil, suggère des puces d'expérience et corrige les fautes.
-          </p>
-        </div>
-        <button
-          type="button"
-          class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary-hover shadow-md transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95"
-          @click="handleEnhanceSummary(); openSection = 'summary'"
-        >
-          <span>{{ aiLoading ? aiWaitLabel : 'Générer mon profil IA' }}</span>
-        </button>
-      </div>
 
       <Transition name="form-field__error">
         <UiMessageBanner
@@ -409,13 +390,6 @@ provideResumeEditorValidation({
           />
 
           <template v-if="section.id === 'personal'">
-            <div id="tour-field-photo">
-              <FeatureWizardPhotoUpload
-                :model-value="personalForm.photoUrl"
-                v-model:show-on-cv="showPhotoOnCv"
-                @update:model-value="onPhotoUrlUpdate"
-              />
-            </div>
             <div class="grid grid-cols-1 gap-3">
               <UiFormField id="tour-field-fullname" label="Nom complet" required :error="fieldError('fullName')" tooltip="Saisissez votre prénom et nom tels qu'ils doivent apparaître dans l'en-tête de votre CV.">
                 <input
@@ -489,6 +463,14 @@ provideResumeEditorValidation({
                 <UiPzIcon name="add" class="text-sm" />
                 <span>+ Ajouter adresse, LinkedIn...</span>
               </button>
+            </div>
+            <!-- Photo après les coordonnées : facultative, elle intimidait en premier champ -->
+            <div id="tour-field-photo">
+              <FeatureWizardPhotoUpload
+                :model-value="personalForm.photoUrl"
+                v-model:show-on-cv="showPhotoOnCv"
+                @update:model-value="onPhotoUrlUpdate"
+              />
             </div>
           </template>
 

@@ -36,6 +36,15 @@ const previewOpen = ref(false)
 const actionsOpen = ref(false)
 const tourActive = ref(false)
 
+/** Ni expérience ni formation : on prévient avant le paiement (sans bloquer), pour éviter de payer un CV presque vide. */
+const cvLooksIncomplete = computed(() => {
+  const r = resumeStore.current
+  if (!r) return true
+  const hasExperience = r.experiences.some((e) => e.position?.trim() || e.company?.trim())
+  const hasEducation = r.educations.some((e) => e.degree?.trim() || e.institution?.trim())
+  return !hasExperience && !hasEducation
+})
+
 const previousSavedDraft = ref<ResumeSnapshot | null>(null)
 
 const previousDraftName = computed(() => {
@@ -238,7 +247,9 @@ onMounted(async () => {
   const isAutoOnboardingEnabled = autoOnboardingPref === null ? true : autoOnboardingPref === 'true'
   const tourCompleted = localStorage.getItem('profiloz:onboarding-completed')
 
-  if (isAutoOnboardingEnabled && !tourCompleted) {
+  // Sur mobile, le guide de 14 étapes recouvrait l'écran dès l'arrivée : il reste dans le menu (« Guide interactif »)
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches
+  if (isAutoOnboardingEnabled && !tourCompleted && isDesktop) {
     setTimeout(() => {
       tourActive.value = true
     }, 800)
@@ -649,15 +660,28 @@ async function downloadPdf() {
 
             <div class="space-y-1.5">
               <h3 class="text-lg font-black text-slate-900 leading-snug">
-                Prêt à télécharger votre CV ?
+                {{ cvLooksIncomplete ? 'Votre CV semble incomplet' : 'Prêt à télécharger votre CV ?' }}
               </h3>
               <p class="text-xs text-slate-500 leading-relaxed">
-                Votre document est prêt. Vérifiez une dernière fois sa longueur avant de générer le fichier PDF final.
+                <template v-if="cvLooksIncomplete">
+                  Il ne contient pas encore d’expérience ni de formation. Un CV complet a beaucoup plus de chances d’être retenu.
+                </template>
+                <template v-else>
+                  Votre document est prêt. Vérifiez une dernière fois sa longueur avant de générer le fichier PDF final.
+                </template>
               </p>
             </div>
 
+            <div
+              v-if="cvLooksIncomplete"
+              class="flex items-start gap-2.5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-left text-xs text-amber-900 leading-relaxed"
+            >
+              <UiPzIcon name="warning" class="text-base text-amber-600 shrink-0" />
+              <span><strong>À compléter :</strong> expériences, formation, compétences. Vous pouvez quand même télécharger maintenant.</span>
+            </div>
+
             <!-- Badges de statut du CV -->
-            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-left text-xs">
+            <div v-else class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-left text-xs">
               <div class="flex items-center justify-between">
                 <span class="text-slate-500 font-medium">Format de page</span>
                 <span
@@ -681,7 +705,7 @@ async function downloadPdf() {
                 class="px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-bold text-xs transition-colors cursor-pointer touch-manipulation"
                 @click="cancelConfirmModal"
               >
-                Vérifier encore
+                {{ cvLooksIncomplete ? 'Compléter mon CV' : 'Vérifier encore' }}
               </button>
 
               <button

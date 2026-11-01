@@ -31,13 +31,6 @@ const steps: TourStep[] = [
     section: 'personal',
   },
   {
-    target: '#tour-field-photo',
-    title: 'Photo de profil',
-    icon: 'add_a_photo',
-    content: 'Téléchargez une photo professionnelle. Utilisez l\'interrupteur d\'activation pour l\'afficher ou la masquer sur votre CV.',
-    section: 'personal',
-  },
-  {
     target: '#tour-field-fullname',
     title: 'Nom complet',
     icon: 'person',
@@ -56,6 +49,13 @@ const steps: TourStep[] = [
     title: 'Contact (E-mail & Tél)',
     icon: 'mail',
     content: 'Entrez une adresse e-mail professionnelle et votre numéro de téléphone (avec l\'indicatif international +221 si nécessaire).',
+    section: 'personal',
+  },
+  {
+    target: '#tour-field-photo',
+    title: 'Photo de profil',
+    icon: 'add_a_photo',
+    content: 'Téléchargez une photo professionnelle. Utilisez l\'interrupteur d\'activation pour l\'afficher ou la masquer sur votre CV.',
     section: 'personal',
   },
   {
@@ -233,7 +233,7 @@ function handleClose() {
 
   // Replier ou faire défiler vers le haut pour ramener l'utilisateur au début du formulaire (Informations personnelles)
   nextTick(() => {
-    const firstField = document.querySelector('#tour-field-photo') || document.querySelector('[data-section-id="personal"]')
+    const firstField = document.querySelector('#tour-field-fullname') || document.querySelector('[data-section-id="personal"]')
     if (firstField) {
       firstField.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }

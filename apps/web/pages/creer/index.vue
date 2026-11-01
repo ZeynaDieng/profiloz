@@ -73,7 +73,7 @@ onMounted(() => {
               <h4 class="font-extrabold text-sm text-[#0F172A] group-hover:text-[#2F5BFF] transition-colors">
                 {{ MSG.guide.importCvLink }}
               </h4>
-              <p class="text-[11px] text-[#64748B]">Extraire automatiquement depuis PDF/DOCX</p>
+              <p class="text-[11px] text-[#64748B]">Depuis un PDF, un fichier Word ou une photo</p>
             </div>
           </div>
           <UiPzIcon name="chevron_right" class="text-base text-[#64748B] group-hover:translate-x-1 transition-transform" />

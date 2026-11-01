@@ -138,7 +138,7 @@ function onContinue() {
 
 useWizardStep(computed(() => ({
   onContinue,
-  nextLabel: returnPath.value ? 'Appliquer ce modèle' : 'Commencer la rédaction',
+  nextLabel: returnPath.value ? 'Appliquer ce modèle' : 'Continuer',
 })))
 </script>
 
@@ -153,7 +153,6 @@ useWizardStep(computed(() => ({
         <UiPzIcon name="arrow_back" class="text-[18px]" />
         Retour
       </NuxtLink>
-      <p class="text-sm font-medium text-secondary">{{ MSG.guide.modelStep }}</p>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Choisissez votre modèle</h1>
         <p class="text-on-surface-variant mt-1 text-sm sm:text-base">

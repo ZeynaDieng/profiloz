@@ -154,7 +154,7 @@ async function onChoose(plan: PlanDto) {
       </h1>
       <p class="text-on-surface-variant mt-3 max-w-2xl mx-auto text-sm sm:text-base">
         <template v-if="fromPaywall">
-          Votre dossier est prêt. Comparez les offres et payez uniquement pour télécharger.
+          Payez uniquement pour télécharger votre PDF. Sans compte obligatoire.
         </template>
         <template v-else>
           Créez, modifiez et prévisualisez gratuitement. Vous ne payez qu'au moment de télécharger votre dossier.
@@ -163,17 +163,14 @@ async function onChoose(plan: PlanDto) {
     </header>
 
     <div
-      v-if="fromPaywall"
+      v-if="fromPaywall && fromOtherDocument"
       class="tarifs-page__banner max-w-2xl mx-auto mb-6 md:mb-8 p-4 rounded-xl bg-secondary-fixed text-on-secondary-fixed text-sm text-center"
     >
-      <template v-if="fromOtherDocument">{{ otherDocumentMessage }}</template>
-      <template v-else>
-        Votre CV est prêt ! Choisissez une offre pour le télécharger (compte facultatif).
-      </template>
+      {{ otherDocumentMessage }}
     </div>
 
     <div
-      v-if="entitlementsSummary"
+      v-if="entitlementsSummary && entitlementsSummary.kind !== 'none'"
       class="max-w-2xl mx-auto mb-8 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-sm text-center text-on-surface"
     >
       <p class="font-semibold">{{ entitlementsSummary.title }}</p>
