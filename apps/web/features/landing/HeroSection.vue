@@ -163,8 +163,9 @@ const reducedMotion = ref(false)
     <div
       class="relative z-[2] w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin-desktop grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center"
     >
+      <!-- w-full sans mx-auto : avec des marges auto, le bloc prenait la largeur de son texte et se centrait -->
       <div
-        class="flex flex-col text-left lg:max-w-[31rem] mx-auto lg:mx-0 min-w-0 max-w-full"
+        class="flex flex-col text-left w-full lg:max-w-[31rem] min-w-0 max-w-full"
       >
         <h1
           class="landing-display flex flex-col gap-[0.2rem] text-balance
@@ -204,13 +205,17 @@ const reducedMotion = ref(false)
           </span>
         </h1>
 
+        <!-- Coupure voulue avant « ou » (sinon « ou » restait seul en fin de ligne sur les iPhone) -->
         <p
-          class="landing-lead sm:hidden mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
+          class="landing-lead sm:hidden mt-3 md:mt-4 order-2"
         >
-          {{ heroSubtitleShort }}
+          <template v-if="heroSubtitleShort === defaultSubtitleShort">
+            Importez votre ancien CV<br>ou partez de zéro, l’IA vous guide.
+          </template>
+          <template v-else>{{ heroSubtitleShort }}</template>
         </p>
         <p
-          class="landing-lead hidden sm:block mx-auto lg:mx-0 mt-3 md:mt-4 text-balance order-2"
+          class="landing-lead hidden sm:block mt-3 md:mt-4 text-balance order-2"
         >
           {{ heroSubtitle }}
         </p>

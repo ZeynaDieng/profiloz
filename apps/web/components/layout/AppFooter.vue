@@ -6,7 +6,7 @@ withDefaults(defineProps<{ variant?: 'full' | 'minimal' | 'transactional' }>(), 
 const year = new Date().getFullYear()
 
 const productLinks = [
-  { to: '/creer', label: 'Fonctionnalités' },
+  { to: '/#features', label: 'Comment ça marche' },
   { to: '/creer/modele', label: 'Modèles' },
   { to: '/tarifs', label: 'Tarifs' },
   { to: '/faq', label: 'Questions fréquentes' },

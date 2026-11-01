@@ -8,10 +8,11 @@ const closeButtonRef = ref<HTMLButtonElement | null>(null)
 useDrawerA11y(open, closeButtonRef, menuTriggerRef)
 
 const marketingLinks: { href?: string; to?: RouteLocationRaw; label: string; icon: string; isRoute?: boolean }[] = [
-  { href: '#features', label: 'Fonctionnalités', icon: 'auto_awesome' },
+  // Chemins vers l'accueil (/#…) : un simple #features ne menait nulle part depuis les autres pages
+  { to: { path: '/', hash: '#features' }, label: 'Comment ça marche', icon: 'auto_awesome', isRoute: true },
   { href: '/#templates', label: 'Modèles', icon: 'description', isRoute: true },
   { to: { path: '/', hash: '#tarifs' }, label: 'Tarifs', icon: 'payments', isRoute: true },
-  { to: '/faq', label: 'Questions fréquentes', icon: 'help', isRoute: true },
+  { to: { path: '/', hash: '#faq' }, label: 'Questions fréquentes', icon: 'help', isRoute: true },
 ]
 
 onMounted(() => {
@@ -116,26 +117,15 @@ watch(
             </NuxtLink>
           </template>
 
-          <div
+          <NuxtLink
             v-else
-            class="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/25 bg-surface-container-low/80 px-3 py-2.5"
+            to="/connexion"
+            class="flex items-center justify-center gap-1 min-h-11 w-full rounded-xl border border-outline-variant/30 text-sm font-semibold text-secondary hover:bg-surface-container-low"
+            @click="closeMenu"
           >
-            <span
-              class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-on-surface-variant"
-              title="Mode invité — connectez-vous pour sauvegarder"
-            >
-              <span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
-              Invité
-            </span>
-            <NuxtLink
-              to="/connexion"
-              class="text-sm font-semibold text-secondary hover:underline inline-flex items-center gap-0.5 min-h-9"
-              @click="closeMenu"
-            >
-              Se connecter
-              <UiPzIcon name="arrow_forward" class="text-[16px]" />
-            </NuxtLink>
-          </div>
+            Se connecter
+            <UiPzIcon name="arrow_forward" class="text-[16px]" />
+          </NuxtLink>
         </div>
       </nav>
     </template>

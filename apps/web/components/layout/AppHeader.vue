@@ -30,9 +30,12 @@ onMounted(() => {
       <UiAppLogo size="sm" class="shrink-0 [&_img]:h-8 md:[&_img]:h-12" />
 
       <nav v-if="variant === 'marketing'" class="hidden md:flex items-center gap-stack-lg flex-1 justify-center">
-        <a href="#features" class="font-label-sm text-secondary font-semibold border-b-2 border-secondary pb-1">
-          Fonctionnalités
-        </a>
+        <NuxtLink
+          :to="{ path: '/', hash: '#features' }"
+          class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors"
+        >
+          Comment ça marche
+        </NuxtLink>
         <NuxtLink to="/#templates" class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors">
           Modèles
         </NuxtLink>
@@ -51,7 +54,7 @@ onMounted(() => {
           Tarifs
         </NuxtLink>
         <NuxtLink
-          to="/faq"
+          :to="{ path: '/', hash: '#faq' }"
           class="font-label-sm text-on-surface-variant font-medium hover:text-secondary transition-colors"
         >
           FAQ
