@@ -1,20 +1,24 @@
 <script setup lang="ts">
 const fallbackItems = [
   {
-    q: "Comment fonctionne l'import de documents ?",
-    a: "Notre moteur lit les fichiers PDF et DOCX, identifie expériences, formations et compétences, puis les place dans les champs correspondants de l'éditeur.",
+    q: 'Est-ce gratuit ?',
+    a: 'Créer, modifier et prévisualiser votre CV et vos lettres est gratuit. Vous payez seulement au moment de télécharger le PDF, selon l’offre choisie ci-dessus. Sans abonnement obligatoire.',
+  },
+  {
+    q: 'Que contient un dossier ?',
+    a: 'Un dossier, c’est 2 documents au choix : un CV et une lettre de motivation, ou deux CV, ou deux lettres. Vous pouvez les modifier et les retélécharger ensuite.',
+  },
+  {
+    q: 'Comment payer ?',
+    a: 'Par mobile money (Orange Money, Wave…) ou carte bancaire, via la plateforme de paiement sécurisée PayTech. Le téléchargement est débloqué dès la confirmation du paiement.',
+  },
+  {
+    q: 'Puis-je importer mon ancien CV ?',
+    a: 'Oui : envoyez un PDF, un fichier Word ou une simple photo de votre CV. L’IA remplit automatiquement vos informations, que vous vérifiez avant de continuer.',
   },
   {
     q: 'Les recruteurs pourront-ils lire mon CV ?',
-    a: 'Oui. Chaque modèle est testé pour garantir une excellente lisibilité humaine et une compatibilité avec les principaux ATS du marché.',
-  },
-  {
-    q: 'Puis-je créer une lettre de motivation ?',
-    a: "Oui. Profilo'Z permet de rédiger et personnaliser des lettres de motivation, puis de les exporter en PDF. La création de lettres nécessite un compte gratuit pour les sauvegarder et les modifier.",
-  },
-  {
-    q: 'Puis-je télécharger mon CV en PDF ?',
-    a: 'Oui, vous pouvez exporter votre CV en PDF haute qualité sans inscription. Un compte permet aussi de sauvegarder CV et lettres.',
+    a: 'Oui. Le PDF est net à l’impression et son texte est lisible par les logiciels de tri des candidatures (ATS) utilisés par de nombreux recruteurs.',
   },
 ] as const
 

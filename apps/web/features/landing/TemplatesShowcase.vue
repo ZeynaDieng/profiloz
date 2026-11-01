@@ -14,11 +14,23 @@ import {
 type TemplateKind = 'cv' | 'letter'
 
 const POPULAR_SLUG = 'PROFESSIONNEL'
-const cvTemplates = TEMPLATE_REGISTRY
-const letterTemplates = COVER_LETTER_TEMPLATE_REGISTRY
+/**
+ * Sur l'accueil, seulement une sélection : chaque carte dessine un CV complet (et la rangée en boucle
+ * le double), 29 modèles faisaient ~16 000 mots de plus à afficher sur téléphone. La galerie a tout.
+ */
+const SHOWCASE_LIMIT = 10
+function showcase<T extends { slug: string }>(registry: readonly T[]): T[] {
+  const picked = registry.slice(0, SHOWCASE_LIMIT)
+  const popular = registry.find((t) => t.slug === POPULAR_SLUG)
+  if (popular && !picked.includes(popular)) picked[picked.length - 1] = popular
+  return picked
+}
+const cvTemplates = showcase(TEMPLATE_REGISTRY)
+const letterTemplates = showcase(COVER_LETTER_TEMPLATE_REGISTRY)
 
-const cvCount = computed(() => cvTemplates.length)
-const letterCount = computed(() => letterTemplates.length)
+// Le compteur annonce bien tout le catalogue
+const cvCount = computed(() => TEMPLATE_REGISTRY.length)
+const letterCount = computed(() => COVER_LETTER_TEMPLATE_REGISTRY.length)
 
 function templateCountLabel(count: number, kind: 'cv' | 'letter') {
   const word = count > 1 ? 'modèles' : 'modèle'
@@ -187,7 +199,7 @@ const { target, revealed } = useScrollReveal(0.25)
           <FeaturesLandingTemplateShowcaseRail
             ref="cvRailRef"
             @click="onRailClick('cv', $event)"
-            :count="cvCount"
+            :count="cvTemplates.length"
             :active="activeKind === 'cv'"
           >
             <article
@@ -263,7 +275,7 @@ const { target, revealed } = useScrollReveal(0.25)
           <FeaturesLandingTemplateShowcaseRail
             ref="letterRailRef"
             @click="onRailClick('letter', $event)"
-            :count="letterCount"
+            :count="letterTemplates.length"
             :active="activeKind === 'letter'"
           >
             <article

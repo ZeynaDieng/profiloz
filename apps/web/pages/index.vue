@@ -10,14 +10,14 @@ useSeoPage({
   <div class="landing-page overflow-x-clip max-w-full">
     <SeoStructuredData type="all" />
 
+    <!-- 5 sections : accroche, modèles, 3 étapes, tarifs + FAQ, appel final.
+         Les avis n'apparaissent qu'avec au moins 3 vrais avis validés (admin → Avis clients). -->
     <FeaturesLandingHeroSection />
     <FeaturesLandingTemplatesShowcase />
     <FeaturesLandingTestimonialsStrip />
-
-    <FeaturesLandingFeaturesBento />
-    <FeaturesLandingHowItWorksSection />
-    <FeaturesLandingApplicationDuoSection />
+    <FeaturesLandingStepsSection />
     <FeaturesLandingPricingSection />
+    <FeaturesLandingFaqSection />
     <FeaturesLandingCtaSection />
   </div>
 </template>
