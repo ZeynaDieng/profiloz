@@ -267,7 +267,7 @@ h1, h2, h3, h4 {
 
 /* Landing : sections plus courtes sur mobile */
 .landing-section {
-  @apply py-10 md:py-20 lg:py-28;
+  @apply py-10 md:py-16 lg:py-20;
 }
 
 .landing-page [id] {

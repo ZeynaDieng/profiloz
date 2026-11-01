@@ -63,7 +63,7 @@ async function onChoose(plan: PlanDto) {
 <template>
   <section
     id="tarifs"
-    class="landing-section bg-white border-t border-outline-variant/30"
+    class="landing-section bg-white"
     aria-labelledby="pricing-title"
   >
     <UiPayTechModal
@@ -92,6 +92,7 @@ async function onChoose(plan: PlanDto) {
         :loading="loading"
         :checking-out="checkingOut"
         :animate-in="true"
+        collapse-features
         @choose="onChoose"
       />
 

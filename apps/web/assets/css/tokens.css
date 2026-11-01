@@ -32,6 +32,10 @@
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-accent-green: #059669;
+  /* Accueil : bleu nuit des temps forts (offre recommandée) et ocre chaud des petites touches */
+  --color-brand-deep: #0b2559;
+  --color-accent-warm: #e8912d;
+  --color-on-accent-warm: #2b1600;
   --color-accent-purple: #7c3aed;
   --color-accent-orange: #ea580c;
   --color-accent-teal: #009485;

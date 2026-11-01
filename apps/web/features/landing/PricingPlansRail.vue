@@ -8,8 +8,11 @@ const props = withDefaults(
     checkingOut?: string | null
     paywallHighlight?: boolean
     animateIn?: boolean
+    /** Accueil : avantages limités, le reste sur demande. La page /tarifs affiche tout. */
+    collapseFeatures?: boolean
   }>(),
   {
+    collapseFeatures: false,
     loading: false,
     checkingOut: null,
     paywallHighlight: false,
@@ -26,6 +29,19 @@ const activeIndex = defineModel<number>('activeIndex', { default: 0 })
 const scrollRef = ref<HTMLElement | null>(null)
 const hasInitializedScroll = ref(false)
 const swipeHintVisible = ref(true)
+
+/**
+ * Avantages affichés d'emblée, le reste sur demande : sans limite, toutes les cartes s'alignaient
+ * sur Business (10 avantages) et la section mesurait 1 250 px sur ordinateur, un écran et demi sur mobile.
+ */
+const VISIBLE_FEATURES = 5
+const expandedPlans = ref<Set<string>>(new Set())
+function expandPlan(slug: string) {
+  expandedPlans.value = new Set(expandedPlans.value).add(slug)
+}
+function isCollapsed(plan: PlanDto) {
+  return props.collapseFeatures && plan.features.length > VISIBLE_FEATURES && !expandedPlans.value.has(plan.slug)
+}
 
 watch(
   () => props.plans.length,
@@ -165,7 +181,7 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
           :aria-current="activeIndex === index ? 'true' : undefined"
         >
           <UiCard
-            :variant="plan.popular ? 'glass' : 'default'"
+            :variant="'default'"
             padding="lg"
             class="pricing-card relative flex flex-col h-full"
             :class="[
@@ -178,39 +194,54 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
           >
             <span
               v-if="plan.popular"
-              class="pricing-card__badge absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-secondary text-on-secondary text-xs font-bold whitespace-nowrap"
+              class="pricing-card__badge absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent-warm text-on-accent-warm text-xs font-bold whitespace-nowrap"
             >
               Offre recommandée
             </span>
 
-            <p class="text-[11px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+            <p class="text-[11px] font-bold tracking-[0.12em] uppercase" :class="plan.popular ? 'text-white/60' : 'text-on-surface-variant'">
               Offre {{ String(index + 1).padStart(2, '0') }}
             </p>
-            <h3 class="landing-subtitle md:text-lg md:font-bold mt-1">{{ plan.name }}</h3>
+            <h3 class="landing-subtitle md:text-lg md:font-bold mt-1" :class="plan.popular && 'text-white'">{{ plan.name }}</h3>
             <!-- Hauteur réservée sur grand écran : les 4 prix restent alignés -->
-            <p class="text-sm text-on-surface-variant mt-1 min-h-[2.5rem] md:min-h-[5rem]">{{ plan.description }}</p>
+            <p class="text-sm mt-1 min-h-[2.5rem] md:min-h-[3.75rem]" :class="plan.popular ? 'text-white/75' : 'text-on-surface-variant'">{{ plan.description }}</p>
 
             <div class="mt-4 mb-5">
-              <p class="text-xs font-semibold text-on-surface-variant" :class="!plan.priceFrom && 'hidden md:block md:invisible'">À partir de</p>
-              <span class="text-3xl font-bold text-on-surface tabular-nums">{{ plan.priceXof.toLocaleString('fr-FR') }}</span>
-              <span class="text-on-surface-variant text-sm"> FCFA / {{ plan.priceUnit ?? (plan.kind === 'subscription' ? 'mois' : 'dossier') }}</span>
+              <p class="text-xs font-semibold" :class="[plan.popular ? 'text-white/75' : 'text-on-surface-variant', !plan.priceFrom && 'hidden md:block md:invisible']">À partir de</p>
+              <span class="text-3xl font-bold tabular-nums" :class="plan.popular ? 'text-white' : 'text-on-surface'">{{ plan.priceXof.toLocaleString('fr-FR') }}</span>
+              <span class="text-sm" :class="plan.popular ? 'text-white/75' : 'text-on-surface-variant'"> FCFA / {{ plan.priceUnit ?? (plan.kind === 'subscription' ? 'mois' : 'dossier') }}</span>
             </div>
 
             <ul class="space-y-2.5 sm:space-y-3 mb-6 flex-1">
               <li
                 v-for="(feature, featureIndex) in plan.features"
                 :key="feature"
-                class="pricing-feature flex items-start gap-2 text-sm text-on-surface"
+                class="pricing-feature flex items-start gap-2 text-sm"
+                :class="[
+                  plan.popular ? 'text-white/90' : 'text-on-surface',
+                  isCollapsed(plan) && featureIndex >= VISIBLE_FEATURES && 'pricing-feature--extra',
+                ]"
                 :style="{ '--feature-i': featureIndex }"
               >
-                <UiPzIcon name="check_circle" class="text-[18px] text-secondary shrink-0 mt-0.5" />
+                <UiPzIcon name="check_circle" class="text-[18px] shrink-0 mt-0.5" :class="plan.popular ? 'text-accent-warm' : 'text-secondary'" />
                 <span>{{ feature }}</span>
               </li>
             </ul>
 
+            <button
+              v-if="isCollapsed(plan)"
+              type="button"
+              class="-mt-3 mb-5 text-left text-sm font-semibold underline underline-offset-2"
+              :class="plan.popular ? 'text-white/85' : 'text-secondary'"
+              @click="expandPlan(plan.slug)"
+            >
+              {{ plan.features.length - VISIBLE_FEATURES === 1 ? 'Voir l’autre avantage' : `Voir les ${plan.features.length - VISIBLE_FEATURES} autres avantages` }}
+            </button>
+
             <UiButton
               block
-              :variant="plan.popular ? 'secondary' : 'primary'"
+:variant="plan.popular ? 'secondary' : 'primary'"
+              :class="plan.popular && 'pricing-card__cta--popular'"
               :loading="checkingOut === plan.slug"
               :aria-label="`Choisir l'offre ${plan.name}`"
               @click="emit('choose', plan)"
@@ -356,6 +387,17 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
   padding-bottom: 1.75rem;
 }
 
+/* Mobile : chaque carte garde sa hauteur (sinon toutes s'étirent à celle de Business, avec un grand vide) */
+@media (max-width: 767px) {
+  .pricing-rail {
+    align-items: flex-start;
+  }
+}
+
+.pricing-feature--extra {
+  display: none;
+}
+
 .pricing-rail::-webkit-scrollbar {
   display: none;
 }
@@ -380,11 +422,21 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
     border-color 0.35s ease;
 }
 
-.pricing-card--popular {
-  border-color: var(--color-secondary);
-  box-shadow:
-    var(--shadow-elevated-md),
-    0 0 0 1px color-mix(in srgb, var(--color-secondary) 20%, transparent);
+/* Offre recommandée : carte pleine bleu nuit (sans dégradé), seul temps fort de la grille */
+.pricing-card.pricing-card--popular {
+  background: var(--color-brand-deep);
+  border-color: var(--color-brand-deep);
+  box-shadow: var(--shadow-elevated-md);
+}
+
+/* .landing-subtitle impose sa couleur : on la remplace sur fond bleu nuit */
+.pricing-card--popular h3 {
+  color: #fff;
+}
+
+.pricing-card--popular .pricing-card__cta--popular {
+  background: #fff;
+  color: var(--color-brand-deep);
 }
 
 .pricing-card--active {
@@ -422,8 +474,8 @@ defineExpose({ scrollToPlan, resetToStartOnMobile })
 }
 
 @keyframes pricing-badge-glow {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-secondary) 0%, transparent); }
-  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-secondary) 14%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-warm) 0%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent-warm) 14%, transparent); }
 }
 
 .pricing-plans--ready .pricing-card--revealed {

@@ -5,19 +5,19 @@
  */
 const steps = [
   {
-    icon: 'upload_file',
-    title: 'Importez ou partez de zéro',
-    text: 'Envoyez votre ancien CV (PDF, Word ou photo) : l’IA remplit tout. Ou laissez-vous guider étape par étape.',
+    color: 'var(--color-secondary)',
+    title: 'Importez ou créez',
+    text: 'Votre ancien CV (PDF, Word ou photo) ou une page blanche guidée.',
   },
   {
-    icon: 'palette',
+    color: 'var(--color-accent-green)',
     title: 'Choisissez un modèle',
-    text: 'Des modèles pensés pour les recruteurs et lisibles par les logiciels de tri (ATS). L’IA vous aide à rédiger.',
+    text: 'Lisible par les recruteurs et les logiciels de tri (ATS).',
   },
   {
-    icon: 'download',
-    title: 'Téléchargez CV et lettre',
-    text: 'Votre CV et une lettre de motivation adaptée à l’offre, en PDF prêt à envoyer depuis votre téléphone.',
+    color: '#7c3aed',
+    title: 'Téléchargez',
+    text: 'Votre CV et une lettre adaptée à l’offre, en PDF.',
   },
 ] as const
 
@@ -25,7 +25,7 @@ const { target, revealed } = useScrollReveal(0.2)
 </script>
 
 <template>
-  <section id="features" class="landing-section border-t border-outline-variant/20">
+  <section id="features" class="landing-section bg-surface-container-low">
     <div
       ref="target"
       class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop scroll-reveal"
@@ -36,24 +36,23 @@ const { target, revealed } = useScrollReveal(0.2)
         <h2 class="landing-title">Votre dossier prêt en <span class="text-secondary">3 étapes</span></h2>
       </div>
 
-      <ol class="grid gap-4 md:grid-cols-3 md:gap-6">
-        <li
-          v-for="(step, index) in steps"
-          :key="step.title"
-          class="relative rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 md:p-6"
-        >
-          <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-              <UiPzIcon :name="step.icon" class="text-[22px]" />
-            </span>
-            <span class="text-xs font-bold text-on-surface-variant">Étape {{ index + 1 }}</span>
+      <!-- Liste simple, sans cartes : compacte sur mobile -->
+      <ol class="grid gap-5 md:grid-cols-3 md:gap-10">
+        <li v-for="(step, index) in steps" :key="step.title" class="flex items-start gap-4">
+          <span
+            class="w-10 h-10 rounded-full text-white text-base font-bold flex items-center justify-center shrink-0 tabular-nums"
+            :style="{ backgroundColor: step.color }"
+          >
+            {{ index + 1 }}
+          </span>
+          <div class="min-w-0 pt-1">
+            <h3 class="font-bold text-on-surface text-base md:text-lg leading-snug">{{ step.title }}</h3>
+            <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">{{ step.text }}</p>
           </div>
-          <h3 class="font-bold text-on-surface text-base md:text-lg">{{ step.title }}</h3>
-          <p class="mt-1.5 text-sm text-on-surface-variant leading-relaxed">{{ step.text }}</p>
         </li>
       </ol>
 
-      <div class="mt-6 md:mt-8 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div class="mt-7 md:mt-10 flex flex-col sm:flex-row sm:items-center gap-3">
         <NuxtLink
           to="/creer"
           class="btn-secondary cta-primary w-full sm:w-auto px-6 py-3.5 rounded-2xl text-sm sm:text-base premium-shadow-sm"

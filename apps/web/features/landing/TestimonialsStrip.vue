@@ -194,7 +194,7 @@ onUnmounted(() => {
 .testimonials-strip {
   padding: 2.75rem 0 3rem;
   border-block: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
-  background: color-mix(in srgb, var(--color-surface-container-low) 45%, var(--color-background));
+  background: #fff;
 }
 
 @media (min-width: 768px) {
@@ -259,7 +259,7 @@ onUnmounted(() => {
 
 .testimonials-strip__star {
   font-size: 1.125rem;
-  color: var(--color-accent-green);
+  color: var(--color-accent-warm);
 }
 
 .testimonials-strip__brand {
@@ -271,7 +271,7 @@ onUnmounted(() => {
 
 .testimonials-strip__brand-icon {
   font-size: 1rem;
-  color: var(--color-accent-green);
+  color: var(--color-accent-warm);
 }
 
 .testimonials-strip__brand-name {
@@ -328,7 +328,7 @@ onUnmounted(() => {
 
 .review-card__star {
   font-size: 0.9375rem;
-  color: var(--color-accent-green);
+  color: var(--color-accent-warm);
 }
 
 .review-card__title {
@@ -414,11 +414,7 @@ onUnmounted(() => {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    var(--color-accent-teal),
-    var(--color-accent-green)
-  );
+  background: var(--color-accent-warm);
   transition: width 180ms var(--pz-ease-out, ease);
 }
 

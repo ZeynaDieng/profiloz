@@ -47,7 +47,7 @@ function toggle(index: number) {
   <section
     id="faq"
     ref="target"
-    class="landing-section bg-surface-container-lowest border-t border-outline-variant/30 scroll-reveal"
+    class="landing-section bg-surface-container-low scroll-reveal"
     :class="revealed && 'is-revealed'"
   >
     <div class="max-w-2xl mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop">

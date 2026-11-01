@@ -69,7 +69,7 @@ const heroLines = computed(() => {
       ? hero.value.titleTransform?.trim()
       : hero.value.titleStart?.trim()
 
-  const fallback = ['Modèles professionnels de CV', 'et lettre de motivation'] as const
+  const fallback = ['Votre CV et votre lettre', 'prêts en quelques minutes'] as const
 
   if (!custom) return [...fallback]
 
@@ -94,15 +94,16 @@ const heroLines = computed(() => {
 // fallback title — a custom CMS title is short enough already or can't be
 // safely shortened automatically, so it's reused as-is on mobile too.
 const heroFirstLineShort = computed(() => {
-  const fallbackFirstLine = 'Modèles professionnels de CV'
-  return heroLines.value[0] === fallbackFirstLine ? 'Modèles de CV' : heroLines.value[0]
+  const fallbackFirstLine = 'Votre CV et votre lettre'
+  return heroLines.value[0] === fallbackFirstLine ? 'CV et lettre' : heroLines.value[0]
 })
 
-const heroPills = ['Import IA & Photo', 'Compatible ATS', 'Générateur de Lettre'] as const
+const heroPills = ['Import IA & Photo', 'Compatible ATS', 'Lettre par IA'] as const
 const defaultSubtitle =
-  "Profilo'Z réunit l'IA d'importation, l'éditeur de CV et la création de lettres au même endroit."
+  'Importez votre ancien CV, même en photo, ou partez de zéro : l’IA vous aide à chaque étape.'
 
 const legacySubtitles = [
+  "Profilo'Z réunit l'IA d'importation, l'éditeur de CV et la création de lettres au même endroit.",
   "Profilo'Z réunit CV, lettres de motivation, modèles professionnels et export PDF. L'ensemble de votre dossier de candidature, au même endroit.",
   "Profilo'Z réunit modèles professionnels, éditeur guidé et export PDF. Votre dossier complet, au même endroit.",
 ]
@@ -116,7 +117,8 @@ const heroSubtitle = computed(() => {
 // Shorter phrasing for small screens only — sm: and up still use heroSubtitle.
 // If the CMS doesn't provide a dedicated short version, fall back to a
 // deliberately brief default rather than truncating the long one mid-sentence.
-const defaultSubtitleShort = "L'IA d'importation, l'éditeur de CV et les lettres, au même endroit."
+// Assez long pour occuper 2 lignes : plus court, le bloc de texte se rétrécit et se décale vers le centre
+const defaultSubtitleShort = 'Importez votre ancien CV ou partez de zéro, l’IA vous guide.'
 
 const heroSubtitleShort = computed(() => {
   const customShort = (hero.value as { subtitleShort?: string }).subtitleShort?.trim()
@@ -124,6 +126,10 @@ const heroSubtitleShort = computed(() => {
 })
 
 const heroLine2 = computed(() => heroLines.value[1] ?? '')
+// Mobile : 2e ligne raccourcie pour ne pas passer sur le visage de la photo
+const heroLine2Short = computed(() =>
+  heroLine2.value === 'prêts en quelques minutes' ? 'en quelques minutes' : heroLine2.value,
+)
 
 const reducedMotion = ref(false)
 </script>
@@ -171,8 +177,21 @@ const reducedMotion = ref(false)
             {{ heroLines[0] }}
           </span>
           <span
+            v-if="heroLine2Short"
+            class="sm:hidden block leading-[1.14] break-words [hyphens:auto] min-h-[1.2em] mt-0.5 text-secondary"
+          >
+            <span v-if="reducedMotion">{{ heroLine2Short }}</span>
+            <UiTypewriterText
+              v-else
+              tag="span"
+              :segments="[{ text: heroLine2Short }]"
+              loop
+              loop-mode="full"
+            />
+          </span>
+          <span
             v-if="heroLine2"
-            class="block leading-[1.14] break-words [hyphens:auto] min-h-[1.2em] mt-0.5 text-secondary"
+            class="hidden sm:block leading-[1.14] break-words [hyphens:auto] min-h-[1.2em] mt-0.5 text-secondary"
           >
             <span v-if="reducedMotion">{{ heroLine2 }}</span>
             <UiTypewriterText
@@ -230,7 +249,7 @@ const reducedMotion = ref(false)
           <!-- Item 3: Générateur de Lettre -->
           <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 shrink-0">
             <span class="w-4 h-4 rounded-full bg-[#EEF4FF] border border-[#2563eb]/20 text-[#2563eb] flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
-            <span>Générateur de Lettre</span>
+            <span>Lettre par IA</span>
           </span>
         </div>
       </div>
