@@ -3,11 +3,11 @@ import { isAvatarStorageKey, isBase64PhotoUrl, sanitizePhotoReference } from '..
 
 describe('avatar storage helpers', () => {
   it('identifie une clé avatar utilisateur', () => {
-    expect(isAvatarStorageKey('avatars/clxyz123abc/uuid-1234.jpg')).toBe(true)
+    expect(isAvatarStorageKey('avatars/clxyz123abc/3f2a9c1e-7b4d-4e8a-9c21-5d6e7f8a9b0c.jpg')).toBe(true)
   })
 
   it('identifie une clé avatar invité', () => {
-    expect(isAvatarStorageKey('avatars/guest/clxyz123abc/uuid-1234.jpg')).toBe(true)
+    expect(isAvatarStorageKey('avatars/guest/clxyz123abc/3f2a9c1e-7b4d-4e8a-9c21-5d6e7f8a9b0c.jpg')).toBe(true)
   })
 
   it('rejette le base64 et les chemins invalides', () => {

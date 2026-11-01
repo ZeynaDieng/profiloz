@@ -139,9 +139,21 @@ const currentLetterSnapshot = computed(() => {
   }
 })
 
+// Le brouillon et le dernier téléchargement ne sont lus qu'après le montage : le serveur ne les
+// connaît pas, et un nom différent entre serveur et navigateur faisait un décalage d'hydratation.
+const isMounted = ref(false)
+onMounted(() => {
+  isMounted.value = true
+})
+
 const downloadedFilename = computed(() => {
   const fromQuery = route.query.file
   if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery
+  // Même format que les vrais noms de fichiers (« cv Profiloz.pdf »)
+  const fallback = isLetter.value
+    ? buildCoverLetterPdfFilename(null)
+    : buildResumePdfFilename({ personalInfo: {} })
+  if (!isMounted.value) return fallback
   if (lastFilename.value) return lastFilename.value
   const last = loadLastDownloadContext()
   if (last?.filename) return last.filename
@@ -149,7 +161,7 @@ const downloadedFilename = computed(() => {
     return buildCoverLetterPdfFilename(coverLetterStore.current.senderName)
   }
   if (resumeStore.current) return buildResumePdfFilename(resumeStore.current)
-  return isLetter.value ? 'lettre-profiloz.pdf' : 'cv-profiloz.pdf'
+  return fallback
 })
 
 const docTitle = computed(() => (isLetter.value ? 'Votre lettre est prête !' : 'Votre CV est prêt !'))

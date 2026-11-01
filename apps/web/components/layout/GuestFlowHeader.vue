@@ -21,9 +21,8 @@ onMounted(() => {
 <template>
   <header class="sticky top-0 z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 shrink-0">
     <div class="flex items-center justify-between gap-2 px-margin-mobile py-2.5 min-h-[3.25rem]">
-      <NuxtLink to="/" class="shrink-0 min-h-11 inline-flex items-center">
-        <UiAppLogo size="sm" class="[&_img]:h-8" />
-      </NuxtLink>
+      <!-- UiAppLogo est déjà un lien vers l'accueil : l'envelopper dans un 2e lien donnait un <a> dans un <a> -->
+      <UiAppLogo size="sm" class="shrink-0 min-h-11 [&_img]:h-8" />
 
       <div class="flex items-center gap-1 shrink-0">
         <LayoutAuthStatus icon-only class="sm:hidden" />
