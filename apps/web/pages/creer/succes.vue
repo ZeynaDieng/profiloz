@@ -661,6 +661,11 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Avis client (uniquement après paiement, publié après validation) -->
+        <FeatureReviewsReviewForm
+          :default-name="resumeStore.current?.personalInfo?.fullName || coverLetterStore.current?.senderName"
+        />
+
         <!-- Boîte Nom du fichier + Copier -->
         <div class="w-full max-w-xl mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-xs">
           <div class="flex items-center gap-2 min-w-0 text-slate-700 font-medium">

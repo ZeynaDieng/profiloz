@@ -6,7 +6,8 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const SCANNED_DIRS = ['app', 'components', 'composables', 'features', 'layouts', 'pages', 'utils']
+// Le package partagé définit aussi des icônes (menu de l'administration, offres…)
+const SCANNED_DIRS = ['app', 'components', 'composables', 'features', 'layouts', 'pages', 'utils', '../../packages/shared/src']
 const SCANNED_FILES = ['app.vue', 'app.config.ts']
 
 const ICON_NAME = /^[a-z][a-z0-9_]*$/

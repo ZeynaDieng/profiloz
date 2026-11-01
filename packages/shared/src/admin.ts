@@ -21,6 +21,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/contenu/landing', label: 'Landing', icon: 'web' },
   { to: '/admin/contenu/blog', label: 'Blog', icon: 'article' },
   { to: '/admin/contenu/faq', label: 'FAQ', icon: 'quiz' },
+  { to: '/admin/avis', label: 'Avis clients', icon: 'reviews' },
   { to: '/admin/medias', label: 'Médiathèque', icon: 'perm_media' },
   { to: '/admin/emails', label: 'Emails', icon: 'forward_to_inbox' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' },

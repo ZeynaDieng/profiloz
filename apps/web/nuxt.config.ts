@@ -192,6 +192,7 @@ export default defineNuxtConfig({
     { path: '~/features/cover-letter-templates', prefix: 'FeatureCoverLetterTemplates' },
     { path: '~/features/cover-letter', prefix: 'FeatureCoverLetter' },
     { path: '~/features/admin', prefix: 'Admin' },
+    { path: '~/features/reviews', prefix: 'FeatureReviews' },
   ],
 
   // ─── Route Rules (indexation + cache + performance) ──────────────

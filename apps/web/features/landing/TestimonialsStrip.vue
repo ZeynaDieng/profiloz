@@ -1,42 +1,45 @@
 <script setup lang="ts">
-const testimonials = [
-  {
-    title: 'Un CV prêt en quelques minutes',
-    quote: 'Mon CV était prêt en moins de 10 minutes. Le PDF est impeccable et prêt à envoyer.',
-    name: 'Aminata D.',
-    ago: 'Il y a 2 jours',
-  },
-  {
-    title: 'Import fluide et rapide',
-    quote: 'J\'ai importé mon ancien CV et tout s\'est rempli automatiquement. J\'ai juste corrigé deux détails.',
-    name: 'Moussa S.',
-    ago: 'Il y a 5 jours',
-  },
-  {
-    title: 'Enfin pensé pour le mobile',
-    quote: 'Simple, élégant, et enfin un outil où je peux créer mon dossier depuis mon téléphone.',
-    name: 'Fatou N.',
-    ago: 'Il y a 1 semaine',
-  },
-  {
-    title: 'CV et lettre au même endroit',
-    quote: 'J\'ai créé mon CV et ma lettre sur la même plateforme. Tout est harmonisé, c\'est top.',
-    name: 'Ibrahima K.',
-    ago: 'Il y a 1 semaine',
-  },
-  {
-    title: 'Modèles vraiment pros',
-    quote: 'Les modèles sont modernes et lisibles. Mon recruteur m\'a dit que mon dossier était très clair.',
-    name: 'Mariame T.',
-    ago: 'Il y a 2 semaines',
-  },
-  {
-    title: 'Service au top',
-    quote: 'Réponse rapide et parcours guidé du début à la fin. Je recommande sans hésiter.',
-    name: 'Omar B.',
-    ago: 'Il y a 3 semaines',
-  },
-] as const
+import type { PublicReviews } from '~/services/review.service'
+
+/**
+ * Avis réels, validés par l'équipe (admin → Avis clients). Section masquée tant qu'il y a
+ * moins de MIN_REVIEWS avis publiés : mieux vaut rien que des avis inventés.
+ */
+const MIN_REVIEWS = 3
+/** En dessous, le nombre de documents créés n'est pas mis en avant. */
+const MIN_DOCUMENTS_SHOWN = 100
+
+const reviewService = useReviewService()
+const data = ref<PublicReviews | null>(null)
+
+const visible = computed(() => (data.value?.reviews.length ?? 0) >= MIN_REVIEWS)
+const average = computed(() => data.value?.stats.averageRating ?? null)
+const averageLabel = computed(() => (average.value ? average.value.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) : ''))
+const documentsLabel = computed(() => {
+  const count = data.value?.stats.documentCount ?? 0
+  if (count < MIN_DOCUMENTS_SHOWN) return ''
+  // Arrondi à la centaine inférieure : « Plus de 1 200 documents créés »
+  return `Plus de ${(Math.floor(count / 100) * 100).toLocaleString('fr-FR')} documents créés`
+})
+
+const relativeFormat = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' })
+function ago(iso: string) {
+  const days = Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000)
+  if (days > -7) return relativeFormat.format(days, 'day')
+  if (days > -30) return relativeFormat.format(Math.round(days / 7), 'week')
+  if (days > -365) return relativeFormat.format(Math.round(days / 30), 'month')
+  return relativeFormat.format(Math.round(days / 365), 'year')
+}
+
+onMounted(async () => {
+  try {
+    data.value = await reviewService.getPublic()
+    await nextTick()
+    updateScrollState()
+  } catch {
+    data.value = null
+  }
+})
 
 const railRef = ref<HTMLElement | null>(null)
 const scrollProgress = ref(0)
@@ -79,26 +82,28 @@ onUnmounted(() => {
 
 <template>
   <section
+    v-if="visible && data"
     ref="target"
     class="testimonials-strip scroll-reveal overflow-x-clip max-w-full"
     :class="revealed && 'is-revealed'"
   >
     <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-tablet xl:px-margin-desktop">
       <h2 class="testimonials-strip__headline landing-title text-center text-balance">
-        94&nbsp;% des candidats nous recommandent
+        Ce que disent nos clients
       </h2>
 
       <div class="testimonials-strip__layout">
         <aside class="testimonials-strip__score">
-          <p class="testimonials-strip__rating-value">4,8 sur 5</p>
+          <p class="testimonials-strip__rating-value">{{ averageLabel }} sur 5</p>
 
-          <div class="testimonials-strip__stars" aria-label="Note moyenne 4,8 sur 5">
+          <div class="testimonials-strip__stars" :aria-label="`Note moyenne ${averageLabel} sur 5`">
             <UiPzIcon
               v-for="i in 5"
               :key="i"
               name="star"
               filled
               class="testimonials-strip__star"
+              :class="{ 'opacity-25': average !== null && i > Math.round(average) }"
             />
           </div>
 
@@ -107,7 +112,9 @@ onUnmounted(() => {
             <span class="testimonials-strip__brand-name">Profilo'Z</span>
           </div>
 
-          <p class="testimonials-strip__meta">Plus de 12&nbsp;000 CV créés</p>
+          <p class="testimonials-strip__meta">
+            D’après {{ data.stats.reviewCount }} avis vérifiés<template v-if="documentsLabel"> · {{ documentsLabel }}</template>
+          </p>
         </aside>
 
         <div class="testimonials-strip__carousel">
@@ -117,8 +124,8 @@ onUnmounted(() => {
             @scroll.passive="updateScrollState"
           >
             <figure
-              v-for="item in testimonials"
-              :key="item.name + item.title"
+              v-for="item in data.reviews"
+              :key="item.id"
               class="review-card"
             >
               <div class="review-card__stars" aria-hidden="true">
@@ -128,15 +135,15 @@ onUnmounted(() => {
                   name="star"
                   filled
                   class="review-card__star"
+                  :class="{ 'opacity-25': i > item.rating }"
                 />
               </div>
 
-              <p class="review-card__title">{{ item.title }}</p>
               <blockquote class="review-card__quote">
-                {{ item.quote }}
+                {{ item.comment }}
               </blockquote>
               <figcaption class="review-card__meta">
-                {{ item.name }} · {{ item.ago }}
+                {{ item.displayName }}<template v-if="item.city"> · {{ item.city }}</template> · {{ ago(item.createdAt) }}
               </figcaption>
             </figure>
           </div>

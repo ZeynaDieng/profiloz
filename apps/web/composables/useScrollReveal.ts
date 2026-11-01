@@ -47,6 +47,11 @@ export function useScrollReveal(threshold = 0.25) {
     }
   }
 
+  // Élément affiché après coup (v-if sur des données chargées) : on l'observe dès qu'il apparaît
+  watch(target, (el) => {
+    if (el && !revealed.value && import.meta.client) syncRevealState()
+  })
+
   onMounted(() => {
     if (!import.meta.client) {
       revealed.value = true
