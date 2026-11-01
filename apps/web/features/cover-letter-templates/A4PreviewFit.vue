@@ -6,6 +6,8 @@ import { letterPreviewWrapperStyle } from '~/utils/template-accent-colors'
 const props = defineProps<{
   letter?: CoverLetterSnapshot | null
   hideBadge?: boolean
+  /** Aperçu avant paiement : filigrane, texte non copiable. */
+  watermark?: boolean
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
@@ -109,7 +111,7 @@ const previewStyle = computed(() =>
 
     <!-- Conteneur A4 avec mise à l'échelle -->
     <div
-      class="shrink-0 pointer-events-none letter-a4-preview-fit shadow-2xl rounded-sm transition-all flex items-center justify-center"
+      class="shrink-0 pointer-events-none select-none letter-a4-preview-fit shadow-2xl rounded-sm transition-all flex items-center justify-center"
       :style="{
         width: `${A4_WIDTH_PX}px`,
         height: `${A4_HEIGHT_PX * pageCount}px`,
@@ -119,6 +121,7 @@ const previewStyle = computed(() =>
       }"
     >
       <CoverLetterPreviewA4 :letter="letter" />
+      <UiPreviewWatermark v-if="watermark" />
 
       <!-- Lignes de séparation 3D de pages A4 si plusieurs pages -->
       <template v-if="pageCount > 1">

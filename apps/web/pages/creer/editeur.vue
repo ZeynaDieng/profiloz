@@ -21,6 +21,7 @@ const resumeService = useResumeService()
 const pdfService = usePdfService()
 const { ensureSession } = useGuestSession()
 const { ensureDownloadAccess } = usePaymentEntitlements()
+const { showWatermark } = usePreviewWatermark()
 const { isDesktop, isMobileOrTablet } = useBreakpoints()
 const { openMenu } = useMarketingMenuState()
 const editorValidation = useResumeEditorValidation()
@@ -595,7 +596,7 @@ async function downloadPdf() {
       </div>
 
       <div id="tour-preview-panel" v-if="isDesktop" class="flex-1 overflow-hidden min-w-0 hidden xl:block">
-        <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" />
+        <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" :watermark="showWatermark" />
       </div>
     </main>
 
@@ -620,7 +621,7 @@ async function downloadPdf() {
 
     <!-- Mobile : aperçu plein écran -->
     <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu du CV">
-      <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" />
+      <FeatureEditorPreviewPanel v-if="previewResume" :resume="previewResume" :watermark="showWatermark" />
       <template #footer>
         <div class="grid grid-cols-2 gap-3 w-full">
           <UiButton variant="outline" block icon="edit" @click="previewOpen = false">

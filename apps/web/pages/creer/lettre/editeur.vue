@@ -26,6 +26,7 @@ const pdfService = usePdfService()
 const resumeService = useResumeService()
 const { ensureSession } = useGuestSession()
 const { ensureDownloadAccess } = usePaymentEntitlements()
+const { showWatermark } = usePreviewWatermark()
 const { isDesktop } = useBreakpoints()
 const { openMenu } = useMarketingMenuState()
 
@@ -536,8 +537,12 @@ async function executePdfDownload() {
                 {{ isOverflowing ? `⚠️ ${pageCount} pages A4` : '🟢 1 page A4' }}
               </span>
             </div>
+            <p v-if="showWatermark" class="px-4 py-2 border-b border-outline-variant/30 text-xs text-on-surface-variant">
+              Aperçu avec filigrane. Votre PDF téléchargé est <strong class="text-on-surface">net, sans filigrane</strong>
+              et son texte est lisible par les logiciels de recrutement (ATS).
+            </p>
             <div class="h-[min(70vh,720px)]">
-              <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+              <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" :watermark="showWatermark" />
             </div>
           </UiCard>
         </div>
@@ -562,7 +567,7 @@ async function executePdfDownload() {
 
       <UiFullScreenSheet v-model:open="previewOpen" title="Aperçu A4 Lettre">
         <div class="h-full min-h-[70vh] bg-surface-container-low">
-          <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" />
+          <FeatureCoverLetterTemplatesA4PreviewFit :letter="previewLetter" :watermark="showWatermark" />
         </div>
         <template #footer>
           <div class="grid grid-cols-2 gap-3 w-full">

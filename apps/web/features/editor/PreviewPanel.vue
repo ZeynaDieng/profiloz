@@ -5,6 +5,8 @@ import { useMediaQuery } from '@vueuse/core'
 
 const props = defineProps<{
   resume: ResumeSnapshot
+  /** Aperçu avant paiement : filigrane, texte non copiable. */
+  watermark?: boolean
 }>()
 
 const isMobilePreview = useMediaQuery('(max-width: 1023px)')
@@ -163,6 +165,17 @@ watch(
       </div>
     </div>
 
+    <p
+      v-if="watermark"
+      class="px-4 py-2 bg-secondary/5 border-b border-secondary/15 text-xs text-on-surface-variant flex items-center gap-2 shrink-0"
+    >
+      <UiPzIcon name="verified" class="text-secondary text-base shrink-0" />
+      <span>
+        Aperçu avec filigrane. Votre PDF téléchargé est <strong class="text-on-surface">net, sans filigrane</strong>
+        et son texte est lisible par les logiciels de recrutement (ATS).
+      </span>
+    </p>
+
     <!-- Bannière d'avertissement de dépassement -->
     <div
       v-if="isOverflowing"
@@ -180,8 +193,14 @@ watch(
     <div ref="containerRef" class="flex-1 overflow-auto p-3 md:p-stack-md">
       <div class="flex justify-center">
         <div :style="previewWrapperStyle">
-          <div :style="scaleStyle" class="relative">
+          <div
+            :style="scaleStyle"
+            class="relative"
+            :class="watermark && 'select-none'"
+            @copy="watermark && $event.preventDefault()"
+          >
             <ResumePreviewA4 :resume="resume" />
+            <UiPreviewWatermark v-if="watermark" />
 
             <!-- Séparateurs visuels de pages A4 (découpage en feuilles séparées comme Word / Google Docs) -->
             <template v-if="isOverflowing">
