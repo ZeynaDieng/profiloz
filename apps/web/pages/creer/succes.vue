@@ -509,7 +509,7 @@ onMounted(async () => {
               <NuxtLink :to="isLetter ? '/creer/modele' : '/creer/lettre/modele'" class="block">
                 <div class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-between gap-3 group cursor-pointer">
                   <div class="flex items-center gap-2.5 min-w-0">
-                    <span class="text-xl shrink-0">{{ isLetter ? '📄' : '✉️' }}</span>
+                    <UiPzIcon :name="isLetter ? 'description' : 'mail'" class="text-[22px] shrink-0" />
                     <div class="min-w-0">
                       <div class="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
                         {{ isLetter ? 'Un CV professionnel' : 'Une Lettre de motivation' }}
@@ -529,7 +529,7 @@ onMounted(async () => {
               <NuxtLink :to="isLetter ? '/creer/lettre/modele' : '/creer/modele'" class="block">
                 <div class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-between gap-3 group cursor-pointer">
                   <div class="flex items-center gap-2.5 min-w-0">
-                    <span class="text-xl shrink-0">{{ isLetter ? '✉️' : '📄' }}</span>
+                    <UiPzIcon :name="isLetter ? 'mail' : 'description'" class="text-[22px] shrink-0" />
                     <div class="min-w-0">
                       <div class="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
                         {{ isLetter ? 'Une 2ème Lettre IA' : 'Un 2ème CV (ou réimport)' }}
@@ -551,7 +551,7 @@ onMounted(async () => {
           <div v-else-if="dossierComplete" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white p-5 sm:p-6 shadow-xl border border-emerald-500/30">
             <div class="relative z-10 flex items-center gap-4">
               <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center font-extrabold text-2xl shrink-0">
-                🏆
+                <UiPzIcon name="emoji_events" class="text-[26px]" />
               </div>
               <div class="space-y-1">
                 <h2 class="text-base sm:text-lg font-extrabold text-white leading-snug">

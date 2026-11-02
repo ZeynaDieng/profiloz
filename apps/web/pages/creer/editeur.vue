@@ -642,8 +642,8 @@ async function downloadPdf() {
           :icon="previewOpen ? 'edit' : 'visibility'"
           @click="previewOpen = !previewOpen"
         >
-          <span v-if="previewOpen">✏️ Revenir à la saisie</span>
-          <span v-else-if="isOverflowing">Aperçu ({{ pageCount }} pages ⚠️)</span>
+          <span v-if="previewOpen">Revenir à la saisie</span>
+          <span v-else-if="isOverflowing">Aperçu ({{ pageCount }} pages)</span>
           <span v-else>Aperçu (1 page A4)</span>
         </UiButton>
         <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
@@ -658,10 +658,10 @@ async function downloadPdf() {
       <template #footer>
         <div class="grid grid-cols-2 gap-3 w-full">
           <UiButton variant="outline" block icon="edit" @click="previewOpen = false">
-            ✏️ Revenir à la saisie
+            Revenir à la saisie
           </UiButton>
           <UiButton variant="secondary" block icon="download" :loading="pdfLoading" @click="promptDownloadPdf">
-            📥 Télécharger mon PDF
+            Télécharger mon PDF
           </UiButton>
         </div>
       </template>
@@ -677,7 +677,7 @@ async function downloadPdf() {
         >
           <div class="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-5 text-center">
             <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-2xl font-black">
-              📄
+              <UiPzIcon name="description" class="text-[28px]" />
             </div>
 
             <div class="space-y-1.5">
@@ -710,7 +710,8 @@ async function downloadPdf() {
                   class="font-extrabold px-2.5 py-0.5 rounded-full text-[11px]"
                   :class="isOverflowing ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
                 >
-                  {{ isOverflowing ? `⚠️ ${pageCount} pages A4` : '🟢 1 page A4 (Parfait)' }}
+                  <UiPzIcon :name="isOverflowing ? 'warning' : 'check_circle'" class="text-[13px] align-[-2px]" />
+                  {{ isOverflowing ? `${pageCount} pages A4` : '1 page A4 (Parfait)' }}
                 </span>
               </div>
               <div class="flex items-center justify-between border-t border-slate-200/60 pt-2">

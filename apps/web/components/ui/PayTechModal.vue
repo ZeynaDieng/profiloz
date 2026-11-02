@@ -37,7 +37,7 @@ function openInNewTab() {
           <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700/60 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                🔒
+                <UiPzIcon name="lock" class="text-[18px]" />
               </div>
               <div>
                 <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">

@@ -136,7 +136,7 @@ async function onChoose(plan: PlanDto) {
     <!-- Bandeau d'information si offre précédente 100% consommée -->
     <div v-if="fromCompleted" class="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 flex items-start gap-3 text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto text-left shadow-sm">
       <div class="w-8 h-8 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-base shrink-0">
-        🎉
+        <UiPzIcon name="celebration" class="text-[18px]" />
       </div>
       <div>
         <strong class="font-extrabold text-sm sm:text-base block mb-0.5 text-amber-950 dark:text-amber-100">Votre offre précédente est 100% terminée !</strong>

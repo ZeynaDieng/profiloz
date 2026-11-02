@@ -341,7 +341,7 @@ provideResumeEditorValidation({
         v-if="showWelcome"
         class="flex items-start gap-2.5 p-3 rounded-xl bg-secondary/5 border border-secondary/15"
       >
-        <span class="text-lg leading-snug" aria-hidden="true">👋</span>
+        <UiPzIcon name="waving_hand" class="text-[20px] text-secondary shrink-0 mt-0.5" />
         <p class="flex-1 text-[13px] leading-relaxed text-on-surface">
           Remplissez vos informations, l’aperçu se met à jour tout seul.
           <button
@@ -538,7 +538,7 @@ provideResumeEditorValidation({
                   @click="resumeStore.setTemplateConfig({ customOrder: false })"
                 >
                   <UiPzIcon name="sort" class="text-xs" />
-                  <span>🔄 Réactiver le tri automatique par date</span>
+                  <span>Réactiver le tri automatique par date</span>
                 </button>
               </div>
               <FeatureWizardExperienceForm v-model="experiences" :field-errors="fieldErrors" />
@@ -554,7 +554,7 @@ provideResumeEditorValidation({
                   @click="resumeStore.setTemplateConfig({ customOrder: false })"
                 >
                   <UiPzIcon name="sort" class="text-xs" />
-                  <span>🔄 Réactiver le tri automatique par date</span>
+                  <span>Réactiver le tri automatique par date</span>
                 </button>
               </div>
               <FeatureWizardEducationForm v-model="educations" :field-errors="fieldErrors" />

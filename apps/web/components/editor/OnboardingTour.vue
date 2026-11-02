@@ -21,12 +21,12 @@ interface TourStep {
 const steps: TourStep[] = [
   {
     target: '#tour-template-selector',
-    title: '🎨 Choix du modèle',
+    title: 'Choix du modèle',
     content: `Sélectionnez le design de votre CV parmi nos ${TEMPLATE_CATALOG.length} modèles professionnels. Vos données sont conservées et adaptées instantanément à chaque style.`,
   },
   {
     target: '[data-section-id="personal"]',
-    title: '📞 Informations personnelles',
+    title: 'Informations personnelles',
     content: 'Commencez par renseigner vos coordonnées de contact dans cette première section. Cliquez pour l\'ouvrir.',
     section: 'personal',
   },

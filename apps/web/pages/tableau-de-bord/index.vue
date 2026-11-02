@@ -164,7 +164,7 @@ function formatDate(iso: string) {
         class="mb-4"
       />
       <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">
-        Bonjour {{ greetingName || 'vous' }} 👋
+        Bonjour {{ greetingName || 'vous' }}
       </h1>
       <p class="text-on-surface-variant mt-1">{{ MSG.guide.dashboardPrompt }}</p>
       <div class="mt-4 max-w-md">

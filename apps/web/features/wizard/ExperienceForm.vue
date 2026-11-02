@@ -188,7 +188,8 @@ async function handleSuggestBullets(index: number) {
             :disabled="aiLoading"
             @click="handleSuggestBullets(index)"
           >
-            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? aiWaitLabel : '💡 Suggérer des puces IA' }}</span>
+            <UiPzIcon name="lightbulb" class="text-[13px]" />
+            <span>{{ activeAiIndex === index && aiActionType === 'bullets' ? aiWaitLabel : 'Suggérer des puces IA' }}</span>
           </button>
         </div>
         <input v-model="item.position" type="text" class="form-input w-full" placeholder="Chef de projet digital" />

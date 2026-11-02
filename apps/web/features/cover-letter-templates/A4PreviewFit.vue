@@ -106,7 +106,7 @@ const previewStyle = computed(() =>
       :class="isOverflowing ? 'bg-amber-500 text-white' : 'bg-slate-900/80 text-white'"
     >
       <UiPzIcon :name="isOverflowing ? 'warning' : 'description'" class="text-sm" />
-      <span>{{ isOverflowing ? `⚠️ Lettre sur ${pageCount} pages A4` : '🟢 1 page A4 (Parfait)' }}</span>
+      <span>{{ isOverflowing ? `Lettre sur ${pageCount} pages A4` : '1 page A4 (Parfait)' }}</span>
     </div>
 
     <!-- Conteneur A4 avec mise à l'échelle -->
